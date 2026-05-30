@@ -1,0 +1,98 @@
+.dash-kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  width: 100%;
+}
+
+.dash-kpi-card:hover {
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+.dash-kpi-card.is-active {
+  border-color: var(--kpi-color, #2563eb);
+  box-shadow: 0 0 0 1px var(--kpi-color, #2563eb);
+}
+
+.dash-kpi-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.dash-kpi-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.dash-kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--kpi-color, #2563eb);
+}
+
+.dash-kpi-charts {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dash-kpi-donut {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.dash-kpi-donut::after {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.dash-kpi-bars {
+  flex: 1;
+  min-width: 0;
+}
+
+.dash-kpi-bar-track {
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.dash-kpi-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.dash-kpi-bar-legend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.dash-kpi-bar-legend .muted {
+  color: #94a3b8;
+}
+
+.dash-kpi-sub {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+}

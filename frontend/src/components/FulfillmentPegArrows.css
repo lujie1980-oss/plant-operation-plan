@@ -1,0 +1,4 @@
+/* 隐藏库内折线箭头，仅保留自定义贝塞尔层 */
+.fulfillment-gantt .gantt-container svg .arrows {
+  display: none;
+}

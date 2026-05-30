@@ -1,0 +1,39 @@
+.fulfillment-gantt {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.fulfillment-gantt .gantt-hint {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.fulfillment-gantt .gantt-container {
+  flex: 1;
+  min-height: 160px;
+}
+
+.fulfillment-gantt .gantt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fulfillment-gantt .gantt-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fulfillment-gantt .gantt-arrow-btn.active {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}

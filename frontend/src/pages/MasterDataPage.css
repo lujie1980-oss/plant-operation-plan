@@ -1,0 +1,146 @@
+.br-version-panel {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.br-version-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.br-version-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.br-version-name {
+  min-width: 10rem;
+}
+
+.br-version-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.br-excel-toolbar {
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.br-excel-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+  max-width: 720px;
+}
+
+.master-data-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.master-data-page .page-header,
+.master-data-page .status-banner {
+  flex-shrink: 0;
+}
+
+.md-tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.md-tab-btn {
+  appearance: none;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.md-tab-btn:hover:not(.is-active) {
+  background: #f8fafc;
+}
+
+.md-tab-btn.is-active {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(29, 78, 216, 0.25);
+}
+
+.md-tab-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.md-tab-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 0;
+  padding: 0.85rem 1rem;
+  overflow: hidden;
+}
+
+.md-tab-desc {
+  margin: 0 0 0.5rem;
+  color: #64748b;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.md-tab-bar-sub {
+  margin-top: -4px;
+  margin-bottom: 8px;
+  padding-left: 8px;
+}
+
+.plan-params-page .plan-param-tab-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-params-page .plan-param-group {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  margin: 0;
+}
+
+.plan-params-page .plan-param-group .md-tab-desc {
+  margin-top: 0;
+}
+
+.plan-param-empty {
+  margin: 0;
+  font-size: 13px;
+  color: #94a3b8;
+}

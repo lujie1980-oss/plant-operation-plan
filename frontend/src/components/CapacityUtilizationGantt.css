@@ -1,0 +1,232 @@
+.cap-gantt {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.cap-gantt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  padding: 0 0 0.35rem;
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+.cap-leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cap-leg::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.cap-leg.band-idle::before {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.cap-leg.band-light::before {
+  background: #bbf7d0;
+  border-color: #86efac;
+}
+
+.cap-leg.band-normal::before {
+  background: #22c55e;
+  border-color: #15803d;
+}
+
+.cap-leg.band-high::before {
+  background: #fde047;
+  border-color: #eab308;
+}
+
+.cap-leg.band-overload::before {
+  background: #fca5a5;
+  border-color: #ef4444;
+}
+
+.cap-leg.cap-leg-feedback::before {
+  background: repeating-linear-gradient(
+    -45deg,
+    #7c3aed,
+    #7c3aed 3px,
+    #a78bfa 3px,
+    #a78bfa 6px
+  );
+  border-color: #6d28d9;
+}
+
+.cap-gantt-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.cap-gantt-empty {
+  margin: 2rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.88rem;
+}
+
+.cap-gantt-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.cap-gantt-header-row,
+.cap-gantt-body-row {
+  display: grid;
+  align-items: stretch;
+}
+
+.cap-gantt-header-row {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.cap-gantt-corner,
+.cap-gantt-col-head,
+.cap-gantt-row-label {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  box-sizing: border-box;
+}
+
+.cap-gantt-col-head {
+  justify-content: center;
+  text-align: center;
+  border-left: 1px solid #e2e8f0;
+}
+
+.cap-col-date {
+  line-height: 1.25;
+}
+
+.cap-gantt-row-label {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #fafbfc;
+  border-bottom: 1px solid #f1f5f9;
+  border-right: 1px solid #e2e8f0;
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cap-gantt-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0.2rem;
+  overflow: hidden;
+  border: none;
+  border-left: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  font: inherit;
+  transition: box-shadow 0.12s, transform 0.12s;
+}
+
+.cap-gantt-cell-empty {
+  cursor: default;
+}
+
+.cap-gantt-cell.band-idle,
+.cap-gantt-cell-empty.band-idle {
+  background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #64748b;
+}
+
+.cap-gantt-cell.band-light {
+  background: linear-gradient(180deg, #ecfdf5 0%, #bbf7d0 100%);
+  color: #166534;
+}
+
+.cap-gantt-cell.band-normal {
+  background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+  color: #f0fdf4;
+}
+
+.cap-gantt-cell.band-high {
+  background: linear-gradient(180deg, #fef9c3 0%, #fde047 100%);
+  color: #713f12;
+}
+
+.cap-gantt-cell.band-overload {
+  background: linear-gradient(180deg, #fecaca 0%, #fca5a5 100%);
+  color: #7f1d1d;
+}
+
+.cap-gantt-cell:hover:not(.cap-gantt-cell-empty) {
+  box-shadow: inset 0 0 0 2px #3b82f6;
+  z-index: 1;
+}
+
+.cap-gantt-cell.is-selected {
+  box-shadow: inset 0 0 0 2px #1d4ed8;
+  z-index: 2;
+}
+
+.cap-feedback-lock-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(124, 58, 237, 0.92),
+    rgba(124, 58, 237, 0.92) 4px,
+    rgba(167, 139, 250, 0.92) 4px,
+    rgba(167, 139, 250, 0.92) 8px
+  );
+  border-top: 2px solid #5b21b6;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cap-gantt-cell.has-feedback-lock .cap-cell-pct,
+.cap-gantt-cell.has-feedback-lock .cap-cell-sub {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+}
+
+.cap-cell-pct {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cap-cell-sub {
+  font-size: 0.62rem;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}

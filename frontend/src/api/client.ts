@@ -1,0 +1,663 @@
+import type {
+  CapacityAnalysis,
+  DemandPoolEntry,
+  DemandPoolSummary,
+  OrderFulfillmentChain,
+  DetailScheduleResult,
+  MasterPlanRefreshResult,
+  ScheduleFeedback,
+  ScheduleFeedbackApplyResult,
+  DispatchResult,
+  KittingResult,
+  MaterialDemandDetail,
+  MaterialRequirementReport,
+  KpiReport,
+  MasterPlanCapacityStrategy,
+  MasterPlanResult,
+  PipelineResult,
+  PlanVersionCompare,
+  RescheduleResult,
+  WorkOrderCapacityGantt,
+  WorkOrder,
+  WorkOrderOrderLineTree,
+  WorkOrderScheduleOperation,
+  WorkOrderDispatchResult,
+  WorkOrderGenerationBatchResult,
+  WorkOrderKitting,
+  DemandTrackingEntry,
+  DashboardSummary,
+  PlanningPipelineRun,
+  PlanningScenario,
+  RuleSetVersion,
+  CreatePlanningScenarioPayload,
+  CreateRuleSetVersionPayload,
+  ScenarioComparison,
+} from '../types/api';
+import type {
+  BomMd,
+  BusinessRuleScopeMd,
+  ChangeoverMd,
+  OperationTransferTimeMd,
+  OperationPostProcessingMd,
+  MaterialLeadTimeMd,
+  ContinuousProductionMd,
+  ParallelOperationMd,
+  InventoryMd,
+  MaterialMd,
+  MasterDataValidationReportMd,
+  ProductResourceMd,
+  ProductionLineMd,
+  ResourceCalendarMd,
+  ResourceMd,
+  SalesOrderMd,
+  ShiftHeadcountMd,
+  SystemParameterMd,
+} from '../types/masterData';
+import type { MasterPlanObjective, MasterPlanObjectiveUpdate } from '../types/masterPlanObjectives';
+import type {
+  DetailSchedulePlanningDiagnostics,
+  MasterPlanPlanningDiagnostics,
+} from '../types/planningDiagnostics';
+import type { PlanningScoreExplanation } from '../types/planningScoreExplanation';
+import type {
+  MasterPlanStrategyCreate,
+  MasterPlanStrategyDetail,
+  MasterPlanStrategySummary,
+  MasterPlanStrategyUpdate,
+} from '../types/masterPlanStrategies';
+import { getStoredWorkspaceId } from '../context/WorkspaceContext';
+import type { Workspace, WorkspaceCreatePayload } from '../types/workspace';
+
+export type MasterDataImportResult = {
+  rowsImported: number;
+  errors: string[];
+};
+
+function filenameFromDisposition(header: string | null, fallback: string): string {
+  if (!header) return fallback;
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(header);
+  return match ? decodeURIComponent(match[1].trim()) : fallback;
+}
+
+function workspaceHeaders(extra?: HeadersInit): HeadersInit {
+  return {
+    Accept: 'application/json',
+    'X-Workspace-Id': getStoredWorkspaceId(),
+    ...extra,
+  };
+}
+
+async function downloadBlob(path: string, fallbackName: string): Promise<void> {
+  const res = await fetch(path, { headers: workspaceHeaders() });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP ${res.status}`);
+  }
+  const blob = await res.blob();
+  const name = filenameFromDisposition(res.headers.get('Content-Disposition'), fallbackName);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function versionQuery(masterPlanVersionId?: string): string {
+  return masterPlanVersionId
+    ? `?masterPlanVersionId=${encodeURIComponent(masterPlanVersionId)}`
+    : '';
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers);
+  headers.set('Accept', 'application/json');
+  headers.set('X-Workspace-Id', getStoredWorkspaceId());
+  if (init?.body != null && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+  const res = await fetch(path, { ...init, headers });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP ${res.status}`);
+  }
+  if (res.status === 204) {
+    return undefined as T;
+  }
+  return res.json() as Promise<T>;
+}
+
+export const api = {
+  workspaces: {
+    list: () => request<Workspace[]>('/api/v1/workspaces'),
+    create: (payload: WorkspaceCreatePayload) =>
+      request<Workspace>('/api/v1/workspaces', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    delete: (id: string) =>
+      request<void>(`/api/v1/workspaces/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    reloadSampleData: (dataset?: string) =>
+      request<{ status: string; resource: string; message: string }>(
+        `/api/v1/admin/reload-sample-data${dataset ? `?dataset=${encodeURIComponent(dataset)}` : ''}`,
+        { method: 'POST' },
+      ),
+  },
+  demandPool: (masterPlanVersionId?: string) =>
+    request<DemandPoolEntry[]>(`/api/v1/demand/demand-pool${versionQuery(masterPlanVersionId)}`),
+  demandPoolSummary: (masterPlanVersionId?: string) =>
+    request<DemandPoolSummary>(`/api/v1/demand/demand-pool/summary${versionQuery(masterPlanVersionId)}`),
+  demandTracking: () => request<DemandTrackingEntry[]>('/api/v1/demand/tracking'),
+  dashboardSummary: () => request<DashboardSummary>('/api/v1/dashboard/summary'),
+  workOrders: {
+    list: (masterPlanVersionId?: string) =>
+      request<WorkOrder[]>(`/api/v1/work-orders${versionQuery(masterPlanVersionId)}`),
+    listByOrderLine: (
+      salesOrderNo: string,
+      salesOrderLineNo: number,
+      masterPlanVersionId?: string,
+    ) =>
+      request<WorkOrderOrderLineTree>(
+        `/api/v1/work-orders/by-order-line/${encodeURIComponent(salesOrderNo)}/${salesOrderLineNo}${versionQuery(masterPlanVersionId)}`,
+      ),
+    generateAll: (replaceExisting = true) =>
+      request<WorkOrderGenerationBatchResult>(
+        `/api/v1/work-orders/generate-all?replaceExisting=${replaceExisting}`,
+        { method: 'POST' },
+      ),
+    dispatch: (workOrderNos: string[]) =>
+      request<WorkOrderDispatchResult>('/api/v1/work-orders/dispatch', {
+        method: 'POST',
+        body: JSON.stringify({ workOrderNos }),
+      }),
+    dispatchedKitting: () => request<WorkOrderKitting[]>('/api/v1/work-orders/dispatched/kitting'),
+    computeDispatchedKitting: () =>
+      request<WorkOrderKitting[]>('/api/v1/work-orders/dispatched/kitting/compute', { method: 'POST' }),
+    fulfillmentChain: (workOrderNo: string, masterPlanVersionId?: string) =>
+      request<OrderFulfillmentChain>(
+        `/api/v1/work-orders/${encodeURIComponent(workOrderNo)}/fulfillment-chain${versionQuery(masterPlanVersionId)}`,
+      ),
+    downstreamFulfillmentChain: (workOrderNo: string, masterPlanVersionId?: string) =>
+      request<OrderFulfillmentChain>(
+        `/api/v1/work-orders/${encodeURIComponent(workOrderNo)}/downstream-fulfillment-chain${versionQuery(masterPlanVersionId)}`,
+      ),
+    scheduleOperations: (workOrderNo: string, masterPlanVersionId?: string) =>
+      request<WorkOrderScheduleOperation[]>(
+        `/api/v1/work-orders/${encodeURIComponent(workOrderNo)}/schedule-operations${versionQuery(masterPlanVersionId)}`,
+      ),
+  },
+  fulfillmentChain: (salesOrderNo: string, salesOrderLineNo: number, masterPlanVersionId?: string) =>
+    request<OrderFulfillmentChain>(
+      `/api/v1/demand/demand-pool/${encodeURIComponent(salesOrderNo)}/${salesOrderLineNo}/fulfillment-chain${versionQuery(masterPlanVersionId)}`,
+    ),
+  computeKitting: () => request<KittingResult[]>('/api/v1/kitting/compute', { method: 'POST' }),
+  materialBalance: (masterPlanVersionId?: string) =>
+    request<MaterialRequirementReport>(
+      `/api/v1/material-requirements/balance${versionQuery(masterPlanVersionId)}`,
+    ),
+  computeMaterialRequirements: (masterPlanVersionId?: string) =>
+    request<MaterialRequirementReport>(
+      `/api/v1/material-requirements/compute${versionQuery(masterPlanVersionId)}`,
+      { method: 'POST' },
+    ),
+  materialDemandUsages: (productCode: string, masterPlanVersionId?: string) =>
+    request<MaterialDemandDetail>(
+      `/api/v1/material-requirements/materials/${encodeURIComponent(productCode)}/demand-usages${versionQuery(masterPlanVersionId)}`,
+    ),
+  analyzeCapacity: (masterPlanVersionId?: string) => {
+    const q = masterPlanVersionId
+      ? `?masterPlanVersionId=${encodeURIComponent(masterPlanVersionId)}`
+      : '';
+    return request<CapacityAnalysis>(`/api/v1/capacity/analyze${q}`, { method: 'POST' });
+  },
+  solveMasterPlan: (strategyId?: string, capacityStrategy?: MasterPlanCapacityStrategy) =>
+    request<MasterPlanResult>('/api/v1/planning/master-plan/solve', {
+      method: 'POST',
+      body: JSON.stringify({ strategyId, capacityStrategy }),
+    }),
+  getMasterPlan: (versionId: string) => request<MasterPlanResult>(`/api/v1/planning/master-plan/result/${versionId}`),
+  previewMasterPlanDiagnostics: (strategyId?: string, feedbackCutoff?: string) => {
+    const params = new URLSearchParams();
+    if (strategyId) {
+      params.set('strategyId', strategyId);
+    }
+    if (feedbackCutoff) {
+      params.set('feedbackCutoff', feedbackCutoff);
+    }
+    const q = params.toString() ? `?${params}` : '';
+    return request<MasterPlanPlanningDiagnostics>(`/api/v1/planning/master-plan/diagnostics/preview${q}`);
+  },
+  previewDetailScheduleDiagnostics: (masterPlanVersionId?: string) => {
+    const q = masterPlanVersionId
+      ? `?masterPlanVersionId=${encodeURIComponent(masterPlanVersionId)}`
+      : '';
+    return request<DetailSchedulePlanningDiagnostics>(
+      `/api/v1/planning/detail-schedule/diagnostics/preview${q}`,
+    );
+  },
+  explainMasterPlanScore: (versionId: string) =>
+    request<PlanningScoreExplanation>(
+      `/api/v1/planning/master-plan/${encodeURIComponent(versionId)}/score-explanation`,
+    ),
+  explainDetailScheduleScore: (versionId: string, masterPlanVersionId: string) =>
+    request<PlanningScoreExplanation>(
+      `/api/v1/planning/detail-schedule/${encodeURIComponent(versionId)}/score-explanation?masterPlanVersionId=${encodeURIComponent(masterPlanVersionId)}`,
+    ),
+  listMasterPlanObjectives: () =>
+    request<MasterPlanObjective[]>('/api/v1/planning/master-plan/objectives'),
+  saveMasterPlanObjectives: (objectives: MasterPlanObjectiveUpdate[]) =>
+    request<MasterPlanObjective[]>('/api/v1/planning/master-plan/objectives', {
+      method: 'PUT',
+      body: JSON.stringify({ objectives }),
+    }),
+  resetMasterPlanObjectives: () =>
+    request<MasterPlanObjective[]>('/api/v1/planning/master-plan/objectives/reset-defaults', {
+      method: 'POST',
+    }),
+  listMasterPlanStrategies: () =>
+    request<MasterPlanStrategySummary[]>('/api/v1/planning/master-plan/strategies'),
+  getMasterPlanStrategy: (strategyId: string) =>
+    request<MasterPlanStrategyDetail>(
+      `/api/v1/planning/master-plan/strategies/${encodeURIComponent(strategyId)}`,
+    ),
+  createMasterPlanStrategy: (payload: MasterPlanStrategyCreate) =>
+    request<MasterPlanStrategyDetail>('/api/v1/planning/master-plan/strategies', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  updateMasterPlanStrategy: (strategyId: string, payload: MasterPlanStrategyUpdate) =>
+    request<MasterPlanStrategyDetail>(
+      `/api/v1/planning/master-plan/strategies/${encodeURIComponent(strategyId)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      },
+    ),
+  duplicateMasterPlanStrategy: (strategyId: string, name?: string) =>
+    request<MasterPlanStrategyDetail>(
+      `/api/v1/planning/master-plan/strategies/${encodeURIComponent(strategyId)}/duplicate`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      },
+    ),
+  deleteMasterPlanStrategy: (strategyId: string) =>
+    request<void>(`/api/v1/planning/master-plan/strategies/${encodeURIComponent(strategyId)}`, {
+      method: 'DELETE',
+    }),
+  workOrderCapacityGantt: (versionId: string, workOrderNo: string) =>
+    request<WorkOrderCapacityGantt>(
+      `/api/v1/planning/master-plan/${encodeURIComponent(versionId)}/work-orders/${encodeURIComponent(workOrderNo)}/capacity-gantt`,
+    ),
+  solveDetailSchedule: (
+    masterPlanVersionId?: string,
+    options?: { refreshMasterPlan?: boolean; feedbackCutoff?: string },
+  ) => {
+    const params = new URLSearchParams();
+    if (masterPlanVersionId) {
+      params.set('masterPlanVersionId', masterPlanVersionId);
+    }
+    if (options?.refreshMasterPlan) {
+      params.set('refreshMasterPlan', 'true');
+    }
+    if (options?.feedbackCutoff) {
+      params.set('feedbackCutoff', options.feedbackCutoff);
+    }
+    const q = params.toString() ? `?${params}` : '';
+    return request<DetailScheduleResult>(`/api/v1/planning/detail-schedule/solve${q}`, { method: 'POST' });
+  },
+  applyScheduleFeedback: (
+    detailScheduleVersionId: string,
+    masterPlanVersionId?: string,
+    feedbackCutoff?: string,
+  ) => {
+    const params = new URLSearchParams();
+    if (masterPlanVersionId) {
+      params.set('masterPlanVersionId', masterPlanVersionId);
+    }
+    if (feedbackCutoff) {
+      params.set('feedbackCutoff', feedbackCutoff);
+    }
+    const q = params.toString() ? `?${params}` : '';
+    return request<ScheduleFeedbackApplyResult>(
+      `/api/v1/planning/schedule-feedback/apply-from-detail-schedule/${encodeURIComponent(detailScheduleVersionId)}${q}`,
+      { method: 'POST' },
+    );
+  },
+  listScheduleFeedback: (opts: { detailScheduleVersionId?: string; frozenThrough?: string }) => {
+    const params = new URLSearchParams();
+    if (opts.detailScheduleVersionId) {
+      params.set('detailScheduleVersionId', opts.detailScheduleVersionId);
+    }
+    if (opts.frozenThrough) {
+      params.set('frozenThrough', opts.frozenThrough);
+    }
+    const q = params.toString() ? `?${params}` : '';
+    return request<ScheduleFeedback[]>(`/api/v1/planning/schedule-feedback${q}`);
+  },
+  refreshSubsequentMasterPlan: (opts: {
+    parentMasterPlanVersionId: string;
+    detailScheduleVersionId: string;
+    feedbackCutoff?: string;
+    strategyId?: string;
+  }) => {
+    const params = new URLSearchParams();
+    params.set('parentMasterPlanVersionId', opts.parentMasterPlanVersionId);
+    params.set('detailScheduleVersionId', opts.detailScheduleVersionId);
+    if (opts.feedbackCutoff) {
+      params.set('feedbackCutoff', opts.feedbackCutoff);
+    }
+    if (opts.strategyId) {
+      params.set('strategyId', opts.strategyId);
+    }
+    return request<MasterPlanRefreshResult>(
+      `/api/v1/planning/master-plan/refresh-subsequent?${params}`,
+      { method: 'POST' },
+    );
+  },
+  dispatch: (planVersionId: string) =>
+    request<DispatchResult>('/api/v1/planning/dispatch', {
+      method: 'POST',
+      body: JSON.stringify({ planVersionId }),
+    }),
+  handleEvent: (eventType: string, payload: Record<string, unknown>) =>
+    request<RescheduleResult>('/api/v1/events', {
+      method: 'POST',
+      body: JSON.stringify({ eventId: null, eventType, eventTs: null, payload }),
+    }),
+  kpiReport: () => request<KpiReport>('/api/v1/kpi/report'),
+  listPipelineRuns: (limit = 30) =>
+    request<PlanningPipelineRun[]>(`/api/v1/planning/pipeline-runs?limit=${limit}`),
+  getPipelineRun: (runId: string) =>
+    request<PlanningPipelineRun>(`/api/v1/planning/pipeline-runs/${encodeURIComponent(runId)}`),
+  startPipelineRun: (
+    strategyId: string,
+    options?: { scenarioId?: string; ruleSetVersionId?: string },
+  ) =>
+    request<PlanningPipelineRun>('/api/v1/planning/pipeline-runs', {
+      method: 'POST',
+      body: JSON.stringify({
+        strategyId,
+        scenarioId: options?.scenarioId,
+        ruleSetVersionId: options?.ruleSetVersionId,
+      }),
+    }),
+  executePipelineRun: (
+    runId: string,
+    options?: { includeDetailSchedule?: boolean; refreshMasterPlanAfterSchedule?: boolean },
+  ) => {
+    const params = new URLSearchParams();
+    if (options?.includeDetailSchedule) {
+      params.set('includeDetailSchedule', 'true');
+    }
+    if (options?.refreshMasterPlanAfterSchedule) {
+      params.set('refreshMasterPlanAfterSchedule', 'true');
+    }
+    const q = params.toString() ? `?${params}` : '';
+    return request<PipelineResult>(
+      `/api/v1/planning/pipeline-runs/${encodeURIComponent(runId)}/execute${q}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          includeDetailSchedule: options?.includeDetailSchedule ?? false,
+          refreshMasterPlanAfterSchedule: options?.refreshMasterPlanAfterSchedule ?? false,
+        }),
+      },
+    );
+  },
+  runFullPipeline: (
+    strategyId: string,
+    options?: {
+      scenarioId?: string;
+      ruleSetVersionId?: string;
+      includeDetailSchedule?: boolean;
+      refreshMasterPlanAfterSchedule?: boolean;
+    },
+  ) =>
+    request<PipelineResult>('/api/v1/planning/run-full-pipeline', {
+      method: 'POST',
+      body: JSON.stringify({
+        strategyId,
+        scenarioId: options?.scenarioId,
+        ruleSetVersionId: options?.ruleSetVersionId,
+        includeDetailSchedule: options?.includeDetailSchedule ?? false,
+        refreshMasterPlanAfterSchedule: options?.refreshMasterPlanAfterSchedule ?? false,
+      }),
+    }),
+  listScenarios: (limit = 50) =>
+    request<PlanningScenario[]>(`/api/v1/planning/scenarios?limit=${limit}`),
+  listScenarioCatalog: () =>
+    request<PlanningScenario[]>('/api/v1/planning/scenario-catalog'),
+  createScenario: (payload: CreatePlanningScenarioPayload) =>
+    request<PlanningScenario>('/api/v1/planning/scenario-catalog', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  listRuleSetVersions: () => request<RuleSetVersion[]>('/api/v1/planning/rule-set-versions'),
+  createRuleSetVersion: (payload: CreateRuleSetVersionPayload) =>
+    request<RuleSetVersion>('/api/v1/planning/rule-set-versions', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  syncRuleSetFromWorkspace: (ruleSetVersionId: string) =>
+    request<RuleSetVersion>(
+      `/api/v1/planning/rule-set-versions/${encodeURIComponent(ruleSetVersionId)}/sync-from-workspace`,
+      { method: 'POST' },
+    ),
+  compareScenarios: (planVersionIds: string[]) =>
+    request<ScenarioComparison>('/api/v1/planning/scenarios/compare', {
+      method: 'POST',
+      body: JSON.stringify({ planVersionIds }),
+    }),
+  comparePlans: (from: string, to: string) =>
+    request<PlanVersionCompare>(`/api/v1/planning/compare?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
+  erpOrders: () => request<unknown>('/api/v1/integration/erp/orders'),
+  mesStatus: () => request<Record<string, unknown>>('/api/v1/integration/mes/status'),
+  masterData: {
+    salesOrders: {
+      list: () => request<SalesOrderMd[]>('/api/v1/master-data/sales-orders'),
+      save: (dto: SalesOrderMd) =>
+        request<SalesOrderMd>('/api/v1/master-data/sales-orders', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/sales-orders/${id}`, { method: 'DELETE' }),
+    },
+    boms: {
+      list: () => request<BomMd[]>('/api/v1/master-data/boms'),
+      save: (dto: BomMd) =>
+        request<BomMd>('/api/v1/master-data/boms', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/boms/${id}`, { method: 'DELETE' }),
+    },
+    materials: {
+      list: () => request<MaterialMd[]>('/api/v1/master-data/materials'),
+      save: (dto: MaterialMd) =>
+        request<MaterialMd>('/api/v1/master-data/materials', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/materials/${id}`, { method: 'DELETE' }),
+    },
+    inventory: {
+      list: () => request<InventoryMd[]>('/api/v1/master-data/inventory'),
+      save: (dto: InventoryMd) =>
+        request<InventoryMd>('/api/v1/master-data/inventory', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/inventory/${id}`, { method: 'DELETE' }),
+    },
+    resources: {
+      list: () => request<ResourceMd[]>('/api/v1/master-data/resources'),
+      save: (dto: ResourceMd) =>
+        request<ResourceMd>('/api/v1/master-data/resources', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/resources/${id}`, { method: 'DELETE' }),
+    },
+    productResources: {
+      list: () => request<ProductResourceMd[]>('/api/v1/master-data/product-resources'),
+      save: (dto: ProductResourceMd) =>
+        request<ProductResourceMd>('/api/v1/master-data/product-resources', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/product-resources/${id}`, { method: 'DELETE' }),
+    },
+    lines: {
+      list: () => request<ProductionLineMd[]>('/api/v1/master-data/lines'),
+      save: (dto: ProductionLineMd) =>
+        request<ProductionLineMd>('/api/v1/master-data/lines', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/lines/${id}`, { method: 'DELETE' }),
+    },
+    calendar: {
+      list: () => request<ResourceCalendarMd[]>('/api/v1/master-data/calendar'),
+      save: (dto: ResourceCalendarMd) =>
+        request<ResourceCalendarMd>('/api/v1/master-data/calendar', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/calendar/${id}`, { method: 'DELETE' }),
+    },
+    shiftHeadcount: {
+      list: () => request<ShiftHeadcountMd[]>('/api/v1/master-data/shift-headcount'),
+      save: (dto: ShiftHeadcountMd) =>
+        request<ShiftHeadcountMd>('/api/v1/master-data/shift-headcount', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/shift-headcount/${id}`, { method: 'DELETE' }),
+    },
+    changeover: {
+      list: () => request<ChangeoverMd[]>('/api/v1/master-data/changeover'),
+      save: (dto: ChangeoverMd) =>
+        request<ChangeoverMd>('/api/v1/master-data/changeover', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/changeover/${id}`, { method: 'DELETE' }),
+    },
+    parallelOperations: {
+      list: () => request<ParallelOperationMd[]>('/api/v1/master-data/parallel-operations'),
+      save: (dto: ParallelOperationMd) =>
+        request<ParallelOperationMd>('/api/v1/master-data/parallel-operations', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/parallel-operations/${id}`, { method: 'DELETE' }),
+    },
+    operationTransferTime: {
+      list: () => request<OperationTransferTimeMd[]>('/api/v1/master-data/operation-transfer-time'),
+      save: (dto: OperationTransferTimeMd) =>
+        request<OperationTransferTimeMd>('/api/v1/master-data/operation-transfer-time', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/operation-transfer-time/${id}`, { method: 'DELETE' }),
+    },
+    operationPostProcessing: {
+      list: () => request<OperationPostProcessingMd[]>('/api/v1/master-data/operation-post-processing'),
+      save: (dto: OperationPostProcessingMd) =>
+        request<OperationPostProcessingMd>('/api/v1/master-data/operation-post-processing', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/operation-post-processing/${id}`, { method: 'DELETE' }),
+    },
+    materialLeadTime: {
+      list: () => request<MaterialLeadTimeMd[]>('/api/v1/master-data/material-lead-time'),
+      save: (dto: MaterialLeadTimeMd) =>
+        request<MaterialLeadTimeMd>('/api/v1/master-data/material-lead-time', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/material-lead-time/${id}`, { method: 'DELETE' }),
+    },
+    continuousProduction: {
+      list: () => request<ContinuousProductionMd[]>('/api/v1/master-data/continuous-production'),
+      save: (dto: ContinuousProductionMd) =>
+        request<ContinuousProductionMd>('/api/v1/master-data/continuous-production', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/continuous-production/${id}`, { method: 'DELETE' }),
+    },
+    parameters: {
+      list: () => request<SystemParameterMd[]>('/api/v1/master-data/parameters'),
+      save: (dto: SystemParameterMd) =>
+        request<SystemParameterMd>('/api/v1/master-data/parameters', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/parameters/${id}`, { method: 'DELETE' }),
+    },
+    businessRuleScopes: {
+      list: () => request<BusinessRuleScopeMd[]>('/api/v1/master-data/business-rule-scopes'),
+      save: (ruleTypeId: string, dto: BusinessRuleScopeMd) =>
+        request<BusinessRuleScopeMd>(`/api/v1/master-data/business-rule-scopes/${encodeURIComponent(ruleTypeId)}`, {
+          method: 'PUT',
+          body: JSON.stringify(dto),
+        }),
+    },
+    validation: () => request<MasterDataValidationReportMd>('/api/v1/master-data/validation'),
+    downloadTemplate: () =>
+      downloadBlob('/api/v1/master-data/excel/template', 'master-data-template.xlsx'),
+    exportAll: () => downloadBlob('/api/v1/master-data/excel/export', 'master-data-export.xlsx'),
+    importExcel: async (file: File): Promise<MasterDataImportResult> =>
+      importMasterDataExcel('/api/v1/master-data/excel/import', file),
+    importChangeoverExcel: async (file: File, replace = true): Promise<MasterDataImportResult> =>
+      importMasterDataExcel('/api/v1/master-data/excel/changeover-import', file, replace),
+    importParallelOperationExcel: async (file: File, replace = true): Promise<MasterDataImportResult> =>
+      importMasterDataExcel('/api/v1/master-data/excel/parallel-operation-import', file, replace),
+  },
+  businessRuleExcel: {
+    downloadTemplate: (kind: string) =>
+      downloadBlob(`/api/v1/business-rules/excel/${kind}/template`, `${kind}-template.xlsx`),
+    exportRules: (kind: string) =>
+      downloadBlob(`/api/v1/business-rules/excel/${kind}/export`, `${kind}-export.xlsx`),
+    importRules: async (kind: string, file: File, replace = true): Promise<MasterDataImportResult> =>
+      importMasterDataExcel(`/api/v1/business-rules/excel/${kind}/import`, file, replace),
+  },
+};
+
+async function importMasterDataExcel(
+  path: string,
+  file: File,
+  replace = true,
+): Promise<MasterDataImportResult> {
+  const res = await fetch(`${path}?replace=${replace}`, {
+    method: 'POST',
+    headers: workspaceHeaders({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    }),
+    body: file,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP ${res.status}`);
+  }
+  return res.json() as Promise<MasterDataImportResult>;
+}

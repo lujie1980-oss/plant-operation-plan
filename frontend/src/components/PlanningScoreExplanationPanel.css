@@ -1,0 +1,91 @@
+.planning-score-panel {
+  margin-top: 0.5rem;
+}
+
+.planning-score-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.planning-score-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted, #666);
+}
+
+.planning-score-error {
+  color: var(--danger, #c0392b);
+  font-size: 0.9rem;
+}
+
+.planning-score-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.planning-score-badge {
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: var(--surface-2, #f0f2f5);
+}
+
+.planning-score-truncated {
+  font-size: 0.85rem;
+  color: var(--text-muted, #666);
+}
+
+.planning-score-group h4 {
+  margin: 0.5rem 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.planning-score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.planning-score-table th,
+.planning-score-table td {
+  border: 1px solid var(--border, #ddd);
+  padding: 0.35rem 0.5rem;
+  vertical-align: top;
+  text-align: left;
+}
+
+.planning-score-table th {
+  background: var(--surface-2, #f5f5f5);
+  font-weight: 600;
+}
+
+.planning-score-samples {
+  margin: 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+}
+
+.planning-score-samples code {
+  font-size: 0.8rem;
+}
+
+.planning-score-indicted {
+  color: var(--text-muted, #666);
+  font-size: 0.8rem;
+}
+
+.planning-score-more {
+  color: var(--text-muted, #666);
+  font-style: italic;
+}
+
+.planning-score-empty {
+  font-size: 0.9rem;
+  color: var(--text-muted, #666);
+}

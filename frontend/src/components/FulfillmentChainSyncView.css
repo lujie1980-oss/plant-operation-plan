@@ -1,0 +1,193 @@
+.chain-sync-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 唯一纵向滚动条 */
+.chain-sync-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.chain-sync-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  min-width: min-content;
+}
+
+.chain-sync-left {
+  flex: 0 0 340px;
+  width: 340px;
+  border-right: 1px solid #e2e8f0;
+  background: #fafbfc;
+  overflow: visible;
+}
+
+.chain-sync-left-header {
+  display: flex;
+  align-items: center;
+  padding: 0 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  background: linear-gradient(180deg, #f1f5f9 0%, #e8eef4 100%);
+  border-bottom: 1px solid #cbd5e1;
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  box-shadow: 0 1px 0 #cbd5e1;
+}
+
+.chain-sync-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.45rem 0 0;
+  box-sizing: border-box;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fff;
+}
+
+.chain-sync-row[role='button'] {
+  cursor: pointer;
+}
+
+.chain-sync-row.is-selected {
+  background: #eff6ff;
+  box-shadow: inset 3px 0 0 #3b82f6;
+}
+
+.chain-sync-row.type-inventory {
+  background: #f0fdf4;
+}
+
+.chain-sync-row.type-shortage {
+  background: #fef2f2;
+}
+
+.chain-sync-indent {
+  flex-shrink: 0;
+}
+
+.chain-sync-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  color: #1e293b;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chain-sync-meta-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.chain-sync-right {
+  flex: 1;
+  min-width: 480px;
+  overflow: visible;
+}
+
+/* 甘特：取消内部纵滚，由外层 chain-sync-scroll 统一滚动 */
+.chain-sync-view .sync-gantt {
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.chain-sync-view .sync-gantt.gantt-card {
+  border: none;
+  border-radius: 0;
+}
+
+.chain-sync-view .sync-gantt .gantt-container {
+  overflow: visible !important;
+  min-height: unset !important;
+}
+
+/* 日历表头与左侧「满足节点」同行 sticky（gantt-task-react 使用 CSS Modules 哈希类名） */
+.chain-sync-view .sync-gantt [class*='ganttVerticalContainer'] > svg:first-of-type {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: block;
+  background: linear-gradient(180deg, #f1f5f9 0%, #e8eef4 100%);
+  box-shadow: 0 1px 0 #cbd5e1;
+}
+
+.chain-sync-view .sync-gantt [class*='ganttVerticalContainer'] {
+  font-size: initial;
+}
+
+.chain-sync-view .sync-gantt [class*='wrapper'] {
+  overflow: visible !important;
+}
+
+.chain-sync-view .sync-gantt [class*='horizontalContainer'] {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+.chain-sync-view .sync-gantt [class*='ganttVerticalContainer'] {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+.chain-sync-view .sync-gantt [class*='scrollWrapper'] {
+  display: none !important;
+}
+
+.chain-sync-view .demand-tree-type {
+  flex-shrink: 0;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.chain-sync-view .demand-tree-type.sales_order {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.chain-sync-view .demand-tree-type.work_order {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.chain-sync-view .demand-tree-type.inventory {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.chain-sync-view .demand-tree-type.shortage {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.chain-sync-view .demand-tree-date {
+  color: #64748b;
+}
+
+.chain-sync-view .demand-tree-qty {
+  font-weight: 700;
+  color: #0f172a;
+}

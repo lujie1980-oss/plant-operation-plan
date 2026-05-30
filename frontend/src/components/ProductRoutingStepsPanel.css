@@ -1,0 +1,260 @@
+.routing-steps-panel {
+
+  flex: 1;
+
+  min-height: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  overflow: hidden;
+
+}
+
+
+
+.routing-steps-head {
+
+  margin: 0;
+
+  padding: 0.55rem 0.65rem;
+
+  font-size: 0.85rem;
+
+  color: #334155;
+
+  border-bottom: 1px solid #e2e8f0;
+
+  background: #f8fafc;
+
+  flex-shrink: 0;
+
+}
+
+
+
+.routing-steps-count {
+
+  margin-left: 0.5rem;
+
+  font-size: 0.75rem;
+
+  color: #64748b;
+
+  font-weight: normal;
+
+}
+
+
+
+.routing-tree-wrap {
+
+  flex: 1;
+
+  min-height: 0;
+
+  overflow: auto;
+
+}
+
+
+
+.routing-tree-table {
+
+  width: 100%;
+
+  border-collapse: collapse;
+
+  font-size: 0.78rem;
+
+}
+
+
+
+.routing-th {
+
+  position: sticky;
+
+  top: 0;
+
+  z-index: 1;
+
+  padding: 0.4rem 0.45rem;
+
+  text-align: left;
+
+  font-weight: 600;
+
+  color: #475569;
+
+  background: #f8fafc;
+
+  border-bottom: 1px solid #e2e8f0;
+
+  white-space: nowrap;
+
+}
+
+
+
+.routing-th-toggle {
+
+  width: 1.75rem;
+
+}
+
+
+
+.routing-tr-op {
+
+  background: #fff;
+
+}
+
+
+
+.routing-tr-op:hover {
+
+  background: #f8fafc;
+
+}
+
+
+
+.routing-tr-child {
+
+  background: #fafbfc;
+
+}
+
+
+
+.routing-tr-resource .routing-td-child-label {
+
+  color: #1d4ed8;
+
+  font-weight: 600;
+
+}
+
+
+
+.routing-tr-line .routing-td-child-label {
+
+  color: #047857;
+
+  font-weight: 600;
+
+}
+
+
+
+.routing-td {
+
+  padding: 0.35rem 0.45rem;
+
+  border-bottom: 1px solid #f1f5f9;
+
+  color: #334155;
+
+  vertical-align: middle;
+
+}
+
+
+
+.routing-td-toggle {
+
+  width: 1.75rem;
+
+  padding-left: 0.35rem;
+
+}
+
+
+
+.routing-td-seq {
+
+  font-weight: 700;
+
+  color: #1d4ed8;
+
+  text-align: center;
+
+  width: 2.5rem;
+
+}
+
+
+
+.routing-td-op {
+
+  font-weight: 600;
+
+  color: #0f172a;
+
+}
+
+
+
+.routing-td-num {
+
+  text-align: right;
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+
+
+.routing-td-id {
+
+  font-size: 0.72rem;
+
+  color: #64748b;
+
+  word-break: break-all;
+
+}
+
+
+
+.routing-toggle {
+
+  width: 1.1rem;
+
+  height: 1.1rem;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #64748b;
+
+  font-size: 0.75rem;
+
+  cursor: pointer;
+
+  border-radius: 4px;
+
+}
+
+
+
+.routing-toggle:hover {
+
+  background: #e2e8f0;
+
+}
+
+
+
+.routing-toggle.spacer {
+
+  display: inline-block;
+
+}
+

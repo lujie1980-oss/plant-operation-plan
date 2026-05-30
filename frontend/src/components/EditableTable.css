@@ -1,0 +1,153 @@
+.editable-table {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.editable-table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.editable-table-toolbar .input {
+  min-width: 200px;
+}
+
+.editable-table-count {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.editable-table-toolbar-spacer {
+  flex: 1;
+}
+
+.editable-table-error {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.82rem;
+  margin-bottom: 0.5rem;
+}
+
+.editable-table-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.md-table {
+  width: 100%;
+  font-size: 0.82rem;
+  table-layout: fixed;
+}
+
+.md-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f8fafc;
+  box-shadow: 0 1px 0 #e2e8f0;
+  font-size: 0.78rem;
+}
+
+.md-table tbody tr.md-row-editing {
+  background: #eff6ff;
+}
+
+.md-table tbody tr.md-row-new {
+  background: #ecfdf5;
+}
+
+.md-required {
+  color: #ef4444;
+  margin-left: 0.15rem;
+}
+
+.md-muted {
+  color: #94a3b8;
+}
+
+.md-warn-col {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.md-bom-warn {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 6px;
+  padding: 0.1rem 0.45rem;
+}
+
+.md-table tbody tr.md-row-has-warn:not(.md-row-editing) {
+  background: #fffbeb;
+}
+
+tr.md-row-highlight td {
+  background: #dbeafe !important;
+  box-shadow: inset 3px 0 0 #2563eb;
+}
+
+.md-readonly {
+  color: #475569;
+  font-family: ui-monospace, monospace;
+}
+
+.md-input {
+  width: 100%;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  background: #fff;
+}
+
+.md-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.md-actions-col {
+  width: 168px;
+  white-space: nowrap;
+}
+
+.md-btn {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.76rem;
+  margin-right: 0.25rem;
+}
+
+.md-btn:last-child {
+  margin-right: 0;
+}
+
+.md-btn.danger {
+  color: #b91c1c;
+  border-color: #fecaca;
+  background: #fff;
+}
+
+.md-btn.danger:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+.md-empty {
+  margin: 1.5rem;
+  text-align: center;
+}

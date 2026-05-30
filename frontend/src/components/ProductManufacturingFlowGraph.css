@@ -1,0 +1,580 @@
+.mfg-flow-graph {
+
+  display: flex;
+
+  flex-direction: column;
+
+  flex: 1;
+
+  min-height: 0;
+
+  background: #fafbfc;
+
+}
+
+
+
+.mfg-flow-legend {
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  align-items: center;
+
+  gap: 0.75rem;
+
+  padding: 0.35rem 0.65rem;
+
+  font-size: 0.68rem;
+
+  color: #64748b;
+
+  border-bottom: 1px solid #e2e8f0;
+
+  background: #f8fafc;
+
+  flex-shrink: 0;
+
+}
+
+
+
+.mfg-flow-legend .legend-triangle {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 2px solid transparent;
+  border-right: 2px solid transparent;
+  border-bottom: 3px solid #86efac;
+  margin-right: 0.3rem;
+  vertical-align: middle;
+}
+
+
+
+.mfg-flow-legend .legend-rect {
+
+  display: inline-block;
+
+  width: 12px;
+
+  height: 8px;
+
+  border: 1.5px solid #93c5fd;
+
+  border-radius: 3px;
+
+  background: #eff6ff;
+
+  margin-right: 0.3rem;
+
+  vertical-align: middle;
+
+}
+
+
+
+.mfg-flow-legend .legend-hint {
+
+  color: #94a3b8;
+
+  font-size: 0.65rem;
+
+}
+
+
+
+.mfg-flow-zoom-controls {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 0.25rem;
+
+  margin-left: auto;
+
+  flex-shrink: 0;
+
+}
+
+
+
+.mfg-zoom-btn {
+
+  appearance: none;
+
+  border: 1px solid #cbd5e1;
+
+  background: #fff;
+
+  color: #334155;
+
+  border-radius: 6px;
+
+  min-width: 1.65rem;
+
+  height: 1.55rem;
+
+  padding: 0 0.35rem;
+
+  font-size: 0.82rem;
+
+  font-weight: 600;
+
+  line-height: 1;
+
+  cursor: pointer;
+
+}
+
+
+
+.mfg-zoom-btn:hover:not(:disabled) {
+
+  background: #f1f5f9;
+
+  border-color: #94a3b8;
+
+}
+
+
+
+.mfg-zoom-btn:disabled {
+
+  opacity: 0.45;
+
+  cursor: not-allowed;
+
+}
+
+
+
+.mfg-zoom-btn.mfg-zoom-reset {
+
+  min-width: auto;
+
+  padding: 0 0.45rem;
+
+  font-size: 0.68rem;
+
+  font-weight: 500;
+
+  margin-left: 0.15rem;
+
+}
+
+
+
+.mfg-zoom-label {
+
+  min-width: 2.75rem;
+
+  text-align: center;
+
+  font-size: 0.72rem;
+
+  font-weight: 600;
+
+  color: #475569;
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+
+
+.mfg-flow-scroll {
+
+  flex: 1;
+
+  min-height: 0;
+
+  overflow: auto;
+
+  cursor: default;
+
+}
+
+
+
+.mfg-flow-zoom-layer {
+
+  display: flex;
+
+  justify-content: flex-start;
+
+  align-items: center;
+
+  min-width: max-content;
+
+  min-height: max-content;
+
+  padding: 0.85rem 1rem;
+
+  zoom: var(--mfg-zoom, 1);
+
+}
+
+
+
+@supports not (zoom: 1) {
+
+  .mfg-flow-zoom-layer {
+
+    zoom: unset;
+
+    transform: scale(var(--mfg-zoom, 1));
+
+    transform-origin: left center;
+
+  }
+
+}
+
+
+
+.mfg-flow-canvas {
+
+  display: flex;
+
+  align-items: center;
+
+}
+
+
+
+/* ── 从左到右的 stage 布局 ── */
+
+.mfg-stage-lr {
+
+  display: flex;
+
+  flex-direction: row;
+
+  align-items: center;
+
+  flex-wrap: nowrap;
+
+}
+
+
+
+.mfg-stage-inputs {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: stretch;
+
+  justify-content: center;
+
+  gap: 0.65rem;
+
+  position: relative;
+
+}
+
+
+
+.mfg-stage-inputs.count-1 {
+
+  gap: 0;
+
+}
+
+
+
+.mfg-input-branch-lr {
+
+  display: flex;
+
+  flex-direction: row;
+
+  align-items: center;
+
+}
+
+
+
+.mfg-merge-bar {
+
+  position: absolute;
+
+  right: -0.35rem;
+
+  top: 10%;
+
+  bottom: 10%;
+
+  width: 1.5px;
+
+  background: #94a3b8;
+
+  pointer-events: none;
+
+}
+
+
+
+.mfg-stage-inputs.count-1 .mfg-merge-bar {
+
+  display: none;
+
+}
+
+
+
+/* ── 物料：向上三角形（尖头朝上） ── */
+.mfg-material-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  cursor: default;
+  max-width: 4.5rem;
+  flex-shrink: 0;
+}
+
+.mfg-triangle-shape {
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 11px solid #bbf7d0;
+  filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.06));
+  flex-shrink: 0;
+}
+
+.mfg-material-node.kind-raw .mfg-triangle-shape {
+  border-bottom-color: #86efac;
+}
+
+.mfg-material-node.kind-semi .mfg-triangle-shape {
+  border-bottom-color: #fcd34d;
+}
+
+.mfg-material-node.kind-finished .mfg-triangle-shape {
+  border-bottom-color: #60a5fa;
+}
+
+.mfg-material-code {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.2;
+  text-align: center;
+  word-break: break-all;
+  max-width: 4.5rem;
+}
+
+
+
+/* ── 工序组 ── */
+
+.mfg-ops-group-box {
+
+  border: 1.5px dashed #93c5fd;
+
+  border-radius: 8px;
+
+  padding: 0.3rem 0.35rem;
+
+  background: rgba(239, 246, 255, 0.45);
+
+  flex-shrink: 0;
+
+}
+
+
+
+.mfg-ops-row {
+
+  display: flex;
+
+  flex-direction: row;
+
+  align-items: center;
+
+  flex-wrap: nowrap;
+
+  gap: 0;
+
+}
+
+
+
+.mfg-op-chain-item {
+
+  display: flex;
+
+  flex-direction: row;
+
+  align-items: center;
+
+}
+
+
+
+.mfg-operation-node {
+
+  min-width: 3.5rem;
+
+  max-width: 5rem;
+
+  min-height: 1.5rem;
+
+  padding: 0.2rem 0.35rem;
+
+  border-radius: 8px;
+
+  border: 1.5px solid #93c5fd;
+
+  background: #eff6ff;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  box-shadow: 0 1px 1px rgba(29, 78, 216, 0.06);
+
+  cursor: default;
+
+  flex-shrink: 0;
+
+}
+
+
+
+.mfg-operation-name {
+
+  font-size: 0.62rem;
+
+  font-weight: 600;
+
+  color: #0f172a;
+
+  line-height: 1.15;
+
+  text-align: center;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  display: -webkit-box;
+
+  -webkit-line-clamp: 2;
+
+  -webkit-box-orient: vertical;
+
+  word-break: break-all;
+
+}
+
+
+
+/* ── 连接线（左→右） ── */
+
+.mfg-connector {
+
+  flex-shrink: 0;
+
+  background: #94a3b8;
+
+}
+
+
+
+.mfg-connector-right {
+
+  width: 0.75rem;
+
+  height: 1.5px;
+
+  margin: 0 0.15rem;
+
+  position: relative;
+
+  align-self: center;
+
+}
+
+
+
+.mfg-connector-right::after {
+
+  content: '';
+
+  position: absolute;
+
+  right: -1px;
+
+  top: -3px;
+
+  border-top: 4px solid transparent;
+
+  border-bottom: 4px solid transparent;
+
+  border-left: 5px solid #94a3b8;
+
+}
+
+
+
+@media (max-width: 900px) {
+
+  .mfg-stage-lr {
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+  }
+
+
+
+  .mfg-connector-right {
+
+    width: 1.5px;
+
+    height: 0.65rem;
+
+    margin: 0.15rem 0;
+
+  }
+
+
+
+  .mfg-connector-right::after {
+
+    right: -3px;
+
+    top: auto;
+
+    bottom: -1px;
+
+    border-left: 4px solid transparent;
+
+    border-right: 4px solid transparent;
+
+    border-top: 5px solid #94a3b8;
+
+    border-bottom: none;
+
+  }
+
+
+
+  .mfg-merge-bar {
+
+    display: none;
+
+  }
+
+}
+

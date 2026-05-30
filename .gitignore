@@ -1,0 +1,27 @@
+# Build
+target/
+frontend/node_modules/
+frontend/dist/
+
+# Local database & imports
+data/
+.import-tmp/
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Env / secrets
+.env
+.env.*
+
+# Large local extract outputs (regenerate via tools/)
+tools/dunan_extracted.json
+tools/*_extracted.json
+.gh-auth-log.txt

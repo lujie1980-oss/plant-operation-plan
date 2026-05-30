@@ -1,0 +1,56 @@
+.plan-diagnostics-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.plan-diagnostics-intro {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.plan-diagnostics-section h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+}
+
+.plan-diagnostics-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.plan-diagnostics-check {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.plan-diagnostics-cutoff {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.plan-diagnostics-cutoff .input {
+  width: auto;
+}
+
+.plan-diagnostics-score {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.plan-diagnostics-score h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}

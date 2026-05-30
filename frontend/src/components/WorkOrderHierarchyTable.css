@@ -1,0 +1,99 @@
+.wo-tree-panel {
+  flex: 1;
+  min-height: 0;
+}
+
+.wo-tree-table {
+  width: 100%;
+}
+
+.wo-tree-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+  box-shadow: 0 1px 0 #e2e8f0;
+  font-size: 0.78rem;
+}
+
+.wo-tree-td {
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.82rem;
+}
+
+.wo-tree-td-toggle {
+  width: 1.75rem;
+  padding-left: 0.25rem;
+  padding-right: 0;
+}
+
+.wo-tree-td-check {
+  width: 40px;
+  text-align: center;
+}
+
+.wo-tree-td-num {
+  text-align: right;
+}
+
+.wo-tree-td-timing {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.wo-tree-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.wo-tree-toggle.spacer {
+  display: inline-block;
+  width: 1.25rem;
+}
+
+.wo-tree-toggle:hover {
+  color: #2563eb;
+}
+
+.wo-tree-label {
+  display: inline-block;
+}
+
+.wo-tree-table tbody tr {
+  cursor: pointer;
+}
+
+.wo-tree-table tbody tr:hover {
+  background: #f1f5f9;
+}
+
+.wo-tree-table tbody tr.checked {
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.wo-tree-table tbody tr.active {
+  background: #eff6ff;
+}
+
+.wo-tree-table tbody tr.active td {
+  font-weight: 600;
+}
+
+.wo-tree-empty {
+  margin: 1rem 0;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}

@@ -1,0 +1,19 @@
+.plan-diagnostics-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.plan-diagnostics-page .page-header {
+  flex-shrink: 0;
+}
+
+.plan-diagnostics-page-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.15rem;
+}

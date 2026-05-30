@@ -1,0 +1,168 @@
+.app-shell {
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.content-column {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content-topbar {
+  flex-shrink: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1.25rem;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.content-topbar-link {
+  font-size: 0.8125rem;
+  color: #3b82f6;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.content-topbar-link:hover {
+  text-decoration: underline;
+}
+
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+  padding: 1.25rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+.brand-title {
+  display: block;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+}
+
+.brand-sub {
+  display: block;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.nav-link {
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.nav-link.active {
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+}
+
+.nav-group {
+  margin-top: 0.15rem;
+}
+
+.nav-group-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.nav-group-head:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-group-head.is-active-group {
+  color: #93c5fd;
+}
+
+.nav-group-chevron {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.nav-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: 0.1rem 0 0.35rem 0.5rem;
+  padding-left: 0.35rem;
+  border-left: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.nav-link-sub {
+  font-size: 0.8125rem;
+  padding: 0.45rem 0.65rem;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--ui-gap-md) var(--ui-gap-lg);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  background: #f1f5f9;
+}
+
+/* 需求满足 / 产能平衡 / 需求跟踪：主区域不整体滚动，由内部面板滚动 */
+.main:has(.demand-page),
+.main:has(.capacity-page),
+.main:has(.mrp-page),
+.main:has(.production-plan-page),
+.main:has(.demand-tracking-page),
+.main:has(.detail-schedule-page),
+.main:has(.plan-params-page),
+.main:has(.plan-objectives-page),
+.main:has(.business-rules-page),
+.main:has(.plan-diagnostics-page) {
+  overflow: hidden;
+  padding: 0.5rem 0.65rem;
+}

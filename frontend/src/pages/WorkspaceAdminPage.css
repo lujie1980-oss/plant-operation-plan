@@ -1,0 +1,72 @@
+.workspace-admin-page {
+  padding: 1rem 1.25rem 2rem;
+}
+
+.workspace-admin-hint {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: #f0f9ff;
+  color: #0c4a6e;
+}
+
+.workspace-admin-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.workspace-admin-card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.workspace-admin-form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 420px;
+}
+
+.workspace-admin-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.workspace-admin-form input {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}
+
+.workspace-admin-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.workspace-admin-list-head h2 {
+  margin: 0;
+}
+
+.workspace-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.workspace-admin-table th,
+.workspace-admin-table td {
+  text-align: left;
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.btn.danger {
+  color: #b91c1c;
+  border-color: #fecaca;
+}

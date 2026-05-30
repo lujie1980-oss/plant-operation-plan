@@ -1,0 +1,167 @@
+import { useMemo, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { WorkspaceSelector } from './WorkspaceSelector';
+import './Layout.css';
+
+type NavLinkItem = { to: string; label: string; end?: boolean };
+
+type NavGroup = {
+  id: string;
+  label: string;
+  items: NavLinkItem[];
+};
+
+const TOP_NAV: NavLinkItem[] = [{ to: '/', label: '首页', end: true }];
+
+const DATA_GROUP: NavGroup = {
+  id: 'data',
+  label: '数据管理',
+  items: [
+    { to: '/master-data', label: '主数据', end: true },
+    { to: '/business-data', label: '业务数据', end: true },
+  ],
+};
+
+const BUSINESS_RULES_GROUP: NavGroup = {
+  id: 'business-rules',
+  label: '业务规则',
+  items: [
+    { to: '/business-rules/production', label: '生产规则' },
+    { to: '/business-rules/capacity', label: '产能规则' },
+    { to: '/business-rules/material', label: '物料规则' },
+    { to: '/business-rules/labor', label: '人力规则' },
+    { to: '/business-rules/demand', label: '需求规则' },
+  ],
+};
+
+const MASTER_PLAN_GROUP: NavGroup = {
+  id: 'master-plan',
+  label: '主计划',
+  items: [
+    { to: '/master-plan/parameters', label: '计划参数' },
+    { to: '/master-plan/objectives', label: '优化目标' },
+    { to: '/master-plan/plan-run', label: '计划运行' },
+    { to: '/master-plan/scenario-comparison', label: '场景对比' },
+  ],
+};
+
+const PLAN_ANALYSIS_GROUP: NavGroup = {
+  id: 'plan-analysis',
+  label: '计划分析',
+  items: [
+    { to: '/master-plan/analysis/demand', label: '需求满足' },
+    { to: '/master-plan/analysis/capacity', label: '产能平衡' },
+    { to: '/master-plan/analysis/material', label: '物料需求' },
+    { to: '/master-plan/analysis/work-orders', label: '生产工单' },
+    { to: '/master-plan/analysis/diagnostics', label: '推演诊断' },
+  ],
+};
+
+const SCHEDULING_GROUP: NavGroup = {
+  id: 'scheduling',
+  label: '生产排程',
+  items: [
+    { to: '/scheduling/parameters', label: '计划参数' },
+    { to: '/scheduling/kitting', label: '物料齐套' },
+    { to: '/scheduling/detail-schedule', label: '生产排程' },
+    { to: '/scheduling/scenario-comparison', label: '场景对比' },
+  ],
+};
+
+const ALL_GROUPS = [DATA_GROUP, BUSINESS_RULES_GROUP, MASTER_PLAN_GROUP, PLAN_ANALYSIS_GROUP, SCHEDULING_GROUP];
+
+function groupActive(group: NavGroup, pathname: string) {
+  if (group.id === 'plan-analysis' && pathname.startsWith('/master-plan/analysis')) {
+    return true;
+  }
+  return group.items.some((item) => pathname === item.to || pathname.startsWith(`${item.to}/`));
+}
+
+export function Layout() {
+  const { pathname } = useLocation();
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    for (const g of ALL_GROUPS) {
+      init[g.id] = groupActive(g, pathname);
+    }
+    return init;
+  });
+
+  const openGroups = useMemo(() => {
+    const next = { ...expanded };
+    for (const g of ALL_GROUPS) {
+      if (groupActive(g, pathname)) {
+        next[g.id] = true;
+      }
+    }
+    return next;
+  }, [pathname, expanded]);
+
+  const toggleGroup = (id: string) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="brand">
+          <span className="brand-title">工厂运营计划</span>
+          <span className="brand-sub">APS · Timefold</span>
+        </div>
+        <nav className="nav">
+          {TOP_NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+
+          {ALL_GROUPS.map((group) => (
+            <div key={group.id} className="nav-group">
+              <button
+                type="button"
+                className={`nav-group-head ${groupActive(group, pathname) ? 'is-active-group' : ''}`}
+                onClick={() => toggleGroup(group.id)}
+                aria-expanded={openGroups[group.id]}
+              >
+                <span>{group.label}</span>
+                <span className="nav-group-chevron">{openGroups[group.id] ? '▾' : '▸'}</span>
+              </button>
+              {openGroups[group.id] && (
+                <div className="nav-group-items">
+                  {group.items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.end}
+                      className={({ isActive }) =>
+                        isActive ? 'nav-link nav-link-sub active' : 'nav-link nav-link-sub'
+                      }
+                    >
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </nav>
+      </aside>
+      <div className="content-column">
+        <header className="content-topbar">
+          <WorkspaceSelector />
+          <Link to="/workspaces" className="content-topbar-link">
+            管理数据集
+          </Link>
+        </header>
+        <main className="main">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}

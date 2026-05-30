@@ -1,0 +1,62 @@
+.gantt-card {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.gantt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.gantt-toolbar h3 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.gantt-view-modes {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.gantt-view-modes button {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.gantt-view-modes button.active {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+}
+
+.gantt-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  min-height: 200px;
+  flex: 1;
+  min-height: 0;
+}
+
+.gantt-list-header-custom {
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  box-sizing: border-box;
+}
+

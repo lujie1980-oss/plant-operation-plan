@@ -1,0 +1,122 @@
+.demand-tracking-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.demand-tracking-page .page-header,
+.demand-tracking-page .status-banner {
+  flex-shrink: 0;
+}
+
+.demand-tracking-page .dt-split {
+  flex: 1;
+  min-height: 0;
+}
+
+.demand-tracking-page .dt-table-panel,
+.demand-tracking-page .dt-detail-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  margin-bottom: 0;
+  padding: 0.75rem 1rem;
+  overflow: hidden;
+}
+
+.demand-tracking-page .panel-title {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.demand-tracking-page .dt-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.demand-tracking-page .dt-table tbody tr {
+  cursor: pointer;
+}
+
+.demand-tracking-page .dt-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.demand-tracking-page .dt-table tbody tr.selected {
+  background: #eff6ff;
+}
+
+.demand-tracking-page .dt-flow-cell {
+  min-width: 420px;
+  padding: 0.35rem 0.5rem;
+}
+
+.dt-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 100px;
+}
+
+.dt-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--accent, #2563eb);
+  border-radius: 4px;
+  max-width: 80px;
+}
+
+.dt-progress span {
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  min-width: 36px;
+}
+
+.dt-detail-head {
+  flex-shrink: 0;
+  margin-bottom: 0.75rem;
+}
+
+.dt-detail-sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.dt-detail-section {
+  flex-shrink: 0;
+  margin-bottom: 0.75rem;
+}
+
+.dt-detail-section h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.dt-process-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.dt-process-section .process-path-graph {
+  flex: 1;
+  min-height: 0;
+}
+
+.dt-detail-panel {
+  overflow: auto;
+}
+
+.dt-detail-empty {
+  margin: auto;
+  text-align: center;
+}

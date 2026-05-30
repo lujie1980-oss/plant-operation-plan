@@ -1,0 +1,130 @@
+.wo-sched-gantt {
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  height: 100%;
+}
+
+.wo-sched-gantt-legend {
+  display: flex;
+  gap: 0.65rem;
+  font-size: 0.68rem;
+  color: #64748b;
+  padding-bottom: 0.35rem;
+}
+
+.wo-sched-leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.wo-sched-leg::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.wo-sched-leg.frozen::before {
+  background: #7c3aed;
+}
+
+.wo-sched-leg.suggestion::before {
+  background: #3b82f6;
+}
+
+.wo-sched-gantt-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.wo-sched-gantt-empty {
+  margin: 1.5rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.88rem;
+}
+
+.wo-sched-gantt-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.wo-sched-gantt-header,
+.wo-sched-gantt-row {
+  display: grid;
+  align-items: stretch;
+}
+
+.wo-sched-gantt-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.wo-sched-corner,
+.wo-sched-row-label {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.wo-sched-row-label {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #fafbfc;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.wo-sched-time-axis {
+  display: flex;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.wo-sched-day-tick {
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 0.68rem;
+  color: #64748b;
+  border-left: 1px solid #f1f5f9;
+  padding-top: 0.35rem;
+}
+
+.wo-sched-track {
+  position: relative;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.wo-sched-bar {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: calc((100% - 8px) * var(--gantt-bar-height-ratio));
+  min-height: 8px;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 0.65rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.15);
+}
+
+.wo-sched-bar-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

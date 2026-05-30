@@ -1,0 +1,5984 @@
+{
+  "物料基本资料": [
+    {
+      "part_id": "TX674001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 223.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 447,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "GX882002",
+      "parent_qty": 384
+    },
+    {
+      "part_id": "SV209001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 399,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 399,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "DD084003",
+      "parent_qty": 369
+    },
+    {
+      "part_id": "SV582001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 153.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 307,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "DC714002",
+      "parent_qty": 374
+    },
+    {
+      "part_id": "SV580002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 307,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 307,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "KT252001",
+      "parent_qty": 384
+    },
+    {
+      "part_id": "KT123001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 109.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 219,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "KG234002",
+      "parent_qty": 366
+    },
+    {
+      "part_id": "LP088003",
+      "part_name": "#REF!",
+      "safety_stock_qty": 219,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 219,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "GH956001",
+      "parent_qty": 402
+    },
+    {
+      "part_id": "MB451001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 97.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 195,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "HC991002",
+      "parent_qty": 332
+    },
+    {
+      "part_id": "LP089003",
+      "part_name": "#REF!",
+      "safety_stock_qty": 195,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 195,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "LP088003",
+      "parent_qty": 219
+    },
+    {
+      "part_id": "P0283001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 125,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 250,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "LP089003",
+      "parent_qty": 195
+    },
+    {
+      "part_id": "P1555002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 250,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 250,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "KT415007",
+      "parent_qty": 200
+    },
+    {
+      "part_id": "P0283001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 172.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 345,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "RD507005",
+      "parent_qty": 315
+    },
+    {
+      "part_id": "GG080001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 256,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 256,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "SM548003",
+      "parent_qty": 352
+    },
+    {
+      "part_id": "P0283001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 167,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 334,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "RN696001",
+      "parent_qty": 240
+    },
+    {
+      "part_id": "GG081001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 256,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 256,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "SV580002",
+      "parent_qty": 307
+    },
+    {
+      "part_id": "DC535003",
+      "part_name": "#REF!",
+      "safety_stock_qty": 167,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 334,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "SV209001",
+      "parent_qty": 399
+    },
+    {
+      "part_id": "DP010002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 320,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 320,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "SX443001",
+      "parent_qty": 299
+    },
+    {
+      "part_id": "DC535003",
+      "part_name": "#REF!",
+      "safety_stock_qty": 167,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 334,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "SX658001",
+      "parent_qty": 309
+    },
+    {
+      "part_id": "FK453001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 320,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 320,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "TN556002",
+      "parent_qty": 356
+    },
+    {
+      "part_id": "SHA2615001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 386,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 386,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "TN277002",
+      "parent_qty": 260
+    },
+    {
+      "part_id": "SHA1735001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 193,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 386,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "UR827001",
+      "parent_qty": 240
+    },
+    {
+      "part_id": "FH750001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 386,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 386,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "UR828001",
+      "parent_qty": 240
+    },
+    {
+      "part_id": "SHA1735001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 193,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 386,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "UV690001",
+      "parent_qty": 369
+    },
+    {
+      "part_id": "DN841001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 218.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 437,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": "UV694001",
+      "parent_qty": 216
+    },
+    {
+      "part_id": "FK477001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 360,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 360,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "DD087001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 184.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 369,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "DD084003",
+      "part_name": "#REF!",
+      "safety_stock_qty": 369,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 369,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "DD087001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 184.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 369,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "GX882002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 384,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 384,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "HC992002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 165,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 330,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "KX543002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 330,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 330,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "EK938004",
+      "part_name": "#REF!",
+      "safety_stock_qty": 85,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 170,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "EK915004",
+      "part_name": "#REF!",
+      "safety_stock_qty": 170,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 170,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "HC992002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 186.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 373,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "HC991002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 332,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 332,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "GH958001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 201,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 402,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "GH956001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 402,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 402,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "DZ071003",
+      "part_name": "#REF!",
+      "safety_stock_qty": 237,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 474,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "FA566005",
+      "part_name": "#REF!",
+      "safety_stock_qty": 355,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 355,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "KG231001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 183,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 366,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "KG234002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 366,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 366,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "FF935001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 150,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 300,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "FF924001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 300,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 300,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "KT416002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 100,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 200,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "KT415007",
+      "part_name": "#REF!",
+      "safety_stock_qty": 200,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 200,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "TD713001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 72,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 144,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "TD574002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 230,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 230,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "TD713001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 72,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 144,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "TD575002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 144,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 144,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "DC717001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 187,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 374,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "DC714002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 374,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 374,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "DC717001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 187,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 374,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "KT252001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 384,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 384,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "DD087001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 184.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 369,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "ST708001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 150,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 300,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "SU419001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 326,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 326,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": 16490315,
+      "part_name": "#REF!",
+      "safety_stock_qty": 108,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 216,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": 16490315,
+      "part_name": "#REF!",
+      "safety_stock_qty": 108,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 216,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "MS942001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 216,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 216,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": 16490315,
+      "part_name": "#REF!",
+      "safety_stock_qty": 108,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 216,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "MS943001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 216,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 216,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "HW361003",
+      "part_name": "#REF!",
+      "safety_stock_qty": 210.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 421,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "HW404007",
+      "part_name": "#REF!",
+      "safety_stock_qty": 394,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 394,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "HC992002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 147.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 295,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "LZ046001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 332,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 332,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "HC992002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 147.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 295,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "NH847001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 332,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 332,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "SX439001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 149.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 299,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "SX443001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 299,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 299,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "SX659001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 154.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 309,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "SX658001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 309,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 309,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "MC004002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 183.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 367,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "RN696001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 240,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 240,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "MC004002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 183.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 367,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "MC178004",
+      "part_name": "#REF!",
+      "safety_stock_qty": 372,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 372,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "MC004002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 183.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 367,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "NZ015001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 240,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 240,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "RD559002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 157.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 315,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "SM548003",
+      "part_name": "#REF!",
+      "safety_stock_qty": 352,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 352,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "RD559002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 157.5,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 315,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "RD507005",
+      "part_name": "#REF!",
+      "safety_stock_qty": 315,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 315,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "TN539001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 130,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 260,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "TN277002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 260,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 260,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "TN274001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 133,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 266,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "TN556002",
+      "part_name": "#REF!",
+      "safety_stock_qty": 356,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 356,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "UR831001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 120,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 240,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "UR827001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 240,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 240,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "UR831001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 120,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 240,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "UR828001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 240,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 240,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "DD087001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 180,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 369,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "UV690001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 369,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 360,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": 16490315,
+      "part_name": "#REF!",
+      "safety_stock_qty": 125,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 255,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    },
+    {
+      "part_id": "UV694001",
+      "part_name": "#REF!",
+      "safety_stock_qty": 216,
+      "unit": "PC",
+      "part_type": "M",
+      "max_lot_size": 0,
+      "min_lot_size": null,
+      "inc_lot_size": 216,
+      "is_phantom": 0,
+      "fixed_lead_time": 1,
+      "consolidate_day": 1,
+      "parent_part_id": null,
+      "parent_qty": null
+    }
+  ],
+  "物料清单": [
+    {
+      "output_part_id": "TX674001",
+      "input_part_id": "TX674001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SV209001",
+      "input_part_id": "SV209001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SV582001",
+      "input_part_id": "SV582001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SV580002",
+      "input_part_id": "SV580002",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "KT123001",
+      "input_part_id": "KT123001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "LP088003",
+      "input_part_id": "LP088003",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "MB451001",
+      "input_part_id": "MB451001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "LP089003",
+      "input_part_id": "LP089003",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "P0283001",
+      "input_part_id": "P0283001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "P1555002",
+      "input_part_id": "P1555002",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "P0283001",
+      "input_part_id": "P0283001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "GG080001",
+      "input_part_id": "GG080001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "P0283001",
+      "input_part_id": "P0283001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "GG081001",
+      "input_part_id": "GG081001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DC535003",
+      "input_part_id": "DC535003",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DP010002",
+      "input_part_id": "DP010002",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DC535003",
+      "input_part_id": "DC535003",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "FK453001",
+      "input_part_id": "FK453001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "W8775002",
+      "input_part_id": "W8775002",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "CB680001",
+      "input_part_id": "CB680001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DP314001",
+      "input_part_id": "DP314001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SHA1735001",
+      "input_part_id": "SHA1735001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SHA2615001",
+      "input_part_id": "SHA2615001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SHA1735001",
+      "input_part_id": "SHA1735001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "FH750001",
+      "input_part_id": "FH750001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SHA1735001",
+      "input_part_id": "SHA1735001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DN841001",
+      "input_part_id": "DN841001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "FK477001",
+      "input_part_id": "FK477001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DD087001",
+      "input_part_id": "DD087001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DD084003",
+      "input_part_id": "DD084003",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DD087001",
+      "input_part_id": "DD087001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "GX882002",
+      "input_part_id": "GX882002",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "HC992002",
+      "input_part_id": "HC992002",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "KX543002",
+      "input_part_id": "KX543002",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "EK938004",
+      "input_part_id": "EK938004",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "EK915004",
+      "input_part_id": "EK915004",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "HC992002",
+      "input_part_id": "HC992002",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "HC991002",
+      "input_part_id": "HC991002",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "GH958001",
+      "input_part_id": "GH958001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "GH956001",
+      "input_part_id": "GH956001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DZ071003",
+      "input_part_id": "DZ071003",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "FA566005",
+      "input_part_id": "FA566005",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "KG231001",
+      "input_part_id": "KG231001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "KG234002",
+      "input_part_id": "KG234002",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "FF935001",
+      "input_part_id": "FF935001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "FF924001",
+      "input_part_id": "FF924001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "KT416002",
+      "input_part_id": "KT416002",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "KT415007",
+      "input_part_id": "KT415007",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "TD713001",
+      "input_part_id": "TD713001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "TD574002",
+      "input_part_id": "TD574002",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "TD713001",
+      "input_part_id": "TD713001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "TD575002",
+      "input_part_id": "TD575002",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DC717001",
+      "input_part_id": "DC717001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DC714002",
+      "input_part_id": "DC714002",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DC717001",
+      "input_part_id": "DC717001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "KT252001",
+      "input_part_id": "KT252001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DD087001",
+      "input_part_id": "DD087001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "UV691001",
+      "input_part_id": "UV691001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "ST708001",
+      "input_part_id": "ST708001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SU419001",
+      "input_part_id": "SU419001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": 16490315,
+      "input_part_id": 16490315,
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "UV695001",
+      "input_part_id": "UV695001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": 16490315,
+      "input_part_id": 16490315,
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "MS942001",
+      "input_part_id": "MS942001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": 16490315,
+      "input_part_id": 16490315,
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "MS943001",
+      "input_part_id": "MS943001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "HW361003",
+      "input_part_id": "HW361003",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "HW404007",
+      "input_part_id": "HW404007",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "HC992002",
+      "input_part_id": "HC992002",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "LZ046001",
+      "input_part_id": "LZ046001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "HC992002",
+      "input_part_id": "HC992002",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "NH847001",
+      "input_part_id": "NH847001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SX439001",
+      "input_part_id": "SX439001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SX443001",
+      "input_part_id": "SX443001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SX659001",
+      "input_part_id": "SX659001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SX658001",
+      "input_part_id": "SX658001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "MC004002",
+      "input_part_id": "MC004002",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "RN696001",
+      "input_part_id": "RN696001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "MC004002",
+      "input_part_id": "MC004002",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "MC178004",
+      "input_part_id": "MC178004",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "MC004002",
+      "input_part_id": "MC004002",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "NZ015001",
+      "input_part_id": "NZ015001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "RD559002",
+      "input_part_id": "RD559002",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "SM548003",
+      "input_part_id": "SM548003",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "RD559002",
+      "input_part_id": "RD559002",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "RD507005",
+      "input_part_id": "RD507005",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "TN539001",
+      "input_part_id": "TN539001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "TN277002",
+      "input_part_id": "TN277002",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "TN274001",
+      "input_part_id": "TN274001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "TN556002",
+      "input_part_id": "TN556002",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "UR831001",
+      "input_part_id": "UR831001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "UR827001",
+      "input_part_id": "UR827001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "UR831001",
+      "input_part_id": "UR831001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "UR828001",
+      "input_part_id": "UR828001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "DD087001",
+      "input_part_id": "DD087001",
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "UV690001",
+      "input_part_id": "UV690001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": 16490315,
+      "input_part_id": 16490315,
+      "sequence_txt": 1,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    },
+    {
+      "output_part_id": "UV694001",
+      "input_part_id": "UV694001",
+      "sequence_txt": 0,
+      "output_part_qty": 1,
+      "input_part_qty": 1,
+      "is_phantom": 0
+    }
+  ],
+  "资源": [
+    {
+      "equip_id": 10041813,
+      "equip_name": "钎焊式干检线10#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10064540,
+      "equip_name": "钎焊式干检线13#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035176,
+      "equip_name": "钎焊式干检线2#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035177,
+      "equip_name": "钎焊式干检线3#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10041817,
+      "equip_name": "钎焊式干检线4#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035180,
+      "equip_name": "钎焊式干检线5#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10039717,
+      "equip_name": "钎焊式干检线8#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10039718,
+      "equip_name": "钎焊式干检线9#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10062851,
+      "equip_name": "钎焊式双通道散热器装配线13#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035148,
+      "equip_name": "钎焊式散热器装配线1#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035137,
+      "equip_name": "钎焊式散热器装配线10#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035130,
+      "equip_name": "钎焊式散热器装配线3#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035131,
+      "equip_name": "钎焊式散热器装配线4#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035132,
+      "equip_name": "钎焊式散热器装配线5#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035149,
+      "equip_name": "钎焊式散热器装配线6#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035134,
+      "equip_name": "钎焊式散热器装配线7#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035135,
+      "equip_name": "钎焊式散热器装配线8#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035136,
+      "equip_name": "钎焊式散热器装配线9#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    },
+    {
+      "equip_id": 10035146,
+      "equip_name": "钎焊式散热器装配线11#",
+      "ws_id": "冷却车间",
+      "week_calendar_id": "24H"
+    }
+  ],
+  "资源群组": [
+    {
+      "equip_group_id": 10041813,
+      "equip_id": "钎焊式干检线10#"
+    },
+    {
+      "equip_group_id": 10064540,
+      "equip_id": "钎焊式干检线13#"
+    },
+    {
+      "equip_group_id": 10035176,
+      "equip_id": "钎焊式干检线2#"
+    },
+    {
+      "equip_group_id": 10035177,
+      "equip_id": "钎焊式干检线3#"
+    },
+    {
+      "equip_group_id": 10041817,
+      "equip_id": "钎焊式干检线4#"
+    },
+    {
+      "equip_group_id": 10035180,
+      "equip_id": "钎焊式干检线5#"
+    },
+    {
+      "equip_group_id": 10039717,
+      "equip_id": "钎焊式干检线8#"
+    },
+    {
+      "equip_group_id": 10039718,
+      "equip_id": "钎焊式干检线9#"
+    },
+    {
+      "equip_group_id": 10062851,
+      "equip_id": "钎焊式双通道散热器装配线13#"
+    },
+    {
+      "equip_group_id": 10035148,
+      "equip_id": "钎焊式散热器装配线1#"
+    },
+    {
+      "equip_group_id": 10035137,
+      "equip_id": "钎焊式散热器装配线10#"
+    },
+    {
+      "equip_group_id": 10035130,
+      "equip_id": "钎焊式散热器装配线3#"
+    },
+    {
+      "equip_group_id": 10035131,
+      "equip_id": "钎焊式散热器装配线4#"
+    },
+    {
+      "equip_group_id": 10035132,
+      "equip_id": "钎焊式散热器装配线5#"
+    },
+    {
+      "equip_group_id": 10035149,
+      "equip_id": "钎焊式散热器装配线6#"
+    },
+    {
+      "equip_group_id": 10035134,
+      "equip_id": "钎焊式散热器装配线7#"
+    },
+    {
+      "equip_group_id": 10035135,
+      "equip_id": "钎焊式散热器装配线8#"
+    },
+    {
+      "equip_group_id": 10035136,
+      "equip_id": "钎焊式散热器装配线9#"
+    },
+    {
+      "equip_group_id": 10035146,
+      "equip_id": "钎焊式散热器装配线11#"
+    }
+  ],
+  "工作中心": [
+    {
+      "ws_id": "冷却车间",
+      "ws_name": "EC"
+    }
+  ],
+  "工艺资料": [
+    {
+      "part_id": "TX674001",
+      "route_id": "TX674001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035135,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 70,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "SV209001",
+      "route_id": "SV209001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041813,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 60,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "SV582001",
+      "route_id": "SV582001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035132,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 74.9,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "SV580002",
+      "route_id": "SV580002",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041817,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 60,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "KT123001",
+      "route_id": "KT123001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 1800,
+      "process_time": 107.73,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "LP088003",
+      "route_id": "LP088003",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039718,
+      "equip_group_id": null,
+      "setup_time": 1800,
+      "process_time": 76.4,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "MB451001",
+      "route_id": "MB451001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 1800,
+      "process_time": 120.96,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "LP089003",
+      "route_id": "LP089003",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039718,
+      "equip_group_id": null,
+      "setup_time": 1800,
+      "process_time": 76.4,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "P0283001",
+      "route_id": "P0283001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 1800,
+      "process_time": 72,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "P1555002",
+      "route_id": "P1555002",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039717,
+      "equip_group_id": null,
+      "setup_time": 1800,
+      "process_time": 75.93,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "P0283001",
+      "route_id": "P0283001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 1800,
+      "process_time": 72,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "GG080001",
+      "route_id": "GG080001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039717,
+      "equip_group_id": null,
+      "setup_time": 1800,
+      "process_time": 67.97,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "P0283001",
+      "route_id": "P0283001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 72,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "GG081001",
+      "route_id": "GG081001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039717,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 67.5,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DC535003",
+      "route_id": "DC535003",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 1800,
+      "process_time": 70.61,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DP010002",
+      "route_id": "DP010002",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039718,
+      "equip_group_id": null,
+      "setup_time": 1800,
+      "process_time": 63.19,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DC535003",
+      "route_id": "DC535003",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 70.61,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "FK453001",
+      "route_id": "FK453001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039718,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 75.94,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "SHA2615001",
+      "route_id": "SHA2615001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041817,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 75.94,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "SHA1735001",
+      "route_id": "SHA1735001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035131,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 58.9,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "FH750001",
+      "route_id": "FH750001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041817,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 75.94,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "SHA1735001",
+      "route_id": "SHA1735001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035131,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 58.9,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DN841001",
+      "route_id": "DN841001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 81,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "FK477001",
+      "route_id": "FK477001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10035177,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 67.5,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DD087001",
+      "route_id": "DD087001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 68.1,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DD084003",
+      "route_id": "DD084003",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10035177,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 61.17,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DD087001",
+      "route_id": "DD087001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 68.1,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "GX882002",
+      "route_id": "GX882002",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10035177,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 61.17,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "HC992002",
+      "route_id": "HC992002",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035132,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 66.04,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "KX543002",
+      "route_id": "KX543002",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041817,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 70.36,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "EK938004",
+      "route_id": "EK938004",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 66.04,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "EK915004",
+      "route_id": "EK915004",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041817,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 62.2,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "HC992002",
+      "route_id": "HC992002",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035132,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 66.04,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "HC991002",
+      "route_id": "HC991002",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039717,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 70.36,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "GH958001",
+      "route_id": "GH958001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035137,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 58.88,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "GH956001",
+      "route_id": "GH956001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10035177,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 61.81,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DZ071003",
+      "route_id": "DZ071003",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035149,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 47.93,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "FA566005",
+      "route_id": "FA566005",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041814,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 66.11,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "KG231001",
+      "route_id": "KG231001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 68.45,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "KG234002",
+      "route_id": "KG234002",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10035177,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 68.9,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "FF935001",
+      "route_id": "FF935001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 1,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "FF924001",
+      "route_id": "FF924001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039717,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 66.03,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "KT416002",
+      "route_id": "KT416002",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035135,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 77.64,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "KT415007",
+      "route_id": "KT415007",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041813,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 58.2,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "TD713001",
+      "route_id": "TD713001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035148,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 140,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "TD574002",
+      "route_id": "TD574002",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041814,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 70,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "TD713001",
+      "route_id": "TD713001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035148,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 140,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "TD575002",
+      "route_id": "TD575002",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041814,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 70,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DC717001",
+      "route_id": "DC717001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035149,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 65.68,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DC714002",
+      "route_id": "DC714002",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10035177,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 61.17,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DC717001",
+      "route_id": "DC717001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035149,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 65.68,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "KT252001",
+      "route_id": "KT252001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10035177,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 61.17,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DD087001",
+      "route_id": "DD087001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 68.1,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "ST708001",
+      "route_id": "ST708001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10062851,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 55,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "SU419001",
+      "route_id": "SU419001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10064540,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 60,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "MS942001",
+      "route_id": "MS942001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041813,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 81.93,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "MS943001",
+      "route_id": "MS943001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041813,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 81.93,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "HW361003",
+      "route_id": "HW361003",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035137,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 56.06,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "HW404007",
+      "route_id": "HW404007",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041813,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 60,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "HC992002",
+      "route_id": "HC992002",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035132,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 66.04,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "LZ046001",
+      "route_id": "LZ046001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039717,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 70.36,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "HC992002",
+      "route_id": "HC992002",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035132,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 66.04,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "NH847001",
+      "route_id": "NH847001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039717,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 70.36,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "SX439001",
+      "route_id": "SX439001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035137,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 79,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "SX443001",
+      "route_id": "SX443001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041817,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 70,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "SX659001",
+      "route_id": "SX659001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035135,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 76.36,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "SX658001",
+      "route_id": "SX658001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039717,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 70,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "MC004002",
+      "route_id": "MC004002",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035136,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 61.99,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "RN696001",
+      "route_id": "RN696001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10035180,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 72.8,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "MC004002",
+      "route_id": "MC004002",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035136,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 61.99,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "MC178004",
+      "route_id": "MC178004",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10035180,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 72.8,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "MC004002",
+      "route_id": "MC004002",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035136,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 61.99,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "NZ015001",
+      "route_id": "NZ015001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10035180,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 72.8,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "RD559002",
+      "route_id": "RD559002",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035149,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 75.46,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "SM548003",
+      "route_id": "SM548003",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039717,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 71.12,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "RD559002",
+      "route_id": "RD559002",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035149,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 75.46,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "RD507005",
+      "route_id": "RD507005",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039717,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 71.12,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "TN539001",
+      "route_id": "TN539001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035135,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 90.6,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "TN277002",
+      "route_id": "TN277002",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039717,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 66,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "TN274001",
+      "route_id": "TN274001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035137,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 88.8,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "TN556002",
+      "route_id": "TN556002",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10035176,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 60,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "UR831001",
+      "route_id": "UR831001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10062851,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 66.15,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "UR827001",
+      "route_id": "UR827001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039718,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 65.93,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "UR831001",
+      "route_id": "UR831001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10062851,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 66.15,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "UR828001",
+      "route_id": "UR828001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039718,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 65.93,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "DD087001",
+      "route_id": "DD087001",
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035134,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 68.1,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "UV690001",
+      "route_id": "UV690001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10039718,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 81.93,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": 16490315,
+      "route_id": 16490315,
+      "sequ_num": 1,
+      "operation_id": "CB",
+      "operation_name": "芯子装配",
+      "equip_id": 10035146,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 89,
+      "transfer_batch_size": 1
+    },
+    {
+      "part_id": "UV694001",
+      "route_id": "UV694001",
+      "sequ_num": 2,
+      "operation_id": "BE",
+      "operation_name": "后道",
+      "equip_id": 10041813,
+      "equip_group_id": null,
+      "setup_time": 2400,
+      "process_time": 81.93,
+      "transfer_batch_size": 1
+    }
+  ],
+  "库存": [
+    {
+      "section": "BE工序库存",
+      "part_id": "DD084003",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 1540
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "LK729001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "DC714002",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 60
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "KG234002",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 266
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "EK915004",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 33
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "LZ054002",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 2
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "NL987001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "GH956001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 1248
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "FH841002",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "KX543002",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 213
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "HC991002",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 310
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "PU714001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "LZ046001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "PE649001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "NL986001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "NH847001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "DV778001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "DV777001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 72
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "GG080001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "GG081001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "MD263002",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 36
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "KV932002",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 36
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "LV104004",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 18
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "LP088003",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 7
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "LP089003",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 14
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "KT415007",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 391
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": 16490313,
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "RD507005",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 752
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "SM548003",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 352
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "TW504003",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UU618001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "MC178004",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "NZ015001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 248
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "RN696001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 568
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "LR798003",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "SV580002",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 862
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "SV209001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 430
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "TN256001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "SX443001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 36
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "SX658001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 312
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "TN556002",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 731
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "TN277002",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 828
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UR827001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 25
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UR828001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 73
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UN362001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "SU419001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 30
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "US826001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UV691001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UV690001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UV695001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UR828001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 600
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UR827001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 330
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UV694001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 72
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UR828001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 600
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UR827001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 330
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "TX674001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 400
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "SV582001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 454
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "KT123001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 157
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "MB451001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 153
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "P0283001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "P0283001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "P0283001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "DC535003",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "DC535003",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "SHA1735001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "SHA1735001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "DN841001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "DD087001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 1006
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "DD087001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "HC992002",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 150
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "EK938004",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 13
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "HC992002",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "GH958001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 130
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "DZ071003",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "KG231001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 122
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "FF935001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "KT416002",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 354
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "TD713001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "TD713001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 94
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "DC717001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 520
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "DC717001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "DD087001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "ST708001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 63
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": 16490315,
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": 16490315,
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": 16490315,
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "HW361003",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "HC992002",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "HC992002",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "SX439001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 373
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "SX659001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 72
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "MC004002",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "MC004002",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 212
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "MC004002",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "RD559002",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 0
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "RD559002",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 585
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "TN539001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 440
+    },
+    {
+      "section": "CB工序库存",
+      "part_id": "TN274001",
+      "warehouse_id": 2,
+      "warehouse_name": "W02",
+      "unallocate_qty": 418
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UR828001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 600
+    },
+    {
+      "section": "BE工序库存",
+      "part_id": "UR827001",
+      "warehouse_id": 1,
+      "warehouse_name": "W01",
+      "unallocate_qty": 330
+    }
+  ],
+  "需求来源": [
+    {
+      "demand_order_id": "请自编",
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "GX882002",
+      "part_name": "MQB26散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "DD084003",
+      "part_name": "MQB26散热器",
+      "order_qty": 419,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "DC714002",
+      "part_name": "MQB16散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "KT252001",
+      "part_name": "MQB16散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "KG234002",
+      "part_name": "OMEGA CSS散热器",
+      "order_qty": 60,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "GH956001",
+      "part_name": "MQB2.0散热器上海冀强",
+      "order_qty": 1353,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "HC991002",
+      "part_name": "AS24散热器",
+      "order_qty": 208,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "LP088003",
+      "part_name": "U616mm散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "LP089003",
+      "part_name": "U626mm散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "KT415007",
+      "part_name": "C1XX CSS新散热器",
+      "order_qty": 102,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "RD507005",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "SM548003",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "RN696001",
+      "part_name": "MEB LTR 散热器（安徽）",
+      "order_qty": 320,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "SV580002",
+      "part_name": "BYD HTR 散热器",
+      "order_qty": 200,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "SV209001",
+      "part_name": "BYD LTR 散热器",
+      "order_qty": 200,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "SX443001",
+      "part_name": "SVW HTR 散热器",
+      "order_qty": 252,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "SX658001",
+      "part_name": "SVW LTR 散热器",
+      "order_qty": 196,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "TN556002",
+      "part_name": "557 HTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "TN277002",
+      "part_name": "557 LTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "UR827001",
+      "part_name": "BSUV高温",
+      "order_qty": 126,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "UR828001",
+      "part_name": "BSUV低温",
+      "order_qty": 126,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "UV690001",
+      "part_name": "MQB26 PHEV散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-06 00:00:00",
+      "part_id": "UV694001",
+      "part_name": "MQB16 PHEV散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "GX882002",
+      "part_name": "MQB26散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "DD084003",
+      "part_name": "MQB26散热器",
+      "order_qty": 384,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "DC714002",
+      "part_name": "MQB16散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "KT252001",
+      "part_name": "MQB16散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "KG234002",
+      "part_name": "OMEGA CSS散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "GH956001",
+      "part_name": "MQB2.0散热器上海冀强",
+      "order_qty": 1101,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "HC991002",
+      "part_name": "AS24散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "LP088003",
+      "part_name": "U616mm散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "LP089003",
+      "part_name": "U626mm散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "KT415007",
+      "part_name": "C1XX CSS新散热器",
+      "order_qty": 102,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "RD507005",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "SM548003",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "RN696001",
+      "part_name": "MEB LTR 散热器（安徽）",
+      "order_qty": 256,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "SV580002",
+      "part_name": "BYD HTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "SV209001",
+      "part_name": "BYD LTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "SX443001",
+      "part_name": "SVW HTR 散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "SX658001",
+      "part_name": "SVW LTR 散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "TN556002",
+      "part_name": "557 HTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "TN277002",
+      "part_name": "557 LTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "UR827001",
+      "part_name": "BSUV高温",
+      "order_qty": 126,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "UR828001",
+      "part_name": "BSUV低温",
+      "order_qty": 126,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "UV690001",
+      "part_name": "MQB26 PHEV散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-07 00:00:00",
+      "part_id": "UV694001",
+      "part_name": "MQB16 PHEV散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "GX882002",
+      "part_name": "MQB26散热器长沙",
+      "order_qty": 384,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "DD084003",
+      "part_name": "MQB26散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "DC714002",
+      "part_name": "MQB16散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "KT252001",
+      "part_name": "MQB16散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "KG234002",
+      "part_name": "OMEGA CSS散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "GH956001",
+      "part_name": "MQB2.0散热器上海冀强",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "HC991002",
+      "part_name": "AS24散热器",
+      "order_qty": 208,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "LP088003",
+      "part_name": "U616mm散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "LP089003",
+      "part_name": "U626mm散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "KT415007",
+      "part_name": "C1XX CSS新散热器",
+      "order_qty": 102,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "RD507005",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "SM548003",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "RN696001",
+      "part_name": "MEB LTR 散热器（安徽）",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "SV580002",
+      "part_name": "BYD HTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "SV209001",
+      "part_name": "BYD LTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "SX443001",
+      "part_name": "SVW HTR 散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "SX658001",
+      "part_name": "SVW LTR 散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "TN556002",
+      "part_name": "557 HTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "TN277002",
+      "part_name": "557 LTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "UR827001",
+      "part_name": "BSUV高温",
+      "order_qty": 126,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "UR828001",
+      "part_name": "BSUV低温",
+      "order_qty": 126,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "UV690001",
+      "part_name": "MQB26 PHEV散热器",
+      "order_qty": 288,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-08 00:00:00",
+      "part_id": "UV694001",
+      "part_name": "MQB16 PHEV散热器",
+      "order_qty": 288,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "GX882002",
+      "part_name": "MQB26散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "DD084003",
+      "part_name": "MQB26散热器",
+      "order_qty": 433,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "DC714002",
+      "part_name": "MQB16散热器",
+      "order_qty": 480,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "KT252001",
+      "part_name": "MQB16散热器长沙",
+      "order_qty": 384,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "KG234002",
+      "part_name": "OMEGA CSS散热器",
+      "order_qty": 60,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "GH956001",
+      "part_name": "MQB2.0散热器上海冀强",
+      "order_qty": 330,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "HC991002",
+      "part_name": "AS24散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "LP088003",
+      "part_name": "U616mm散热器",
+      "order_qty": 161,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "LP089003",
+      "part_name": "U626mm散热器",
+      "order_qty": 42,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "KT415007",
+      "part_name": "C1XX CSS新散热器",
+      "order_qty": 102,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "RD507005",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "SM548003",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "RN696001",
+      "part_name": "MEB LTR 散热器（安徽）",
+      "order_qty": 320,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "SV580002",
+      "part_name": "BYD HTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "SV209001",
+      "part_name": "BYD LTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "SX443001",
+      "part_name": "SVW HTR 散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "SX658001",
+      "part_name": "SVW LTR 散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "TN556002",
+      "part_name": "557 HTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "TN277002",
+      "part_name": "557 LTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "UR827001",
+      "part_name": "BSUV高温",
+      "order_qty": 126,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "UR828001",
+      "part_name": "BSUV低温",
+      "order_qty": 126,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "UV690001",
+      "part_name": "MQB26 PHEV散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-09 00:00:00",
+      "part_id": "UV694001",
+      "part_name": "MQB16 PHEV散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "GX882002",
+      "part_name": "MQB26散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "DD084003",
+      "part_name": "MQB26散热器",
+      "order_qty": 384,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "DC714002",
+      "part_name": "MQB16散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "KT252001",
+      "part_name": "MQB16散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "KG234002",
+      "part_name": "OMEGA CSS散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "GH956001",
+      "part_name": "MQB2.0散热器上海冀强",
+      "order_qty": 313,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "HC991002",
+      "part_name": "AS24散热器",
+      "order_qty": 102,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "LP088003",
+      "part_name": "U616mm散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "LP089003",
+      "part_name": "U626mm散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "KT415007",
+      "part_name": "C1XX CSS新散热器",
+      "order_qty": 60,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "RD507005",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "SM548003",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "RN696001",
+      "part_name": "MEB LTR 散热器（安徽）",
+      "order_qty": 288,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "SV580002",
+      "part_name": "BYD HTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "SV209001",
+      "part_name": "BYD LTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "SX443001",
+      "part_name": "SVW HTR 散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "SX658001",
+      "part_name": "SVW LTR 散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "TN556002",
+      "part_name": "557 HTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "TN277002",
+      "part_name": "557 LTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "UR827001",
+      "part_name": "BSUV高温",
+      "order_qty": 126,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "UR828001",
+      "part_name": "BSUV低温",
+      "order_qty": 126,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "UV690001",
+      "part_name": "MQB26 PHEV散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-10 00:00:00",
+      "part_id": "UV694001",
+      "part_name": "MQB16 PHEV散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "GX882002",
+      "part_name": "MQB26散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "DD084003",
+      "part_name": "MQB26散热器",
+      "order_qty": 432,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "DC714002",
+      "part_name": "MQB16散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "KT252001",
+      "part_name": "MQB16散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "KG234002",
+      "part_name": "OMEGA CSS散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "GH956001",
+      "part_name": "MQB2.0散热器上海冀强",
+      "order_qty": 330,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "HC991002",
+      "part_name": "AS24散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "LP088003",
+      "part_name": "U616mm散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "LP089003",
+      "part_name": "U626mm散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "KT415007",
+      "part_name": "C1XX CSS新散热器",
+      "order_qty": 102,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "RD507005",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "SM548003",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "RN696001",
+      "part_name": "MEB LTR 散热器（安徽）",
+      "order_qty": 288,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "SV580002",
+      "part_name": "BYD HTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "SV209001",
+      "part_name": "BYD LTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "SX443001",
+      "part_name": "SVW HTR 散热器",
+      "order_qty": 216,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "SX658001",
+      "part_name": "SVW LTR 散热器",
+      "order_qty": 224,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "TN556002",
+      "part_name": "557 HTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "TN277002",
+      "part_name": "557 LTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "UR827001",
+      "part_name": "BSUV高温",
+      "order_qty": 126,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "UR828001",
+      "part_name": "BSUV低温",
+      "order_qty": 126,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "UV690001",
+      "part_name": "MQB26 PHEV散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-11 00:00:00",
+      "part_id": "UV694001",
+      "part_name": "MQB16 PHEV散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "GX882002",
+      "part_name": "MQB26散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "DD084003",
+      "part_name": "MQB26散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "DC714002",
+      "part_name": "MQB16散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "KT252001",
+      "part_name": "MQB16散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "KG234002",
+      "part_name": "OMEGA CSS散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "GH956001",
+      "part_name": "MQB2.0散热器上海冀强",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "HC991002",
+      "part_name": "AS24散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "LP088003",
+      "part_name": "U616mm散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "LP089003",
+      "part_name": "U626mm散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "KT415007",
+      "part_name": "C1XX CSS新散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "RD507005",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "SM548003",
+      "part_name": "T26散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "RN696001",
+      "part_name": "MEB LTR 散热器（安徽）",
+      "order_qty": 320,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "SV580002",
+      "part_name": "BYD HTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "SV209001",
+      "part_name": "BYD LTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "SX443001",
+      "part_name": "SVW HTR 散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "SX658001",
+      "part_name": "SVW LTR 散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "TN556002",
+      "part_name": "557 HTR散热器",
+      "order_qty": 294,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "TN277002",
+      "part_name": "557 LTR散热器",
+      "order_qty": 294,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "UR827001",
+      "part_name": "BSUV高温",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "UR828001",
+      "part_name": "BSUV低温",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "UV690001",
+      "part_name": "MQB26 PHEV散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-12 00:00:00",
+      "part_id": "UV694001",
+      "part_name": "MQB16 PHEV散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "GX882002",
+      "part_name": "MQB26散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "DD084003",
+      "part_name": "MQB26散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "DC714002",
+      "part_name": "MQB16散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "KT252001",
+      "part_name": "MQB16散热器长沙",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "KG234002",
+      "part_name": "OMEGA CSS散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "GH956001",
+      "part_name": "MQB2.0散热器上海冀强",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "HC991002",
+      "part_name": "AS24散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "LP088003",
+      "part_name": "U616mm散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "LP089003",
+      "part_name": "U626mm散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "KT415007",
+      "part_name": "C1XX CSS新散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "RD507005",
+      "part_name": "T26散热器",
+      "order_qty": 1000,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "SM548003",
+      "part_name": "T26散热器",
+      "order_qty": 1500,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "RN696001",
+      "part_name": "MEB LTR 散热器（安徽）",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "SV580002",
+      "part_name": "BYD HTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "SV209001",
+      "part_name": "BYD LTR 散热器",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "SX443001",
+      "part_name": "SVW HTR 散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "SX658001",
+      "part_name": "SVW LTR 散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "TN556002",
+      "part_name": "557 HTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "TN277002",
+      "part_name": "557 LTR散热器",
+      "order_qty": 217,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "UR827001",
+      "part_name": "BSUV高温",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "UR828001",
+      "part_name": "BSUV低温",
+      "order_qty": 0,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "UV690001",
+      "part_name": "MQB26 PHEV散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    },
+    {
+      "demand_order_id": null,
+      "customer_id": null,
+      "due_date": "2026-02-13 00:00:00",
+      "part_id": "UV694001",
+      "part_name": "MQB16 PHEV散热器",
+      "order_qty": null,
+      "shipped_qty": 0,
+      "order_type": null
+    }
+  ]
+}

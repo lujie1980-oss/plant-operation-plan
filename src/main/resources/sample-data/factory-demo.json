@@ -1,0 +1,2238 @@
+{
+  "_meta": {
+    "source": "Mahle POC (POC需求资料.xlsx)",
+    "generated_at": "2026-05-26T20:01:32",
+    "demand_date_offset_days": 110,
+    "earliest_due_date": "2026-05-27",
+    "sales_order_count": 70,
+    "resource_count": 20,
+    "product_resource_count": 73,
+    "inventory_count": 78,
+    "work_centers": [
+      {
+        "ws_id": "冷却车间",
+        "ws_name": "EC"
+      }
+    ]
+  },
+  "salesOrderLines": [
+    {
+      "salesOrderNo": "DO-MAHLE-0001",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "DD084003",
+      "orderQty": 419.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0002",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "KG234002",
+      "orderQty": 60.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0003",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "GH956001",
+      "orderQty": 1353.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0004",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "HC991002",
+      "orderQty": 208.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0005",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "KT415007",
+      "orderQty": 102.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0006",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "RN696001",
+      "orderQty": 320.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0007",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "SV580002",
+      "orderQty": 200.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0008",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "SV209001",
+      "orderQty": 200.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0009",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "SX443001",
+      "orderQty": 252.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0010",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "SX658001",
+      "orderQty": 196.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0011",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN556002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0012",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN277002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0013",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UR827001",
+      "orderQty": 126.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0014",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UR828001",
+      "orderQty": 126.0,
+      "promiseDate": "2026-05-27",
+      "dueDate": "2026-05-27",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0015",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "DD084003",
+      "orderQty": 384.0,
+      "promiseDate": "2026-05-28",
+      "dueDate": "2026-05-28",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0016",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "GH956001",
+      "orderQty": 1101.0,
+      "promiseDate": "2026-05-28",
+      "dueDate": "2026-05-28",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0017",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "KT415007",
+      "orderQty": 102.0,
+      "promiseDate": "2026-05-28",
+      "dueDate": "2026-05-28",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0018",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "RN696001",
+      "orderQty": 256.0,
+      "promiseDate": "2026-05-28",
+      "dueDate": "2026-05-28",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0019",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN556002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-05-28",
+      "dueDate": "2026-05-28",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0020",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN277002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-05-28",
+      "dueDate": "2026-05-28",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0021",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UR827001",
+      "orderQty": 126.0,
+      "promiseDate": "2026-05-28",
+      "dueDate": "2026-05-28",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0022",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UR828001",
+      "orderQty": 126.0,
+      "promiseDate": "2026-05-28",
+      "dueDate": "2026-05-28",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0023",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "GX882002",
+      "orderQty": 384.0,
+      "promiseDate": "2026-05-29",
+      "dueDate": "2026-05-29",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0024",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "HC991002",
+      "orderQty": 208.0,
+      "promiseDate": "2026-05-29",
+      "dueDate": "2026-05-29",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0025",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "KT415007",
+      "orderQty": 102.0,
+      "promiseDate": "2026-05-29",
+      "dueDate": "2026-05-29",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0026",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN556002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-05-29",
+      "dueDate": "2026-05-29",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0027",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN277002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-05-29",
+      "dueDate": "2026-05-29",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0028",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UR827001",
+      "orderQty": 126.0,
+      "promiseDate": "2026-05-29",
+      "dueDate": "2026-05-29",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0029",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UR828001",
+      "orderQty": 126.0,
+      "promiseDate": "2026-05-29",
+      "dueDate": "2026-05-29",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0030",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UV690001",
+      "orderQty": 288.0,
+      "promiseDate": "2026-05-29",
+      "dueDate": "2026-05-29",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0031",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UV694001",
+      "orderQty": 288.0,
+      "promiseDate": "2026-05-29",
+      "dueDate": "2026-05-29",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0032",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "DD084003",
+      "orderQty": 433.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0033",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "DC714002",
+      "orderQty": 480.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0034",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "KT252001",
+      "orderQty": 384.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0035",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "KG234002",
+      "orderQty": 60.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0036",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "GH956001",
+      "orderQty": 330.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0037",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "LP088003",
+      "orderQty": 161.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0038",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "LP089003",
+      "orderQty": 42.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0039",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "KT415007",
+      "orderQty": 102.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0040",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "RN696001",
+      "orderQty": 320.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0041",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN556002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0042",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN277002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0043",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UR827001",
+      "orderQty": 126.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0044",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UR828001",
+      "orderQty": 126.0,
+      "promiseDate": "2026-05-30",
+      "dueDate": "2026-05-30",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0045",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "DD084003",
+      "orderQty": 384.0,
+      "promiseDate": "2026-05-31",
+      "dueDate": "2026-05-31",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0046",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "GH956001",
+      "orderQty": 313.0,
+      "promiseDate": "2026-05-31",
+      "dueDate": "2026-05-31",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0047",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "HC991002",
+      "orderQty": 102.0,
+      "promiseDate": "2026-05-31",
+      "dueDate": "2026-05-31",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0048",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "KT415007",
+      "orderQty": 60.0,
+      "promiseDate": "2026-05-31",
+      "dueDate": "2026-05-31",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0049",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "RN696001",
+      "orderQty": 288.0,
+      "promiseDate": "2026-05-31",
+      "dueDate": "2026-05-31",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0050",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN556002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-05-31",
+      "dueDate": "2026-05-31",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0051",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN277002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-05-31",
+      "dueDate": "2026-05-31",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0052",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UR827001",
+      "orderQty": 126.0,
+      "promiseDate": "2026-05-31",
+      "dueDate": "2026-05-31",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0053",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UR828001",
+      "orderQty": 126.0,
+      "promiseDate": "2026-05-31",
+      "dueDate": "2026-05-31",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0054",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "DD084003",
+      "orderQty": 432.0,
+      "promiseDate": "2026-06-01",
+      "dueDate": "2026-06-01",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0055",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "GH956001",
+      "orderQty": 330.0,
+      "promiseDate": "2026-06-01",
+      "dueDate": "2026-06-01",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0056",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "KT415007",
+      "orderQty": 102.0,
+      "promiseDate": "2026-06-01",
+      "dueDate": "2026-06-01",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0057",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "RN696001",
+      "orderQty": 288.0,
+      "promiseDate": "2026-06-01",
+      "dueDate": "2026-06-01",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0058",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "SX443001",
+      "orderQty": 216.0,
+      "promiseDate": "2026-06-01",
+      "dueDate": "2026-06-01",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0059",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "SX658001",
+      "orderQty": 224.0,
+      "promiseDate": "2026-06-01",
+      "dueDate": "2026-06-01",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0060",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN556002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-06-01",
+      "dueDate": "2026-06-01",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0061",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN277002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-06-01",
+      "dueDate": "2026-06-01",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0062",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UR827001",
+      "orderQty": 126.0,
+      "promiseDate": "2026-06-01",
+      "dueDate": "2026-06-01",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0063",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "UR828001",
+      "orderQty": 126.0,
+      "promiseDate": "2026-06-01",
+      "dueDate": "2026-06-01",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0064",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "RN696001",
+      "orderQty": 320.0,
+      "promiseDate": "2026-06-02",
+      "dueDate": "2026-06-02",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0065",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN556002",
+      "orderQty": 294.0,
+      "promiseDate": "2026-06-02",
+      "dueDate": "2026-06-02",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0066",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN277002",
+      "orderQty": 294.0,
+      "promiseDate": "2026-06-02",
+      "dueDate": "2026-06-02",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0067",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "RD507005",
+      "orderQty": 1000.0,
+      "promiseDate": "2026-06-03",
+      "dueDate": "2026-06-03",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0068",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "SM548003",
+      "orderQty": 1500.0,
+      "promiseDate": "2026-06-03",
+      "dueDate": "2026-06-03",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0069",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN556002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-06-03",
+      "dueDate": "2026-06-03",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "DO-MAHLE-0070",
+      "salesOrderLineNo": 10,
+      "customerCode": "MAHLE",
+      "productCode": "TN277002",
+      "orderQty": 217.0,
+      "promiseDate": "2026-06-03",
+      "dueDate": "2026-06-03",
+      "priority": 5,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    }
+  ],
+  "bomComponents": [
+    {
+      "parentProductCode": "GX882002",
+      "componentProductCode": "TX674001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "DD084003",
+      "componentProductCode": "SV209001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "DC714002",
+      "componentProductCode": "SV582001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "KT252001",
+      "componentProductCode": "SV580002",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "KG234002",
+      "componentProductCode": "KT123001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "GH956001",
+      "componentProductCode": "LP088003",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "HC991002",
+      "componentProductCode": "MB451001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "LP088003",
+      "componentProductCode": "LP089003",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "LP089003",
+      "componentProductCode": "P0283001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "KT415007",
+      "componentProductCode": "P1555002",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "RD507005",
+      "componentProductCode": "P0283001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "SM548003",
+      "componentProductCode": "GG080001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "RN696001",
+      "componentProductCode": "P0283001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "SV580002",
+      "componentProductCode": "GG081001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "SV209001",
+      "componentProductCode": "DC535003",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "SX443001",
+      "componentProductCode": "DP010002",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "SX658001",
+      "componentProductCode": "DC535003",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "TN556002",
+      "componentProductCode": "FK453001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "TN277002",
+      "componentProductCode": "SHA2615001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "UR827001",
+      "componentProductCode": "SHA1735001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "UR828001",
+      "componentProductCode": "FH750001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "UV690001",
+      "componentProductCode": "SHA1735001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "parentProductCode": "UV694001",
+      "componentProductCode": "DN841001",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    }
+  ],
+  "inventory": [
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "DD084003",
+      "onhandQty": 1540.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "LK729001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "DC714002",
+      "onhandQty": 60.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "KG234002",
+      "onhandQty": 266.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "EK915004",
+      "onhandQty": 33.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "LZ054002",
+      "onhandQty": 2.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "NL987001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "GH956001",
+      "onhandQty": 1248.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "FH841002",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "KX543002",
+      "onhandQty": 213.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "HC991002",
+      "onhandQty": 310.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "PU714001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "LZ046001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "PE649001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "NL986001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "NH847001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "DV778001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "DV777001",
+      "onhandQty": 72.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "GG080001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "GG081001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "MD263002",
+      "onhandQty": 36.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "KV932002",
+      "onhandQty": 36.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "LV104004",
+      "onhandQty": 18.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "LP088003",
+      "onhandQty": 7.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "LP089003",
+      "onhandQty": 14.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "KT415007",
+      "onhandQty": 391.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "16490313",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "RD507005",
+      "onhandQty": 752.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "SM548003",
+      "onhandQty": 352.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "TW504003",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "UU618001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "MC178004",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "NZ015001",
+      "onhandQty": 248.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "RN696001",
+      "onhandQty": 568.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "LR798003",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "SV580002",
+      "onhandQty": 862.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "SV209001",
+      "onhandQty": 430.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "TN256001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "SX443001",
+      "onhandQty": 36.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "SX658001",
+      "onhandQty": 312.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "TN556002",
+      "onhandQty": 731.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "TN277002",
+      "onhandQty": 828.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "UR827001",
+      "onhandQty": 25.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "UR828001",
+      "onhandQty": 73.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "UN362001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "SU419001",
+      "onhandQty": 30.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "US826001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "UV691001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "UV690001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "UV695001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W01-BE工序库存",
+      "productCode": "UV694001",
+      "onhandQty": 72.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "TX674001",
+      "onhandQty": 400.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "SV582001",
+      "onhandQty": 454.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "KT123001",
+      "onhandQty": 157.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "MB451001",
+      "onhandQty": 153.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "P0283001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "DC535003",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "SHA1735001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "DN841001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "DD087001",
+      "onhandQty": 1006.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "HC992002",
+      "onhandQty": 150.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "EK938004",
+      "onhandQty": 13.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "GH958001",
+      "onhandQty": 130.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "DZ071003",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "KG231001",
+      "onhandQty": 122.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "FF935001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "KT416002",
+      "onhandQty": 354.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "TD713001",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "DC717001",
+      "onhandQty": 520.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "ST708001",
+      "onhandQty": 63.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "16490315",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "HW361003",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "SX439001",
+      "onhandQty": 373.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "SX659001",
+      "onhandQty": 72.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "MC004002",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "RD559002",
+      "onhandQty": 0.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "TN539001",
+      "onhandQty": 440.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "W02-CB工序库存",
+      "productCode": "TN274001",
+      "onhandQty": 418.0,
+      "reservedQty": 0
+    }
+  ],
+  "resources": [
+    {
+      "resourceId": "钎焊式干检线10#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 50.73
+    },
+    {
+      "resourceId": "钎焊式干检线13#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 60.0
+    },
+    {
+      "resourceId": "钎焊式干检线2#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 60.0
+    },
+    {
+      "resourceId": "钎焊式干检线3#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 58.85
+    },
+    {
+      "resourceId": "钎焊式干检线4#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 51.3
+    },
+    {
+      "resourceId": "钎焊式干检线5#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 49.45
+    },
+    {
+      "resourceId": "钎焊式干检线8#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 51.17
+    },
+    {
+      "resourceId": "钎焊式干检线9#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 47.41
+    },
+    {
+      "resourceId": "钎焊式双通道散热器装配线13#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 54.42
+    },
+    {
+      "resourceId": "钎焊式散热器装配线1#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 25.71
+    },
+    {
+      "resourceId": "钎焊式散热器装配线10#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 52.22
+    },
+    {
+      "resourceId": "钎焊式散热器装配线3#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 60
+    },
+    {
+      "resourceId": "钎焊式散热器装配线4#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 61.12
+    },
+    {
+      "resourceId": "钎焊式散热器装配线5#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 54.51
+    },
+    {
+      "resourceId": "钎焊式散热器装配线6#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 54.81
+    },
+    {
+      "resourceId": "钎焊式散热器装配线7#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 50.98
+    },
+    {
+      "resourceId": "钎焊式散热器装配线8#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 46.75
+    },
+    {
+      "resourceId": "钎焊式散热器装配线9#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 58.07
+    },
+    {
+      "resourceId": "钎焊式散热器装配线11#",
+      "areaId": "冷却车间",
+      "bottleneck": true,
+      "runRatePerHour": 40.45
+    },
+    {
+      "resourceId": "10041814",
+      "areaId": "冷却车间",
+      "bottleneck": false,
+      "runRatePerHour": 51.43
+    }
+  ],
+  "productResources": [
+    {
+      "productCode": "16490315",
+      "resourceId": "钎焊式散热器装配线11#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 89.0
+    },
+    {
+      "productCode": "DC535003",
+      "resourceId": "钎焊式散热器装配线7#",
+      "setupTimeMinutes": 30,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 70.61
+    },
+    {
+      "productCode": "DC714002",
+      "resourceId": "钎焊式干检线3#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 61.17
+    },
+    {
+      "productCode": "DC717001",
+      "resourceId": "钎焊式散热器装配线6#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 65.68
+    },
+    {
+      "productCode": "DD084003",
+      "resourceId": "钎焊式干检线3#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 61.17
+    },
+    {
+      "productCode": "DD087001",
+      "resourceId": "钎焊式散热器装配线7#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 68.1
+    },
+    {
+      "productCode": "DN841001",
+      "resourceId": "钎焊式散热器装配线7#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 81.0
+    },
+    {
+      "productCode": "DP010002",
+      "resourceId": "钎焊式干检线9#",
+      "setupTimeMinutes": 30,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 63.19
+    },
+    {
+      "productCode": "DZ071003",
+      "resourceId": "钎焊式散热器装配线6#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 47.93
+    },
+    {
+      "productCode": "EK915004",
+      "resourceId": "钎焊式干检线4#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 62.2
+    },
+    {
+      "productCode": "EK938004",
+      "resourceId": "钎焊式散热器装配线7#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 66.04
+    },
+    {
+      "productCode": "FA566005",
+      "resourceId": "10041814",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 66.11
+    },
+    {
+      "productCode": "FF924001",
+      "resourceId": "钎焊式干检线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 66.03
+    },
+    {
+      "productCode": "FF935001",
+      "resourceId": "钎焊式散热器装配线7#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 1.0
+    },
+    {
+      "productCode": "FH750001",
+      "resourceId": "钎焊式干检线4#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 75.94
+    },
+    {
+      "productCode": "FK453001",
+      "resourceId": "钎焊式干检线9#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 75.94
+    },
+    {
+      "productCode": "FK477001",
+      "resourceId": "钎焊式干检线3#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 67.5
+    },
+    {
+      "productCode": "GG080001",
+      "resourceId": "钎焊式干检线8#",
+      "setupTimeMinutes": 30,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 67.97
+    },
+    {
+      "productCode": "GG081001",
+      "resourceId": "钎焊式干检线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 67.5
+    },
+    {
+      "productCode": "GH956001",
+      "resourceId": "钎焊式干检线3#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 61.81
+    },
+    {
+      "productCode": "GH958001",
+      "resourceId": "钎焊式散热器装配线10#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 58.88
+    },
+    {
+      "productCode": "GX882002",
+      "resourceId": "钎焊式干检线3#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 61.17
+    },
+    {
+      "productCode": "HC991002",
+      "resourceId": "钎焊式干检线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 70.36
+    },
+    {
+      "productCode": "HC992002",
+      "resourceId": "钎焊式散热器装配线5#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 66.04
+    },
+    {
+      "productCode": "HW361003",
+      "resourceId": "钎焊式散热器装配线10#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 56.06
+    },
+    {
+      "productCode": "HW404007",
+      "resourceId": "钎焊式干检线10#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 60.0
+    },
+    {
+      "productCode": "KG231001",
+      "resourceId": "钎焊式散热器装配线7#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 68.45
+    },
+    {
+      "productCode": "KG234002",
+      "resourceId": "钎焊式干检线3#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 68.9
+    },
+    {
+      "productCode": "KT123001",
+      "resourceId": "钎焊式散热器装配线7#",
+      "setupTimeMinutes": 30,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 107.73
+    },
+    {
+      "productCode": "KT252001",
+      "resourceId": "钎焊式干检线3#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 61.17
+    },
+    {
+      "productCode": "KT415007",
+      "resourceId": "钎焊式干检线10#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 58.2
+    },
+    {
+      "productCode": "KT416002",
+      "resourceId": "钎焊式散热器装配线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 77.64
+    },
+    {
+      "productCode": "KX543002",
+      "resourceId": "钎焊式干检线4#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 70.36
+    },
+    {
+      "productCode": "LP088003",
+      "resourceId": "钎焊式干检线9#",
+      "setupTimeMinutes": 30,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 76.4
+    },
+    {
+      "productCode": "LP089003",
+      "resourceId": "钎焊式干检线9#",
+      "setupTimeMinutes": 30,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 76.4
+    },
+    {
+      "productCode": "LZ046001",
+      "resourceId": "钎焊式干检线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 70.36
+    },
+    {
+      "productCode": "MB451001",
+      "resourceId": "钎焊式散热器装配线7#",
+      "setupTimeMinutes": 30,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 120.96
+    },
+    {
+      "productCode": "MC004002",
+      "resourceId": "钎焊式散热器装配线9#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 61.99
+    },
+    {
+      "productCode": "MC178004",
+      "resourceId": "钎焊式干检线5#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 72.8
+    },
+    {
+      "productCode": "MS942001",
+      "resourceId": "钎焊式干检线10#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 81.93
+    },
+    {
+      "productCode": "MS943001",
+      "resourceId": "钎焊式干检线10#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 81.93
+    },
+    {
+      "productCode": "NH847001",
+      "resourceId": "钎焊式干检线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 70.36
+    },
+    {
+      "productCode": "NZ015001",
+      "resourceId": "钎焊式干检线5#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 72.8
+    },
+    {
+      "productCode": "P0283001",
+      "resourceId": "钎焊式散热器装配线7#",
+      "setupTimeMinutes": 30,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 72.0
+    },
+    {
+      "productCode": "P1555002",
+      "resourceId": "钎焊式干检线8#",
+      "setupTimeMinutes": 30,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 75.93
+    },
+    {
+      "productCode": "RD507005",
+      "resourceId": "钎焊式干检线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 71.12
+    },
+    {
+      "productCode": "RD559002",
+      "resourceId": "钎焊式散热器装配线6#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 75.46
+    },
+    {
+      "productCode": "RN696001",
+      "resourceId": "钎焊式干检线5#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 72.8
+    },
+    {
+      "productCode": "SHA1735001",
+      "resourceId": "钎焊式散热器装配线4#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 58.9
+    },
+    {
+      "productCode": "SHA2615001",
+      "resourceId": "钎焊式干检线4#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 75.94
+    },
+    {
+      "productCode": "SM548003",
+      "resourceId": "钎焊式干检线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 71.12
+    },
+    {
+      "productCode": "ST708001",
+      "resourceId": "钎焊式双通道散热器装配线13#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 55.0
+    },
+    {
+      "productCode": "SU419001",
+      "resourceId": "钎焊式干检线13#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 60.0
+    },
+    {
+      "productCode": "SV209001",
+      "resourceId": "钎焊式干检线10#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 60.0
+    },
+    {
+      "productCode": "SV580002",
+      "resourceId": "钎焊式干检线4#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 60.0
+    },
+    {
+      "productCode": "SV582001",
+      "resourceId": "钎焊式散热器装配线5#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 74.9
+    },
+    {
+      "productCode": "SX439001",
+      "resourceId": "钎焊式散热器装配线10#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 79.0
+    },
+    {
+      "productCode": "SX443001",
+      "resourceId": "钎焊式干检线4#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 70.0
+    },
+    {
+      "productCode": "SX658001",
+      "resourceId": "钎焊式干检线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 70.0
+    },
+    {
+      "productCode": "SX659001",
+      "resourceId": "钎焊式散热器装配线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 76.36
+    },
+    {
+      "productCode": "TD574002",
+      "resourceId": "10041814",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 70.0
+    },
+    {
+      "productCode": "TD575002",
+      "resourceId": "10041814",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 70.0
+    },
+    {
+      "productCode": "TD713001",
+      "resourceId": "钎焊式散热器装配线1#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 140.0
+    },
+    {
+      "productCode": "TN274001",
+      "resourceId": "钎焊式散热器装配线10#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 88.8
+    },
+    {
+      "productCode": "TN277002",
+      "resourceId": "钎焊式干检线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 66.0
+    },
+    {
+      "productCode": "TN539001",
+      "resourceId": "钎焊式散热器装配线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 90.6
+    },
+    {
+      "productCode": "TN556002",
+      "resourceId": "钎焊式干检线2#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 60.0
+    },
+    {
+      "productCode": "TX674001",
+      "resourceId": "钎焊式散热器装配线8#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 70.0
+    },
+    {
+      "productCode": "UR827001",
+      "resourceId": "钎焊式干检线9#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 65.93
+    },
+    {
+      "productCode": "UR828001",
+      "resourceId": "钎焊式干检线9#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 65.93
+    },
+    {
+      "productCode": "UR831001",
+      "resourceId": "钎焊式双通道散热器装配线13#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 1,
+      "operationName": "芯子装配",
+      "processTimeSeconds": 66.15
+    },
+    {
+      "productCode": "UV690001",
+      "resourceId": "钎焊式干检线9#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 81.93
+    },
+    {
+      "productCode": "UV694001",
+      "resourceId": "钎焊式干检线10#",
+      "setupTimeMinutes": 40,
+      "sequenceNo": 2,
+      "operationName": "后道",
+      "processTimeSeconds": 81.93
+    }
+  ],
+  "lines": [
+    {
+      "lineId": "LINE-钎焊式干检线10#",
+      "areaId": "冷却车间",
+      "resourceId": "钎焊式干检线10#",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-钎焊式干检线13#",
+      "areaId": "冷却车间",
+      "resourceId": "钎焊式干检线13#",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-钎焊式干检线2#",
+      "areaId": "冷却车间",
+      "resourceId": "钎焊式干检线2#",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-钎焊式干检线3#",
+      "areaId": "冷却车间",
+      "resourceId": "钎焊式干检线3#",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-钎焊式干检线4#",
+      "areaId": "冷却车间",
+      "resourceId": "钎焊式干检线4#",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-钎焊式干检线5#",
+      "areaId": "冷却车间",
+      "resourceId": "钎焊式干检线5#",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-钎焊式干检线8#",
+      "areaId": "冷却车间",
+      "resourceId": "钎焊式干检线8#",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-钎焊式干检线9#",
+      "areaId": "冷却车间",
+      "resourceId": "钎焊式干检线9#",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    }
+  ],
+  "changeoverMatrix": [],
+  "workOrders": []
+}
