@@ -69,14 +69,14 @@ class DetailScheduleSessionServiceTest {
     @Order(2)
     void createSessionRejectsMissingMasterPlan() {
         assertThrows(BadRequestException.class, () -> sessionService.create(
-                new CreateScheduleSessionRequest(null, true, false)));
+                new CreateScheduleSessionRequest(null, true, false, null)));
     }
 
     @Test
     @Order(3)
     void createSessionWithSeedQueues() throws Exception {
         ScheduleSessionDto session = sessionService.create(
-                new CreateScheduleSessionRequest(masterPlanVersionId, true, false));
+                new CreateScheduleSessionRequest(masterPlanVersionId, true, false, null));
         assertNotNull(session.sessionId());
         assertEquals(masterPlanVersionId, session.masterPlanVersionId());
         assertNotNull(session.preview());
@@ -94,7 +94,7 @@ class DetailScheduleSessionServiceTest {
     @Order(4)
     void simulateSessionRecalculatesWithoutTimefold() {
         ScheduleSessionSimulateResultDto result = sessionService.simulate(
-                sessionId, new SimulateScheduleSessionRequest(null, null, false));
+                sessionId, new SimulateScheduleSessionRequest(null, null, false, null, null));
         assertNotNull(result.session());
         assertTrue(result.simulationDurationMs() >= 0);
         assertNotNull(result.session().preview().simulationMode());
@@ -125,7 +125,7 @@ class DetailScheduleSessionServiceTest {
         }
         productionTaskService.start(releasedStepId);
         ScheduleSessionDto session = sessionService.create(
-                new CreateScheduleSessionRequest(masterPlanVersionId, true, false));
+                new CreateScheduleSessionRequest(masterPlanVersionId, true, false, null));
         ConfirmScheduleSessionResultDto result = sessionService.confirm(session.sessionId());
         ProductionTaskEntity task = ProductionTaskEntity.findByStepId(releasedStepId);
         assertEquals(StepExecutionState.RUNNING.name(), task.executionState);

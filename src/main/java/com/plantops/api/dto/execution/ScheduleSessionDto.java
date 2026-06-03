@@ -9,5 +9,15 @@ public record ScheduleSessionDto(
         String masterPlanVersionId,
         LocalDateTime createdAt,
         LocalDateTime expiresAt,
-        DetailSchedulePlanningPreviewDto preview) {
+        DetailSchedulePlanningPreviewDto preview,
+        String simulationProfileId) {
+
+    public ScheduleSessionDto(
+            String sessionId,
+            String masterPlanVersionId,
+            LocalDateTime createdAt,
+            LocalDateTime expiresAt,
+            DetailSchedulePlanningPreviewDto preview) {
+        this(sessionId, masterPlanVersionId, createdAt, expiresAt, preview, null);
+    }
 }

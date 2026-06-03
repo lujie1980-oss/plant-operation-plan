@@ -16,5 +16,12 @@ public record SimulationRuleContext(
         Map<String, JsonNode> ruleParams,
         SimulationMode mode,
         Set<String> seedOperationIds,
-        LocalDate planningAnchorDate) {
+        LocalDate planningAnchorDate,
+        SimulationProfileSettings profileSettings) {
+
+    public SimulationRuleContext {
+        if (profileSettings == null) {
+            profileSettings = SimulationProfileSettings.defaults(null);
+        }
+    }
 }

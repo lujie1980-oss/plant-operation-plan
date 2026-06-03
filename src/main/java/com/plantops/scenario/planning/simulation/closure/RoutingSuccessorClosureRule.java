@@ -24,8 +24,13 @@ public class RoutingSuccessorClosureRule implements AffectedClosureRule {
     }
 
     @Override
+    public String profileRuleKey() {
+        return "routing-successor";
+    }
+
+    @Override
     public boolean enabled(SimulationRuleContext ctx) {
-        return registry.isRuleTypeEnabled(ctx, ruleTypeId());
+        return registry.isClosureRuleEnabled(ctx, this);
     }
 
     @Override

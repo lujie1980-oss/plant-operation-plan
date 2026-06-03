@@ -11,5 +11,7 @@ public record ScheduleSessionSimulateResultDto(
         List<String> recalculatedOperationIds,
         List<ScheduleConstraintViolationDto> violations,
         int hardViolationCount,
-        int mediumViolationCount) {
+        int mediumViolationCount,
+        List<String> appliedRules,
+        String simulationProfileId) {
 }

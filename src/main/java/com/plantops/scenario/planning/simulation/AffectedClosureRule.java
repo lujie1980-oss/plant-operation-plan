@@ -18,4 +18,10 @@ public interface AffectedClosureRule {
             OperationAssignment current,
             Set<String> affected,
             ArrayDeque<String> pending);
+
+    /** config_json incremental.rules 中的键名。 */
+    default String profileRuleKey() {
+        String typeId = ruleTypeId();
+        return typeId != null ? typeId : "same-line-suffix";
+    }
 }

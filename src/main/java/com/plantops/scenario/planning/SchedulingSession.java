@@ -1,5 +1,6 @@
 package com.plantops.scenario.planning;
 
+import com.plantops.scenario.planning.simulation.SimulationProfileSnapshot;
 import com.plantops.solver.detailschedule.DetailSchedule;
 
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ public final class SchedulingSession {
     private final boolean solved;
     private final Long solveDurationMs;
     private final String score;
+    private final SimulationProfileSnapshot simulationProfile;
 
     public SchedulingSession(
             String sessionId,
@@ -30,6 +32,20 @@ public final class SchedulingSession {
             boolean solved,
             Long solveDurationMs,
             String score) {
+        this(sessionId, masterPlanVersionId, planningAnchor, schedule, createdAt, expiresAt, solved, solveDurationMs, score, null);
+    }
+
+    public SchedulingSession(
+            String sessionId,
+            String masterPlanVersionId,
+            LocalDate planningAnchor,
+            DetailSchedule schedule,
+            LocalDateTime createdAt,
+            LocalDateTime expiresAt,
+            boolean solved,
+            Long solveDurationMs,
+            String score,
+            SimulationProfileSnapshot simulationProfile) {
         this.sessionId = sessionId;
         this.masterPlanVersionId = masterPlanVersionId;
         this.planningAnchor = planningAnchor;
@@ -39,6 +55,7 @@ public final class SchedulingSession {
         this.solved = solved;
         this.solveDurationMs = solveDurationMs;
         this.score = score;
+        this.simulationProfile = simulationProfile;
     }
 
     public String sessionId() {
@@ -75,6 +92,10 @@ public final class SchedulingSession {
 
     public String score() {
         return score;
+    }
+
+    public SimulationProfileSnapshot simulationProfile() {
+        return simulationProfile;
     }
 
     public boolean expired(LocalDateTime now) {

@@ -60,7 +60,11 @@ public class ScheduleSessionResource {
     public ScheduleSessionSimulateResultDto simulate(
             @PathParam("sessionId") String sessionId,
             SimulateScheduleSessionRequest request) {
-        return sessionService.simulate(sessionId, request != null ? request : new SimulateScheduleSessionRequest(null, null, null));
+        return sessionService.simulate(
+                sessionId,
+                request != null
+                        ? request
+                        : new SimulateScheduleSessionRequest(null, null, null, null, null));
     }
 
     @PATCH
@@ -71,7 +75,7 @@ public class ScheduleSessionResource {
             List<SessionStepPatchDto> patches) {
         return sessionService.simulate(
                 sessionId,
-                new SimulateScheduleSessionRequest(patches, null, false));
+                new SimulateScheduleSessionRequest(patches, null, false, null, null));
     }
 
     @POST

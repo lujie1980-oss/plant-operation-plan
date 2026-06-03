@@ -24,8 +24,13 @@ public class ParallelMateClosureRule implements AffectedClosureRule {
     }
 
     @Override
+    public String profileRuleKey() {
+        return "parallel-mate";
+    }
+
+    @Override
     public boolean enabled(SimulationRuleContext ctx) {
-        return registry.isRuleTypeEnabled(ctx, ruleTypeId());
+        return registry.isClosureRuleEnabled(ctx, this);
     }
 
     @Override

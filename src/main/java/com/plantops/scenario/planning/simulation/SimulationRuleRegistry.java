@@ -5,8 +5,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class SimulationRuleRegistry {
@@ -69,6 +72,44 @@ public class SimulationRuleRegistry {
         if (ctx.enabledRuleTypes() != null && !ctx.enabledRuleTypes().contains(ruleTypeId)) {
             return false;
         }
-        return ruleScope.isDetailScheduleEnabled(ruleTypeId);
+        if (!ruleScope.isDetailScheduleEnabled(ruleTypeId)) {
+            return false;
+        }
+        return ctx.profileSettings().isRuleEnabled(ruleTypeId, true);
+    }
+
+    public boolean isClosureRuleEnabled(SimulationRuleContext ctx, AffectedClosureRule rule) {
+        if (!ctx.profileSettings().isRuleEnabled(rule.profileRuleKey(), true)) {
+            return false;
+        }
+        String ruleTypeId = rule.ruleTypeId();
+        if (ruleTypeId == null || ruleTypeId.isBlank()) {
+            return true;
+        }
+        return isRuleTypeEnabled(ctx, ruleTypeId);
+    }
+
+    public List<String> collectAppliedRuleIds(SimulationRuleContext ctx, boolean includeClosureRules) {
+        Set<String> ids = new LinkedHashSet<>();
+        for (TimingRule rule : enabledTimingRules(ctx)) {
+            String key = rule.ruleTypeId();
+            if (key != null && !key.isBlank()) {
+                ids.add(key);
+            }
+        }
+        for (ValidationRule rule : enabledValidationRules(ctx)) {
+            String key = rule.ruleTypeId();
+            if (key != null && !key.isBlank()) {
+                ids.add(key);
+            } else {
+                ids.add(rule.getClass().getSimpleName());
+            }
+        }
+        if (includeClosureRules) {
+            for (AffectedClosureRule rule : enabledClosureRules(ctx)) {
+                ids.add(rule.profileRuleKey());
+            }
+        }
+        return new ArrayList<>(ids);
     }
 }

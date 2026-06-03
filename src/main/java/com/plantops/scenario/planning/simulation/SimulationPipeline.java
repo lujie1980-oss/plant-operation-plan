@@ -19,7 +19,9 @@ public class SimulationPipeline {
             SimulationMode mode,
             long durationMs,
             List<String> recalculatedOperationIds,
-            List<ScheduleConstraintViolation> violations) {
+            List<ScheduleConstraintViolation> violations,
+            List<String> appliedRules,
+            String simulationProfileId) {
     }
 
     @Inject
@@ -31,37 +33,56 @@ public class SimulationPipeline {
     @Inject
     SimulationClosureExpander closureExpander;
 
+    @Inject
+    SimulationRuleRegistry registry;
+
     public SimulationResult fullSimulate(DetailSchedule schedule) {
-        long start = System.currentTimeMillis();
         SimulationRuleContext ctx = SimulationRuleContextFactory.from(
                 schedule, SimulationMode.FULL, Set.of());
-        timingKernel.applyAllStartTimes(ctx, schedule);
-        List<String> recalculated = scheduledOperationIds(schedule);
-        List<ScheduleConstraintViolation> violations = validationPipeline.validate(ctx);
-        return new SimulationResult(
-                SimulationMode.FULL,
-                System.currentTimeMillis() - start,
-                recalculated,
-                violations);
+        return simulate(schedule, ctx, true, List.of());
     }
 
-    public SimulationResult incrementalSimulate(
-            DetailSchedule schedule,
-            Collection<String> seedOperationIds) {
-        long start = System.currentTimeMillis();
+    public SimulationResult incrementalSimulate(DetailSchedule schedule, Collection<String> seedOperationIds) {
         SimulationRuleContext ctx = SimulationRuleContextFactory.from(
                 schedule, SimulationMode.INCREMENTAL, Set.copyOf(seedOperationIds));
-        Set<String> affected = closureExpander.expand(ctx, seedOperationIds);
-        timingKernel.applyAllStartTimes(ctx, schedule);
-        List<String> recalculated = affected.isEmpty()
-                ? scheduledOperationIds(schedule)
-                : new ArrayList<>(affected);
+        return simulate(schedule, ctx, false, seedOperationIds);
+    }
+
+    public SimulationResult simulate(
+            DetailSchedule schedule,
+            SimulationRuleContext ctx,
+            boolean fullReschedule,
+            Collection<String> seedOperationIds) {
+        long start = System.currentTimeMillis();
+        SimulationMode mode;
+        List<String> recalculated;
+        boolean includeClosure = false;
+
+        if (fullReschedule || seedOperationIds == null || seedOperationIds.isEmpty()) {
+            mode = SimulationMode.FULL;
+            timingKernel.applyAllStartTimes(ctx, schedule);
+            recalculated = scheduledOperationIds(schedule);
+        } else {
+            mode = SimulationMode.INCREMENTAL;
+            includeClosure = true;
+            Set<String> affected = closureExpander.expand(ctx, seedOperationIds);
+            timingKernel.applyAllStartTimes(ctx, schedule);
+            recalculated = affected.isEmpty()
+                    ? scheduledOperationIds(schedule)
+                    : new ArrayList<>(affected);
+        }
+
         List<ScheduleConstraintViolation> violations = validationPipeline.validate(ctx);
+        List<String> appliedRules = registry.collectAppliedRuleIds(ctx, includeClosure);
+        String profileId = ctx.profileSettings().profileId();
+
         return new SimulationResult(
-                SimulationMode.INCREMENTAL,
+                mode,
                 System.currentTimeMillis() - start,
                 recalculated,
-                violations);
+                violations,
+                appliedRules,
+                profileId);
     }
 
     private static List<String> scheduledOperationIds(DetailSchedule schedule) {

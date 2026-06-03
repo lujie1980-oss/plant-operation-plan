@@ -27,6 +27,7 @@ public final class SimulationRuleContextFactory {
                 Map.of(),
                 mode,
                 seedOperationIds != null ? seedOperationIds : Set.of(),
-                anchor);
+                anchor,
+                SimulationProfileSettings.defaults(null));
     }
 }

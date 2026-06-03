@@ -10,12 +10,17 @@ import com.plantops.api.dto.planning.SimulateScheduleSessionRequest;
 import com.plantops.scenario.execution.ProductionTaskService;
 import com.plantops.scenario.planning.DetailSchedulePlanningContext;
 import com.plantops.scenario.planning.DetailScheduleProblemMapper;
+import com.plantops.scenario.planning.SimulationProfileService;
 import com.plantops.scenario.planning.DetailScheduleSessionMutation;
 import com.plantops.scenario.planning.DetailScheduleSimulationEngine;
 import com.plantops.scenario.planning.ScheduleConstraintViolation;
 import com.plantops.scenario.planning.ScheduleValidationService;
 import com.plantops.scenario.planning.SchedulingSession;
 import com.plantops.scenario.planning.SchedulingSessionStore;
+import com.plantops.scenario.planning.simulation.SimulationMode;
+import com.plantops.scenario.planning.simulation.SimulationProfileResolver;
+import com.plantops.scenario.planning.simulation.SimulationRuleContext;
+import com.plantops.scenario.planning.simulation.ValidationPipeline;
 import com.plantops.solver.detailschedule.DetailSchedule;
 import com.plantops.solver.detailschedule.OperationAssignment;
 import com.plantops.solver.detailschedule.ScheduleLine;
@@ -53,6 +58,15 @@ public class DetailScheduleSessionService {
     @Inject
     ScheduleValidationService validationService;
 
+    @Inject
+    SimulationProfileService simulationProfileService;
+
+    @Inject
+    SimulationProfileResolver simulationProfileResolver;
+
+    @Inject
+    ValidationPipeline validationPipeline;
+
     public ScheduleSessionDto create(CreateScheduleSessionRequest request)
             throws ExecutionException, InterruptedException {
         if (request == null) {
@@ -86,6 +100,9 @@ public class DetailScheduleSessionService {
 
         LocalDateTime createdAt = LocalDateTime.now();
         String sessionId = "SS-" + UUID.randomUUID().toString().substring(0, 12);
+        var profileSnapshot = simulationProfileService.resolveSnapshot(
+                masterPlanVersionId,
+                request != null ? request.simulationProfileId() : null);
         SchedulingSession session = new SchedulingSession(
                 sessionId,
                 masterPlanVersionId,
@@ -95,7 +112,8 @@ public class DetailScheduleSessionService {
                 sessionStore.defaultExpiresAt(createdAt),
                 solved,
                 solveDurationMs,
-                score);
+                score,
+                profileSnapshot);
         sessionStore.put(session);
 
         DetailSchedulePlanningPreviewDto preview = detailScheduleService.toSessionPreviewDto(
@@ -114,7 +132,8 @@ public class DetailScheduleSessionService {
                 masterPlanVersionId,
                 createdAt,
                 session.expiresAt(),
-                preview);
+                preview,
+                profileSnapshot.profileId());
     }
 
     /** 工序在当前 Session 下可分配的产线（acceptsLine）。 */
@@ -163,17 +182,13 @@ public class DetailScheduleSessionService {
                 session.score(),
                 session.solveDurationMs(),
                 detailScheduleService.operationsFromSchedule(session.schedule()));
-        return new ScheduleSessionDto(
-                session.sessionId(),
-                session.masterPlanVersionId(),
-                session.createdAt(),
-                session.expiresAt(),
-                preview);
+        return toSessionDto(session, preview);
     }
 
     @Transactional
     public ConfirmScheduleSessionResultDto confirm(String sessionId) {
         SchedulingSession session = sessionStore.require(sessionId);
+        enforceConfirmPolicy(session);
         DetailSchedule schedule = session.schedule();
         long duration = session.solveDurationMs() != null ? session.solveDurationMs() : 0L;
         String versionId = "DS-" + UUID.randomUUID().toString().substring(0, 8);
@@ -212,7 +227,8 @@ public class DetailScheduleSessionService {
                 session.expiresAt(),
                 true,
                 duration,
-                score);
+                score,
+                session.simulationProfile());
         sessionStore.put(updated);
         return get(sessionId);
     }
@@ -235,12 +251,18 @@ public class DetailScheduleSessionService {
             seeds.addAll(request.affectedOperationIds());
         }
 
-        DetailScheduleSimulationEngine.SimulationResult simulation;
-        if ((request != null && request.resolveFullReschedule()) || seeds.isEmpty()) {
-            simulation = simulationEngine.fullSimulate(schedule);
-        } else {
-            simulation = simulationEngine.incrementalSimulate(schedule, seeds);
-        }
+        boolean fullReschedule = (request != null && request.resolveFullReschedule()) || seeds.isEmpty();
+        SimulationMode mode = fullReschedule ? SimulationMode.FULL : SimulationMode.INCREMENTAL;
+        SimulationRuleContext ctx = simulationProfileResolver.buildContext(
+                schedule,
+                mode,
+                seeds,
+                session.simulationProfile(),
+                request != null ? request.simulationProfileId() : null,
+                request != null ? request.ruleOverrides() : null);
+
+        DetailScheduleSimulationEngine.SimulationResult simulation =
+                simulationEngine.simulate(schedule, ctx, fullReschedule, seeds);
 
         List<ScheduleConstraintViolationDto> violationDtos = validationService.toDtos(simulation.violations());
         int hardCount = countLevel(simulation.violations(), ScheduleConstraintViolation.ViolationLevel.HARD);
@@ -255,7 +277,8 @@ public class DetailScheduleSessionService {
                 session.expiresAt(),
                 session.solved(),
                 session.solveDurationMs(),
-                session.score());
+                session.score(),
+                session.simulationProfile());
         sessionStore.put(updated);
 
         ScheduleSessionDto sessionDto = buildSessionDto(updated, violationDtos, simulation);
@@ -266,7 +289,31 @@ public class DetailScheduleSessionService {
                 simulation.recalculatedOperationIds(),
                 violationDtos,
                 hardCount,
-                mediumCount);
+                mediumCount,
+                simulation.appliedRules(),
+                simulation.simulationProfileId());
+    }
+
+    private void enforceConfirmPolicy(SchedulingSession session) {
+        if (session.simulationProfile() == null) {
+            return;
+        }
+        SimulationRuleContext ctx = simulationProfileResolver.buildContext(
+                session.schedule(),
+                SimulationMode.FULL,
+                java.util.Set.of(),
+                session.simulationProfile(),
+                null,
+                null);
+        if (!ctx.profileSettings().blockConfirmOnHard()) {
+            return;
+        }
+        var violations = validationPipeline.validate(ctx);
+        boolean hasHard = violations.stream()
+                .anyMatch(v -> v.level() == ScheduleConstraintViolation.ViolationLevel.HARD);
+        if (hasHard) {
+            throw new BadRequestException("存在 HARD 级违背，推演配置禁止确认发布");
+        }
     }
 
     private ScheduleSessionDto buildSessionDto(
@@ -289,12 +336,22 @@ public class DetailScheduleSessionService {
                 simulation.mode().name(),
                 simulation.durationMs(),
                 simulation.recalculatedOperationIds());
+        return toSessionDto(session, preview);
+    }
+
+    private static ScheduleSessionDto toSessionDto(
+            SchedulingSession session,
+            DetailSchedulePlanningPreviewDto preview) {
+        String profileId = session.simulationProfile() != null
+                ? session.simulationProfile().profileId()
+                : null;
         return new ScheduleSessionDto(
                 session.sessionId(),
                 session.masterPlanVersionId(),
                 session.createdAt(),
                 session.expiresAt(),
-                preview);
+                preview,
+                profileId);
     }
 
     private static int countLevel(

@@ -4,6 +4,7 @@ export interface CreateScheduleSessionRequest {
   masterPlanVersionId: string;
   seedInitialQueues?: boolean;
   solve?: boolean;
+  simulationProfileId?: string;
 }
 
 export interface ScheduleSession {
@@ -12,6 +13,7 @@ export interface ScheduleSession {
   createdAt: string;
   expiresAt: string;
   preview: DetailSchedulePlanningPreview;
+  simulationProfileId?: string | null;
 }
 
 export interface PlanningConflict {
@@ -28,6 +30,8 @@ export interface SimulateScheduleSessionRequest {
   stepPatches?: SessionStepPatch[];
   affectedOperationIds?: string[];
   fullReschedule?: boolean;
+  simulationProfileId?: string;
+  ruleOverrides?: Record<string, { enabled?: boolean }>;
 }
 
 export interface SessionStepPatch {
@@ -45,6 +49,8 @@ export interface ScheduleSessionSimulateResult {
   violations: import('./detailSchedulePlanningPreview').ScheduleConstraintViolation[];
   hardViolationCount: number;
   mediumViolationCount: number;
+  appliedRules?: string[];
+  simulationProfileId?: string | null;
 }
 
 export interface ConfirmScheduleSessionResult {

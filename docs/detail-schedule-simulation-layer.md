@@ -246,6 +246,8 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 
 `DetailScheduleSimulationEngine` 为 REST/测试兼容门面，实际编排由 `com.plantops.scenario.planning.simulation.SimulationPipeline` 完成。
 
+**Phase 2 — SimulationProfile：** Session 创建时快照 `simulation_profile.config_json`；`simulate` 可传 `simulationProfileId` / `ruleOverrides`（仅当次）；响应含 `appliedRules`、`simulationProfileId`。CRUD：`GET/POST /api/v1/planning/simulation-profiles`。
+
 ### 7.1 入口
 
 | 方法 | 模式 | 行为 |

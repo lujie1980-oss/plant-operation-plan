@@ -21,8 +21,6 @@ import java.util.Set;
 @ApplicationScoped
 public class DetailScheduleTimingKernel {
 
-    private static final int MAX_ROUTING_ITERATIONS = 16;
-
     @Inject
     SimulationRuleRegistry registry;
 
@@ -39,7 +37,8 @@ public class DetailScheduleTimingKernel {
         OperationTransferTimeIndex transferRules = RoutingChainTimingRule.transferRules(ctx);
         Map<String, OperationAssignment> byOperationId = indexById(schedule.getOperations());
 
-        for (int iteration = 0; iteration < MAX_ROUTING_ITERATIONS; iteration++) {
+        int maxIterations = ctx.profileSettings().maxRoutingIterations();
+        for (int iteration = 0; iteration < maxIterations; iteration++) {
             applyLineQueuesOnce(ctx, schedule, transferRules, byOperationId);
             if (!RoutingChainTimingRule.bumpEarliestFromRoutingPredecessors(schedule, transferRules)) {
                 break;
