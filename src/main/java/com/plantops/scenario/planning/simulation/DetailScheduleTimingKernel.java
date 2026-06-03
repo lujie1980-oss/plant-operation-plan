@@ -24,6 +24,63 @@ public class DetailScheduleTimingKernel {
     @Inject
     SimulationRuleRegistry registry;
 
+    /**
+     * Timefold shadow supplier：单工序链式下界，与 {@link #applyAllStartTimes} 共用规则插件。
+     */
+    public Integer computeShadowStartMinute(OperationAssignment op, DetailSchedule schedule) {
+        if (schedule == null || op == null || op.getLine() == null) {
+            return null;
+        }
+        SimulationRuleContext ctx = SimulationRuleContextFactory.from(
+                schedule, SimulationMode.FULL, Set.of());
+        Map<String, OperationAssignment> byId = indexById(schedule.getOperations());
+
+        if (registry.isRuleTypeEnabled(ctx, com.plantops.masterdata.BusinessRuleTypeIds.PARALLEL_OPERATIONS)
+                && op.isParallelPaired()
+                && op.getPairMateOperationId() != null) {
+            OperationAssignment mate = byId.get(op.getPairMateOperationId());
+            if (mate != null
+                    && mate.getLine() != null
+                    && mate.getLine().getLineId().equals(op.getLine().getLineId())) {
+                return computeShadowSingle(op, mate, ctx);
+            }
+        }
+        return computeShadowSingle(op, null, ctx);
+    }
+
+    private int computeShadowSingle(
+            OperationAssignment op,
+            OperationAssignment parallelMate,
+            SimulationRuleContext ctx) {
+        ScheduleLine line = op.getLine();
+        int start = parallelMate != null
+                ? ContractEarliestTimingRule.effectiveEarliestStartMinute(op, parallelMate, ctx)
+                : ContractEarliestTimingRule.effectiveEarliestStartMinute(op, ctx);
+        start = Math.max(start, registry.maxEarliestFloorMinute(ctx, op));
+        if (parallelMate != null) {
+            start = Math.max(start, registry.maxEarliestFloorMinute(ctx, parallelMate));
+        }
+
+        OperationAssignment previousOnLine = op.getPreviousOnLine();
+        if (previousOnLine != null && previousOnLine.getStartMinute() != null) {
+            int afterPrev = previousOnLine.getStartMinute()
+                    + previousOnLine.getDurationMinutes()
+                    + registry.sumGapBeforeNext(ctx, previousOnLine, op, line);
+            start = Math.max(start, afterPrev);
+        }
+
+        if (op.getRoutingPredecessor() != null
+                && registry.isRuleTypeEnabled(
+                        ctx, com.plantops.masterdata.BusinessRuleTypeIds.OPERATION_TRANSFER_TIME)) {
+            Integer required = RoutingChainTimingRule.minimumStartRespectingRoutingChain(
+                    op, RoutingChainTimingRule.transferRules(ctx));
+            if (required != null) {
+                start = Math.max(start, required);
+            }
+        }
+        return start;
+    }
+
     public void applyAllStartTimes(DetailSchedule schedule) {
         SimulationRuleContext ctx = SimulationRuleContextFactory.from(
                 schedule, SimulationMode.FULL, Set.of());

@@ -1,7 +1,11 @@
 import { useCallback, useState } from 'react';
 import { api } from '../api/client';
 import type { DetailSchedulePlanningPreview } from '../types/detailSchedulePlanningPreview';
-import type { ScheduleSession, SessionStepPatch } from '../types/scheduleSession';
+import type {
+  ScheduleSession,
+  ScheduleSessionSimulateResult,
+  SessionStepPatch,
+} from '../types/scheduleSession';
 
 export function useScheduleSession(masterPlanVersionId: string | null) {
   const [session, setSession] = useState<ScheduleSession | null>(null);
@@ -10,6 +14,20 @@ export function useScheduleSession(masterPlanVersionId: string | null) {
   const [simulating, setSimulating] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [simulateMeta, setSimulateMeta] = useState<{
+    appliedRules?: string[];
+    simulationProfileId?: string | null;
+  } | null>(null);
+
+  const applySimulateResult = useCallback((result: ScheduleSessionSimulateResult) => {
+    setSession(result.session);
+    setPreview(result.session.preview);
+    setSimulateMeta({
+      appliedRules: result.appliedRules,
+      simulationProfileId:
+        result.simulationProfileId ?? result.session.simulationProfileId ?? null,
+    });
+  }, []);
 
   const createSession = useCallback(
     async (opts?: { seedInitialQueues?: boolean; solve?: boolean }) => {
@@ -27,10 +45,14 @@ export function useScheduleSession(masterPlanVersionId: string | null) {
         });
         setSession(result);
         setPreview(result.preview);
+        setSimulateMeta({
+          simulationProfileId: result.simulationProfileId ?? null,
+        });
         return result;
       } catch (e: unknown) {
         setSession(null);
         setPreview(null);
+        setSimulateMeta(null);
         setError(e instanceof Error ? e.message : String(e));
         return null;
       } finally {
@@ -52,8 +74,7 @@ export function useScheduleSession(masterPlanVersionId: string | null) {
       const result = await api.simulateScheduleSession(session.sessionId, {
         fullReschedule: true,
       });
-      setSession(result.session);
-      setPreview(result.session.preview);
+      applySimulateResult(result);
       return result;
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
@@ -61,7 +82,7 @@ export function useScheduleSession(masterPlanVersionId: string | null) {
     } finally {
       setSimulating(false);
     }
-  }, [session?.sessionId]);
+  }, [session?.sessionId, applySimulateResult]);
 
   /** 应用 patch 后按受影响工序做增量推演（批次/工序排产、甘特拖拽等）。 */
   const simulateIncremental = useCallback(
@@ -81,8 +102,7 @@ export function useScheduleSession(masterPlanVersionId: string | null) {
           stepPatches: patches,
           fullReschedule: false,
         });
-        setSession(result.session);
-        setPreview(result.session.preview);
+        applySimulateResult(result);
         return result;
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : String(e));
@@ -91,7 +111,7 @@ export function useScheduleSession(masterPlanVersionId: string | null) {
         setSimulating(false);
       }
     },
-    [session?.sessionId],
+    [session?.sessionId, applySimulateResult],
   );
 
   const simulate = useCallback(
@@ -113,8 +133,7 @@ export function useScheduleSession(masterPlanVersionId: string | null) {
           stepPatches: patches,
           fullReschedule,
         });
-        setSession(result.session);
-        setPreview(result.session.preview);
+        applySimulateResult(result);
         return result;
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : String(e));
@@ -123,7 +142,7 @@ export function useScheduleSession(masterPlanVersionId: string | null) {
         setSimulating(false);
       }
     },
-    [session?.sessionId, simulateFull, simulateIncremental],
+    [session?.sessionId, simulateFull, simulateIncremental, applySimulateResult],
   );
 
   const confirm = useCallback(async () => {
@@ -137,6 +156,7 @@ export function useScheduleSession(masterPlanVersionId: string | null) {
       const result = await api.confirmScheduleSession(session.sessionId);
       setSession(null);
       setPreview(null);
+      setSimulateMeta(null);
       return result;
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
@@ -173,6 +193,7 @@ export function useScheduleSession(masterPlanVersionId: string | null) {
     simulating,
     confirming,
     error,
+    simulateMeta,
     setError,
     createSession,
     simulate,

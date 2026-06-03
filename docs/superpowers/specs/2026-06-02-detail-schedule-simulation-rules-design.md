@@ -1,6 +1,6 @@
 # 详细排程推演规则可定制 — 设计规格（审阅稿）
 
-> **状态**：Phase 1–2 已落地；Phase 3–4 待做  
+> **状态**：Phase 1–2、Phase 4 已落地；Phase 3（扩展规则）按需  
 > **日期**：2026-06-02  
 > **关联**：[detail-schedule-simulation-layer.md](../../detail-schedule-simulation-layer.md)、[aps-planning-layer.md](../../aps-planning-layer.md) §5.6  
 > **前置**：Session 推演、链式赋时、校验、生产排程页交互已落地

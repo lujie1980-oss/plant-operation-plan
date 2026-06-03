@@ -256,7 +256,13 @@ export function ScheduleSessionWorkbench({
         </div>
       )}
 
-      <ScheduleViolationsPanel violations={preview?.violations} />
+      <ScheduleViolationsPanel
+        violations={preview?.violations}
+        appliedRules={simulateResult?.appliedRules}
+        simulationProfileId={
+          simulateResult?.simulationProfileId ?? session?.simulationProfileId
+        }
+      />
     </div>
   );
 }

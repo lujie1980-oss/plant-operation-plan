@@ -64,6 +64,7 @@ export function DetailSchedulePage() {
     confirm,
     optimize,
     hasSession,
+    simulateMeta,
   } = useScheduleSession(activePlanVersionId);
 
   const [error, setError] = useState<string | null>(null);
@@ -556,7 +557,12 @@ export function DetailSchedulePage() {
         </section>
       )}
 
-      <ScheduleViolationsPanel violations={preview?.violations} maxItems={8} />
+      <ScheduleViolationsPanel
+        violations={preview?.violations}
+        maxItems={8}
+        appliedRules={simulateMeta?.appliedRules}
+        simulationProfileId={simulateMeta?.simulationProfileId}
+      />
 
       <HorizontalResizeSplit
         className="ds-layout-split"
