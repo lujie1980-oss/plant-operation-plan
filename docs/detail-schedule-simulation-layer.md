@@ -250,6 +250,14 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 
 **Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `OperationStartTimeKernel`（与 `DetailScheduleTimingKernel` 共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
 
+**Phase 3 — 扩展规则（默认关闭，业务规则页 + Profile 启用）：**
+
+| ruleTypeId | 类型 | 说明 |
+|------------|------|------|
+| `factory-calendar` | TimingRule | 按 `resource_calendar` + 工厂班次策略 snap 开工到可用窗口 |
+| `feedback-freeze` | Timing + Validation | cutoff 前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` |
+| `batch-continuous` | Closure + Validation | 增量闭包扩展同批次同线工序；校验队列内批次不被隔开 |
+
 ### 7.1 入口
 
 | 方法 | 模式 | 行为 |

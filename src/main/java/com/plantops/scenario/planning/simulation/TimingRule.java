@@ -3,6 +3,8 @@ package com.plantops.scenario.planning.simulation;
 import com.plantops.solver.detailschedule.OperationAssignment;
 import com.plantops.solver.detailschedule.ScheduleLine;
 
+import java.util.OptionalInt;
+
 /** 产线队列扫描中的赋时规则插件。 */
 public interface TimingRule {
 
@@ -28,5 +30,19 @@ public interface TimingRule {
     }
 
     default void afterLineQueuePass(SimulationRuleContext ctx, ScheduleLine line) {
+    }
+
+    /** 冻结工序：返回固定开工分钟（相对锚点），跳过后续 cursor 计算。 */
+    default OptionalInt fixedStartMinute(SimulationRuleContext ctx, OperationAssignment op) {
+        return OptionalInt.empty();
+    }
+
+    /** 将 tentative 开工分钟对齐到规则窗口（如班次日历）。 */
+    default int snapStartMinute(
+            SimulationRuleContext ctx,
+            OperationAssignment op,
+            ScheduleLine line,
+            int tentativeStart) {
+        return tentativeStart;
     }
 }

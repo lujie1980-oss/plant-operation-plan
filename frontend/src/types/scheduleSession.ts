@@ -32,6 +32,8 @@ export interface SimulateScheduleSessionRequest {
   fullReschedule?: boolean;
   simulationProfileId?: string;
   ruleOverrides?: Record<string, { enabled?: boolean }>;
+  /** ISO date — 启用 feedback-freeze 规则时加载冻结反馈 */
+  feedbackCutoff?: string;
 }
 
 export interface SessionStepPatch {

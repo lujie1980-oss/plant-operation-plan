@@ -94,7 +94,7 @@ class DetailScheduleSessionServiceTest {
     @Order(4)
     void simulateSessionRecalculatesWithoutTimefold() {
         ScheduleSessionSimulateResultDto result = sessionService.simulate(
-                sessionId, new SimulateScheduleSessionRequest(null, null, false, null, null));
+                sessionId, new SimulateScheduleSessionRequest(null, null, false, null, null, null));
         assertNotNull(result.session());
         assertTrue(result.simulationDurationMs() >= 0);
         assertNotNull(result.session().preview().simulationMode());

@@ -259,7 +259,8 @@ public class DetailScheduleSessionService {
                 seeds,
                 session.simulationProfile(),
                 request != null ? request.simulationProfileId() : null,
-                request != null ? request.ruleOverrides() : null);
+                request != null ? request.ruleOverrides() : null,
+                request != null ? request.resolveFeedbackCutoff() : null);
 
         DetailScheduleSimulationEngine.SimulationResult simulation =
                 simulationEngine.simulate(schedule, ctx, fullReschedule, seeds);

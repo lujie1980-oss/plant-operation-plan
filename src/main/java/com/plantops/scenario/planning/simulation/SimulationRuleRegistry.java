@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.Set;
 
 @ApplicationScoped
@@ -63,6 +64,28 @@ public class SimulationRuleRegistry {
             floor = Math.max(floor, rule.earliestFloorMinute(ctx, op));
         }
         return floor;
+    }
+
+    public OptionalInt fixedStartMinute(SimulationRuleContext ctx, com.plantops.solver.detailschedule.OperationAssignment op) {
+        for (TimingRule rule : enabledTimingRules(ctx)) {
+            OptionalInt fixed = rule.fixedStartMinute(ctx, op);
+            if (fixed.isPresent()) {
+                return fixed;
+            }
+        }
+        return OptionalInt.empty();
+    }
+
+    public int snapStartMinute(
+            SimulationRuleContext ctx,
+            com.plantops.solver.detailschedule.OperationAssignment op,
+            com.plantops.solver.detailschedule.ScheduleLine line,
+            int tentativeStart) {
+        int snapped = tentativeStart;
+        for (TimingRule rule : enabledTimingRules(ctx)) {
+            snapped = rule.snapStartMinute(ctx, op, line, snapped);
+        }
+        return snapped;
     }
 
     public boolean isRuleTypeEnabled(SimulationRuleContext ctx, String ruleTypeId) {

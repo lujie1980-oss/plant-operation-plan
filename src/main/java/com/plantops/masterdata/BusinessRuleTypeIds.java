@@ -14,6 +14,12 @@ public final class BusinessRuleTypeIds {
     public static final String MATERIAL_LEAD_TIME = "material-lead-time";
     public static final String SHIFT_HEADCOUNT_RULES = "shift-headcount-rules";
     public static final String DEMAND_PRIORITY_RULES = "demand-priority-rules";
+    /** Phase 3：班次日历赋时（跳过非开工窗口）。 */
+    public static final String FACTORY_CALENDAR = "factory-calendar";
+    /** Phase 3：排程反馈冻结窗口内工序保持计划时间。 */
+    public static final String FEEDBACK_FREEZE = "feedback-freeze";
+    /** Phase 3：批次内工序增量闭包扩展。 */
+    public static final String BATCH_CONTINUOUS = "batch-continuous";
 
     public static final List<String> ALL = List.of(
             CHANGEOVER,
@@ -24,7 +30,10 @@ public final class BusinessRuleTypeIds {
             BOM_RULES,
             MATERIAL_LEAD_TIME,
             SHIFT_HEADCOUNT_RULES,
-            DEMAND_PRIORITY_RULES);
+            DEMAND_PRIORITY_RULES,
+            FACTORY_CALENDAR,
+            FEEDBACK_FREEZE,
+            BATCH_CONTINUOUS);
 
     private BusinessRuleTypeIds() {
     }
@@ -40,6 +49,9 @@ public final class BusinessRuleTypeIds {
             case MATERIAL_LEAD_TIME -> "采购提前期";
             case SHIFT_HEADCOUNT_RULES -> "班次人员";
             case DEMAND_PRIORITY_RULES -> "订单优先级";
+            case FACTORY_CALENDAR -> "班次日历赋时";
+            case FEEDBACK_FREEZE -> "反馈冻结窗口";
+            case BATCH_CONTINUOUS -> "批次连续排产";
             default -> ruleTypeId;
         };
     }
@@ -61,6 +73,12 @@ public final class BusinessRuleTypeIds {
                     "物料采购提前期（天）：缺料时按该提前期推算可到货日。物料填 * 表示所有物料的默认提前期；优先取精确物料规则，其次 * 规则，最后系统默认参数。最早可行开始对多个缺料件取“最迟到货”（并行备料）。";
             case SHIFT_HEADCOUNT_RULES -> "各区域/班次的可用人员数，影响排程人力约束。";
             case DEMAND_PRIORITY_RULES -> "需求规则：优先级、加急等级与排程锁定";
+            case FACTORY_CALENDAR ->
+                    "按资源日历与工厂班次策略，将工序开工时间对齐到可用班次窗口（非 24h 连续分钟）。";
+            case FEEDBACK_FREEZE ->
+                    "排程反馈 cutoff 及之前已冻结工序在 Session 推演中保持计划开工时间不变。";
+            case BATCH_CONTINUOUS ->
+                    "增量推演时，种子工序所在批次的同线工序一并纳入波及闭包。";
             default -> "";
         };
     }

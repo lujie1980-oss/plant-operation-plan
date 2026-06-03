@@ -64,7 +64,7 @@ public class ScheduleSessionResource {
                 sessionId,
                 request != null
                         ? request
-                        : new SimulateScheduleSessionRequest(null, null, null, null, null));
+                        : new SimulateScheduleSessionRequest(null, null, null, null, null, null));
     }
 
     @PATCH
@@ -75,7 +75,7 @@ public class ScheduleSessionResource {
             List<SessionStepPatchDto> patches) {
         return sessionService.simulate(
                 sessionId,
-                new SimulateScheduleSessionRequest(patches, null, false, null, null));
+                new SimulateScheduleSessionRequest(patches, null, false, null, null, null));
     }
 
     @POST

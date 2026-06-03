@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.Set;
 
 @ApplicationScoped
@@ -78,6 +79,7 @@ public class DetailScheduleTimingKernel {
                 start = Math.max(start, required);
             }
         }
+        start = registry.snapStartMinute(ctx, op, line, start);
         return start;
     }
 
@@ -165,11 +167,33 @@ public class DetailScheduleTimingKernel {
             if (op.getPairGroupId() != null && placedPairGroups.contains(op.getPairGroupId())) {
                 continue;
             }
+            OptionalInt fixed = registry.fixedStartMinute(ctx, op);
+            if (fixed.isPresent() && !(parallelEnabled
+                    && op.isParallelPaired()
+                    && op.getPairMateOperationId() != null)) {
+                assignFixedStart(op, fixed.getAsInt());
+                cursor = Math.max(cursor, endMinute(op));
+                previous = op;
+                continue;
+            }
             if (parallelEnabled
                     && op.isParallelPaired()
                     && op.getPairMateOperationId() != null) {
                 OperationAssignment mate = byOperationId.get(op.getPairMateOperationId());
                 if (mate != null && queue.contains(mate)) {
+                    OptionalInt mateFixed = registry.fixedStartMinute(ctx, mate);
+                    if (mateFixed.isPresent() || fixed.isPresent()) {
+                        int start = fixed.isPresent() ? fixed.getAsInt() : mateFixed.getAsInt();
+                        if (fixed.isPresent() && mateFixed.isPresent()) {
+                            start = Math.max(fixed.getAsInt(), mateFixed.getAsInt());
+                        }
+                        assignFixedStart(op, start);
+                        assignFixedStart(mate, start);
+                        cursor = Math.max(cursor, Math.max(endMinute(op), endMinute(mate)));
+                        placedPairGroups.add(op.getPairGroupId());
+                        previous = laterFinishing(op, mate);
+                        continue;
+                    }
                     if (previous != null) {
                         cursor += registry.sumGapBeforeNext(ctx, previous, op, line);
                     }
@@ -178,6 +202,7 @@ public class DetailScheduleTimingKernel {
                             ContractEarliestTimingRule.effectiveEarliestStartMinute(op, mate, ctx));
                     cursor = Math.max(cursor, earliestFloor(ctx, op, transferRules));
                     cursor = Math.max(cursor, earliestFloor(ctx, mate, transferRules));
+                    cursor = registry.snapStartMinute(ctx, op, line, cursor);
                     op.setStartMinute(cursor);
                     mate.setStartMinute(cursor);
                     int span = Math.max(op.getDurationMinutes(), mate.getDurationMinutes());
@@ -193,10 +218,24 @@ public class DetailScheduleTimingKernel {
             }
             cursor = Math.max(cursor, ContractEarliestTimingRule.effectiveEarliestStartMinute(op, ctx));
             cursor = Math.max(cursor, earliestFloor(ctx, op, transferRules));
+            cursor = registry.snapStartMinute(ctx, op, line, cursor);
             op.setStartMinute(cursor);
             cursor += op.getDurationMinutes();
             previous = op;
         }
+    }
+
+    private static void assignFixedStart(OperationAssignment op, int start) {
+        op.setStartMinute(start);
+    }
+
+    private static int endMinute(OperationAssignment op) {
+        Integer end = op.getEndMinute();
+        if (end != null) {
+            return end;
+        }
+        Integer start = op.getStartMinute();
+        return start != null ? start + op.getDurationMinutes() : 0;
     }
 
     private int earliestFloor(

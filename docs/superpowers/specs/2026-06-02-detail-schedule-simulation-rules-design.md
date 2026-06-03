@@ -1,6 +1,6 @@
 # 详细排程推演规则可定制 — 设计规格（审阅稿）
 
-> **状态**：Phase 1–2、Phase 4 已落地；Phase 3（扩展规则）按需  
+> **状态**：Phase 1–4、Phase 3 扩展规则已落地  
 > **日期**：2026-06-02  
 > **关联**：[detail-schedule-simulation-layer.md](../../detail-schedule-simulation-layer.md)、[aps-planning-layer.md](../../aps-planning-layer.md) §5.6  
 > **前置**：Session 推演、链式赋时、校验、生产排程页交互已落地
@@ -327,10 +327,13 @@ POST /api/v1/planning/schedule-sessions/{id}/simulate
 
 ### Phase 3 — 扩展规则（按需）
 
-**交付：**
+**交付（2026-06-02）：**
 
-- 新增 `TimingRule` / `ValidationRule` 实现 + 主数据（若有）。
-- 示例候选：班次日历赋时、反馈冻结窗口、批次内连续排产策略。
+- `factory-calendar`：`FactoryCalendarTimingRule` + `ResourceWorkingCalendarIndex`（班次窗口 snap）
+- `feedback-freeze`：`FeedbackFreezeTimingRule` + `FeedbackFreezeValidationRule`；simulate 请求可选 `feedbackCutoff`
+- `batch-continuous`：`BatchContinuousClosureRule` + `BatchContinuousValidationRule`
+- 业务规则页新增三项 ruleType（V48 迁移，默认关闭）
+- 默认 `SimulationProfile` 中上述规则 `enabled: false`（行为与 Phase 2 兼容）
 
 ### Phase 4 — Timefold Shadow 对齐（可与 Phase 1 并行验证）
 

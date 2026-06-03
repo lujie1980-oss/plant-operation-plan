@@ -1,5 +1,6 @@
 package com.plantops.scenario.planning.simulation;
 
+import com.plantops.scenario.FeedbackFreezeIndex;
 import com.plantops.persistence.entity.SimulationProfileEntity;
 import com.plantops.scenario.planning.SimulationProfileService;
 import com.plantops.solver.detailschedule.DetailSchedule;
@@ -27,7 +28,8 @@ public class SimulationProfileResolver {
             Set<String> seedOperationIds,
             SimulationProfileSnapshot sessionSnapshot,
             String requestProfileId,
-            Map<String, Map<String, Object>> requestRuleOverrides) {
+            Map<String, Map<String, Object>> requestRuleOverrides,
+            LocalDate feedbackCutoff) {
         SimulationProfileSnapshot effective = resolveEffectiveSnapshot(sessionSnapshot, requestProfileId);
         SimulationProfileSettings settings = configParser.parse(
                 effective != null ? effective.profileId() : null,
@@ -38,6 +40,10 @@ public class SimulationProfileResolver {
         LocalDate anchor = facts != null && facts.planningAnchorDate() != null
                 ? facts.planningAnchorDate()
                 : LocalDate.now();
+        if (schedule != null && feedbackCutoff != null) {
+            facts = mergeFeedbackFreeze(facts, anchor, feedbackCutoff);
+            schedule.setProblemFacts(facts);
+        }
         return new SimulationRuleContext(
                 schedule,
                 facts,
@@ -47,6 +53,39 @@ public class SimulationProfileResolver {
                 seedOperationIds != null ? seedOperationIds : Set.of(),
                 anchor,
                 settings);
+    }
+
+    public SimulationRuleContext buildContext(
+            DetailSchedule schedule,
+            SimulationMode mode,
+            Set<String> seedOperationIds,
+            SimulationProfileSnapshot sessionSnapshot,
+            String requestProfileId,
+            Map<String, Map<String, Object>> requestRuleOverrides) {
+        return buildContext(
+                schedule, mode, seedOperationIds, sessionSnapshot, requestProfileId, requestRuleOverrides, null);
+    }
+
+    private static DetailScheduleProblemFacts mergeFeedbackFreeze(
+            DetailScheduleProblemFacts facts,
+            LocalDate anchor,
+            LocalDate feedbackCutoff) {
+        if (facts == null) {
+            return new DetailScheduleProblemFacts(
+                    null,
+                    anchor,
+                    null,
+                    null,
+                    null,
+                    FeedbackFreezeIndex.fromWorkspace(anchor, feedbackCutoff));
+        }
+        return new DetailScheduleProblemFacts(
+                facts.contractSettings(),
+                facts.planningAnchorDate(),
+                facts.changeoverRules(),
+                facts.transferRules(),
+                facts.workingCalendar(),
+                FeedbackFreezeIndex.fromWorkspace(anchor, feedbackCutoff));
     }
 
     private SimulationProfileSnapshot resolveEffectiveSnapshot(

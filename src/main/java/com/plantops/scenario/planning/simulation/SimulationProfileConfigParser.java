@@ -13,8 +13,18 @@ public class SimulationProfileConfigParser {
 
     public static final String DEFAULT_CONFIG_JSON = """
             {
-              "timing": { "maxRoutingIterations": 16, "rules": {} },
-              "incremental": { "rules": {} },
+              "timing": {
+                "maxRoutingIterations": 16,
+                "rules": {
+                  "factory-calendar": { "enabled": false },
+                  "feedback-freeze": { "enabled": false }
+                }
+              },
+              "incremental": {
+                "rules": {
+                  "batch-continuous": { "enabled": false }
+                }
+              },
               "validation": { "blockConfirmOnHard": false }
             }
             """;
