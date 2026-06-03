@@ -128,8 +128,8 @@ public class BusinessRuleScopeService {
             if (!existing.containsKey(ruleTypeId)) {
                 BusinessRuleScopeEntity row = new BusinessRuleScopeEntity();
                 row.ruleTypeId = ruleTypeId;
-                row.enableMasterPlan = true;
-                row.enableDetailSchedule = true;
+                row.enableMasterPlan = !isPhase3ExtensionRule(ruleTypeId);
+                row.enableDetailSchedule = !isPhase3ExtensionRule(ruleTypeId);
                 row.ensureWorkspace();
                 toPersist.add(row);
             }
@@ -137,6 +137,12 @@ public class BusinessRuleScopeService {
         for (BusinessRuleScopeEntity row : toPersist) {
             row.persist();
         }
+    }
+
+    private static boolean isPhase3ExtensionRule(String ruleTypeId) {
+        return BusinessRuleTypeIds.FACTORY_CALENDAR.equals(ruleTypeId)
+                || BusinessRuleTypeIds.FEEDBACK_FREEZE.equals(ruleTypeId)
+                || BusinessRuleTypeIds.BATCH_CONTINUOUS.equals(ruleTypeId);
     }
 
     private BusinessRuleScopeEntity findOrDefault(String ruleTypeId) {
