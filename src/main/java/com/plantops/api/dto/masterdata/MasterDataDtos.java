@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
 
 /**
  * 计划主数据维护所需的 DTO 集合。
@@ -56,7 +57,8 @@ public final class MasterDataDtos {
             String materialCode,
             String materialName,
             String uomCode,
-            String materialType
+            String materialType,
+            Map<String, Object> extensions
     ) {
     }
 
@@ -95,7 +97,48 @@ public final class MasterDataDtos {
             String keyMaterial,
             String maleFemaleEnd,
             String totalBranch,
-            BigDecimal standardLabor
+            BigDecimal standardLabor,
+            Map<String, Object> extensions
+    ) {
+    }
+
+    /** 主数据字段目录项（General / Custom） */
+    public record MasterFieldDefinitionDto(
+            Long id,
+            String entityType,
+            String fieldKey,
+            String fieldCategory,
+            String dataType,
+            String labelZh,
+            boolean required,
+            boolean visibleInGrid,
+            boolean usedInRules,
+            int displayOrder,
+            String source
+    ) {
+    }
+
+    /** 新增 workspace 级 Custom 字段 */
+    public record MasterFieldDefinitionCreateDto(
+            String entityType,
+            String fieldKey,
+            String dataType,
+            String labelZh,
+            boolean required,
+            boolean visibleInGrid,
+            boolean usedInRules,
+            int displayOrder
+    ) {
+    }
+
+    /** 更新字段目录（不可改 fieldKey / entityType） */
+    public record MasterFieldDefinitionUpdateDto(
+            String dataType,
+            String labelZh,
+            boolean required,
+            boolean visibleInGrid,
+            boolean usedInRules,
+            int displayOrder
     ) {
     }
 
@@ -152,7 +195,10 @@ public final class MasterDataDtos {
             String fromOperationName,
             String toOperationName,
             int transferMinutes,
-            int minTransferMinutes
+            int minTransferMinutes,
+            int maxTransferMinutes,
+            String linkMode,
+            int delayStartMinutes
     ) {
     }
 
@@ -211,7 +257,8 @@ public final class MasterDataDtos {
             String ruleTypeId,
             String label,
             boolean enableMasterPlan,
-            boolean enableDetailSchedule
+            boolean enableDetailSchedule,
+            String description
     ) {
     }
 }

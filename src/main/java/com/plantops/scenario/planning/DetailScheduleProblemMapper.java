@@ -2,6 +2,7 @@ package com.plantops.scenario.planning;
 
 import com.plantops.masterdata.BusinessRuleScopeService;
 import com.plantops.solver.detailschedule.DetailSchedule;
+import com.plantops.solver.detailschedule.DetailScheduleLineInitializer;
 import com.plantops.solver.detailschedule.DetailScheduleProblemFacts;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -20,14 +21,14 @@ public class DetailScheduleProblemMapper {
             return DetailSchedule.empty();
         }
         DetailSchedule schedule = new DetailSchedule();
-        schedule.setLineRange(context.lines());
+        schedule.setLines(context.lines());
         schedule.setOperations(context.operations());
-        schedule.setShiftCapacityMinutes(context.shiftCapacityMinutes());
         schedule.setProblemFacts(new DetailScheduleProblemFacts(
                 context.contractSettings(),
                 context.planningAnchor(),
-                context.shiftCapacityMinutes(),
-                businessRuleScopeService.loadChangeoverIndex()));
+                businessRuleScopeService.loadChangeoverIndex(),
+                businessRuleScopeService.loadDetailScheduleTransferTimeIndex()));
+        DetailScheduleLineInitializer.seedInitialQueues(schedule);
         return schedule;
     }
 }

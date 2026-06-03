@@ -1,9 +1,12 @@
 package com.plantops.scenario.planning;
 
+import com.plantops.masterdata.BusinessRuleScopeService;
+import com.plantops.scenario.ChangeoverRuleIndex;
 import com.plantops.solver.masterplan.AdjacentSlotPairFactory;
 import com.plantops.solver.masterplan.MasterPlanSchedule;
 import com.plantops.solver.masterplan.MasterPlanSettings;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 /**
  * 将 {@link MasterPlanPlanningContext} 投影为 Timefold {@link MasterPlanSchedule}（只读视图 + 待优化变量）。
@@ -11,10 +14,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class MasterPlanProblemMapper {
 
+    @Inject
+    BusinessRuleScopeService businessRuleScopeService;
+
     public MasterPlanSchedule toSchedule(MasterPlanPlanningContext context) {
         if (context == null) {
             return MasterPlanSchedule.empty();
         }
+        ChangeoverRuleIndex changeoverRules = businessRuleScopeService.loadMasterPlanChangeoverIndex();
         return new MasterPlanSchedule(
                 context.timeSlots(),
                 context.orderAllocations(),
@@ -26,6 +33,7 @@ public class MasterPlanProblemMapper {
                 context.capacityOverlay(),
                 context.bomDependencyEdges(),
                 context.operationPrecedenceEdges(),
-                context.workOrderTimingBounds());
+                context.workOrderTimingBounds(),
+                changeoverRules);
     }
 }

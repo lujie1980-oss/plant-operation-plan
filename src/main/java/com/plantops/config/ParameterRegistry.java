@@ -27,11 +27,17 @@ public class ParameterRegistry {
             Map.entry("detail_schedule_solver_seconds", "30"),
             Map.entry("capacity_overload_threshold_pct", "110"),
             Map.entry("master_plan_objective_weights",
-                    "{\"minimize_lateness\":10,\"prioritize_high_priority\":1,\"locked_orders_prefer_earlier\":1,\"balance_adjacent_slot_loading\":1}"),
+                    "{\"minimize_lateness\":10,\"prioritize_high_priority\":1,\"locked_orders_prefer_earlier\":1,\"balance_adjacent_slot_loading\":1,\"concentrate_capacity\":1,\"minimize_slot_changeover\":1}"),
             Map.entry("detail_schedule_contract",
                     ScheduleContractConfigService.DEFAULT_CONTRACT_JSON),
-            Map.entry("shift_capacity_minutes", "480"),
-            Map.entry("default_procurement_lead_time_days", "7"));
+            Map.entry("default_procurement_lead_time_days", "7"),
+            Map.entry("batch_split_mode", "NONE"),
+            Map.entry("batch_fixed_qty", "100"),
+            Map.entry("batch_remainder_mode", "SEPARATE_TAIL"),
+            Map.entry("batch_auto_on_dispatch", "false"),
+            Map.entry("batch_kitting_create_short_batch", "true"),
+            Map.entry("batch_min_qty", "10"),
+            Map.entry("batch_max_qty", "200"));
 
     private final ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
 

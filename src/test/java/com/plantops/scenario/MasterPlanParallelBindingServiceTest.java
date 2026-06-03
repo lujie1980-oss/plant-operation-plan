@@ -13,6 +13,25 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class MasterPlanParallelBindingServiceTest {
 
     @Test
+    void linkParallelSegmentPairsBindsEachSegmentIndex() {
+        String res = "RES-X";
+        OrderAllocation a0 = alloc("A0", "SO1", 1, "PROD-A", res, 10, 0);
+        OrderAllocation a1 = alloc("A1", "SO1", 1, "PROD-A", res, 10, 1);
+        OrderAllocation b0 = alloc("B0", "SO1", 1, "PROD-B", res, 10, 0);
+        OrderAllocation b1 = alloc("B1", "SO1", 1, "PROD-B", res, 10, 1);
+        List<OrderAllocation> line = List.of(a0, a1, b0, b1);
+
+        int linked = MasterPlanParallelBindingService.linkParallelSegmentPairs(
+                line, a0, b0, "GRP", "LINE-1", res);
+
+        assertEquals(2, linked);
+        assertEquals("GRP#S0", a0.getParallelGroupId());
+        assertEquals("GRP#S0", b0.getParallelGroupId());
+        assertEquals("GRP#S1", a1.getParallelGroupId());
+        assertEquals("GRP#S1", b1.getParallelGroupId());
+    }
+
+    @Test
     void findLeadAllocationPicksEarliestOperationOnResource() {
         OrderAllocation laterOp = alloc("A@OP20_0#0", "SO1", 1, "PROD-A", "RES-X", 20, 0);
         OrderAllocation lead = alloc("A@OP10_0#0", "SO1", 1, "PROD-A", "RES-X", 10, 0);

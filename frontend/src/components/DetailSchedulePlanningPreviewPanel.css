@@ -1,0 +1,79 @@
+.ds-planning-preview-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.ds-planning-preview-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.ds-planning-preview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+}
+
+.ds-planning-violations {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.ds-planning-violations h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.ds-violation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 10rem;
+  overflow: auto;
+}
+
+.ds-violation {
+  display: grid;
+  grid-template-columns: 3.5rem 8rem 1fr 2fr;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  background: #f8fafc;
+}
+
+.ds-violation.level-hard {
+  background: #fef2f2;
+  border-left: 3px solid #ef4444;
+}
+
+.ds-violation.level-medium {
+  background: #fffbeb;
+  border-left: 3px solid #f59e0b;
+}
+
+.ds-violation-level {
+  font-weight: 600;
+}
+
+.ds-planning-preview-gantt {
+  margin-top: 1rem;
+  min-height: 280px;
+}
+
+.ds-planning-preview-gantt h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}

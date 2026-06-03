@@ -1,0 +1,56 @@
+.batch-split-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.batch-split-section {
+  padding: 1rem;
+}
+
+.batch-split-section-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.batch-split-section-desc {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.batch-split-field-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.15rem;
+}
+
+.batch-split-span-2 {
+  grid-column: 1 / -1;
+}
+
+.batch-split-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.batch-split-preview {
+  padding: 1rem;
+  background: #f8fafc;
+}
+
+.batch-split-preview-text {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.batch-split-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

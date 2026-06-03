@@ -8,12 +8,14 @@ import java.util.Optional;
 public enum ChangeoverAttributeKey {
     WIRE_MATERIAL("wireMaterial", "线材"),
     KEY_MATERIAL("keyMaterial", "关键物料"),
+    MALE_FEMALE_END("maleFemaleEnd", "公母端"),
     TOTAL_BRANCH("totalBranch", "分支"),
     PRODUCT_CODE("productCode", "料号");
 
     private static final Map<String, ChangeoverAttributeKey> BY_CODE = Map.of(
             "wireMaterial", WIRE_MATERIAL,
             "keyMaterial", KEY_MATERIAL,
+            "maleFemaleEnd", MALE_FEMALE_END,
             "totalBranch", TOTAL_BRANCH,
             "productCode", PRODUCT_CODE);
 

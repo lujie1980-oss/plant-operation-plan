@@ -24,6 +24,12 @@ public class OperationTransferTimeRuleEntity extends WorkspaceScopedEntity {
 
     public int minTransferMinutes;
 
+    public int maxTransferMinutes;
+
+    public String linkMode;
+
+    public int delayStartMinutes;
+
     public static java.util.List<OperationTransferTimeRuleEntity> listInWorkspace() {
         return list("workspaceId", ws());
     }

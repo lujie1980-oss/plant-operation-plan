@@ -321,7 +321,8 @@ public class MasterDataValidationService {
         Set<String> warnedTransferProducts = new HashSet<>();
         for (OperationTransferTimeRuleEntity rule : operationTransferTimes) {
             String k = rule.productCode + "|" + rule.fromOperationName + "->" + rule.toOperationName;
-            if (rule.transferMinutes < 0 || rule.minTransferMinutes < 0) {
+            int maxMinutes = rule.maxTransferMinutes > 0 ? rule.maxTransferMinutes : rule.transferMinutes;
+            if (rule.minTransferMinutes < 0 || maxMinutes < 0) {
                 addIssue(
                         errors,
                         OP_TRANSFER_NEGATIVE,
@@ -331,14 +332,14 @@ public class MasterDataValidationService {
                         "流转时间或最小流转时间为负",
                         Map.of("productCode", rule.productCode));
             }
-            if (rule.minTransferMinutes > rule.transferMinutes) {
+            if (maxMinutes > 0 && maxMinutes <= rule.minTransferMinutes) {
                 addIssue(
                         warnings,
                         OP_TRANSFER_MIN_GT_TRANSFER,
                         Severity.WARNING,
                         "OperationTransferTimeRule",
                         k,
-                        "最小流转时间大于流转时间",
+                        "最大流转时间必须大于最小流转时间",
                         Map.of("productCode", rule.productCode));
             }
             if (rule.fromOperationName != null && rule.fromOperationName.equals(rule.toOperationName)) {

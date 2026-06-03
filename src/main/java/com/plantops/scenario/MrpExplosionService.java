@@ -123,7 +123,7 @@ public class MrpExplosionService {
                     LotRule rule = lotRules.getOrDefault(
                             product, MrpLotSizing.lotRuleForProduct(product, allBom));
                     plannedQty = MrpLotSizing.apply(bucket.grossQty, rule);
-                    woNo = allocateWorkOrderNo(product, key.needDate(), keyToWoNo.size() + 1);
+                    woNo = allocateUniqueWorkOrderNo(product, key.needDate(), keyToWoNo.size() + 1);
                     sequence = persistWorkOrder(
                             woNo,
                             keyToParentWoNos.getOrDefault(key, List.of()),
@@ -228,8 +228,17 @@ public class MrpExplosionService {
             int bomLevel,
             int sequence,
             List<PegLine> pegLines) {
-        WorkOrderEntity wo = new WorkOrderEntity();
-        wo.workOrderNo = woNo;
+        WorkOrderEntity existing = WorkOrderEntity.findByNo(woNo);
+        WorkOrderEntity wo;
+        if (existing != null && WorkOrderEntity.isMrpRegeneratable(existing)) {
+            wo = existing;
+            WorkOrderPeggingEntity.deleteForWorkOrders(List.of(woNo));
+        } else {
+            wo = new WorkOrderEntity();
+            wo.workOrderNo = woNo;
+            wo.ensureWorkspace();
+            wo.sourceType = WorkOrderEntity.SOURCE_MRP;
+        }
         wo.salesOrderNo = null;
         wo.salesOrderLineNo = 0;
         wo.productCode = productCode;
@@ -241,8 +250,11 @@ public class MrpExplosionService {
         wo.needDate = needDate;
         wo.bomLevel = bomLevel;
         wo.sourceType = WorkOrderEntity.SOURCE_MRP;
-        wo.ensureWorkspace();
-        wo.persist();
+        wo.pendingScheduleEligible = Boolean.TRUE;
+        wo.batchSplitStatus = WorkOrderEntity.BATCH_SPLIT_NONE;
+        if (existing == null) {
+            wo.persist();
+        }
 
         for (PegLine peg : pegLines) {
             WorkOrderPeggingEntity p = new WorkOrderPeggingEntity();
@@ -271,7 +283,24 @@ public class MrpExplosionService {
         }
     }
 
-    private static String allocateWorkOrderNo(String productCode, LocalDate needDate, int seq) {
+    /**
+     * 生成唯一工单号：已存在且不可重建（如已下发）时递增序号，避免 UK_WORK_ORDER_WS 冲突。
+     */
+    static String allocateUniqueWorkOrderNo(String productCode, LocalDate needDate, int preferredSeq) {
+        int seq = Math.max(1, preferredSeq);
+        while (seq < 10_000) {
+            String candidate = formatWorkOrderNo(productCode, needDate, seq);
+            WorkOrderEntity existing = WorkOrderEntity.findByNo(candidate);
+            if (existing == null || WorkOrderEntity.isMrpRegeneratable(existing)) {
+                return candidate;
+            }
+            seq++;
+        }
+        throw new IllegalStateException(
+                "无法为产品 " + productCode + " / " + needDate + " 分配唯一 MRP 工单号（序号已用尽）");
+    }
+
+    private static String formatWorkOrderNo(String productCode, LocalDate needDate, int seq) {
         String safeProduct = productCode.replaceAll("[^A-Za-z0-9_-]", "_");
         if (safeProduct.length() > 24) {
             safeProduct = safeProduct.substring(0, 24);

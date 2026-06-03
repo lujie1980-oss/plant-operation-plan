@@ -3,6 +3,7 @@ package com.plantops.workspace;
 import com.plantops.api.dto.WorkspaceCreateRequest;
 import com.plantops.api.dto.WorkspaceDto;
 import com.plantops.config.ParameterRegistry;
+import com.plantops.masterdata.MasterFieldDefinitionService;
 import com.plantops.persistence.entity.*;
 import com.plantops.scenario.PlanningScenarioService;
 import com.plantops.scenario.RuleSetVersionService;
@@ -35,6 +36,9 @@ public class WorkspaceService {
 
     @Inject
     RuleSetVersionService ruleSetVersionService;
+
+    @Inject
+    MasterFieldDefinitionService masterFieldDefinitionService;
 
     public List<WorkspaceDto> list() {
         return WorkspaceEntity.listAllOrdered().stream().map(this::toDto).toList();
@@ -70,6 +74,7 @@ public class WorkspaceService {
             parameterRegistry.ensureDefaults();
             ruleSetVersionService.ensureDefaults();
             planningScenarioService.ensureDefaults();
+            masterFieldDefinitionService.cloneDefaultsFromDefaultWorkspace(id);
         } finally {
             workspaceContext.setWorkspaceId(prev);
         }
@@ -90,6 +95,7 @@ public class WorkspaceService {
     @Transactional
     void deleteWorkspaceData(String workspaceId) {
         DetailScheduleOperationEntity.delete("workspaceId", workspaceId);
+        ProductionBatchEntity.delete("workspaceId", workspaceId);
         MasterPlanAllocationEntity.delete("workspaceId", workspaceId);
         LineOpeningDecisionEntity.delete("workspaceId", workspaceId);
         ShortageRecommendationEntity.delete("workspaceId", workspaceId);
@@ -112,6 +118,7 @@ public class WorkspaceService {
         ProductionResourceEntity.delete("workspaceId", workspaceId);
         PlanningPipelineRunEntity.delete("workspaceId", workspaceId);
         SystemParameterEntity.delete("workspaceId", workspaceId);
+        MasterFieldDefinitionEntity.delete("workspaceId", workspaceId);
         PlanningScenarioEntity.delete("workspaceId", workspaceId);
         RuleSetVersionEntity.delete("workspaceId", workspaceId);
     }

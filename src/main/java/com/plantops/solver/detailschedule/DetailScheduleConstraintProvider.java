@@ -1,6 +1,6 @@
 package com.plantops.solver.detailschedule;
 
-import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
+import ai.timefold.solver.core.api.score.HardSoftScore;
 import ai.timefold.solver.core.api.score.stream.Constraint;
 import ai.timefold.solver.core.api.score.stream.ConstraintFactory;
 import ai.timefold.solver.core.api.score.stream.ConstraintProvider;
@@ -15,7 +15,6 @@ public class DetailScheduleConstraintProvider implements ConstraintProvider {
     @Override
     public Constraint[] defineConstraints(ConstraintFactory factory) {
         return new Constraint[]{
-                kittingEligibleOnly(factory),
                 lineMustBeOpened(factory),
                 resourceMatch(factory),
                 parallelOperationSameLine(factory),
@@ -25,15 +24,9 @@ public class DetailScheduleConstraintProvider implements ConstraintProvider {
                 preferMasterPlanContractResource(factory),
                 preferHigherPriorityResource(factory),
                 minimizeMasterPlanTargetDeviation(factory),
-                minimizeChangeover(factory)
+                minimizeProductChangeover(factory),
+                routingPrecedence(factory)
         };
-    }
-
-    private Constraint kittingEligibleOnly(ConstraintFactory factory) {
-        return factory.forEach(OperationAssignment.class)
-                .filter(op -> op.getLine() != null && !op.isKittingEligible())
-                .penalize(HardSoftScore.ONE_HARD)
-                .asConstraint("Kitting eligible only");
     }
 
     private Constraint lineMustBeOpened(ConstraintFactory factory) {
@@ -118,7 +111,6 @@ public class DetailScheduleConstraintProvider implements ConstraintProvider {
                 .penalize(HardSoftScore.ONE_SOFT, (op, facts) -> {
                     LocalDate actualEnd = ScheduleTimingUtil.completionDate(
                             facts.planningAnchorDate(),
-                            facts.shiftCapacityMinutes(),
                             op.getStartMinute(),
                             op.getDurationMinutes());
                     return facts.contractSettings().dueDatePenalty(op.getDueDate(), actualEnd);
@@ -132,6 +124,7 @@ public class DetailScheduleConstraintProvider implements ConstraintProvider {
     private Constraint minimizeMasterPlanTargetDeviation(ConstraintFactory factory) {
         return factory.forEach(OperationAssignment.class)
                 .join(DetailScheduleProblemFacts.class)
+                .filter((op, facts) -> facts.contractSettings().masterPlanTargetSoftConstraintEnabled())
                 .filter((op, facts) -> (op.getMpContractStartDate() != null || op.getMpContractEndDate() != null
                         || op.getMpTargetEndDate() != null)
                         && op.getLine() != null
@@ -139,11 +132,9 @@ public class DetailScheduleConstraintProvider implements ConstraintProvider {
                 .penalize(HardSoftScore.ONE_SOFT, (op, facts) -> {
                     LocalDate actualStart = ScheduleTimingUtil.startDate(
                             facts.planningAnchorDate(),
-                            facts.shiftCapacityMinutes(),
                             op.getStartMinute());
                     LocalDate actualEnd = ScheduleTimingUtil.completionDate(
                             facts.planningAnchorDate(),
-                            facts.shiftCapacityMinutes(),
                             op.getStartMinute(),
                             op.getDurationMinutes());
                     int penalty = 0;
@@ -191,10 +182,39 @@ public class DetailScheduleConstraintProvider implements ConstraintProvider {
                 .asConstraint("Prefer higher priority resource");
     }
 
-    private Constraint minimizeChangeover(ConstraintFactory factory) {
+    /**
+     * 同产线链上相邻任务的产品换型成本（Soft）。
+     */
+    private Constraint minimizeProductChangeover(ConstraintFactory factory) {
         return factory.forEach(OperationAssignment.class)
-                .filter(op -> op.getLine() != null)
-                .penalize(HardSoftScore.ONE_SOFT, OperationAssignment::getSequenceHint)
-                .asConstraint("Prefer sequence hint");
+                .filter(op -> op.getLine() != null && op.getPreviousOnLine() != null)
+                .join(DetailScheduleProblemFacts.class)
+                .filter((later, facts) -> later.getProductCode() != null
+                        && later.getPreviousOnLine().getProductCode() != null
+                        && later.getOperationName() != null)
+                .penalize(HardSoftScore.ONE_SOFT, (later, facts) ->
+                        facts.changeoverRules().computeMinutes(
+                                later.getOperationName(),
+                                later.getResourceId(),
+                                later.getOperationSeq(),
+                                later.getPreviousOnLine().getProductCode(),
+                                later.getProductCode()))
+                .asConstraint("Minimize product changeover");
+    }
+
+    /**
+     * 工序衔接（Hard）：沿 {@link OperationAssignment#getRoutingPredecessor()} 工艺链生效；
+     * 间隔与模式由生产规则 · 工序流转时间配置。
+     */
+    private Constraint routingPrecedence(ConstraintFactory factory) {
+        return factory.forEach(OperationAssignment.class)
+                .filter(succ -> succ.getLine() != null
+                        && succ.getRoutingPredecessor() != null
+                        && succ.getStartMinute() != null)
+                .join(DetailScheduleProblemFacts.class)
+                .penalize(HardSoftScore.ONE_HARD, (succ, facts) ->
+                        LineChainTimingUtil.routingPrecedenceViolationMinutes(
+                                succ, facts.transferRules()))
+                .asConstraint("Routing precedence");
     }
 }

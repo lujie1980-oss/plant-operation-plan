@@ -21,6 +21,9 @@ public final class MasterPlanObjectiveCatalog {
     public static final String PRIORITIZE_HIGH_PRIORITY = "prioritize_high_priority";
     public static final String LOCKED_ORDERS_PREFER_EARLIER = "locked_orders_prefer_earlier";
     public static final String BALANCE_ADJACENT_SLOT_LOADING = "balance_adjacent_slot_loading";
+    /** 减少同一资源上的开线槽位数，并在已占用槽位内尽量用足产能。 */
+    public static final String CONCENTRATE_CAPACITY = "concentrate_capacity";
+    public static final String MINIMIZE_SLOT_CHANGEOVER = "minimize_slot_changeover";
 
     private static final List<Definition> DEFINITIONS = List.of(
             new Definition(
@@ -46,6 +49,18 @@ public final class MasterPlanObjectiveCatalog {
                     "产能均衡",
                     "同一资源上，相邻时间槽的负荷（已分配工时）尽量接近，避免负荷陡增或陡降。",
                     "相邻槽位负荷差（分钟）",
+                    1),
+            new Definition(
+                    CONCENTRATE_CAPACITY,
+                    "产能集中",
+                    "同一资源上尽量减少「有占用」的时间槽数量（少开线），并在已占用槽位内尽量用足可用产能；与「产能均衡」目标可能此消彼长，请按策略调节权重。",
+                    "每占用 1 槽 × 槽产能 + 槽内剩余产能（分钟）",
+                    1),
+            new Definition(
+                    MINIMIZE_SLOT_CHANGEOVER,
+                    "减少槽内换型",
+                    "同一资源同一时间槽内，不同产品（料号）组合越少越好；按换型矩阵估算切换成本，无匹配规则时使用名义切换分钟数。",
+                    "槽内不同产品对的换型分钟 × 权重",
                     1));
 
     private MasterPlanObjectiveCatalog() {

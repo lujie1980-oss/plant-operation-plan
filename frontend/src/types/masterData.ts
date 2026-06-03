@@ -8,6 +8,7 @@ export interface BusinessRuleScopeMd {
   label: string;
   enableMasterPlan: boolean;
   enableDetailSchedule: boolean;
+  description: string;
 }
 
 export interface SalesOrderMd extends MasterDataRecord {
@@ -48,6 +49,7 @@ export interface MaterialMd extends MasterDataRecord {
   materialName: string | null;
   uomCode: string | null;
   materialType: string | null;
+  extensions?: Record<string, string | number | boolean | null> | null;
 }
 
 export interface InventoryMd extends MasterDataRecord {
@@ -81,6 +83,42 @@ export interface ProductResourceMd extends MasterDataRecord {
   maleFemaleEnd: string | null;
   totalBranch: string | null;
   standardLabor: number | null;
+  extensions?: Record<string, string | number | null> | null;
+}
+
+/** 主数据字段目录（General / Custom） */
+export interface MasterFieldDefinitionMd {
+  id: number | null;
+  entityType: string;
+  fieldKey: string;
+  fieldCategory: 'GENERAL' | 'CUSTOM';
+  dataType: 'STRING' | 'NUMBER' | 'INTEGER' | 'DATE' | 'BOOL' | 'ENUM';
+  labelZh: string;
+  required: boolean;
+  visibleInGrid: boolean;
+  usedInRules: boolean;
+  displayOrder: number;
+  source: string;
+}
+
+export interface MasterFieldDefinitionCreateMd {
+  entityType: string;
+  fieldKey: string;
+  dataType: MasterFieldDefinitionMd['dataType'];
+  labelZh: string;
+  required: boolean;
+  visibleInGrid: boolean;
+  usedInRules: boolean;
+  displayOrder: number;
+}
+
+export interface MasterFieldDefinitionUpdateMd {
+  dataType: MasterFieldDefinitionMd['dataType'];
+  labelZh: string;
+  required: boolean;
+  visibleInGrid: boolean;
+  usedInRules: boolean;
+  displayOrder: number;
 }
 
 export interface ProductionLineMd extends MasterDataRecord {
@@ -124,8 +162,12 @@ export interface OperationTransferTimeMd extends MasterDataRecord {
   productCode: string;
   fromOperationName: string;
   toOperationName: string;
+  /** @deprecated 与 maxTransferMinutes 相同，兼容旧 API */
   transferMinutes: number;
   minTransferMinutes: number;
+  maxTransferMinutes: number;
+  linkMode: string;
+  delayStartMinutes: number;
 }
 
 export interface OperationPostProcessingMd extends MasterDataRecord {

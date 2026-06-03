@@ -96,6 +96,9 @@ public class OperationTransferTimeExcelImportService {
                 e.toOperationName = toOp.trim();
                 e.transferMinutes = transferMinutes;
                 e.minTransferMinutes = minTransferMinutes;
+                e.maxTransferMinutes = transferMinutes;
+                e.linkMode = "STANDARD";
+                e.delayStartMinutes = 0;
                 if (e.id == null) {
                     e.persist();
                 }

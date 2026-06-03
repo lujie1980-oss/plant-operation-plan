@@ -59,6 +59,16 @@ public class WorkOrderEntity extends WorkspaceScopedEntity {
     /** MRP / MANUAL */
     public String sourceType;
 
+    /** 待排队列：用户标记是否可进入细排（默认可排）。 */
+    public Boolean pendingScheduleEligible = Boolean.TRUE;
+
+    /** 批次拆解状态：NONE / SPLIT / PARTIAL（排程域，与 MRP 无关）。 */
+    public String batchSplitStatus = BATCH_SPLIT_NONE;
+
+    public static final String BATCH_SPLIT_NONE = "NONE";
+    public static final String BATCH_SPLIT_SPLIT = "SPLIT";
+    public static final String BATCH_SPLIT_PARTIAL = "PARTIAL";
+
     public static final String SOURCE_MRP = "MRP";
     public static final String SOURCE_MANUAL = "MANUAL";
 
@@ -152,7 +162,18 @@ public class WorkOrderEntity extends WorkspaceScopedEntity {
         List<String> nos = rows.stream().map(wo -> wo.workOrderNo).toList();
         WorkOrderBomDependencyEntity.deleteForWorkOrders(nos);
         WorkOrderPeggingEntity.deleteForWorkOrders(nos);
+        ProductionBatchEntity.deleteActiveByWorkOrderNos(nos);
         delete("workspaceId = ?1 and workOrderNo in ?2", ws(), nos);
+        getEntityManager().flush();
+    }
+
+    public static boolean isMrpRegeneratable(WorkOrderEntity wo) {
+        if (wo == null) {
+            return false;
+        }
+        boolean mrpSource = wo.sourceType == null || SOURCE_MRP.equals(wo.sourceType);
+        boolean notDispatched = wo.dispatchStatus == null || !"DISPATCHED".equals(wo.dispatchStatus);
+        return mrpSource && notDispatched;
     }
 
     public static List<WorkOrderEntity> findByPeggingOrderLine(String salesOrderNo, int lineNo, String productCode) {

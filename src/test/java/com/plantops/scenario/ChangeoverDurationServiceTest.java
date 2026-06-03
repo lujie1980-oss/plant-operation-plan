@@ -40,6 +40,8 @@ class ChangeoverDurationServiceTest {
     @Test
     void attributeKey_parseChineseLabels() {
         assertEquals("wireMaterial", ChangeoverAttributeKey.normalizeCode("线材"));
+        assertEquals("keyMaterial", ChangeoverAttributeKey.normalizeCode("关键物料"));
+        assertEquals("maleFemaleEnd", ChangeoverAttributeKey.normalizeCode("公母端"));
         assertEquals("totalBranch", ChangeoverAttributeKey.normalizeCode("分支"));
         assertEquals("productCode", ChangeoverAttributeKey.normalizeCode("料号"));
     }

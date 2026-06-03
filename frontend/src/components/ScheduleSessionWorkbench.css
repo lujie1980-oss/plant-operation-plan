@@ -1,0 +1,53 @@
+.schedule-session-workbench {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.schedule-session-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.schedule-session-meta {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.schedule-session-patch {
+  padding: 0.75rem 1rem;
+  margin-top: 0.25rem;
+}
+
+.schedule-session-patch .panel-title {
+  margin: 0 0 0.65rem;
+  font-size: 0.9rem;
+}
+
+.schedule-session-patch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: flex-end;
+}
+
+.schedule-session-patch-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.schedule-session-patch-row .input {
+  min-width: 8rem;
+}
+
+.schedule-session-check {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.35rem !important;
+  padding-bottom: 0.35rem;
+}

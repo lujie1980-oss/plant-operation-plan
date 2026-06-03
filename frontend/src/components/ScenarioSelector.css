@@ -70,8 +70,34 @@
   text-overflow: ellipsis;
 }
 
-.scenario-selector-busy {
-  font-size: 0.75rem;
-  color: #94a3b8;
+.schedule-version-history-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: #475569;
   white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.schedule-version-history-toggle input {
+  margin: 0;
+}
+
+.schedule-version-current {
+  font-size: 0.8125rem;
+  color: #0f172a;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.35rem 0.55rem;
+  height: 32px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+}
+
+.schedule-version-meta {
+  max-width: min(360px, 40vw);
 }

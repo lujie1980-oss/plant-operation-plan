@@ -333,6 +333,24 @@
   flex-direction: column;
 }
 
+.production-plan-page .pp-gantt-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.production-plan-page .pp-gantt-panel.ms-gantt {
+  background: transparent;
+}
+
+.production-plan-page .pp-schedule-host .ms-gantt-empty {
+  margin: 1.5rem;
+}
+
 .pp-tree-host .fulfillment-tree-panel {
   flex: 1;
   min-height: 0;
@@ -367,7 +385,129 @@
   font-weight: 600;
 }
 
+.tag.tag-scheduled {
+  background: #dcfce7;
+  color: #166534;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tag.tag-unscheduled {
+  background: #f1f5f9;
+  color: #64748b;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pp-stat {
+  font-size: 13px;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.pp-stat strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.pp-nested-split-host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pp-nested-split-host .horizontal-resize-split {
+  flex: 1;
+  min-height: 0;
+}
+
+.pp-bottom-empty {
+  padding: 1rem 1.25rem;
+}
+
+.pp-sub-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.production-plan-page .pp-panel-scroll .ft-table-wrap {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
+}
+
+.production-plan-page .pp-panel-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+  box-shadow: 0 1px 0 #e2e8f0;
+}
+
+.production-plan-page .pp-panel-scroll tbody tr.active td,
+.production-plan-page .pp-panel-scroll tbody tr.selected td {
+  background: #eff6ff;
+  font-weight: 600;
+}
+
+.production-plan-page .pp-panel-scroll tbody tr.shortage td {
+  color: #dc2626;
+}
+
+.production-plan-page .pp-panel-scroll tbody tr:hover {
+  background: #f1f5f9;
+}
+
+.pwo-eligible-select {
+  min-width: 6.5rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border, #e2e8f0);
+  background: var(--surface, #fff);
+  font-size: 0.8125rem;
+}
+
+.pwo-eligible-select.blocked {
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.pwo-sched-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.pwo-sched-icon.done {
+  color: #16a34a;
+}
+
+.pwo-sched-icon.open {
+  color: #94a3b8;
+}
+
+.pwo-icon-col {
+  width: 44px;
+  text-align: center;
+}
+
 .muted-text {
   color: #94a3b8;
   font-size: 0.85rem;
+}
+
+.muted-ref {
+  color: var(--text-muted, #64748b);
 }

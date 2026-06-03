@@ -2,8 +2,16 @@ package com.plantops.api;
 
 import com.plantops.api.dto.*;
 import com.plantops.api.dto.planning.DetailSchedulePlanningDiagnosticsDto;
+import com.plantops.api.dto.planning.DetailSchedulePlanningPreviewDto;
+import com.plantops.api.dto.planning.DetailSchedulePlanningPreviewRequest;
+import com.plantops.api.dto.planning.MasterPlanPlanningPreviewDto;
+import com.plantops.api.dto.planning.MasterPlanPlanningPreviewRequest;
+import com.plantops.api.dto.planning.DetailScheduleVersionSummaryDto;
 import com.plantops.api.dto.planning.MasterPlanPlanningDiagnosticsDto;
+import com.plantops.api.dto.planning.OrderPlanningChainDto;
+import com.plantops.api.dto.planning.OrderPlanningChainPreviewRequest;
 import com.plantops.api.dto.planning.PlanningScoreExplanationDto;
+import com.plantops.scenario.planning.OrderPlanningChainService;
 import com.plantops.config.MasterPlanStrategyConfigService;
 import com.plantops.scenario.*;
 import com.plantops.scenario.planning.PlanningScoreExplainService;
@@ -49,6 +57,12 @@ public class PlanningResource {
     ScenarioComparisonService scenarioComparisonService;
 
     @Inject
+    DetailScheduleVersionComparisonService detailScheduleVersionComparisonService;
+
+    @Inject
+    DetailScheduleKpiService detailScheduleKpiService;
+
+    @Inject
     MasterPlanStrategyConfigService strategyConfigService;
 
     @Inject
@@ -62,6 +76,9 @@ public class PlanningResource {
 
     @Inject
     PlanningScoreExplainService planningScoreExplainService;
+
+    @Inject
+    OrderPlanningChainService orderPlanningChainService;
 
     @POST
     @Path("/kitting/compute")
@@ -112,6 +129,16 @@ public class PlanningResource {
         return Response.ok(masterPlanService.getWorkOrderCapacityGantt(versionId, workOrderNo)).build();
     }
 
+    /**
+     * 主计划推演层统一预览：默认仅 P0–P4；{@code solve} 可选内存/持久化选优，结果反写到分配快照。
+     */
+    @POST
+    @Path("/planning/master-plan/preview")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response previewMasterPlanPlanning(MasterPlanPlanningPreviewRequest request) throws Exception {
+        return Response.ok(masterPlanService.previewPlanning(request)).build();
+    }
+
     @GET
     @Path("/planning/master-plan/diagnostics/preview")
     public MasterPlanPlanningDiagnosticsDto previewMasterPlanDiagnostics(
@@ -130,10 +157,65 @@ public class PlanningResource {
         return detailScheduleService.previewPlanningDiagnostics(masterPlanVersionId);
     }
 
+    /**
+     * 细排程推演层统一预览：默认仅 P0–P4；{@code solve} 可选内存/持久化选优，结果反写到工序快照。
+     */
+    @POST
+    @Path("/planning/detail-schedule/preview")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response previewDetailSchedulePlanning(DetailSchedulePlanningPreviewRequest request) throws Exception {
+        return Response.ok(detailScheduleService.previewPlanning(request)).build();
+    }
+
+    @POST
+    @Path("/planning/order-chain/preview")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public OrderPlanningChainDto previewOrderPlanningChain(OrderPlanningChainPreviewRequest request) {
+        return orderPlanningChainService.preview(request);
+    }
+
     @GET
     @Path("/planning/master-plan/{versionId}/score-explanation")
     public PlanningScoreExplanationDto explainMasterPlanScore(@PathParam("versionId") String versionId) {
         return planningScoreExplainService.explainMasterPlan(versionId);
+    }
+
+    @GET
+    @Path("/planning/detail-schedule/{versionId}")
+    public com.plantops.api.dto.DetailScheduleResultDto getDetailSchedule(
+            @PathParam("versionId") String versionId) {
+        return detailScheduleService.get(versionId);
+    }
+
+    @GET
+    @Path("/planning/detail-schedule/page-kpis")
+    public java.util.List<DemandPoolKpiDto> detailSchedulePageKpis(
+            @QueryParam("detailScheduleVersionId") String detailScheduleVersionId) {
+        return detailScheduleKpiService.pageKpis(
+                detailScheduleVersionId, resolveDetailScheduleOperations(detailScheduleVersionId));
+    }
+
+    @POST
+    @Path("/planning/detail-schedule/page-kpis")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public java.util.List<DemandPoolKpiDto> detailSchedulePageKpisPost(DetailSchedulePageKpisRequestDto request) {
+        String versionId = request != null ? request.detailScheduleVersionId() : null;
+        java.util.List<DetailScheduleOperationDto> operations =
+                request != null && request.operations() != null && !request.operations().isEmpty()
+                        ? request.operations()
+                        : resolveDetailScheduleOperations(versionId);
+        return detailScheduleKpiService.pageKpis(versionId, operations);
+    }
+
+    private java.util.List<DetailScheduleOperationDto> resolveDetailScheduleOperations(String detailScheduleVersionId) {
+        if (detailScheduleVersionId == null || detailScheduleVersionId.isBlank()) {
+            return java.util.List.of();
+        }
+        try {
+            return detailScheduleService.get(detailScheduleVersionId).operations();
+        } catch (jakarta.ws.rs.NotFoundException ignored) {
+            return java.util.List.of();
+        }
     }
 
     @GET
@@ -366,6 +448,23 @@ public class PlanningResource {
                 ? request.planVersionIds()
                 : java.util.List.of();
         return scenarioComparisonService.compare(ids);
+    }
+
+    @GET
+    @Path("/planning/detail-schedule/versions")
+    public java.util.List<DetailScheduleVersionSummaryDto> listDetailScheduleVersions(
+            @QueryParam("limit") @DefaultValue("50") int limit) {
+        return detailScheduleVersionComparisonService.listVersions(limit);
+    }
+
+    @POST
+    @Path("/planning/detail-schedule/versions/compare")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public ScenarioComparisonDto compareDetailScheduleVersions(ScenarioCompareRequest request) {
+        java.util.List<String> ids = request != null && request.planVersionIds() != null
+                ? request.planVersionIds()
+                : java.util.List.of();
+        return detailScheduleVersionComparisonService.compare(ids);
     }
 
     public record ScenarioCompareRequest(java.util.List<String> planVersionIds) {

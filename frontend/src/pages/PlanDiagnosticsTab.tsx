@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { DetailSchedulePlanningPreviewPanel } from '../components/DetailSchedulePlanningPreviewPanel';
+import { MasterPlanPlanningPreviewPanel } from '../components/MasterPlanPlanningPreviewPanel';
 import { PlanningDiagnosticsPanel } from '../components/PlanningDiagnosticsPanel';
 import { PlanningScoreExplanationPanel } from '../components/PlanningScoreExplanationPanel';
 import { usePlan } from '../context/PlanContext';
@@ -16,8 +18,8 @@ export function PlanDiagnosticsTab() {
   return (
     <div className="plan-diagnostics-tab">
       <p className="plan-diagnostics-intro">
-        基于当前场景最新主计划版本预览 S04/S05 推演结果（不求解 Timefold）。S04 可选反馈 overlay 模拟滚动刷新前的冻结槽位。
-        下方「得分分解」对已求解并持久化的计划版本调用 Timefold explain，展示约束匹配明细。
+        基于当前场景预览 S04/S05 推演结果。主计划/细排程均支持统一推演 API：仅诊断、或内存/落库求解（细排程另支持初始队列赋时）。
+        S04 可选反馈 overlay。下方「得分分解」对已持久化版本做 Timefold explain。
       </p>
       <section className="card plan-diagnostics-section">
         <h3>主计划推演（S04）</h3>
@@ -41,6 +43,10 @@ export function PlanDiagnosticsTab() {
             />
           </label>
         </div>
+        <MasterPlanPlanningPreviewPanel
+          strategyId={strategyId}
+          feedbackCutoff={useFeedbackOverlay ? feedbackCutoff : null}
+        />
         <PlanningDiagnosticsPanel
           layer="master-plan"
           contextId={strategyId}
@@ -57,6 +63,7 @@ export function PlanDiagnosticsTab() {
       </section>
       <section className="card plan-diagnostics-section">
         <h3>详细排程推演（S05）</h3>
+        <DetailSchedulePlanningPreviewPanel masterPlanVersionId={masterPlanVersionId} />
         <PlanningDiagnosticsPanel
           layer="detail-schedule"
           contextId={masterPlanVersionId}

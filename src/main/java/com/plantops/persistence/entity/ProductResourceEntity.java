@@ -3,18 +3,15 @@ package com.plantops.persistence.entity;
 
 
 import jakarta.persistence.Column;
-
 import jakarta.persistence.Entity;
-
 import jakarta.persistence.Table;
-
 import jakarta.persistence.UniqueConstraint;
-
-
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
-
 import java.util.List;
+import java.util.Map;
 
 
 
@@ -77,6 +74,11 @@ public class ProductResourceEntity extends WorkspaceScopedEntity {
     /** 制造人力：工序标准人力需求 */
     @Column(name = "standard_labor")
     public BigDecimal standardLabor;
+
+    /** workspace 级 Custom 字段（JSON）；legacy 列在过渡期双写 */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "extensions")
+    public Map<String, Object> extensions;
 
     public static List<ProductResourceEntity> listInWorkspace() {
 

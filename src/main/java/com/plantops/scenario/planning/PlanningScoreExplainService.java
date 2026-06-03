@@ -1,7 +1,6 @@
 package com.plantops.scenario.planning;
 
-import ai.timefold.solver.core.api.score.ScoreExplanation;
-import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
+import ai.timefold.solver.core.api.score.HardSoftScore;
 import ai.timefold.solver.core.api.solver.SolutionManager;
 import com.plantops.api.dto.planning.PlanningScoreExplanationDto;
 import com.plantops.config.SolverRuntimeFactory;
@@ -11,7 +10,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 /**
- * 选优层得分分解入口：恢复已持久化解 + {@code SolutionManager.explain()}。
+ * 选优层得分分解入口：恢复已持久化解 + {@code SolutionManager.analyze()}（Timefold 2.0）。
  */
 @ApplicationScoped
 public class PlanningScoreExplainService {
@@ -32,16 +31,14 @@ public class PlanningScoreExplainService {
         MasterPlanSchedule schedule = masterPlanRestorer.restore(planVersionId);
         SolutionManager<MasterPlanSchedule, HardSoftScore> manager =
                 solverRuntimeFactory.createMasterPlanSolutionManager();
-        ScoreExplanation<MasterPlanSchedule, HardSoftScore> explanation = manager.explain(schedule);
-        return scoreExplainer.explainMasterPlan(planVersionId, explanation);
+        return scoreExplainer.explainMasterPlan(planVersionId, manager.analyze(schedule));
     }
 
     public PlanningScoreExplanationDto explainDetailSchedule(String detailScheduleVersionId, String masterPlanVersionId) {
         DetailSchedule schedule = detailScheduleRestorer.restore(detailScheduleVersionId, masterPlanVersionId);
         SolutionManager<DetailSchedule, HardSoftScore> manager =
                 solverRuntimeFactory.createDetailScheduleSolutionManager();
-        ScoreExplanation<DetailSchedule, HardSoftScore> explanation = manager.explain(schedule);
         return scoreExplainer.explainDetailSchedule(
-                detailScheduleVersionId, masterPlanVersionId, explanation);
+                detailScheduleVersionId, masterPlanVersionId, manager.analyze(schedule));
     }
 }

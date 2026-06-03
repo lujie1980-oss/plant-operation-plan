@@ -10,6 +10,9 @@ import com.plantops.api.dto.masterdata.MasterDataDtos.ULinePairDto;
 import com.plantops.api.dto.masterdata.MasterDataDtos.InventoryDto;
 import com.plantops.api.dto.masterdata.MasterDataDtos.MaterialDto;
 import com.plantops.api.dto.masterdata.MasterDataDtos.MaterialLeadTimeRuleDto;
+import com.plantops.api.dto.masterdata.MasterDataDtos.MasterFieldDefinitionCreateDto;
+import com.plantops.api.dto.masterdata.MasterDataDtos.MasterFieldDefinitionDto;
+import com.plantops.api.dto.masterdata.MasterDataDtos.MasterFieldDefinitionUpdateDto;
 import com.plantops.api.dto.masterdata.MasterDataDtos.ProductResourceDto;
 import com.plantops.api.dto.masterdata.MasterDataDtos.ProductionLineDto;
 import com.plantops.api.dto.masterdata.MasterDataDtos.ResourceCalendarDto;
@@ -21,6 +24,9 @@ import com.plantops.api.dto.masterdata.MasterDataDtos.SystemParameterDto;
 import com.plantops.api.dto.masterdata.MasterDataValidationDtos;
 import com.plantops.config.ParameterRegistry;
 import com.plantops.masterdata.BusinessRuleScopeService;
+import com.plantops.masterdata.BusinessRuleTypeIds;
+import com.plantops.masterdata.MasterDataExtensionService;
+import com.plantops.masterdata.MasterFieldDefinitionService;
 import com.plantops.masterdata.MasterDataValidationService;
 import com.plantops.sample.SampleDataLoader;
 import com.plantops.persistence.entity.BomComponentEntity;
@@ -32,6 +38,7 @@ import com.plantops.persistence.entity.ParallelOperationRuleEntity;
 import com.plantops.persistence.entity.InventoryEntity;
 import com.plantops.persistence.entity.MaterialEntity;
 import com.plantops.persistence.entity.MaterialLeadTimeRuleEntity;
+import com.plantops.masterdata.ProductResourceOperationNames;
 import com.plantops.persistence.entity.ProductResourceEntity;
 import com.plantops.persistence.entity.ProductionLineEntity;
 import com.plantops.persistence.entity.ProductionResourceEntity;
@@ -72,10 +79,48 @@ public class MasterDataResource {
     SampleDataLoader sampleDataLoader;
 
     @Inject
+    com.plantops.masterdata.FactoryCalendarService factoryCalendarService;
+
+    @Inject
     MasterDataValidationService validationService;
 
     @Inject
     BusinessRuleScopeService businessRuleScopeService;
+
+    @Inject
+    MasterFieldDefinitionService masterFieldDefinitionService;
+
+    // -------------------------- 字段目录 --------------------------
+
+    @GET
+    @Path("/field-schema/{entityType}")
+    public List<MasterFieldDefinitionDto> fieldSchema(@PathParam("entityType") String entityType) {
+        return masterFieldDefinitionService.listSchema(entityType);
+    }
+
+    @POST
+    @Path("/field-definitions")
+    @Transactional
+    public MasterFieldDefinitionDto createFieldDefinition(MasterFieldDefinitionCreateDto dto) {
+        return masterFieldDefinitionService.createCustom(dto);
+    }
+
+    @PUT
+    @Path("/field-definitions/{id}")
+    @Transactional
+    public MasterFieldDefinitionDto updateFieldDefinition(
+            @PathParam("id") Long id,
+            MasterFieldDefinitionUpdateDto dto) {
+        return masterFieldDefinitionService.update(id, dto);
+    }
+
+    @DELETE
+    @Path("/field-definitions/{id}")
+    @Transactional
+    public Response deleteFieldDefinition(@PathParam("id") Long id) {
+        masterFieldDefinitionService.delete(id);
+        return Response.noContent().build();
+    }
 
     // -------------------------- ?????--------------------------
 
@@ -283,6 +328,7 @@ public class MasterDataResource {
         e.materialName = dto.materialName();
         e.uomCode = dto.uomCode();
         e.materialType = dto.materialType();
+        MasterDataExtensionService.applyMaterialExtensions(e, dto.extensions());
         if (dto.id() == null) {
             e.ensureWorkspace();
             e.persist();
@@ -305,7 +351,8 @@ public class MasterDataResource {
                 e.materialCode,
                 e.materialName,
                 e.uomCode,
-                e.materialType);
+                e.materialType,
+                MasterDataExtensionService.readMaterialExtensions(e));
     }
 
     // -------------------------- ?? --------------------------
@@ -475,14 +522,18 @@ public class MasterDataResource {
         e.resourcePriority = dto.resourcePriority() != null
                 ? dto.resourcePriority()
                 : ProductResourceEntity.DEFAULT_RESOURCE_PRIORITY;
-        e.operationName = dto.operationName();
+        e.operationName = ProductResourceOperationNames.normalize(
+                dto.operationName(), dto.resourceId(), dto.sequenceNo());
         e.processTimeSeconds = dto.processTimeSeconds();
-        e.bomLevel = dto.bomLevel();
-        e.wireMaterial = dto.wireMaterial();
-        e.keyMaterial = dto.keyMaterial();
-        e.maleFemaleEnd = dto.maleFemaleEnd();
-        e.totalBranch = dto.totalBranch();
-        e.standardLabor = dto.standardLabor();
+        MasterDataExtensionService.applyProductResourceCustomFields(
+                e,
+                dto.extensions(),
+                dto.bomLevel(),
+                dto.wireMaterial(),
+                dto.keyMaterial(),
+                dto.maleFemaleEnd(),
+                dto.totalBranch(),
+                dto.standardLabor());
         if (dto.id() == null) {
             e.ensureWorkspace();
             e.persist();
@@ -498,7 +549,24 @@ public class MasterDataResource {
         return deleted ? Response.noContent().build() : Response.status(Response.Status.NOT_FOUND).build();
     }
 
+    @POST
+    @Path("/product-resources/repair-operation-names")
+    @Transactional
+    public java.util.Map<String, Integer> repairProductResourceOperationNames() {
+        int updated = 0;
+        for (ProductResourceEntity row : ProductResourceEntity.listInWorkspace()) {
+            String normalized = ProductResourceOperationNames.normalize(
+                    row.operationName, row.resourceId, row.sequenceNo);
+            if (normalized != null && !normalized.equals(row.operationName)) {
+                row.operationName = normalized;
+                updated++;
+            }
+        }
+        return java.util.Map.of("updated", updated);
+    }
+
     private static ProductResourceDto toProductResourceDto(ProductResourceEntity e) {
+        var extensions = MasterDataExtensionService.readProductResourceExtensions(e);
         return new ProductResourceDto(
                 e.id,
                 e.productCode,
@@ -508,12 +576,13 @@ public class MasterDataResource {
                 e.resourcePriority != null ? e.resourcePriority : ProductResourceEntity.DEFAULT_RESOURCE_PRIORITY,
                 e.operationName,
                 e.processTimeSeconds,
-                e.bomLevel,
-                e.wireMaterial,
-                e.keyMaterial,
-                e.maleFemaleEnd,
-                e.totalBranch,
-                e.standardLabor);
+                MasterDataExtensionService.stringValue(extensions.get("bomLevel")),
+                MasterDataExtensionService.stringValue(extensions.get("wireMaterial")),
+                MasterDataExtensionService.stringValue(extensions.get("keyMaterial")),
+                MasterDataExtensionService.stringValue(extensions.get("maleFemaleEnd")),
+                MasterDataExtensionService.stringValue(extensions.get("totalBranch")),
+                MasterDataExtensionService.decimalValue(extensions.get("standardLabor")),
+                extensions);
     }
 
     // -------------------------- ?? --------------------------
@@ -809,11 +878,19 @@ public class MasterDataResource {
         if (fromOp.equals(toOp)) {
             throw new IllegalArgumentException("前工序与后工序不能相同");
         }
-        if (dto.transferMinutes() < 0 || dto.minTransferMinutes() < 0) {
+        if (dto.minTransferMinutes() < 0 || dto.maxTransferMinutes() < 0) {
             throw new IllegalArgumentException("流转时间不能为负");
         }
-        if (dto.minTransferMinutes() > dto.transferMinutes()) {
-            throw new IllegalArgumentException("最小流转时间不能大于流转时间");
+        int maxMinutes = dto.maxTransferMinutes() > 0 ? dto.maxTransferMinutes() : dto.transferMinutes();
+        if (maxMinutes > 0 && maxMinutes <= dto.minTransferMinutes()) {
+            throw new IllegalArgumentException("最大流转时间必须大于最小流转时间");
+        }
+        String linkMode = dto.linkMode() != null && !dto.linkMode().isBlank()
+                ? dto.linkMode().trim().toUpperCase()
+                : "STANDARD";
+        com.plantops.scenario.OperationLinkMode.fromDb(linkMode);
+        if ("DELAYED_START".equals(linkMode) && dto.delayStartMinutes() < 0) {
+            throw new IllegalArgumentException("延后开始时间不能为负");
         }
         OperationTransferTimeRuleEntity e = dto.id() != null
                 ? findRequired(OperationTransferTimeRuleEntity.findById(dto.id()), "工序流转时间规则不存在")
@@ -825,8 +902,11 @@ public class MasterDataResource {
         e.productCode = productCode;
         e.fromOperationName = fromOp;
         e.toOperationName = toOp;
-        e.transferMinutes = dto.transferMinutes();
+        e.transferMinutes = maxMinutes;
         e.minTransferMinutes = dto.minTransferMinutes();
+        e.maxTransferMinutes = maxMinutes;
+        e.linkMode = linkMode;
+        e.delayStartMinutes = Math.max(0, dto.delayStartMinutes());
         if (dto.id() == null && e.id == null) {
             e.persist();
         }
@@ -842,13 +922,17 @@ public class MasterDataResource {
     }
 
     private static OperationTransferTimeRuleDto toOperationTransferTimeDto(OperationTransferTimeRuleEntity e) {
+        int max = e.maxTransferMinutes > 0 ? e.maxTransferMinutes : e.transferMinutes;
         return new OperationTransferTimeRuleDto(
                 e.id,
                 e.productCode,
                 e.fromOperationName,
                 e.toOperationName,
-                e.transferMinutes,
-                e.minTransferMinutes);
+                max,
+                e.minTransferMinutes,
+                max,
+                e.linkMode != null ? e.linkMode : "STANDARD",
+                e.delayStartMinutes);
     }
 
     // -------------------------- 工序后处理时间 --------------------------
@@ -1113,6 +1197,7 @@ public class MasterDataResource {
                 || "timeslot_daily_days".equals(paramId)
                 || "timeslot_weekly_buckets".equals(paramId)) {
             sampleDataLoader.extendCalendarsToHorizon();
+            factoryCalendarService.syncResourceCalendarsToHorizon();
         }
     }
 
@@ -1132,9 +1217,10 @@ public class MasterDataResource {
             BusinessRuleScopeDto dto) {
         return businessRuleScopeService.upsert(new BusinessRuleScopeDto(
                 ruleTypeId,
-                dto.label() != null ? dto.label() : ruleTypeId,
+                dto.label() != null ? dto.label() : BusinessRuleTypeIds.labelOf(ruleTypeId),
                 dto.enableMasterPlan(),
-                dto.enableDetailSchedule()));
+                dto.enableDetailSchedule(),
+                dto.description()));
     }
 
     public record ParameterValuePayload(String value, String description) {

@@ -329,13 +329,14 @@ public class CapacityService {
                 String rowKey = alloc.allocationId != null ? alloc.allocationId : wo.workOrderNo;
 
                 boolean feedbackLocked = alloc.allocationId != null && alloc.allocationId.startsWith("FB-");
+                SalesOrderRef orderRef = resolveSalesOrderRef(wo, alloc);
                 byWo.putIfAbsent(rowKey, new CapacityBucketWorkOrderDto(
 
                         wo.workOrderNo,
 
-                        wo.salesOrderNo,
+                        orderRef.salesOrderNo(),
 
-                        wo.salesOrderLineNo,
+                        orderRef.salesOrderLineNo(),
 
                         wo.productCode,
 
@@ -386,6 +387,7 @@ public class CapacityService {
 
                 int minutes = workOrderMinutes(wo);
 
+                SalesOrderRef orderRef = resolveSalesOrderRef(wo, null);
                 byWo.putIfAbsent(
 
                         wo.workOrderNo,
@@ -394,9 +396,9 @@ public class CapacityService {
 
                                 wo.workOrderNo,
 
-                                wo.salesOrderNo,
+                                orderRef.salesOrderNo(),
 
-                                wo.salesOrderLineNo,
+                                orderRef.salesOrderLineNo(),
 
                                 wo.productCode,
 
@@ -436,15 +438,23 @@ public class CapacityService {
         return ProductRoutingSteps.totalDurationMinutes(wo.productCode, wo.quantity);
     }
 
-
-
-    private int shiftCapacityMinutes() {
-
-        return parameters.getInt("shift_capacity_minutes", 480);
-
+    /** 成品工单直接带订单行；组件工单从主计划分配或 pegging 解析。 */
+    private static SalesOrderRef resolveSalesOrderRef(WorkOrderEntity wo, MasterPlanAllocationEntity alloc) {
+        if (wo.salesOrderNo != null && !wo.salesOrderNo.isBlank()) {
+            return new SalesOrderRef(wo.salesOrderNo, wo.salesOrderLineNo);
+        }
+        if (alloc != null && alloc.salesOrderNo != null && !alloc.salesOrderNo.isBlank()) {
+            return new SalesOrderRef(alloc.salesOrderNo, alloc.salesOrderLineNo);
+        }
+        WorkOrderScheduleContext ctx = WorkOrderScheduleContext.resolve(wo);
+        if (ctx.salesOrderNo != null && !ctx.salesOrderNo.isBlank()) {
+            return new SalesOrderRef(ctx.salesOrderNo, ctx.salesOrderLineNo);
+        }
+        return new SalesOrderRef(null, 0);
     }
 
-
+    private record SalesOrderRef(String salesOrderNo, int salesOrderLineNo) {
+    }
 
     private PlanVersionEntity findLatestPlanVersion(String planType) {
         return PlanVersionEntity.listInWorkspace().stream()

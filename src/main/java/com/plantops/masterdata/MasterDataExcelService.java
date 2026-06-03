@@ -11,6 +11,7 @@ import com.plantops.api.dto.masterdata.MasterDataDtos.ShiftHeadcountDto;
 import com.plantops.api.dto.masterdata.MasterDataImportResult;
 import com.plantops.api.dto.masterdata.MasterDataValidationDtos.ValidationIssue;
 import com.plantops.api.dto.masterdata.MasterDataValidationDtos;
+import com.plantops.masterdata.MasterDataExcelSheet.ColumnDef;
 import com.plantops.persistence.entity.BomComponentEntity;
 import com.plantops.persistence.entity.MaterialEntity;
 import com.plantops.persistence.entity.ProductResourceEntity;
@@ -54,6 +55,9 @@ public class MasterDataExcelService {
     @Inject
     MasterDataValidationService validationService;
 
+    @Inject
+    MasterDataExcelColumnLayout columnLayout;
+
     public byte[] buildTemplate() {
         return buildWorkbook(false);
     }
@@ -63,14 +67,19 @@ public class MasterDataExcelService {
     }
 
     public byte[] buildSingleSheetWorkbook(MasterDataExcelSheet def, boolean withData) {
+        List<ColumnDef> columns = columnLayout.resolve(def);
         try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet readme = wb.createSheet("说明");
             readme.createRow(0).createCell(0).setCellValue("业务规则 Excel：第一行为表头，从第二行起填写数据。");
             readme.createRow(1).createCell(0).setCellValue("工作表「" + def.sheetName + "」与系统主数据字段一致。");
+            if (def.extensionEntityType() != null) {
+                readme.createRow(2).createCell(0)
+                        .setCellValue("Custom 列来自当前 workspace 字段目录，随目录变更而增减。");
+            }
             Sheet sheet = wb.createSheet(def.sheetName);
-            writeHeader(sheet, def);
+            writeHeader(sheet, columns);
             if (withData) {
-                writeDataRows(sheet, def);
+                writeDataRows(sheet, def, columns);
             }
             wb.write(out);
             return out.toByteArray();
@@ -82,6 +91,7 @@ public class MasterDataExcelService {
     @Transactional
     @io.quarkus.narayana.jta.runtime.TransactionConfiguration(timeout = 3600)
     public MasterDataImportResult importSingleSheet(MasterDataExcelSheet def, InputStream input, boolean replace) {
+        List<ColumnDef> columns = columnLayout.resolve(def);
         if (replace) {
             switch (def) {
                 case BOM -> BomComponentEntity.delete("workspaceId", BomComponentEntity.ws());
@@ -102,11 +112,11 @@ public class MasterDataExcelService {
             }
             for (int r = 1; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
-                if (row == null || isRowEmpty(row, def)) {
+                if (row == null || isRowEmpty(row, columns)) {
                     continue;
                 }
                 try {
-                    importRow(def, row);
+                    importRow(def, columns, row);
                     imported++;
                 } catch (Exception ex) {
                     errors.add(def.sheetName + " 第" + (r + 1) + "行: " + ex.getMessage());
@@ -136,12 +146,15 @@ public class MasterDataExcelService {
             Sheet readme = wb.createSheet("说明");
             readme.createRow(0).createCell(0).setCellValue("主数据 Excel 模板：每个工作表第一行为表头，从第二行起填写数据。");
             readme.createRow(1).createCell(0).setCellValue("系统ID 留空表示新增；填写已有 ID 表示更新。日期格式 yyyy-MM-dd，布尔填 是/否 或 true/false。");
+            readme.createRow(2).createCell(0)
+                    .setCellValue("「物料」「产品工艺」的 Custom 列由字段目录动态生成；导入时仅更新 Excel 中出现的 Custom 列，其余扩展属性保留。");
 
             for (MasterDataExcelSheet def : MasterDataExcelSheet.values()) {
+                List<ColumnDef> columns = columnLayout.resolve(def);
                 Sheet sheet = wb.createSheet(def.sheetName);
-                writeHeader(sheet, def);
+                writeHeader(sheet, columns);
                 if (withData) {
-                    writeDataRows(sheet, def);
+                    writeDataRows(sheet, def, columns);
                 }
             }
             wb.write(out);
@@ -151,19 +164,32 @@ public class MasterDataExcelService {
         }
     }
 
-    private void writeHeader(Sheet sheet, MasterDataExcelSheet def) {
+    private void writeHeader(Sheet sheet, List<ColumnDef> columns) {
         Row header = sheet.createRow(0);
-        for (int i = 0; i < def.columns.size(); i++) {
-            header.createCell(i).setCellValue(def.columns.get(i).header());
+        for (int i = 0; i < columns.size(); i++) {
+            header.createCell(i).setCellValue(columns.get(i).header());
         }
     }
 
-    private void writeDataRows(Sheet sheet, MasterDataExcelSheet def) {
+    private void writeDataRows(Sheet sheet, MasterDataExcelSheet def, List<ColumnDef> columns) {
         int rowIdx = 1;
         switch (def) {
+            case MATERIALS -> {
+                for (MaterialDto dto : masterDataResource.listMaterials()) {
+                    Map<String, Object> values = row(
+                            "id", dto.id(),
+                            "siteCode", dto.siteCode(),
+                            "materialCode", dto.materialCode(),
+                            "materialName", dto.materialName(),
+                            "uomCode", dto.uomCode(),
+                            "materialType", dto.materialType());
+                    putExtensionValues(values, columns, dto.extensions());
+                    writeRow(sheet, rowIdx++, columns, values);
+                }
+            }
             case BOM -> {
                 for (BomDto dto : masterDataResource.listBoms()) {
-                    writeRow(sheet, rowIdx++, def, row(
+                    writeRow(sheet, rowIdx++, columns, row(
                             "id", dto.id(),
                             "finishedProductCode", dto.finishedProductCode(),
                             "bomId", dto.bomId(),
@@ -183,7 +209,7 @@ public class MasterDataExcelService {
             }
             case RESOURCES -> {
                 for (ResourceDto dto : masterDataResource.listResources()) {
-                    writeRow(sheet, rowIdx++, def, row(
+                    writeRow(sheet, rowIdx++, columns, row(
                             "id", dto.id(),
                             "resourceId", dto.resourceId(),
                             "resourceGroup", dto.resourceGroup(),
@@ -194,7 +220,7 @@ public class MasterDataExcelService {
             }
             case PRODUCT_RESOURCES -> {
                 for (ProductResourceDto dto : masterDataResource.listProductResources()) {
-                    writeRow(sheet, rowIdx++, def, row(
+                    Map<String, Object> values = row(
                             "id", dto.id(),
                             "productCode", dto.productCode(),
                             "sequenceNo", dto.sequenceNo(),
@@ -202,18 +228,14 @@ public class MasterDataExcelService {
                             "operationName", dto.operationName(),
                             "resourceId", dto.resourceId(),
                             "setupTimeMinutes", dto.setupTimeMinutes(),
-                            "processTimeSeconds", dto.processTimeSeconds(),
-                            "bomLevel", dto.bomLevel(),
-                            "wireMaterial", dto.wireMaterial(),
-                            "keyMaterial", dto.keyMaterial(),
-                            "maleFemaleEnd", dto.maleFemaleEnd(),
-                            "totalBranch", dto.totalBranch(),
-                            "standardLabor", dto.standardLabor()));
+                            "processTimeSeconds", dto.processTimeSeconds());
+                    putExtensionValues(values, columns, dto.extensions());
+                    writeRow(sheet, rowIdx++, columns, values);
                 }
             }
             case LINES -> {
                 for (ProductionLineDto dto : masterDataResource.listLines()) {
-                    writeRow(sheet, rowIdx++, def, row(
+                    writeRow(sheet, rowIdx++, columns, row(
                             "id", dto.id(),
                             "lineId", dto.lineId(),
                             "areaId", dto.areaId(),
@@ -224,7 +246,7 @@ public class MasterDataExcelService {
             }
             case CALENDAR -> {
                 for (ResourceCalendarDto dto : masterDataResource.listCalendar()) {
-                    writeRow(sheet, rowIdx++, def, row(
+                    writeRow(sheet, rowIdx++, columns, row(
                             "id", dto.id(),
                             "resourceId", dto.resourceId(),
                             "calendarDate", dto.calendarDate(),
@@ -235,7 +257,7 @@ public class MasterDataExcelService {
             }
             case SHIFT_HEADCOUNT -> {
                 for (ShiftHeadcountDto dto : masterDataResource.listShiftHeadcount()) {
-                    writeRow(sheet, rowIdx++, def, row(
+                    writeRow(sheet, rowIdx++, columns, row(
                             "id", dto.id(),
                             "areaId", dto.areaId(),
                             "calendarDate", dto.calendarDate(),
@@ -255,10 +277,10 @@ public class MasterDataExcelService {
         return map;
     }
 
-    private void writeRow(Sheet sheet, int rowIdx, MasterDataExcelSheet def, Map<String, Object> values) {
+    private void writeRow(Sheet sheet, int rowIdx, List<ColumnDef> columns, Map<String, Object> values) {
         Row row = sheet.createRow(rowIdx);
-        for (int c = 0; c < def.columns.size(); c++) {
-            String field = def.columns.get(c).field();
+        for (int c = 0; c < columns.size(); c++) {
+            String field = columns.get(c).field();
             Object v = values.get(field);
             Cell cell = row.createCell(c);
             if (v == null) {
@@ -297,13 +319,14 @@ public class MasterDataExcelService {
                 if (sheet == null) {
                     continue;
                 }
+                List<ColumnDef> columns = columnLayout.resolve(def);
                 for (int r = 1; r <= sheet.getLastRowNum(); r++) {
                     Row row = sheet.getRow(r);
-                    if (row == null || isRowEmpty(row, def)) {
+                    if (row == null || isRowEmpty(row, columns)) {
                         continue;
                     }
                     try {
-                        importRow(def, row);
+                        importRow(def, columns, row);
                         imported++;
                     } catch (Exception ex) {
                         errors.add(def.sheetName + " 第" + (r + 1) + "行: " + ex.getMessage());
@@ -381,14 +404,18 @@ public class MasterDataExcelService {
             String materialCode = cellString(row.getCell(idx.getOrDefault("产品代码", -1)));
             if (materialCode.isBlank()) continue;
             try {
+                MaterialEntity existing = MaterialEntity.findByCode(materialCode);
+                Map<String, Object> extensions = existing != null
+                        ? MasterDataExtensionService.readMaterialExtensions(existing)
+                        : Map.of();
                 masterDataResource.upsertMaterial(new MaterialDto(
-                        null,
+                        existing != null ? existing.id : null,
                         cellString(row.getCell(idx.getOrDefault("基地代码", -1))),
                         materialCode,
                         cellString(row.getCell(idx.getOrDefault("产品名称", -1))),
                         cellString(row.getCell(idx.getOrDefault("主计量单位代码", -1))),
-                        cellString(row.getCell(idx.getOrDefault("物料类型", -1)))
-                ));
+                        cellString(row.getCell(idx.getOrDefault("物料类型", -1))),
+                        extensions.isEmpty() ? null : extensions));
                 imported++;
             } catch (Exception ex) {
                 errors.add("物料主数据 第" + (r + 1) + "行: " + ex.getMessage());
@@ -508,7 +535,10 @@ public class MasterDataExcelService {
                 route.setupTimeMinutes = 0;
                 route.sequenceNo = parseInteger(cellString(row.getCell(idx.getOrDefault("工序编号", -1))));
                 route.resourcePriority = ProductResourceEntity.DEFAULT_RESOURCE_PRIORITY;
-                route.operationName = emptyToNull(cellString(row.getCell(idx.getOrDefault("工序名称", -1))));
+                route.operationName = ProductResourceOperationNames.normalize(
+                        emptyToNull(cellString(row.getCell(idx.getOrDefault("工序名称", -1)))),
+                        resourceId,
+                        route.sequenceNo);
                 route.processTimeSeconds = parseDecimalOrNull(cellString(row.getCell(idx.getOrDefault("制造CT", -1))));
                 route.bomLevel = emptyToNull(firstNonBlank(row, idx, "A/B料", "A/B 料", "AB料"));
                 route.wireMaterial = emptyToNull(cellString(row.getCell(idx.getOrDefault("线材", -1))));
@@ -516,6 +546,7 @@ public class MasterDataExcelService {
                 route.maleFemaleEnd = emptyToNull(cellString(row.getCell(idx.getOrDefault("公母端", -1))));
                 route.totalBranch = emptyToNull(cellString(row.getCell(idx.getOrDefault("总成分支", -1))));
                 route.standardLabor = parseDecimalOrNull(cellString(row.getCell(idx.getOrDefault("制造人力", -1))));
+                MasterDataExtensionService.backfillProductResourceExtensions(route);
                 route.ensureWorkspace();
                 route.persist();
                 imported++;
@@ -544,17 +575,25 @@ public class MasterDataExcelService {
         return map;
     }
 
-    private void importRow(MasterDataExcelSheet def, Row row) {
-        Map<String, String> cells = readRow(row, def);
+    private void importRow(MasterDataExcelSheet def, List<ColumnDef> columns, Row row) {
+        Map<String, String> cells = readRow(row, columns);
         switch (def) {
-            case MATERIALS -> masterDataResource.upsertMaterial(new MaterialDto(
-                    parseLong(cells.get("id")),
-                    emptyToNull(cells.get("siteCode")),
-                    required(cells, "materialCode"),
-                    emptyToNull(cells.get("materialName")),
-                    emptyToNull(cells.get("uomCode")),
-                    emptyToNull(cells.get("materialType"))
-            ));
+            case MATERIALS -> {
+                Long id = parseLong(cells.get("id"));
+                String materialCode = required(cells, "materialCode");
+                MaterialEntity existing = resolveMaterialEntity(id, materialCode);
+                Map<String, Object> mergedExtensions = MasterDataExtensionService.mergeExtensionMaps(
+                        existing != null ? MasterDataExtensionService.readMaterialExtensions(existing) : Map.of(),
+                        parseCustomExtensions(cells, columns));
+                masterDataResource.upsertMaterial(new MaterialDto(
+                        id != null ? id : (existing != null ? existing.id : null),
+                        emptyToNull(cells.get("siteCode")),
+                        materialCode,
+                        emptyToNull(cells.get("materialName")),
+                        emptyToNull(cells.get("uomCode")),
+                        emptyToNull(cells.get("materialType")),
+                        mergedExtensions.isEmpty() ? null : mergedExtensions));
+            }
             case BOM -> masterDataResource.upsertBom(new BomDto(
                     parseLong(cells.get("id")),
                     emptyToNull(cells.get("finishedProductCode")),
@@ -578,21 +617,33 @@ public class MasterDataExcelService {
                     required(cells, "areaId"),
                     parseBoolean(cells.get("bottleneck"), false),
                     parseDecimal(cells.get("runRatePerHour"), BigDecimal.valueOf(60))));
-            case PRODUCT_RESOURCES -> masterDataResource.upsertProductResource(new ProductResourceDto(
-                    parseLong(cells.get("id")),
-                    required(cells, "productCode"),
-                    required(cells, "resourceId"),
-                    parseInt(cells.get("setupTimeMinutes"), 30),
-                    parseInteger(cells.get("sequenceNo")),
-                    parseIntegerOrDefault(cells.get("resourcePriority"), ProductResourceEntity.DEFAULT_RESOURCE_PRIORITY),
-                    emptyToNull(cells.get("operationName")),
-                    parseDecimalOrNull(cells.get("processTimeSeconds")),
-                    emptyToNull(cells.get("bomLevel")),
-                    emptyToNull(cells.get("wireMaterial")),
-                    emptyToNull(cells.get("keyMaterial")),
-                    emptyToNull(cells.get("maleFemaleEnd")),
-                    emptyToNull(cells.get("totalBranch")),
-                    parseDecimalOrNull(cells.get("standardLabor"))));
+            case PRODUCT_RESOURCES -> {
+                Long id = parseLong(cells.get("id"));
+                String productCode = required(cells, "productCode");
+                String resourceId = required(cells, "resourceId");
+                ProductResourceEntity existing = resolveProductResourceEntity(id, productCode, resourceId);
+                Map<String, Object> mergedExtensions = MasterDataExtensionService.mergeExtensionMaps(
+                        existing != null
+                                ? MasterDataExtensionService.readProductResourceExtensions(existing)
+                                : Map.of(),
+                        parseCustomExtensions(cells, columns));
+                masterDataResource.upsertProductResource(new ProductResourceDto(
+                        id != null ? id : (existing != null ? existing.id : null),
+                        productCode,
+                        resourceId,
+                        parseInt(cells.get("setupTimeMinutes"), 30),
+                        parseInteger(cells.get("sequenceNo")),
+                        parseIntegerOrDefault(cells.get("resourcePriority"), ProductResourceEntity.DEFAULT_RESOURCE_PRIORITY),
+                        emptyToNull(cells.get("operationName")),
+                        parseDecimalOrNull(cells.get("processTimeSeconds")),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        mergedExtensions.isEmpty() ? null : mergedExtensions));
+            }
             case LINES -> masterDataResource.upsertLine(new ProductionLineDto(
                     parseLong(cells.get("id")),
                     required(cells, "lineId"),
@@ -616,17 +667,17 @@ public class MasterDataExcelService {
         }
     }
 
-    private Map<String, String> readRow(Row row, MasterDataExcelSheet def) {
+    private Map<String, String> readRow(Row row, List<ColumnDef> columns) {
         Map<String, String> map = new LinkedHashMap<>();
-        for (int i = 0; i < def.columns.size(); i++) {
-            map.put(def.columns.get(i).field(), cellString(row.getCell(i)));
+        for (int i = 0; i < columns.size(); i++) {
+            map.put(columns.get(i).field(), cellString(row.getCell(i)));
         }
         return map;
     }
 
-    private boolean isRowEmpty(Row row, MasterDataExcelSheet def) {
-        for (int i = 0; i < def.columns.size(); i++) {
-            String field = def.columns.get(i).field();
+    private boolean isRowEmpty(Row row, List<ColumnDef> columns) {
+        for (int i = 0; i < columns.size(); i++) {
+            String field = columns.get(i).field();
             if ("id".equals(field)) {
                 continue;
             }
@@ -635,6 +686,58 @@ public class MasterDataExcelService {
             }
         }
         return true;
+    }
+
+    private static void putExtensionValues(
+            Map<String, Object> values,
+            List<ColumnDef> columns,
+            Map<String, Object> extensions) {
+        if (extensions == null) {
+            return;
+        }
+        for (ColumnDef col : columns) {
+            if (col.custom()) {
+                values.put(col.field(), extensions.get(col.field()));
+            }
+        }
+    }
+
+    private static Map<String, Object> parseCustomExtensions(Map<String, String> cells, List<ColumnDef> columns) {
+        Map<String, Object> parsed = new LinkedHashMap<>();
+        for (ColumnDef col : columns) {
+            if (!col.custom()) {
+                continue;
+            }
+            String raw = cells.get(col.field());
+            if (raw == null || raw.isBlank()) {
+                continue;
+            }
+            parsed.put(col.field(), MasterDataExtensionService.parseExtensionCell(raw, col.dataType()));
+        }
+        return parsed;
+    }
+
+    private static MaterialEntity resolveMaterialEntity(Long id, String materialCode) {
+        if (id != null) {
+            MaterialEntity byId = MaterialEntity.findById(id);
+            if (byId != null) {
+                return byId;
+            }
+        }
+        return MaterialEntity.findByCode(materialCode);
+    }
+
+    private static ProductResourceEntity resolveProductResourceEntity(
+            Long id,
+            String productCode,
+            String resourceId) {
+        if (id != null) {
+            ProductResourceEntity byId = ProductResourceEntity.findById(id);
+            if (byId != null) {
+                return byId;
+            }
+        }
+        return ProductResourceEntity.findByProductAndResource(productCode, resourceId);
     }
 
     private static String cellString(Cell cell) {

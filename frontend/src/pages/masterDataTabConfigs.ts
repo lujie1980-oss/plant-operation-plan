@@ -92,7 +92,9 @@ export const salesOrderTab: TabConfig<SalesOrderMd> = {
 export const materialTab: TabConfig<MaterialMd> = {
   id: 'materials',
   label: '物料主数据',
-  description: '物料编码、名称、单位与类型（多基地通过基地代码区分）',
+  description: '物料编码、名称、单位与类型；扩展属性由当前 workspace 字段目录配置',
+  fieldSchemaEntityType: 'MATERIAL',
+  customFieldsUseExtensions: true,
   api: api.masterData.materials,
   rowKey: (r) => r.materialCode,
   search: (r) => `${r.materialCode} ${r.materialName ?? ''} ${r.siteCode ?? ''} ${r.materialType ?? ''}`,
@@ -103,6 +105,7 @@ export const materialTab: TabConfig<MaterialMd> = {
     materialName: '',
     uomCode: '',
     materialType: '',
+    extensions: {},
   }),
   columns: [
     { key: 'siteCode', label: '基地代码', type: 'text', width: 100 },
@@ -205,7 +208,8 @@ export const resourceTab: TabConfig<ResourceMd> = {
 export const productResourceTab: TabConfig<ProductResourceMd> = {
   id: 'product-resources',
   label: '产品工艺',
-  description: '工序、设备组、制造 CT 及线材/关键物料等工艺属性',
+  description: '工序、设备组、制造 CT（基础字段）及 workspace 扩展属性（线材/关键物料等，来自字段目录）',
+  fieldSchemaEntityType: 'PRODUCT_RESOURCE',
   api: api.masterData.productResources,
   rowKey: (r) => `${r.productCode}@${r.sequenceNo ?? 0}@${r.resourceId}`,
   search: (r) =>
@@ -225,6 +229,7 @@ export const productResourceTab: TabConfig<ProductResourceMd> = {
     maleFemaleEnd: '',
     totalBranch: '',
     standardLabor: null,
+    extensions: {},
   }),
   columns: [
     { key: 'productCode', label: '料号', type: 'text', required: true, width: 130 },
@@ -234,12 +239,6 @@ export const productResourceTab: TabConfig<ProductResourceMd> = {
     { key: 'resourceId', label: '设备组', type: 'text', required: true, width: 100 },
     { key: 'processTimeSeconds', label: '制造CT(秒)', type: 'number', width: 110 },
     { key: 'setupTimeMinutes', label: '换型(分钟)', type: 'integer', required: true, width: 100 },
-    { key: 'bomLevel', label: 'A/B料', type: 'text', width: 80 },
-    { key: 'wireMaterial', label: '线材', type: 'text', width: 100 },
-    { key: 'keyMaterial', label: '关键物料', type: 'text', width: 100 },
-    { key: 'maleFemaleEnd', label: '公母端', type: 'text', width: 90 },
-    { key: 'totalBranch', label: '总成分支', type: 'text', width: 100 },
-    { key: 'standardLabor', label: '制造人力', type: 'number', width: 100 },
   ],
 };
 

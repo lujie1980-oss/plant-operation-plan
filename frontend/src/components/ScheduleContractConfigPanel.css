@@ -1,0 +1,47 @@
+.schedule-contract-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.schedule-contract-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.schedule-contract-section {
+  padding: 1rem;
+}
+
+.schedule-contract-section-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.schedule-contract-section-desc {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.schedule-contract-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.schedule-contract-field-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.schedule-contract-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

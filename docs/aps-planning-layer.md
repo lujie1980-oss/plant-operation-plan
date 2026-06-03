@@ -150,7 +150,8 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 
 | 字段 | 来源 | 约束作用 |
 |------|------|----------|
-| `kittingEligible` | P2 齐套推演 | 硬约束：未齐套不可上产线 |
+| `kittingEligible` | P2 齐套推演 | 标记是否齐套；未齐套仍可上产线 |
+| `earliestStartMinute` | P2 + `kitting_lock_t_hours` | 未齐套时最早开工推后（分钟，相对锚点） |
 | `mpContractStartDate` / `mpContractEndDate` / `mpContractResourceId` | P0 主计划契约 | 软约束 + `ScheduleTimingUtil` 最早开工等待 |
 | `mpTargetEndDate` | 契约或工单末槽回退 | 软约束：相对主计划偏差 |
 | `pinned` | 订单排程锁定 + 规则项目启用 | 硬约束：固定产线 |
@@ -166,6 +167,69 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 - 同工单同工序多段合并为 `startDate = min(slotDate)`，`endDate = max(slotDate)`。
 - 无工序级契约时，按工单末槽 + 工序序号回退 `mpTargetEndDate`。
 
+### 5.4 推演层统一预览 API（S05）
+
+`POST /api/v1/planning/detail-schedule/preview`（`DetailSchedulePlanningPreviewRequest`）在**同一套** `DetailSchedulePlanningContext` 上工作：
+
+| 模式 | 请求 | 行为 |
+|------|------|------|
+| 仅推演 | 默认（`solve=false`） | P0–P4 + 全部工序候选，无产线/时间 |
+| 初始可行态 | `seedInitialQueues=true` | `ProblemMapper` 种子队列 + `LineChainTimingUtil` 赋时，**不**调用 Timefold |
+| 内存求解 | `solve=true` | Context → `DetailSchedule` → Timefold → 赋时；结果反写到同一批 `OperationAssignment` |
+| 正式排程 | `solve=true` & `persist=true` | 同上并落库，等价于 `POST .../detail-schedule/solve` |
+
+`GET .../detail-schedule/diagnostics/preview` 保留为轻量诊断；新接口返回 `DetailSchedulePlanningPreviewDto`（诊断 + 产线 + 工序 + 可选 score/版本号）。
+
+前端入口：**主计划 → 推演诊断** 页「运行推演预览」。
+
+### 5.5 主计划推演层统一预览 API（S04）
+
+`POST /api/v1/planning/master-plan/preview`（`MasterPlanPlanningPreviewRequest`）在**同一套** `MasterPlanPlanningContext` 上工作：
+
+| 模式 | 请求 | 行为 |
+|------|------|------|
+| 仅推演 | 默认（`solve=false`） | P0–P4 + 分配候选，无槽位 |
+| 内存求解 | `solve=true` | Context → `MasterPlanSchedule` → Timefold；结果反写到同一批 `OrderAllocation` |
+| 正式主计划 | `solve=true` & `persist=true` | 同上并落库，等价于 `POST .../master-plan/solve` |
+
+可选 `feedbackCutoff` 构建反馈产能 overlay（与滚动刷新主计划一致）。`GET .../master-plan/diagnostics/preview` 仍保留为轻量诊断。
+
+### 5.6 SchedulingSession 与增量推演（已实现）
+
+计划员工作流：**创建 Session → 手动改（可选）→ 增量推演 / 全量重算 → 校验 → 确认发布**；**不**默认调用 Timefold（主动优化见 `optimize`）。
+
+| 类 | 职责 |
+|----|------|
+| `SchedulingSession` / `SchedulingSessionStore` | 内存工作副本（8h TTL） |
+| `DetailScheduleSessionService` | create / get / simulate / optimize / confirm |
+| `DetailScheduleSessionMutation` | `SessionStepPatchDto`：改产线、队列顺序、锁定 |
+| `DetailScheduleSimulationEngine` | `fullSimulate` / `incrementalSimulate`（链式赋时 + 记录波及工序） |
+| `ScheduleValidationService` | 硬/中约束校验（工艺链、并行对、连续生产、齐套未分配等） |
+| `ProductionTaskService` | confirm 时 upsert `RELEASED` + `planning_conflict` |
+
+**REST**（`ScheduleSessionResource`）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/v1/planning/schedule-sessions` | 从 `masterPlanVersionId` 创建 Session |
+| GET | `/api/v1/planning/schedule-sessions/{id}` | 查看 Session 快照 |
+| PATCH | `/api/v1/planning/schedule-sessions/{id}/steps` | 手动 patch + **增量推演**（等价于 simulate + patches） |
+| POST | `/api/v1/planning/schedule-sessions/{id}/simulate` | 增量或全量推演 + 校验 |
+| POST | `/api/v1/planning/schedule-sessions/{id}/optimize` | **主动** Timefold |
+| POST | `/api/v1/planning/schedule-sessions/{id}/confirm` | 落库 `plan_version` + RELEASED 生产任务 |
+
+**`SimulateScheduleSessionRequest`**
+
+| 字段 | 含义 |
+|------|------|
+| `stepPatches` | 手动调整（改线 / 顺序 / 锁定） |
+| `affectedOperationIds` | 增量种子（无 patch 时指定波及起点） |
+| `fullReschedule` | `true` 时全量链式重算；默认无种子则全量 |
+
+增量模式从种子扩展：**工艺后继**、**并行配对**、**同产线队列后缀**，再 `LineChainTimingUtil.applyAllStartTimes`（全局收敛，返回 `recalculatedOperationIds`）。
+
+**前端**：**生产排程**页 Session 推演面板 + 甘特/列表「Session 推演」视图；**推演诊断**页保留预览入口。
+
 ---
 
 ## 6. Timefold 边界一览
@@ -176,7 +240,7 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | **Planning Entity** | `OrderAllocation` | `OperationAssignment` |
 | **Value Range** | `TimeSlot`（按资源） | `ScheduleLine` |
 | **决策变量** | `timeSlot` | `line`（顺序由约束与 shadow 时间推导） |
-| **Problem Facts** | 物料上下文、BOM 边、相邻槽位对、overlay、timing bounds、目标权重 | 契约权重、换型索引、锚点日、班产能 |
+| **Problem Facts** | 物料上下文、BOM 边、相邻槽位对、overlay、timing bounds、目标权重 | 契约权重、换型索引、工序流转索引、锚点日、班产能 |
 | **不在求解器内** | 工单生成、MRP 闭合、工艺展开、eligible 过滤 | 齐套标记、契约加载、并行/连续绑定 |
 
 ---
@@ -210,7 +274,7 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 **并行工序（不同料号同槽）**：
 
 1. **串行工序先后**：`MasterPlanOperationPrecedenceBuilder` 为同工单相邻工序生成 `OperationPrecedenceEdge`；`operationSerialPrecedence` 硬约束。
-2. **并行工序同槽**：`MasterPlanParallelBindingService` + `parallelOperationsSameSlot`（配对料号同槽，与上节「同工序多资源」无关）。
+2. **并行工序同槽**：`MasterPlanParallelBindingService` + `parallelOperationsSameSlot`（配对料号同槽，与上节「同工序多资源」无关）。**拆段同步**：同一 `segmentIndex` 的拆段各自成组（`groupId#S{n}`），不再只绑首段。
 3. **孤儿 / 无交集回退**：见 `parallelOrphan`、`ALLOC_PARALLEL_NO_COMMON_SLOT`。
 4. **规则开关**：`BusinessRuleScopeService.isMasterPlanEnabled(PARALLEL_OPERATIONS)`。
 
@@ -243,7 +307,7 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | 工单被跳过 | 甘特/主计划里看不到某 WO | `issues` 中 `severity=SKIP` + `reasonCode` |
 | 分配被丢弃 | 有工艺但无槽位 | `ALLOC_NO_RESOURCE_SLOTS` + 计数 `orderAllocationsDroppedNoSlots` |
 | 时窗降级 | 有槽但早于「最早可行开始」 | `ALLOC_TIMING_FALLBACK`（仍进候选，靠软约束惩罚） |
-| 齐套 | 详细排程不上线 | `WO_KITTING_SHORT` / `operationsKittingIneligible` |
+| 齐套 | 未齐套仍可排产，最早开工推后 | `WO_KITTING_SHORT` / `operationsKittingIneligible` |
 | 契约缺失 | 偏离主计划 | `OP_MP_TARGET_FALLBACK` vs `operationsWithMpContract` |
 
 **不在本阶段覆盖：** ~~Timefold 得分分解~~（已实现，见 §8.3.10）；求解后未选中的槽位原因仍需结合推演诊断解读。
@@ -399,7 +463,7 @@ GET /api/v1/planning/detail-schedule/diagnostics/preview?masterPlanVersionId={op
 - ~~将 `context.diagnostics()` 写入 `PlanningPipelineRun` 各 step 的 metadata~~（已实现：`diagnostics_json` + 运行日志摘要）
 - ~~反馈滚动场景：`preview` 增加 `feedbackCutoff` + overlay 参数~~（已实现：`GET .../diagnostics/preview?feedbackCutoff=`）
 - ~~前端：`PlanningDiagnosticsPanel` 已接入 **计划运行** / **生产排程** / **计划分析** 页~~
-- 选优层约束 explain / score 分解（P4）
+- ~~选优层约束 explain / score 分解（P4）~~（见 §8.3.10）
 
 #### 8.3.10 选优层得分分解（已实现）
 
@@ -429,6 +493,26 @@ GET /api/v1/planning/detail-schedule/{versionId}/score-explanation?masterPlanVer
 
 `PlanningOrchestrator` 在 S04/S05 求解前显式 `buildPlanningContext`，写入诊断日志与 `diagnostics_json`；Timefold 求解通过 `solveWithPlanningContext` 投影已构建上下文。
 
+### 8.5 订单推演链（已实现）
+
+基于 `MasterPlanPlanningContext` + 可选 `DetailSchedulePlanningContext`，对单条销售订单行生成 **不求解** 的全链可视化数据。
+
+| 类 | 职责 |
+|----|------|
+| `OrderPlanningChainService` | 构建双 Context + peg 拓扑 |
+| `OrderPlanningChainProjector` | eligible 槽时间窗、`planningSignals`、S05 齐套/契约信号 |
+| `OrderPlanningChainDto` | REST 出参 |
+
+**REST**
+
+```http
+POST /api/v1/planning/order-chain/preview
+```
+
+**前端**：主计划 → 计划分析 → **订单推演**（`/master-plan/analysis/order-chain`）
+
+与 `FulfillmentPeggingService` 满足链的区别：时间窗来自 **推演 eligible 槽** 而非 lead-time 启发式；可选 `baselineMasterPlanVersionId` 与求解结果对比。
+
 ---
 
 ## 9. 关键文件索引
@@ -450,6 +534,9 @@ GET /api/v1/planning/detail-schedule/{versionId}/score-explanation?masterPlanVer
 | REST | `api/PlanningResource.java` |
 | 推演诊断 DTO | `api/dto/planning/` |
 | 推演诊断采集 | `scenario/planning/diagnostics/` |
+| 订单推演链 | `scenario/planning/OrderPlanningChainService.java` |
+| Session / 增量推演 | `scenario/DetailScheduleSessionService.java`, `scenario/planning/DetailScheduleSimulationEngine.java` |
+| 生产任务 | `scenario/execution/ProductionTaskService.java`, `api/ScheduleSessionResource.java` |
 
 ---
 
@@ -460,3 +547,4 @@ GET /api/v1/planning/detail-schedule/{versionId}/score-explanation?masterPlanVer
 | 2026-05-30 | 初版：S04/S05 推演层分包、P0–P4、Timefold 边界、扩展点 |
 | 2026-05-30 | §8.3 推演可观测性：Collector、API、reasonCode、解读工作流 |
 | 2026-05-30 | §8.3.10 选优层得分分解：SolutionManager explain API + 前端面板 |
+| 2026-06-02 | §5.6 Session + 增量推演 + 生产任务 RELEASED 发布 |

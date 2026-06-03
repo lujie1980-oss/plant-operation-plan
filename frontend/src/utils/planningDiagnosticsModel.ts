@@ -12,6 +12,7 @@ export const REASON_CODE_LABELS: Record<string, string> = {
   WO_NO_ALLOCATIONS: '无有效分配',
   ALLOC_NO_RESOURCE_SLOTS: '无可用槽位',
   ALLOC_TIMING_FALLBACK: '最早可行时窗回退',
+  ALLOC_PARALLEL_NO_COMMON_SLOT: '并行槽无交集',
   WO_KITTING_SHORT: '齐套不足',
   OP_MP_CONTRACT: '主计划工序契约',
   OP_MP_TARGET_FALLBACK: '主计划末槽回退',
@@ -45,6 +46,8 @@ export const MASTER_PLAN_WARN_COUNTERS = [
   { key: 'orderAllocationsDroppedNoSlots', label: '无槽丢弃' },
   { key: 'orderAllocationsTimingFallback', label: '时窗回退' },
   { key: 'orderAllocationsLocked', label: '锁定分配' },
+  { key: 'parallelOperationOrphans', label: '并行孤儿' },
+  { key: 'parallelSlotIntersectionFallbacks', label: '并行槽无交集' },
 ];
 
 export const DETAIL_SCHEDULE_WARN_COUNTERS = [
@@ -106,6 +109,13 @@ export function metaLines(
     lines.push(`期初物料种类：${mp.counters.inventoryProductCount ?? 0}`);
     lines.push(`BOM 依赖边：${mp.counters.bomDependencyEdgeCount ?? 0}`);
     lines.push(`时隙：${mp.counters.timeSlotCount ?? 0}`);
+    lines.push(
+      `并行配对：${mp.counters.parallelOperationGroups ?? 0} 组，孤儿 ${mp.counters.parallelOperationOrphans ?? 0}`,
+    );
+    lines.push(
+      `并行槽交集：${mp.counters.parallelSlotIntersections ?? 0}，无交集回退 ${mp.counters.parallelSlotIntersectionFallbacks ?? 0}`,
+    );
+    lines.push(`工序先后边：${mp.counters.operationPrecedenceEdges ?? 0}`);
     return lines;
   }
   const ds = data as DetailSchedulePlanningDiagnostics;

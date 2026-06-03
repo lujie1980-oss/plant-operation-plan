@@ -5,11 +5,13 @@ import com.plantops.config.ScheduleContractConfigService;
 import com.plantops.masterdata.BusinessRuleScopeService;
 import com.plantops.persistence.entity.LineOpeningDecisionEntity;
 import com.plantops.persistence.entity.ProductionLineEntity;
+import com.plantops.persistence.entity.ProductionBatchEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.scenario.ContinuousProductionBindingService;
 import com.plantops.scenario.KittingService;
 import com.plantops.scenario.ParallelOperationBindingService;
 import com.plantops.scenario.ProductRoutingSteps;
+import com.plantops.scenario.WorkOrderService;
 import com.plantops.scenario.WorkOrderScheduleContext;
 import com.plantops.scenario.planning.diagnostics.DetailSchedulePlanningDiagnosticsCollector;
 import com.plantops.scenario.planning.diagnostics.PlanningDiagnosticCodes;
@@ -32,7 +34,7 @@ import java.util.stream.Collectors;
  * <ul>
  *   <li>P0 事实装载：排程锚点、契约权重、主计划工序契约、开线决策</li>
  *   <li>P1 产线域：ScheduleLine（开/关 + 产能）</li>
- *   <li>P2 齐套推演：KittingService 消耗池 → OperationAssignment.kittingEligible</li>
+ *   <li>P2 齐套推演：KittingService 消耗池 → kittingEligible + earliestStartMinute</li>
  *   <li>P3 工序展开：{@link DetailScheduleAssignmentBuilder} + 主计划软契约字段</li>
  *   <li>P4 绑定规则：并行工序 / 连续生产（硬约束预处理）</li>
  * </ul>
@@ -71,7 +73,7 @@ public class DetailSchedulePlanningContextBuilder {
     public DetailSchedulePlanningContext build(String masterPlanVersionId, MaterialPlanningContext materialPlanning) {
         DetailSchedulePlanningDiagnosticsCollector diag = new DetailSchedulePlanningDiagnosticsCollector();
         LocalDate planningAnchor = LocalDate.now();
-        int shiftCapacity = parameters.getInt("shift_capacity_minutes", 480);
+        int kittingLockMinutes = Math.max(0, parameters.getInt("kitting_lock_t_hours", 24)) * 60;
         ScheduleContractSettings contract = scheduleContractConfig.load();
         MasterPlanContractLoader.ContractSnapshot mpContracts = masterPlanContractLoader.load(masterPlanVersionId);
         diag.set(PlanningDiagnosticCodes.DS_MP_CONTRACTS_LOADED, mpContracts.operationContracts().size());
@@ -82,6 +84,7 @@ public class DetailSchedulePlanningContextBuilder {
                 : materialPlanningContextBuilder.build();
         List<OperationAssignment> operations = expandOperations(
                 planningAnchor,
+                kittingLockMinutes,
                 mpContracts.workOrderEndByWorkOrder(),
                 mpContracts.operationContracts(),
                 effectiveMaterial,
@@ -93,7 +96,6 @@ public class DetailSchedulePlanningContextBuilder {
 
         return new DetailSchedulePlanningContext(
                 planningAnchor,
-                shiftCapacity,
                 contract,
                 lines,
                 operations,
@@ -124,6 +126,7 @@ public class DetailSchedulePlanningContextBuilder {
 
     private List<OperationAssignment> expandOperations(
             LocalDate planningAnchor,
+            int kittingLockMinutes,
             Map<String, LocalDate> masterPlanEndByWorkOrder,
             Map<String, MasterPlanContractLoader.OperationContract> operationContracts,
             MaterialPlanningContext materialPlanning,
@@ -134,13 +137,152 @@ public class DetailSchedulePlanningContextBuilder {
         diag.set(PlanningDiagnosticCodes.DS_INVENTORY_PRODUCT_COUNT, materialPlanning.inventory().productCount());
         for (WorkOrderEntity wo : WorkOrderEntity.listAllOrdered()) {
             diag.increment(PlanningDiagnosticCodes.DS_WORK_ORDERS_SCANNED);
+            if (!WorkOrderService.DISPATCH_DISPATCHED.equals(wo.dispatchStatus)) {
+                continue;
+            }
+            if (hasActiveBatches(wo)) {
+                seqHint = expandBatchesForWorkOrder(
+                        operations,
+                        wo,
+                        planningAnchor,
+                        kittingLockMinutes,
+                        masterPlanEndByWorkOrder,
+                        operationContracts,
+                        kittingPool,
+                        diag,
+                        seqHint);
+                continue;
+            }
+            if (!WorkOrderService.isPendingScheduleEligible(wo)) {
+                diag.recordSkip(
+                        PlanningDiagnosticCodes.WO_NOT_SCHEDULABLE,
+                        wo.workOrderNo,
+                        "用户标记不可排产");
+                continue;
+            }
+            seqHint = expandWholeWorkOrder(
+                    operations,
+                    wo,
+                    planningAnchor,
+                    kittingLockMinutes,
+                    masterPlanEndByWorkOrder,
+                    operationContracts,
+                    kittingPool,
+                    diag,
+                    seqHint);
+        }
+        diag.set(PlanningDiagnosticCodes.DS_OPERATIONS_TOTAL, operations.size());
+        return operations;
+    }
+
+    private static boolean hasActiveBatches(WorkOrderEntity wo) {
+        if (wo.batchSplitStatus != null
+                && !WorkOrderEntity.BATCH_SPLIT_NONE.equals(wo.batchSplitStatus)) {
+            return ProductionBatchEntity.sumActiveQuantity(wo.workOrderNo).compareTo(BigDecimal.ZERO) > 0;
+        }
+        return false;
+    }
+
+    private int expandBatchesForWorkOrder(
+            List<OperationAssignment> operations,
+            WorkOrderEntity wo,
+            LocalDate planningAnchor,
+            int kittingLockMinutes,
+            Map<String, LocalDate> masterPlanEndByWorkOrder,
+            Map<String, MasterPlanContractLoader.OperationContract> operationContracts,
+            Map<String, BigDecimal> kittingPool,
+            DetailSchedulePlanningDiagnosticsCollector diag,
+            int seqHint) {
+        List<ProductRoutingSteps.Operation> routingOperations =
+                ProductRoutingSteps.operationsForProduct(wo.productCode);
+        if (routingOperations.isEmpty()) {
+            diag.recordSkip(
+                    PlanningDiagnosticCodes.WO_NO_ROUTING,
+                    wo.workOrderNo,
+                    "产品 " + wo.productCode + " 无工艺");
+            return seqHint;
+        }
+        WorkOrderScheduleContext scheduleCtx = WorkOrderScheduleContext.resolve(wo);
+        if (!scheduleCtx.schedulable) {
+            diag.recordSkip(
+                    PlanningDiagnosticCodes.WO_NOT_SCHEDULABLE,
+                    wo.workOrderNo,
+                    "工单不可排程");
+            return seqHint;
+        }
+        boolean pinned = DetailScheduleAssignmentBuilder.resolvePinned(wo, businessRuleScopeService);
+        LocalDate dueDate = DetailScheduleAssignmentBuilder.resolveDueDate(wo);
+        LocalDate woMpEnd = masterPlanEndByWorkOrder.get(wo.workOrderNo);
+        for (ProductionBatchEntity batch : ProductionBatchEntity.listActiveByWorkOrder(wo.workOrderNo)) {
+            if (batch.pendingScheduleEligible != null && !batch.pendingScheduleEligible) {
+                diag.recordSkip(
+                        PlanningDiagnosticCodes.WO_NOT_SCHEDULABLE,
+                        batch.batchNo,
+                        "批次标记不可排产");
+                continue;
+            }
+            boolean kittingOk = kittingService.checkAndConsumeWorkOrderKitting(wo, batch.quantity, kittingPool);
+            if (!kittingOk) {
+                diag.recordWarn(
+                        PlanningDiagnosticCodes.WO_KITTING_SHORT,
+                        batch.batchNo,
+                        null,
+                        "批次齐套不足，最早开始推后 "
+                                + (kittingLockMinutes / 60)
+                                + " 小时（kitting_lock_t_hours）");
+            }
+            List<OperationAssignment> batchOps = DetailScheduleAssignmentBuilder.buildForBatch(
+                    batch,
+                    wo,
+                    routingOperations,
+                    kittingOk,
+                    kittingLockMinutes,
+                    pinned,
+                    dueDate,
+                    woMpEnd,
+                    planningAnchor,
+                    operationContracts,
+                    seqHint,
+                    businessRuleScopeService);
+            seqHint += batchOps.size();
+            diag.increment(PlanningDiagnosticCodes.DS_WORK_ORDERS_INCLUDED);
+            for (OperationAssignment op : batchOps) {
+                if (!op.isKittingEligible()) {
+                    diag.increment(PlanningDiagnosticCodes.DS_OPERATIONS_KITTING_INELIGIBLE);
+                }
+                if (op.getMpContractStartDate() != null) {
+                    diag.increment(PlanningDiagnosticCodes.DS_OPERATIONS_WITH_MP_CONTRACT);
+                } else if (op.getMpTargetEndDate() != null) {
+                    diag.increment(PlanningDiagnosticCodes.DS_OPERATIONS_MP_TARGET_FALLBACK);
+                    diag.recordWarn(
+                            PlanningDiagnosticCodes.OP_MP_TARGET_FALLBACK,
+                            batch.batchNo,
+                            op.getOperationId(),
+                            "无工序级主计划契约，使用工单末槽回退目标日 " + op.getMpTargetEndDate());
+                }
+            }
+            operations.addAll(batchOps);
+        }
+        return seqHint;
+    }
+
+    private int expandWholeWorkOrder(
+            List<OperationAssignment> operations,
+            WorkOrderEntity wo,
+            LocalDate planningAnchor,
+            int kittingLockMinutes,
+            Map<String, LocalDate> masterPlanEndByWorkOrder,
+            Map<String, MasterPlanContractLoader.OperationContract> operationContracts,
+            Map<String, BigDecimal> kittingPool,
+            DetailSchedulePlanningDiagnosticsCollector diag,
+            int seqHint) {
             WorkOrderScheduleContext scheduleCtx = WorkOrderScheduleContext.resolve(wo);
             if (!scheduleCtx.schedulable) {
                 diag.recordSkip(
                         PlanningDiagnosticCodes.WO_NOT_SCHEDULABLE,
                         wo.workOrderNo,
                         "工单不可排程");
-                continue;
+                return seqHint;
             }
             List<ProductRoutingSteps.Operation> routingOperations =
                     ProductRoutingSteps.operationsForProduct(wo.productCode);
@@ -149,7 +291,7 @@ public class DetailSchedulePlanningContextBuilder {
                         PlanningDiagnosticCodes.WO_NO_ROUTING,
                         wo.workOrderNo,
                         "产品 " + wo.productCode + " 无工艺");
-                continue;
+                return seqHint;
             }
             boolean kittingOk = kittingService.checkAndConsumeWorkOrderKitting(wo, kittingPool);
             if (!kittingOk) {
@@ -157,7 +299,9 @@ public class DetailSchedulePlanningContextBuilder {
                         PlanningDiagnosticCodes.WO_KITTING_SHORT,
                         wo.workOrderNo,
                         null,
-                        "齐套不足，工序 kittingEligible=false");
+                        "齐套不足，最早开始推后 "
+                                + (kittingLockMinutes / 60)
+                                + " 小时（kitting_lock_t_hours）");
             }
             boolean pinned = DetailScheduleAssignmentBuilder.resolvePinned(wo, businessRuleScopeService);
             LocalDate dueDate = DetailScheduleAssignmentBuilder.resolveDueDate(wo);
@@ -166,6 +310,7 @@ public class DetailSchedulePlanningContextBuilder {
                     wo,
                     routingOperations,
                     kittingOk,
+                    kittingLockMinutes,
                     pinned,
                     dueDate,
                     woMpEnd,
@@ -191,9 +336,7 @@ public class DetailSchedulePlanningContextBuilder {
                 }
             }
             operations.addAll(woOps);
-        }
-        diag.set(PlanningDiagnosticCodes.DS_OPERATIONS_TOTAL, operations.size());
-        return operations;
+            return seqHint;
     }
 
     private Set<String> loadOpenedLines(String masterPlanVersionId) {

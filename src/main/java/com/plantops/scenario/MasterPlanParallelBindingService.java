@@ -38,6 +38,8 @@ import java.util.List;
 
 import java.util.Map;
 
+import java.util.TreeMap;
+
 
 
 /**
@@ -112,13 +114,11 @@ public class MasterPlanParallelBindingService {
 
                 if (first != null && second != null) {
 
-                    String groupId = "MPP-" + rule.id + "-" + entry.getKey() + "-" + rule.lineId;
+                    String baseGroupId = "MPP-" + rule.id + "-" + entry.getKey() + "-" + rule.lineId;
 
-                    int pairedDuration = Math.max(first.getDurationMinutes(), second.getDurationMinutes());
+                    groups += linkParallelSegmentPairs(
 
-                    linkPair(first, second, groupId, rule.lineId, pairedDuration);
-
-                    groups++;
+                            entry.getValue(), first, second, baseGroupId, rule.lineId, resourceId);
 
                 } else {
                     if (first != null && markOrphan(first, rule)) {
@@ -168,6 +168,105 @@ public class MasterPlanParallelBindingService {
                 slotIntersectionsApplied,
 
                 slotIntersectionFallbacks);
+
+    }
+
+
+
+    /**
+     * 同工序各拆段按 segmentIndex 配对同槽；每段独立 parallelGroupId（base#S{n}）。
+     */
+    static int linkParallelSegmentPairs(
+
+            List<OrderAllocation> orderLineCandidates,
+
+            OrderAllocation firstLead,
+
+            OrderAllocation secondLead,
+
+            String baseGroupId,
+
+            String lineId,
+
+            String resourceId) {
+
+        int opSeq = firstLead.getOperationSeq();
+
+        Map<Integer, OrderAllocation> firstBySeg = segmentsByIndex(
+
+                orderLineCandidates, firstLead.getProductCode(), resourceId, opSeq);
+
+        Map<Integer, OrderAllocation> secondBySeg = segmentsByIndex(
+
+                orderLineCandidates, secondLead.getProductCode(), resourceId, opSeq);
+
+        int linked = 0;
+
+        for (Map.Entry<Integer, OrderAllocation> entry : firstBySeg.entrySet()) {
+
+            OrderAllocation secondSeg = secondBySeg.get(entry.getKey());
+
+            if (secondSeg == null) {
+
+                continue;
+
+            }
+
+            OrderAllocation firstSeg = entry.getValue();
+
+            String groupId = baseGroupId + "#S" + entry.getKey();
+
+            int pairedDuration = Math.max(firstSeg.getDurationMinutes(), secondSeg.getDurationMinutes());
+
+            linkPair(firstSeg, secondSeg, groupId, lineId, pairedDuration);
+
+            linked++;
+
+        }
+
+        return linked;
+
+    }
+
+
+
+    private static Map<Integer, OrderAllocation> segmentsByIndex(
+
+            List<OrderAllocation> candidates,
+
+            String productCode,
+
+            String resourceId,
+
+            int operationSeq) {
+
+        Map<Integer, OrderAllocation> bySegment = new TreeMap<>();
+
+        for (OrderAllocation allocation : candidates) {
+
+            if (!productCode.equals(allocation.getProductCode())) {
+
+                continue;
+
+            }
+
+            if (allocation.getOperationSeq() != operationSeq) {
+
+                continue;
+
+            }
+
+            if (!canUseResource(allocation, resourceId)) {
+
+                continue;
+
+            }
+
+            bySegment.putIfAbsent(allocation.getSegmentIndex(), allocation);
+
+        }
+
+        return bySegment;
 
     }
 

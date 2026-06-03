@@ -113,6 +113,78 @@
   border-left: 2px dashed #94a3b8;
 }
 
+.wo-op-plan-leg-bar::before {
+  width: 20px;
+  height: 10px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+}
+
+.wo-op-plan-op-block {
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+
+.wo-op-plan-op-block:last-child {
+  border-bottom: none;
+}
+
+.wo-op-plan-row--operation {
+  background: #fafbfc;
+}
+
+.wo-op-plan-row--resource {
+  background: #fff;
+}
+
+.wo-op-plan-label--operation {
+  padding: 4px 8px;
+}
+
+.wo-op-plan-op-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wo-op-plan-label--resource {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding-left: 14px;
+  font-size: 10px;
+}
+
+.wo-op-plan-resource-prefix {
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.wo-op-plan-resource.is-assigned {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.wo-op-plan-track--operation {
+  position: relative;
+  display: flex;
+  background: #f8fafc;
+}
+
+.wo-op-plan-track--resource {
+  position: relative;
+  display: flex;
+}
+
+.wo-op-plan-grid-cell {
+  flex-shrink: 0;
+  border-right: 1px solid rgba(15, 23, 42, 0.06);
+  background: #f8fafc;
+}
+
 .wo-op-plan-marker-layer {
   position: absolute;
   pointer-events: none;
@@ -213,7 +285,7 @@
 }
 
 .wo-op-plan-resource {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted, #64748b);
 }
 

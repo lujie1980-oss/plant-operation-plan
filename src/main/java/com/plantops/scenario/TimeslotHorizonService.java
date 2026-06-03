@@ -133,13 +133,6 @@ public class TimeslotHorizonService {
         return keys;
     }
 
-    /**
-     * 主计划/产能分析用：某日可用产能（分钟）。
-     * <ul>
-     *   <li>无产线或单产线：优先产线 ID 日历，否则生产资源 ID 日历，再否则产线默认班产能/全局默认班产能</li>
-     *   <li>同一生产资源下多产线：各产线日历（resourceId=lineId）之和，不再使用资源级日历行（避免重复计量）</li>
-     * </ul>
-     */
     public int capacityForDay(String resourceId, LocalDate date) {
         if (resourceId == null || resourceId.isBlank() || date == null) {
             return defaultShiftMinutes();
@@ -160,6 +153,14 @@ public class TimeslotHorizonService {
             return capacityForCalendarOwner(resourceId, defaultLineCapacity(line), date);
         }
         return capacityForCalendarOwner(resourceId, defaultShiftMinutes(), date);
+    }
+
+    /** 排程 KPI：单条产线在指定日的可用产能（分钟）。 */
+    public int capacityForProductionLine(ProductionLineEntity line, LocalDate date) {
+        if (line == null || date == null) {
+            return 0;
+        }
+        return capacityForLine(line, date);
     }
 
     private int capacityForLine(ProductionLineEntity line, LocalDate date) {
@@ -197,7 +198,7 @@ public class TimeslotHorizonService {
     }
 
     private int defaultShiftMinutes() {
-        return parameters.getInt("shift_capacity_minutes", DEFAULT_SHIFT_MINUTES);
+        return DEFAULT_SHIFT_MINUTES;
     }
 
     public record TimeslotHorizonConfig(

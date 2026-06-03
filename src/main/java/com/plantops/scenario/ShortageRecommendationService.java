@@ -26,7 +26,7 @@ public class ShortageRecommendationService {
     @Transactional
     public List<ShortageRecommendationDto> analyze(DetailSchedule schedule, String planVersionId) {
         List<ShortageRecommendationDto> results = new ArrayList<>();
-        if (schedule.getScore() != null && schedule.getScore().isFeasible()) {
+        if (schedule.score() != null && schedule.score().isFeasible()) {
             return results;
         }
 
@@ -34,9 +34,12 @@ public class ShortageRecommendationService {
             if (op.getLine() == null) {
                 results.add(persist(planVersionId, ShortageType.CAPACITY, "HIGH", op,
                         "USE_ALTERNATE_RESOURCE", Map.of("reason", "No line assigned")));
-            } else if (op.getEndMinute() != null && op.getEndMinute() > schedule.getShiftCapacityMinutes()) {
-                results.add(persist(planVersionId, ShortageType.CAPACITY, "HIGH", op,
-                        "RESEQUENCE", Map.of("overflowMinutes", op.getEndMinute() - schedule.getShiftCapacityMinutes())));
+            } else if (op.getEndMinute() != null && op.getLine() != null) {
+                int lineCap = op.getLine().getCapacityMinutes();
+                if (lineCap > 0 && op.getEndMinute() > lineCap) {
+                    results.add(persist(planVersionId, ShortageType.CAPACITY, "HIGH", op,
+                            "RESEQUENCE", Map.of("overflowMinutes", op.getEndMinute() - lineCap)));
+                }
             } else if (op.getLine() != null && !op.getLine().isOpened()) {
                 results.add(persist(planVersionId, ShortageType.HEADCOUNT, "MEDIUM", op,
                         "CHANGE_OPEN_LINES", Map.of("lineId", op.getLine().getLineId())));

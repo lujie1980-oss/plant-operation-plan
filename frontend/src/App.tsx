@@ -1,5 +1,6 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { SchedulingModuleLayout } from './components/SchedulingModuleLayout';
 import { PlanProvider } from './context/PlanContext';
 import { WorkspaceProvider } from './context/WorkspaceContext';
 import { WorkspaceAdminPage } from './pages/WorkspaceAdminPage';
@@ -7,19 +8,24 @@ import { BusinessDataPage } from './pages/BusinessDataPage';
 import { BusinessRulesPage } from './pages/BusinessRulesPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DemandTrackingPage } from './pages/DemandTrackingPage';
+import { FactoryCalendarPage } from './pages/FactoryCalendarPage';
 import { DetailSchedulePage } from './pages/DetailSchedulePage';
 import { DemandPage } from './pages/DemandPage';
 import { CapacityPage } from './pages/CapacityPage';
 import { KittingPage } from './pages/KittingPage';
 import { ProductionPlanPage } from './pages/ProductionPlanPage';
 import { PlanDiagnosticsPage } from './pages/PlanDiagnosticsPage';
+import { OrderPlanningChainPage } from './pages/OrderPlanningChainPage';
 import { MasterDataPage } from './pages/MasterDataPage';
 import { MasterPlanObjectivesPage } from './pages/MasterPlanObjectivesPage';
 import { PlanParametersPage } from './pages/PlanParametersPage';
 import { PlanRunPage } from './pages/PlanRunPage';
 import { ScheduleKittingPage } from './pages/ScheduleKittingPage';
+import { PendingScheduleWorkOrdersPage } from './pages/PendingScheduleWorkOrdersPage';
+import { BatchPlanPage } from './pages/BatchPlanPage';
 import { SchedulingPlanParametersPage } from './pages/SchedulingPlanParametersPage';
 import { ScenarioComparisonPage } from './pages/ScenarioComparisonPage';
+import { ScheduleVersionComparisonPage } from './pages/ScheduleVersionComparisonPage';
 
 export default function App() {
   return (
@@ -44,6 +50,7 @@ export default function App() {
             <Route path="master-plan/analysis/material" element={<KittingPage />} />
             <Route path="master-plan/analysis/work-orders" element={<ProductionPlanPage />} />
             <Route path="master-plan/analysis/diagnostics" element={<PlanDiagnosticsPage />} />
+            <Route path="master-plan/analysis/order-chain" element={<OrderPlanningChainPage />} />
             <Route path="master-plan/demand" element={<Navigate to="/master-plan/analysis/demand" replace />} />
             <Route path="master-plan/capacity" element={<Navigate to="/master-plan/analysis/capacity" replace />} />
             <Route path="master-plan/material" element={<Navigate to="/master-plan/analysis/material" replace />} />
@@ -58,20 +65,20 @@ export default function App() {
               }
             />
 
-            <Route path="scheduling/parameters" element={<SchedulingPlanParametersPage />} />
-            <Route path="scheduling/kitting" element={<ScheduleKittingPage />} />
-            <Route path="scheduling/detail-schedule" element={<DetailSchedulePage />} />
-            <Route
-              path="scheduling/scenario-comparison"
-              element={
-                <ScenarioComparisonPage
-                  title="排程场景对比"
-                  description="对比不同排程版本的关键 KPI（当前与主计划场景共用数据源，后续可扩展排程版本对比）"
-                  emptyHint="请先在「计划运行」生成多个主计划场景；排程版本对比接口预留中。"
-                />
-              }
-            />
+            <Route path="scheduling" element={<SchedulingModuleLayout />}>
+              <Route path="parameters" element={<SchedulingPlanParametersPage />} />
+              <Route path="batch-plan" element={<BatchPlanPage />} />
+              <Route path="pending-work-orders" element={<PendingScheduleWorkOrdersPage />} />
+              <Route path="kitting" element={<ScheduleKittingPage />} />
+              <Route path="detail-schedule" element={<DetailSchedulePage />} />
+              <Route path="version-comparison" element={<ScheduleVersionComparisonPage />} />
+              <Route
+                path="scenario-comparison"
+                element={<Navigate to="/scheduling/version-comparison" replace />}
+              />
+            </Route>
 
+            <Route path="factory-calendar" element={<FactoryCalendarPage />} />
             <Route path="demand-tracking" element={<DemandTrackingPage />} />
 
             {/* 旧路径重定向 */}

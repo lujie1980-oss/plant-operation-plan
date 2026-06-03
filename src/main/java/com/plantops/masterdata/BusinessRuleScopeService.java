@@ -66,13 +66,27 @@ public class BusinessRuleScopeService {
         }
         e.enableMasterPlan = dto.enableMasterPlan();
         e.enableDetailSchedule = dto.enableDetailSchedule();
+        if (dto.description() != null) {
+            e.description = dto.description().isBlank() ? null : dto.description().trim();
+        }
         return toDto(e);
+    }
+
+    public ChangeoverRuleIndex loadMasterPlanChangeoverIndex() {
+        if (!isMasterPlanEnabled(BusinessRuleTypeIds.CHANGEOVER)) {
+            return new ChangeoverRuleIndex(List.of());
+        }
+        return loadChangeoverRulesFromWorkspace();
     }
 
     public ChangeoverRuleIndex loadChangeoverIndex() {
         if (!isDetailScheduleEnabled(BusinessRuleTypeIds.CHANGEOVER)) {
             return new ChangeoverRuleIndex(List.of());
         }
+        return loadChangeoverRulesFromWorkspace();
+    }
+
+    private ChangeoverRuleIndex loadChangeoverRulesFromWorkspace() {
         List<ChangeoverRuleIndex.Rule> rules = ChangeoverMatrixEntity.listInWorkspace().stream()
                 .map(e -> new ChangeoverRuleIndex.Rule(
                         e.operationName,
@@ -81,20 +95,26 @@ public class BusinessRuleScopeService {
                         e.toAttributeValue,
                         e.setupMinutes))
                 .toList();
-        return new ChangeoverRuleIndex(rules);
+        return ChangeoverRuleIndex.withSnapshots(rules);
     }
 
     public OperationTransferTimeIndex loadTransferTimeIndex() {
         if (!isMasterPlanEnabled(BusinessRuleTypeIds.OPERATION_TRANSFER_TIME)) {
             return new OperationTransferTimeIndex(List.of());
         }
+        return loadTransferTimeRulesFromWorkspace();
+    }
+
+    public OperationTransferTimeIndex loadDetailScheduleTransferTimeIndex() {
+        if (!isDetailScheduleEnabled(BusinessRuleTypeIds.OPERATION_TRANSFER_TIME)) {
+            return new OperationTransferTimeIndex(List.of());
+        }
+        return loadTransferTimeRulesFromWorkspace();
+    }
+
+    private OperationTransferTimeIndex loadTransferTimeRulesFromWorkspace() {
         List<OperationTransferTimeIndex.Rule> rules = OperationTransferTimeRuleEntity.listInWorkspace().stream()
-                .map(e -> new OperationTransferTimeIndex.Rule(
-                        e.productCode,
-                        e.fromOperationName,
-                        e.toOperationName,
-                        e.transferMinutes,
-                        e.minTransferMinutes))
+                .map(OperationTransferTimeIndex::toRule)
                 .toList();
         return new OperationTransferTimeIndex(rules);
     }
@@ -132,10 +152,15 @@ public class BusinessRuleScopeService {
     }
 
     private BusinessRuleScopeDto toDto(BusinessRuleScopeEntity e) {
+        String description = e.description;
+        if (description == null || description.isBlank()) {
+            description = BusinessRuleTypeIds.defaultDescriptionOf(e.ruleTypeId);
+        }
         return new BusinessRuleScopeDto(
                 e.ruleTypeId,
                 BusinessRuleTypeIds.labelOf(e.ruleTypeId),
                 e.enableMasterPlan,
-                e.enableDetailSchedule);
+                e.enableDetailSchedule,
+                description);
     }
 }

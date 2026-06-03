@@ -3,7 +3,8 @@ import { Navigate, useParams } from 'react-router-dom';
 import { consumeMasterDataTableFocus, type MasterDataTableFocus } from '../utils/masterDataFocus';
 import { api } from '../api/client';
 import { BusinessRulesExcelToolbar } from '../components/BusinessRulesExcelToolbar';
-import { BusinessRuleScopePanel } from '../components/BusinessRuleScopePanel';
+import { BusinessRuleDescriptionHeader } from '../components/BusinessRuleDescriptionHeader';
+import { BusinessRuleScopePanel, useBusinessRuleScopes } from '../components/BusinessRuleScopePanel';
 import { PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { MasterDataTabBody, type TabConfig } from '../components/MasterDataTabBody';
@@ -41,6 +42,8 @@ export function BusinessRulesPage() {
   const [newVersionName, setNewVersionName] = useState('');
   const [dataRevision, setDataRevision] = useState(0);
   const [tableFocus, setTableFocus] = useState<MasterDataTableFocus | null>(null);
+  const { scopesById, scopeError, updateScope, replaceScope } = useBusinessRuleScopes();
+  const [descSaving, setDescSaving] = useState(false);
 
   useEffect(() => {
     if (categoryTabs.length === 0) return;
@@ -134,7 +137,7 @@ export function BusinessRulesPage() {
   return (
     <div className="master-data-page business-rules-page">
       <PageHeader title={category.label} description={category.description} />
-      <StatusBanner loading={loading} error={error} success={success} />
+      <StatusBanner loading={loading} error={error ?? scopeError} success={success} />
 
       <section className="card br-version-panel">
         <div className="br-version-toolbar">
@@ -198,8 +201,10 @@ export function BusinessRulesPage() {
                   onClick={() => setActiveTabId(tab.id)}
                 >
                   <span className="br-rules-nav-item-label">{tab.label}</span>
-                  {tab.description && (
-                    <span className="br-rules-nav-item-desc">{tab.description}</span>
+                  {(scopesById[tab.id]?.description ?? tab.description) && (
+                    <span className="br-rules-nav-item-desc">
+                      {scopesById[tab.id]?.description ?? tab.description}
+                    </span>
                   )}
                 </button>
               </li>
@@ -216,9 +221,25 @@ export function BusinessRulesPage() {
             </div>
           ) : activeTab ? (
             <div className="br-rules-main-inner">
-              <h3 className="br-rules-config-title">{activeTab.label}</h3>
-              {activeTab.description && <p className="md-tab-desc">{activeTab.description}</p>}
-              <BusinessRuleScopePanel ruleTypeId={activeTabId} />
+              <BusinessRuleDescriptionHeader
+                label={activeTab.label}
+                description={scopesById[activeTabId]?.description ?? activeTab.description ?? ''}
+                saving={descSaving}
+                onSave={async (description) => {
+                  setDescSaving(true);
+                  try {
+                    await updateScope(activeTabId, { description });
+                    setSuccess('规则说明已保存');
+                  } finally {
+                    setDescSaving(false);
+                  }
+                }}
+              />
+              <BusinessRuleScopePanel
+                ruleTypeId={activeTabId}
+                scope={scopesById[activeTabId] ?? null}
+                onScopeUpdated={replaceScope}
+              />
               <BusinessRulesExcelToolbar
                 activeTabId={activeTabId}
                 onImported={() => setDataRevision((n) => n + 1)}

@@ -1,0 +1,1 @@
+ALTER TABLE material ADD COLUMN IF NOT EXISTS extensions JSON;

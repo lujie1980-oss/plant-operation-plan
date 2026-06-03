@@ -3,8 +3,11 @@ package com.plantops.persistence.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "material")
@@ -24,6 +27,10 @@ public class MaterialEntity extends WorkspaceScopedEntity {
 
     @Column(name = "site_code", length = 64)
     public String siteCode;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "extensions")
+    public Map<String, Object> extensions;
 
     public static List<MaterialEntity> listInWorkspace() {
         return list("workspaceId", ws());

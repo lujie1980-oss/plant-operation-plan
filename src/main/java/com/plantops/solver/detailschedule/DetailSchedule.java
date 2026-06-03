@@ -3,24 +3,23 @@ package com.plantops.solver.detailschedule;
 import ai.timefold.solver.core.api.domain.solution.PlanningEntityCollectionProperty;
 import ai.timefold.solver.core.api.domain.solution.PlanningScore;
 import ai.timefold.solver.core.api.domain.solution.PlanningSolution;
-import ai.timefold.solver.core.api.domain.solution.ProblemFactCollectionProperty;
 import ai.timefold.solver.core.api.domain.solution.ProblemFactProperty;
 import ai.timefold.solver.core.api.domain.valuerange.ValueRangeProvider;
-import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
+import ai.timefold.solver.core.api.score.HardSoftScore;
 
 import java.util.ArrayList;
 import java.util.List;
+
 @PlanningSolution
 public class DetailSchedule {
 
-    @ProblemFactCollectionProperty
-    @ValueRangeProvider(id = "lineRange")
-    private List<ScheduleLine> lineRange;
+    /** 产线规划实体（每条产线持有有序工序 list）。 */
+    @PlanningEntityCollectionProperty
+    private List<ScheduleLine> lines;
 
+    @ValueRangeProvider(id = "operationRange")
     @PlanningEntityCollectionProperty
     private List<OperationAssignment> operations;
-
-    private int shiftCapacityMinutes = 480;
 
     @ProblemFactProperty
     private DetailScheduleProblemFacts problemFacts;
@@ -31,12 +30,24 @@ public class DetailSchedule {
     public DetailSchedule() {
     }
 
-    public List<ScheduleLine> getLineRange() {
-        return lineRange;
+    public List<ScheduleLine> getLines() {
+        return lines;
     }
 
+    public void setLines(List<ScheduleLine> lines) {
+        this.lines = lines;
+    }
+
+    /** @deprecated 使用 {@link #getLines()} */
+    @Deprecated
+    public List<ScheduleLine> getLineRange() {
+        return lines;
+    }
+
+    /** @deprecated 使用 {@link #setLines(List)} */
+    @Deprecated
     public void setLineRange(List<ScheduleLine> lineRange) {
-        this.lineRange = lineRange;
+        this.lines = lineRange;
     }
 
     public List<OperationAssignment> getOperations() {
@@ -47,14 +58,6 @@ public class DetailSchedule {
         this.operations = operations;
     }
 
-    public int getShiftCapacityMinutes() {
-        return shiftCapacityMinutes;
-    }
-
-    public void setShiftCapacityMinutes(int shiftCapacityMinutes) {
-        this.shiftCapacityMinutes = shiftCapacityMinutes;
-    }
-
     public DetailScheduleProblemFacts getProblemFacts() {
         return problemFacts;
     }
@@ -63,6 +66,11 @@ public class DetailSchedule {
         this.problemFacts = problemFacts;
     }
 
+    public HardSoftScore score() {
+        return score;
+    }
+
+    /** Timefold 2.0 要求 {@link ai.timefold.solver.core.api.domain.solution.PlanningScore} 具备 public getter。 */
     public HardSoftScore getScore() {
         return score;
     }
@@ -73,7 +81,7 @@ public class DetailSchedule {
 
     public static DetailSchedule empty() {
         DetailSchedule s = new DetailSchedule();
-        s.lineRange = new ArrayList<>();
+        s.lines = new ArrayList<>();
         s.operations = new ArrayList<>();
         return s;
     }

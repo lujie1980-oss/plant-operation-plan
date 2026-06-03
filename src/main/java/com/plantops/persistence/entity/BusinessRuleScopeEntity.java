@@ -16,6 +16,9 @@ public class BusinessRuleScopeEntity extends WorkspaceScopedEntity {
 
     public boolean enableDetailSchedule = true;
 
+    /** 规则项目说明（workspace 可自定义） */
+    public String description;
+
     public static BusinessRuleScopeEntity findByRuleType(String ruleTypeId) {
         return find("workspaceId = ?1 and ruleTypeId = ?2", ws(), ruleTypeId).firstResult();
     }

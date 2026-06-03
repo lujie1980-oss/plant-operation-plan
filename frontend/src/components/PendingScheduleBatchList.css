@@ -1,0 +1,75 @@
+.pending-batch-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 0.65rem 0.85rem;
+}
+
+.pending-batch-list-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.pending-batch-list-head .panel-title {
+  margin: 0;
+}
+
+.pending-batch-list-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pending-batch-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.pending-batch-drag-hint {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.pending-batch-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+tr.pending-batch-row-draggable {
+  cursor: grab;
+}
+
+tr.pending-batch-row-draggable:active {
+  cursor: grabbing;
+}
+
+tr.pending-batch-row-selected td {
+  background: #eff6ff;
+}
+
+.pending-batch-eligible-select {
+  min-width: 4rem;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.8rem;
+}
+
+.pending-batch-kitting.status-short {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.pending-batch-kitting.status-kitted {
+  color: #15803d;
+  font-weight: 600;
+}

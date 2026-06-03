@@ -5,7 +5,8 @@ import ai.timefold.solver.core.api.domain.solution.PlanningScore;
 import ai.timefold.solver.core.api.domain.solution.PlanningSolution;
 import ai.timefold.solver.core.api.domain.solution.ProblemFactCollectionProperty;
 import ai.timefold.solver.core.api.domain.solution.ProblemFactProperty;
-import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
+import ai.timefold.solver.core.api.score.HardSoftScore;
+import com.plantops.scenario.ChangeoverRuleIndex;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -47,6 +48,9 @@ public class MasterPlanSchedule {
 
     @ProblemFactProperty
     private WorkOrderTimingBoundsContext workOrderTimingBounds;
+
+    @ProblemFactProperty
+    private ChangeoverRuleIndex changeoverRuleIndex;
 
     private LocalDate planningStart;
 
@@ -138,6 +142,34 @@ public class MasterPlanSchedule {
             List<BomDependencyEdge> bomDependencyEdges,
             List<OperationPrecedenceEdge> operationPrecedenceEdges,
             WorkOrderTimingBoundsContext workOrderTimingBounds) {
+        this(
+                timeSlotRange,
+                orderAllocations,
+                planningStart,
+                planningSettings,
+                materialFeasibility,
+                objectiveSettings,
+                adjacentSlotPairs,
+                capacityOverlay,
+                bomDependencyEdges,
+                operationPrecedenceEdges,
+                workOrderTimingBounds,
+                ChangeoverRuleIndex.fromWorkspace());
+    }
+
+    public MasterPlanSchedule(
+            List<TimeSlot> timeSlotRange,
+            List<OrderAllocation> orderAllocations,
+            LocalDate planningStart,
+            MasterPlanSettings planningSettings,
+            MaterialFeasibilityContext materialFeasibility,
+            MasterPlanObjectiveSettings objectiveSettings,
+            List<AdjacentSlotPair> adjacentSlotPairs,
+            MasterPlanCapacityOverlay capacityOverlay,
+            List<BomDependencyEdge> bomDependencyEdges,
+            List<OperationPrecedenceEdge> operationPrecedenceEdges,
+            WorkOrderTimingBoundsContext workOrderTimingBounds,
+            ChangeoverRuleIndex changeoverRuleIndex) {
         this.timeSlotRange = timeSlotRange;
         this.orderAllocations = orderAllocations;
         this.planningStart = planningStart;
@@ -151,6 +183,9 @@ public class MasterPlanSchedule {
         this.workOrderTimingBounds = workOrderTimingBounds != null
                 ? workOrderTimingBounds
                 : WorkOrderTimingBoundsContext.empty();
+        this.changeoverRuleIndex = changeoverRuleIndex != null
+                ? changeoverRuleIndex
+                : ChangeoverRuleIndex.fromWorkspace();
     }
 
     public List<TimeSlot> getTimeSlotRange() {
@@ -169,6 +204,11 @@ public class MasterPlanSchedule {
         this.orderAllocations = orderAllocations;
     }
 
+    public HardSoftScore score() {
+        return score;
+    }
+
+    /** Timefold 2.0 要求 {@link ai.timefold.solver.core.api.domain.solution.PlanningScore} 具备 public getter。 */
     public HardSoftScore getScore() {
         return score;
     }
@@ -251,12 +291,23 @@ public class MasterPlanSchedule {
                 : WorkOrderTimingBoundsContext.empty();
     }
 
+    public ChangeoverRuleIndex getChangeoverRuleIndex() {
+        return changeoverRuleIndex;
+    }
+
+    public void setChangeoverRuleIndex(ChangeoverRuleIndex changeoverRuleIndex) {
+        this.changeoverRuleIndex = changeoverRuleIndex != null
+                ? changeoverRuleIndex
+                : ChangeoverRuleIndex.fromWorkspace();
+    }
+
     public static MasterPlanSchedule empty() {
         MasterPlanSchedule s = new MasterPlanSchedule();
         s.timeSlotRange = new ArrayList<>();
         s.orderAllocations = new ArrayList<>();
         s.bomDependencyEdges = new ArrayList<>();
         s.operationPrecedenceEdges = new ArrayList<>();
+        s.changeoverRuleIndex = new ChangeoverRuleIndex(List.of());
         return s;
     }
 }

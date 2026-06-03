@@ -1,0 +1,149 @@
+.fulfillment-material-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  background: #fafbfc;
+  border-left: 1px solid #e2e8f0;
+}
+
+.fulfillment-material-head {
+  flex-shrink: 0;
+  padding: 0.65rem 0.85rem 0.45rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.fulfillment-material-head .panel-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.fulfillment-material-meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.fulfillment-material-meta.muted {
+  color: #94a3b8;
+}
+
+.fulfillment-material-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 0.5rem 0.65rem;
+}
+
+.fulfillment-material-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.fulfillment-material-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f8fafc;
+  text-align: left;
+  padding: 0.4rem 0.45rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.fulfillment-material-table tbody td {
+  padding: 0.45rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.fulfillment-material-table tr.type-inventory {
+  background: #f0fdf4;
+}
+
+.fulfillment-material-table tr.type-shortage {
+  background: #fef2f2;
+}
+
+.fulfillment-material-panel .demand-tree-type {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.fulfillment-material-panel .demand-tree-type.inventory {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.fulfillment-material-panel .demand-tree-type.shortage {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.fulfillment-material-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.fulfillment-material-panel .empty-hint {
+  margin: 0.5rem 0;
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+.fulfillment-material-panel .badge {
+  display: inline-block;
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.fulfillment-material-panel .badge.ok {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.fulfillment-material-panel .badge.danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.fulfillment-material-panel .badge.info {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.fulfillment-material-panel .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.fulfillment-material-panel .legend-item .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.fulfillment-material-panel .legend-item .dot.ok {
+  background: #10b981;
+}
+
+.fulfillment-material-panel .legend-item .dot.risk {
+  background: #ef4444;
+}

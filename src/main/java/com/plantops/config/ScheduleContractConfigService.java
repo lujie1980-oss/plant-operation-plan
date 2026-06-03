@@ -15,7 +15,8 @@ public class ScheduleContractConfigService {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     public static final String DEFAULT_CONTRACT_JSON =
             "{\"weight_due\":100,\"weight_mp_late\":20,\"weight_mp_early\":60,"
-                    + "\"mp_late_mode\":\"LINEAR\",\"mp_early_mode\":\"QUADRATIC\",\"mp_early_cap_days\":0}";
+                    + "\"mp_late_mode\":\"LINEAR\",\"mp_early_mode\":\"QUADRATIC\",\"mp_early_cap_days\":0,"
+                    + "\"enable_mp_target\":false,\"enable_mp_contract_start_wait\":true}";
 
     @Inject
     ParameterRegistry parameters;
@@ -33,8 +34,17 @@ public class ScheduleContractConfigService {
             ScheduleContractPenaltyMode lateMode = parseMode(root.path("mp_late_mode").asText("LINEAR"));
             ScheduleContractPenaltyMode earlyMode = parseMode(root.path("mp_early_mode").asText("QUADRATIC"));
             int earlyCap = root.path("mp_early_cap_days").asInt(0);
+            boolean enableMpTarget = root.path("enable_mp_target").asBoolean(false);
+            boolean enableMpContractStartWait = root.path("enable_mp_contract_start_wait").asBoolean(true);
             return new ScheduleContractSettings(
-                    weightDue, weightMpLate, weightMpEarly, lateMode, earlyMode, earlyCap);
+                    weightDue,
+                    weightMpLate,
+                    weightMpEarly,
+                    lateMode,
+                    earlyMode,
+                    earlyCap,
+                    enableMpTarget,
+                    enableMpContractStartWait);
         } catch (Exception e) {
             return ScheduleContractSettings.defaults();
         }

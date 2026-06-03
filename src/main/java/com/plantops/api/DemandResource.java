@@ -7,7 +7,11 @@ import com.plantops.api.dto.OrderFulfillmentChainDto;
 import com.plantops.api.dto.WorkOrderGenerateRequestDto;
 import com.plantops.api.dto.WorkOrderGenerationBatchResultDto;
 import com.plantops.api.dto.WorkOrderGenerationResultDto;
+import com.plantops.api.dto.demand.OrderDemandActionRequest;
+import com.plantops.api.dto.demand.OrderDemandActionResult;
 import com.plantops.scenario.DemandService;
+import com.plantops.scenario.OrderDemandAction;
+import com.plantops.scenario.OrderDemandActionService;
 import com.plantops.scenario.WorkOrderGenerationService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -27,6 +31,9 @@ public class DemandResource {
 
     @Inject
     WorkOrderGenerationService workOrderGenerationService;
+
+    @Inject
+    OrderDemandActionService orderDemandActionService;
 
     @GET
     @Path("/demand-pool")
@@ -55,6 +62,20 @@ public class DemandResource {
             @PathParam("salesOrderLineNo") int salesOrderLineNo,
             @QueryParam("masterPlanVersionId") String masterPlanVersionId) {
         return demandService.getFulfillmentChain(salesOrderNo, salesOrderLineNo, masterPlanVersionId);
+    }
+
+    @POST
+    @Path("/demand-pool/{salesOrderNo}/{salesOrderLineNo}/actions/{action}")
+    public OrderDemandActionResult orderAction(
+            @PathParam("salesOrderNo") String salesOrderNo,
+            @PathParam("salesOrderLineNo") int salesOrderLineNo,
+            @PathParam("action") String action,
+            OrderDemandActionRequest body) {
+        return orderDemandActionService.execute(
+                salesOrderNo,
+                salesOrderLineNo,
+                OrderDemandAction.parse(action),
+                body);
     }
 
     @POST

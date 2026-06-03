@@ -13,6 +13,7 @@ import type {
 const ATTRIBUTE_OPTIONS = [
   { value: 'wireMaterial', label: '线材' },
   { value: 'keyMaterial', label: '关键物料' },
+  { value: 'maleFemaleEnd', label: '公母端' },
   { value: 'totalBranch', label: '分支' },
   { value: 'productCode', label: '料号' },
 ];
@@ -74,25 +75,43 @@ export const parallelOperationTab: TabConfig<ParallelOperationMd> = {
 
 export const operationTransferTimeTab: TabConfig<OperationTransferTimeMd> = {
   id: 'operation-transfer-time',
-  label: '工序流转时间',
-  description: '按产品维护相邻工序之间的流转时间与最小流转时间（分钟），影响工单工序甘特间隔。',
+  label: '工序衔接规则',
+  description:
+    '相邻工序衔接：最小/最大流转时间（分钟）与衔接模式（标准顺序、同时开始、延后开始、同时结束）；详细排程 Hard 约束与主计划甘特均生效。',
   api: api.masterData.operationTransferTime,
   rowKey: (r) => `${r.productCode}|${r.fromOperationName}->${r.toOperationName}`,
-  search: (r) => `${r.productCode} ${r.fromOperationName} ${r.toOperationName}`,
+  search: (r) => `${r.productCode} ${r.fromOperationName} ${r.toOperationName} ${r.linkMode}`,
   emptyRow: () => ({
     id: null,
     productCode: '',
     fromOperationName: '',
     toOperationName: '',
-    transferMinutes: 30,
+    transferMinutes: 120,
     minTransferMinutes: 15,
+    maxTransferMinutes: 120,
+    linkMode: 'STANDARD',
+    delayStartMinutes: 0,
   }),
   columns: [
     { key: 'productCode', label: '产品', type: 'text', required: true, width: 140 },
     { key: 'fromOperationName', label: '前工序', type: 'text', required: true, width: 120 },
     { key: 'toOperationName', label: '后工序', type: 'text', required: true, width: 120 },
-    { key: 'transferMinutes', label: '流转时间(分)', type: 'integer', required: true, width: 110 },
     { key: 'minTransferMinutes', label: '最小流转(分)', type: 'integer', required: true, width: 110 },
+    { key: 'maxTransferMinutes', label: '最大流转(分)', type: 'integer', required: true, width: 110 },
+    {
+      key: 'linkMode',
+      label: '衔接模式',
+      type: 'select',
+      required: true,
+      width: 130,
+      options: [
+        { value: 'STANDARD', label: '标准顺序' },
+        { value: 'SIMULTANEOUS_START', label: '同时开始' },
+        { value: 'DELAYED_START', label: '延后开始' },
+        { value: 'SIMULTANEOUS_END', label: '同时结束' },
+      ],
+    },
+    { key: 'delayStartMinutes', label: '延后窗口(分)', type: 'integer', width: 110 },
   ],
 };
 

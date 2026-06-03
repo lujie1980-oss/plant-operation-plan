@@ -1,0 +1,67 @@
+.br-desc-header {
+  flex-shrink: 0;
+}
+
+.br-desc-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.br-desc-title-row .br-rules-config-title {
+  margin: 0;
+}
+
+.br-desc-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.br-desc-edit-btn:hover:not(:disabled) {
+  color: #2563eb;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.br-desc-edit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.br-desc-text {
+  margin-top: 0.35rem;
+}
+
+.br-desc-editor {
+  margin-top: 0.5rem;
+}
+
+.br-desc-textarea {
+  width: 100%;
+  min-height: 5.5rem;
+  resize: vertical;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.br-desc-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.br-desc-error {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: #b91c1c;
+}

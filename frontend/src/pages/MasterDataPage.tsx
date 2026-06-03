@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MasterDataExcelToolbar } from '../components/MasterDataExcelToolbar';
 import { MasterDataHealthPanel } from '../components/MasterDataHealthPanel';
+import { MasterFieldCatalogPanel } from '../components/MasterFieldCatalogPanel';
 import { MasterDataSummaryTab } from '../components/MasterDataSummaryTab';
 import { TabbedSectionPage } from '../components/TabbedSectionPage';
 import {
@@ -14,6 +15,7 @@ import { MASTER_DATA_TABS } from './masterDataTabConfigs';
 
 const SUMMARY_TAB_ID = 'product-summary';
 const DATA_HEALTH_TAB_ID = 'data-health';
+const FIELD_CATALOG_TAB_ID = 'field-catalog';
 
 export function MasterDataPage() {
   const navigate = useNavigate();
@@ -61,6 +63,7 @@ export function MasterDataPage() {
       leadingTabs={[
         { id: SUMMARY_TAB_ID, label: '产品汇总' },
         { id: DATA_HEALTH_TAB_ID, label: '数据健康' },
+        { id: FIELD_CATALOG_TAB_ID, label: '字段目录' },
       ]}
       renderCustomTab={(tabId) => {
         if (tabId === SUMMARY_TAB_ID) {
@@ -73,6 +76,9 @@ export function MasterDataPage() {
               onNavigateToRecord={handleNavigateFromHealth}
             />
           );
+        }
+        if (tabId === FIELD_CATALOG_TAB_ID) {
+          return <MasterFieldCatalogPanel dataRevision={dataRevision} />;
         }
         return undefined;
       }}

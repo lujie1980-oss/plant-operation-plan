@@ -2,12 +2,10 @@ package com.plantops.scenario;
 
 
 
+import com.plantops.masterdata.ProductResourceOperationNames;
 import com.plantops.persistence.entity.ProductResourceEntity;
 
-
-
 import java.math.BigDecimal;
-
 import java.math.RoundingMode;
 
 import java.util.ArrayList;
@@ -132,9 +130,10 @@ public final class ProductRoutingSteps {
 
         List<Operation> out = new ArrayList<>(bySequence.size());
 
-        for (Map.Entry<Integer, List<ProductResourceEntity>> entry : bySequence.entrySet()) {
-
-            List<ProductResourceEntity> group = new ArrayList<>(entry.getValue());
+        List<Integer> sequences = new ArrayList<>(bySequence.keySet());
+        sequences.sort(Integer::compareTo);
+        for (Integer seq : sequences) {
+            List<ProductResourceEntity> group = bySequence.get(seq);
 
             group.sort(Comparator
 
@@ -162,13 +161,15 @@ public final class ProductRoutingSteps {
 
             ProductResourceEntity head = group.get(0);
 
-            String name = head.operationName != null && !head.operationName.isBlank()
+            String name = ProductResourceOperationNames.normalize(
+                    head.operationName,
+                    head.resourceId,
+                    seq);
+            if (name == null || name.isBlank()) {
+                name = "工序 " + seq;
+            }
 
-                    ? head.operationName
-
-                    : "工序 " + entry.getKey();
-
-            out.add(new Operation(entry.getKey(), name, List.copyOf(options)));
+            out.add(new Operation(seq, name, List.copyOf(options)));
 
         }
 

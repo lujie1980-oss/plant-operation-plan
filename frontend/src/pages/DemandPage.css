@@ -282,6 +282,37 @@
   min-height: 0;
 }
 
+.demand-chain-material-split {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.demand-chain-material-split .horizontal-resize-left,
+.demand-chain-material-split .horizontal-resize-right {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.demand-chain-gantt-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.demand-chain-gantt-wrap .chain-sync-view {
+  flex: 1;
+  min-height: 0;
+}
+
+.demand-chain-gantt-wrap .chain-legend {
+  flex-shrink: 0;
+  padding: 0.35rem 0.15rem 0;
+}
+
 .demand-chain-panel .chain-legend {
   flex-shrink: 0;
   padding: 0 0.15rem;

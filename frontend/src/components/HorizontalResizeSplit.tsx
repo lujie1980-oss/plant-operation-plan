@@ -7,6 +7,7 @@ interface HorizontalResizeSplitProps {
   storageKey?: string;
   minLeftRatio?: number;
   maxLeftRatio?: number;
+  defaultLeftRatio?: number;
   left: React.ReactNode;
   right: React.ReactNode;
   className?: string;
@@ -28,11 +29,12 @@ export function HorizontalResizeSplit({
   storageKey,
   minLeftRatio = 0.18,
   maxLeftRatio = 0.72,
+  defaultLeftRatio = DEFAULT_RATIO,
   left,
   right,
   className = '',
 }: HorizontalResizeSplitProps) {
-  const [leftRatio, setLeftRatio] = useState(() => readRatio(storageKey, DEFAULT_RATIO));
+  const [leftRatio, setLeftRatio] = useState(() => readRatio(storageKey, defaultLeftRatio));
   const containerRef = useRef<HTMLDivElement>(null);
   const ratioRef = useRef(leftRatio);
 

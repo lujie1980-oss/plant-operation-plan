@@ -12,7 +12,6 @@ import com.plantops.solver.masterplan.SlotFixedLoad;
 import com.plantops.solver.masterplan.TimeslotGranularity;
 import com.plantops.solver.masterplan.TimeSlot;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 
@@ -33,9 +32,6 @@ public class ScheduleFeedbackService {
 
     private static final Pattern OP_ID_SEQ = Pattern.compile("^OP-(.+)-(\\d+)$");
 
-    @Inject
-    com.plantops.config.ParameterRegistry parameters;
-
     @Transactional
     public ScheduleFeedbackApplyResultDto recordFromDetailSchedule(
             String detailScheduleVersionId,
@@ -46,7 +42,6 @@ public class ScheduleFeedbackService {
             throw new NotFoundException("Detail schedule version not found: " + detailScheduleVersionId);
         }
         LocalDate anchor = LocalDate.now();
-        int shiftCap = parameters.getInt("shift_capacity_minutes", 480);
         LocalDate cutoff = cutoffDate != null ? cutoffDate : anchor;
 
         ScheduleFeedbackEntity.deleteForDetailSchedule(detailScheduleVersionId);
@@ -60,13 +55,14 @@ public class ScheduleFeedbackService {
         int frozen = 0;
         int suggestion = 0;
         for (DetailScheduleOperationEntity op : ops) {
-            LocalDate startDay = dayOffset(anchor, shiftCap, op.startMinute);
-            LocalDate endDay = ScheduleTimingUtil.completionDate(anchor, shiftCap, op.startMinute, op.endMinute - op.startMinute);
+            int duration = Math.max(1, op.endMinute - op.startMinute);
+            LocalDate startDay = ScheduleTimingUtil.startDate(anchor, op.startMinute);
+            LocalDate endDay = ScheduleTimingUtil.completionDate(anchor, op.startMinute, duration);
             if (endDay == null) {
                 endDay = startDay;
             }
-            LocalDateTime plannedStart = startDay.atTime(8, 0);
-            LocalDateTime plannedEnd = endDay.atTime(17, 0);
+            LocalDateTime plannedStart = ScheduleTimingUtil.startDateTime(anchor, op.startMinute);
+            LocalDateTime plannedEnd = ScheduleTimingUtil.completionDateTime(anchor, op.startMinute, duration);
 
             ScheduleFeedbackScope scope = !endDay.isAfter(cutoff)
                     ? ScheduleFeedbackScope.FROZEN
@@ -199,14 +195,6 @@ public class ScheduleFeedbackService {
             }
         }
         return null;
-    }
-
-    private static LocalDate dayOffset(LocalDate anchor, int shiftCapacityMinutes, int startMinute) {
-        if (startMinute <= 0) {
-            return anchor;
-        }
-        int cap = Math.max(1, shiftCapacityMinutes);
-        return anchor.plusDays(startMinute / cap);
     }
 
     private static int parseOperationSeq(String operationId) {
@@ -352,15 +340,16 @@ public class ScheduleFeedbackService {
             return List.of();
         }
         LocalDate anchor = LocalDate.now();
-        int shiftCap = parameters.getInt("shift_capacity_minutes", 480);
         List<WorkOrderScheduleOperationDto> result = new ArrayList<>();
         for (DetailScheduleOperationEntity op : ops) {
-            LocalDate startDay = dayOffset(anchor, shiftCap, op.startMinute);
-            LocalDate endDay = ScheduleTimingUtil.completionDate(
-                    anchor, shiftCap, op.startMinute, Math.max(1, op.endMinute - op.startMinute));
+            int duration = Math.max(1, op.endMinute - op.startMinute);
+            LocalDate startDay = ScheduleTimingUtil.startDate(anchor, op.startMinute);
+            LocalDate endDay = ScheduleTimingUtil.completionDate(anchor, op.startMinute, duration);
             if (endDay == null) {
                 endDay = startDay;
             }
+            LocalDateTime plannedStart = ScheduleTimingUtil.startDateTime(anchor, op.startMinute);
+            LocalDateTime plannedEnd = ScheduleTimingUtil.completionDateTime(anchor, op.startMinute, duration);
             String resourceId = resolveResourceId(op);
             int seq = parseOperationSeq(op.operationId);
             String opName = operationNameFor(op.workOrderNo, seq);
@@ -369,9 +358,9 @@ public class ScheduleFeedbackService {
                     seq,
                     opName,
                     resourceId,
-                    startDay.atTime(8, 0),
-                    endDay.atTime(17, 0),
-                    Math.max(1, op.endMinute - op.startMinute),
+                    plannedStart,
+                    plannedEnd,
+                    duration,
                     "SUGGESTION"));
         }
         return result;

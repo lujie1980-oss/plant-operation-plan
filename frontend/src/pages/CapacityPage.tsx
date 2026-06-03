@@ -129,7 +129,8 @@ export function CapacityPage({ embedded = false }: { embedded?: boolean }) {
                         {
                           key: 'salesOrder',
                           header: '销售订单',
-                          render: (wo) => `${wo.salesOrderNo}-${wo.salesOrderLineNo}`,
+                          render: (wo) =>
+                            wo.salesOrderNo ? `${wo.salesOrderNo}-${wo.salesOrderLineNo}` : '—',
                         },
                         { key: 'productCode', header: '产品', render: (wo) => wo.productCode },
                         { key: 'quantity', header: '数量', render: (wo) => wo.quantity },

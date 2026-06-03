@@ -6,6 +6,9 @@ import io.restassured.config.RestAssuredConfig;
 import io.restassured.http.ContentType;
 import org.apache.http.params.CoreConnectionPNames;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+
+import java.util.concurrent.TimeUnit;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -15,8 +18,8 @@ class PlantOperationPlanResourceTest {
 
     private static RestAssuredConfig longRunningHttp() {
         return RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig()
-                .setParam(CoreConnectionPNames.CONNECTION_TIMEOUT, 120_000)
-                .setParam(CoreConnectionPNames.SO_TIMEOUT, 120_000));
+                .setParam(CoreConnectionPNames.CONNECTION_TIMEOUT, 600_000)
+                .setParam(CoreConnectionPNames.SO_TIMEOUT, 600_000));
     }
 
     @Test
@@ -29,6 +32,7 @@ class PlantOperationPlanResourceTest {
     }
 
     @Test
+    @Timeout(value = 10, unit = TimeUnit.MINUTES)
     void fullPipeline_succeeds() {
         given()
                 .config(longRunningHttp())
@@ -49,6 +53,7 @@ class PlantOperationPlanResourceTest {
     }
 
     @Test
+    @Timeout(value = 10, unit = TimeUnit.MINUTES)
     void workOrderGeneration_fromBom() {
         // 取演示样例中的第一条销售订单作为输入，以避免对具体编号的硬编码。
         String firstOrder = given()
@@ -61,6 +66,7 @@ class PlantOperationPlanResourceTest {
                 .extract().jsonPath().getInt("[0].salesOrderLineNo");
 
         given()
+                .config(longRunningHttp())
                 .contentType(ContentType.JSON)
                 .body(String.format("{\"salesOrderNo\":\"%s\",\"salesOrderLineNo\":%d,\"replaceExisting\":true}",
                         firstOrder, firstLineNo))

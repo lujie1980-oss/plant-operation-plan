@@ -245,6 +245,7 @@ export interface WorkOrderCapacityOperation {
   operationName: string;
   sequenceNo: number;
   resourceId: string;
+  allowedResourceIds?: string[];
   plannedStartTs: string;
   plannedEndTs: string;
   durationMinutes: number;
@@ -302,6 +303,14 @@ export interface DetailScheduleOperation {
   endMinute: number;
   productCode: string;
   pinned: boolean;
+  batchNo?: string | null;
+  /** 工艺路线序号（S05 推演 P3）；甘特工艺链优先使用 */
+  operationSeq?: number;
+  operationName?: string | null;
+  /** 甘特着色：已排程 / 已发布 / 已反馈 */
+  displayPhase?: 'scheduled' | 'released' | 'feedback';
+  /** 换型矩阵规则下的上线前换型分钟（非任务间隔） */
+  changeoverMinutesBefore?: number | null;
 }
 
 export interface ShortageRecommendation {
@@ -473,6 +482,24 @@ export interface ScenarioComparison {
   series: ScenarioComparisonSeries[];
 }
 
+export interface DetailScheduleVersionSummary {
+  planVersionId: string;
+  generatedAt: string | null;
+  score: string | null;
+  solveDurationMs: number | null;
+  operationCount: number;
+  workOrderCount: number;
+  batchCount: number;
+  lineCount: number;
+}
+
+export interface BulkBatchSplitResult {
+  attempted: number;
+  succeeded: number;
+  skipped: number;
+  failures: string[];
+}
+
 export interface PlanVersionCompare {
   fromVersionId: string;
   toVersionId: string;
@@ -514,6 +541,104 @@ export interface WorkOrder {
   orderLinePeggedQty?: number | null;
   peggingCount?: number;
   timingWindow?: WorkOrderTimingWindow | null;
+  pendingScheduleEligible?: boolean;
+  detailScheduled?: boolean;
+  routingOperationCount?: number;
+  detailScheduledOperationCount?: number;
+}
+
+export interface WorkOrderRoutingResourceOption {
+  resourceId: string;
+  resourcePriority: number;
+  durationMinutes: number;
+  allowedLineIds: string[];
+}
+
+export interface WorkOrderRoutingOperation {
+  sequenceNo: number;
+  operationName: string;
+  resourceOptions: WorkOrderRoutingResourceOption[];
+}
+
+export interface WorkOrderRoutingDetail {
+  workOrderNo: string;
+  productCode: string;
+  quantity: number;
+  dispatchStatus: string;
+  dispatchedTs: string | null;
+  plannedSlotDate: string | null;
+  plannedShiftId: string | null;
+  masterPlanResourceId: string | null;
+  operations: WorkOrderRoutingOperation[];
+  batchNo?: string | null;
+}
+
+export interface ProductionBatch {
+  id: number | null;
+  batchNo: string;
+  workOrderNo: string;
+  batchSeq: number;
+  quantity: number;
+  kittingStatus: string;
+  splitMethod: string;
+  status: string;
+  pendingScheduleEligible: boolean;
+  createdTs: string | null;
+}
+
+export interface BatchPlanWorkOrder {
+  workOrderNo: string;
+  productCode: string;
+  quantity: number;
+  batchedQuantity: number;
+  remainingQuantity: number;
+  batchSplitStatus: string;
+  pendingScheduleEligible: boolean;
+  dispatchStatus: string;
+}
+
+export interface BatchSplitResult {
+  workOrderNo: string;
+  batchSplitStatus: string;
+  remainingQuantity: number;
+  batches: ProductionBatch[];
+}
+
+export interface ProductionBatchKitting {
+  batchNo: string;
+  batchSeq: number;
+  quantity: number;
+  workOrderNo: string;
+  productCode: string;
+  workOrderQuantity: number;
+  kittingStatus: string;
+  pendingScheduleEligible: boolean;
+  lines: WorkOrderKittingLine[];
+}
+
+export interface InventoryBatchAllocation {
+  batchNo: string;
+  workOrderNo: string;
+  finishedProductCode: string;
+  batchQuantity: number;
+  workOrderQuantity: number;
+  requiredQty: number;
+  kittingStatus: string;
+}
+
+export interface InventoryAvailabilitySummary {
+  productCode: string;
+  totalOnhand: number;
+  totalAvailable: number;
+  stockingPointCount: number;
+}
+
+export interface InventoryWorkOrderAllocation {
+  workOrderNo: string;
+  finishedProductCode: string;
+  workOrderQuantity: number;
+  requiredQty: number;
+  kittingStatus: string;
 }
 
 export interface OrderLineWorkOrderNode {

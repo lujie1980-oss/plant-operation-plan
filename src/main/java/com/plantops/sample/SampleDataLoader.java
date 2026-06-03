@@ -3,6 +3,7 @@ package com.plantops.sample;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.plantops.config.ParameterRegistry;
+import com.plantops.masterdata.ProductResourceOperationNames;
 import com.plantops.persistence.entity.*;
 import com.plantops.workspace.WorkspaceConstants;
 import com.plantops.workspace.WorkspaceContext;
@@ -56,6 +57,9 @@ public class SampleDataLoader {
     @Inject
     com.plantops.masterdata.ContinuousProductionExcelImportService continuousProductionExcelImportService;
 
+    @Inject
+    com.plantops.masterdata.FactoryCalendarService factoryCalendarService;
+
     private static final String DEFAULT_CHANGEOVER_XLSX = "/sample-data/changeover-kt-prefix-duration.xlsx";
     private static final String DEFAULT_PARALLEL_OPERATION_XLSX = "/sample-data/u-line-parallel-operation-list.xlsx";
     private static final String DEFAULT_CONTINUOUS_PRODUCTION_XLSX = "/sample-data/continuous-production-list.xlsx";
@@ -74,6 +78,7 @@ public class SampleDataLoader {
             }
             if (SalesOrderLineEntity.count("workspaceId", WorkspaceConstants.DEFAULT_ID) > 0) {
                 self.get().extendCalendarsToHorizon();
+                factoryCalendarService.syncResourceCalendarsToHorizon();
                 return;
             }
             loadDemo();
@@ -153,6 +158,7 @@ public class SampleDataLoader {
             seedDefaultContinuousProductionIfEmpty();
             root.get("workOrders").forEach(n -> persistWorkOrder(n));
             seedCalendars();
+            factoryCalendarService.syncResourceCalendarsToHorizon();
         } catch (Exception e) {
             throw new IllegalStateException("Failed to load sample data", e);
         }
@@ -176,7 +182,7 @@ public class SampleDataLoader {
                     cal.resourceId = resourceId;
                     cal.shiftId = "DAY";
                     cal.calendarDate = date;
-                    cal.availableCapacityMinutes = parameterRegistry.getInt("shift_capacity_minutes", 480);
+                    cal.availableCapacityMinutes = com.plantops.masterdata.FactoryCalendarService.DEFAULT_PER_SHIFT_MINUTES;
                     cal.stampWorkspace();
                     cal.persist();
                 }
@@ -198,6 +204,7 @@ public class SampleDataLoader {
                 }
             }
         }
+        factoryCalendarService.syncResourceCalendarsToHorizon();
     }
 
     private void seedCalendars() {
@@ -211,7 +218,7 @@ public class SampleDataLoader {
                 cal.resourceId = resourceId;
                 cal.shiftId = "DAY";
                 cal.calendarDate = date;
-                cal.availableCapacityMinutes = parameterRegistry.getInt("shift_capacity_minutes", 480);
+                cal.availableCapacityMinutes = com.plantops.masterdata.FactoryCalendarService.DEFAULT_PER_SHIFT_MINUTES;
                 cal.stampWorkspace();
                 cal.persist();
             }
@@ -326,7 +333,10 @@ public class SampleDataLoader {
         e.resourcePriority = n.has("resourcePriority") && !n.get("resourcePriority").isNull()
                 ? n.get("resourcePriority").asInt()
                 : ProductResourceEntity.DEFAULT_RESOURCE_PRIORITY;
-        e.operationName = textOrNull(n, "operationName");
+        e.operationName = ProductResourceOperationNames.normalize(
+                textOrNull(n, "operationName"),
+                resourceId,
+                e.sequenceNo);
         if (n.has("processTimeSeconds") && !n.get("processTimeSeconds").isNull()) {
             e.processTimeSeconds = BigDecimal.valueOf(n.get("processTimeSeconds").asDouble());
         }

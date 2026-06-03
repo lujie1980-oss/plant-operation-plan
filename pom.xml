@@ -16,7 +16,7 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <quarkus.platform.version>3.17.5</quarkus.platform.version>
-        <timefold.version>1.15.0</timefold.version>
+        <timefold.version>2.0.0</timefold.version>
         <surefire.version>3.5.2</surefire.version>
         <skip.frontend.build>false</skip.frontend.build>
     </properties>
@@ -90,11 +90,6 @@
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>ai.timefold.solver</groupId>
-            <artifactId>timefold-solver-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

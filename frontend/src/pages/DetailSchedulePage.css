@@ -1,64 +1,246 @@
-.detail-schedule-page {
+.detail-schedule-page-v2 {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.detail-schedule-page-v2 .ds-toolbar-compact {
+  flex-shrink: 0;
+}
+
+.detail-schedule-page-v2 .ds-diagnostics-panel {
+  flex-shrink: 0;
+  margin-bottom: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
+.detail-schedule-page-v2 .ds-layout-split {
+  flex: 1;
+  min-height: 0;
+  margin-top: 0.5rem;
+}
+
+.detail-schedule-page-v2 .ds-left-kpi {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  margin-bottom: 0;
+  padding: 0;
   overflow: hidden;
 }
 
-.detail-schedule-page .ds-split {
-  flex: 1;
+.detail-schedule-page-v2 .ds-kpi-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   min-height: 0;
+  padding: 0.55rem 0.65rem;
+  overflow: hidden;
 }
 
-.detail-schedule-page .ds-bottom-scroll {
+.detail-schedule-page-v2 .ds-kpi-panel .panel-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+.detail-schedule-page-v2 .ds-kpi-session-meta {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  flex-shrink: 0;
+  line-height: 1.35;
+}
+
+.detail-schedule-page-v2 .ds-kpi-panel .panel-scroll {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  display: flex;
-  flex-direction: column;
 }
 
-.detail-schedule-page .ds-gantt-panel {
+.detail-schedule-page-v2 .ds-kpi-panel .kpi-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.detail-schedule-page-v2 .ds-kpi-panel .kpi-item {
+  padding: 0.45rem 0.55rem;
+  border-radius: 6px;
+  background: #f8fafc;
+  border-left: 3px solid #cbd5e1;
+}
+
+.detail-schedule-page-v2 .ds-kpi-panel .kpi-item.severity-ok {
+  border-left-color: #10b981;
+}
+
+.detail-schedule-page-v2 .ds-kpi-panel .kpi-item.severity-warn {
+  border-left-color: #f59e0b;
+}
+
+.detail-schedule-page-v2 .ds-kpi-panel .kpi-item.severity-danger {
+  border-left-color: #ef4444;
+}
+
+.detail-schedule-page-v2 .ds-kpi-panel .kpi-item.severity-info {
+  border-left-color: #3b82f6;
+}
+
+.detail-schedule-page-v2 .ds-kpi-panel .kpi-item-label {
+  display: block;
+  font-size: 0.66rem;
+  color: #64748b;
+  line-height: 1.25;
+}
+
+.detail-schedule-page-v2 .ds-kpi-panel .kpi-item-value {
+  display: block;
+  margin-top: 0.12rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-schedule-page-v2 .ds-kpi-panel .kpi-item-value small {
+  margin-left: 0.15rem;
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.detail-schedule-page-v2 .ds-kpi-panel .empty {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.detail-schedule-page-v2 .ds-right-split {
   height: 100%;
   min-height: 0;
+}
+
+.detail-schedule-page-v2 .ds-right-top {
+  height: 100%;
+  min-height: 0;
+  margin-bottom: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.detail-schedule-page-v2 .ds-batch-workspace {
   display: flex;
   flex-direction: column;
 }
 
-
-.detail-schedule-page .ds-diagnostics-panel {
-  margin-bottom: 0.75rem;
+.detail-schedule-page-v2 .ds-batch-split {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
 }
 
-.detail-schedule-page .ds-diagnostics-panel h3 {
-  margin: 0 0 0.5rem;
-  font-size: 0.95rem;
+.detail-schedule-page-v2 .ds-batch-split .pending-batch-list {
+  padding-right: 0.35rem;
 }
 
-.detail-schedule-page .ds-feedback-options {
+.detail-schedule-page-v2 .ds-right-bottom {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  margin-bottom: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.detail-schedule-page-v2 .horizontal-resize-left {
+  min-width: 6.5rem;
+}
+
+.detail-schedule-page-v2 .ds-bottom-tabs {
+  padding: 0.35rem 0.65rem;
+  flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem 1.5rem;
   align-items: center;
-  margin-bottom: 0.75rem;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
-.detail-schedule-page .ds-check {
+.detail-schedule-page-v2 .ds-line-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.detail-schedule-page-v2 .ds-line-filter .input {
+  width: auto;
+  min-width: 7rem;
+}
+
+.detail-schedule-page-v2 .ds-right-bottom-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 0.25rem 0.35rem;
+}
+
+.detail-schedule-page-v2 .ds-view-toggle {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+
+.detail-schedule-page-v2 .ds-view-toggle-btn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  box-shadow: none;
+}
+
+.detail-schedule-page-v2 .ds-view-toggle-btn.active {
+  background: #fff;
+  color: #0f172a;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.detail-schedule-page-v2 .ds-gantt-panel {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.detail-schedule-page-v2 .ds-check {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  cursor: pointer;
+  font-size: 0.875rem;
 }
 
-.detail-schedule-page .ds-cutoff {
+.detail-schedule-page-v2 .ds-cutoff {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
-.detail-schedule-page .ds-cutoff .input {
+.detail-schedule-page-v2 .ds-cutoff .input {
   width: auto;
 }
 
+@media (max-width: 1100px) {
+  .detail-schedule-page-v2 .ds-layout-split {
+    flex-direction: column;
+  }
+}

@@ -92,7 +92,7 @@ export function masterPlanToGanttTasks(allocations: MasterPlanAllocation[]): Tas
   return tasks;
 }
 
-/** 详细排程：按机台分组，左侧列表为机台，子项为该机台上的任务顺序 */
+/** 详细排程：按产线分组，左侧列表为产线，子项为产线上的任务顺序 */
 export function detailScheduleToGanttTasks(
   operations: DetailScheduleOperation[],
   horizonStart?: Date,
@@ -103,43 +103,46 @@ export function detailScheduleToGanttTasks(
     return d;
   })();
 
-  const byMachine = new Map<string, DetailScheduleOperation[]>();
+  const byLine = new Map<string, DetailScheduleOperation[]>();
   for (const op of operations) {
-    const machineId = op.resourceId || op.lineId;
-    const list = byMachine.get(machineId) ?? [];
+    const lineId = op.lineId?.trim();
+    if (!lineId) {
+      continue;
+    }
+    const list = byLine.get(lineId) ?? [];
     list.push(op);
-    byMachine.set(machineId, list);
+    byLine.set(lineId, list);
   }
 
   const tasks: Task[] = [];
   const colors = ['#0ea5e9', '#14b8a6', '#eab308', '#a855f7', '#f43f5e'];
   let ci = 0;
 
-  const machineIds = [...byMachine.keys()].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+  const lineIds = [...byLine.keys()].sort((a, b) => a.localeCompare(b, 'zh-CN'));
 
-  for (const machineId of machineIds) {
-    const ops = byMachine.get(machineId) ?? [];
-    const projectId = `machine-${machineId}`;
+  for (const lineId of lineIds) {
+    const ops = byLine.get(lineId) ?? [];
+    const projectId = `line-${lineId}`;
     ops.sort(
       (a, b) =>
         (a.startMinute ?? 0) - (b.startMinute ?? 0) ||
         (a.sequenceIndex ?? 0) - (b.sequenceIndex ?? 0),
     );
 
-    let machineStart = base;
-    let machineEnd = addMinutes(base, 480);
+    let lineStart = base;
+    let lineEnd = addMinutes(base, 480);
     if (ops.length > 0) {
       const firstStart = ops[0].startMinute ?? 0;
       const lastEnd = ops[ops.length - 1].endMinute ?? firstStart + 30;
-      machineStart = addMinutes(base, firstStart);
-      machineEnd = addMinutes(base, lastEnd);
+      lineStart = addMinutes(base, firstStart);
+      lineEnd = addMinutes(base, lastEnd);
     }
 
     tasks.push({
       id: projectId,
-      name: machineId,
-      start: machineStart,
-      end: machineEnd,
+      name: lineId,
+      start: lineStart,
+      end: lineEnd,
       type: 'project',
       progress: 0,
       hideChildren: false,

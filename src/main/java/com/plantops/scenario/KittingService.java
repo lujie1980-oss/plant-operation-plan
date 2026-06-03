@@ -5,6 +5,7 @@ import com.plantops.persistence.entity.BomComponentEntity;
 import com.plantops.persistence.entity.KittingResultEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
+import com.plantops.persistence.entity.WorkOrderPeggingEntity;
 import com.plantops.scenario.planning.InventorySnapshot;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -99,13 +100,37 @@ public class KittingService {
         }
         KittingResultEntity entity = new KittingResultEntity();
         entity.computedTs = LocalDateTime.now();
-        entity.salesOrderNo = wo.salesOrderNo;
-        entity.salesOrderLineNo = wo.salesOrderLineNo;
+        SalesOrderRef orderRef = resolveSalesOrderRef(wo);
+        entity.salesOrderNo = orderRef.salesOrderNo();
+        entity.salesOrderLineNo = orderRef.salesOrderLineNo();
         entity.workOrderNo = wo.workOrderNo;
         entity.kittingStatus = status;
         entity.shortageReason = reason;
         entity.stampWorkspace();
         entity.persist();
+    }
+
+    /** 工单齐套结果需写入非空 sales_order_no；组件工单从 pegging 或父工单链解析。 */
+    private SalesOrderRef resolveSalesOrderRef(WorkOrderEntity wo) {
+        WorkOrderEntity current = wo;
+        while (current != null) {
+            if (current.salesOrderNo != null && !current.salesOrderNo.isBlank()) {
+                return new SalesOrderRef(current.salesOrderNo, current.salesOrderLineNo);
+            }
+            for (WorkOrderPeggingEntity peg : WorkOrderPeggingEntity.findByWorkOrder(current.workOrderNo)) {
+                if (peg.salesOrderNo != null && !peg.salesOrderNo.isBlank()) {
+                    return new SalesOrderRef(peg.salesOrderNo, peg.salesOrderLineNo);
+                }
+            }
+            if (current.parentWorkOrderNo == null || current.parentWorkOrderNo.isBlank()) {
+                break;
+            }
+            current = WorkOrderEntity.findByNo(current.parentWorkOrderNo);
+        }
+        return new SalesOrderRef("WO:" + wo.workOrderNo, 0);
+    }
+
+    private record SalesOrderRef(String salesOrderNo, int salesOrderLineNo) {
     }
 
     public boolean isEligible(String salesOrderNo, int lineNo) {
@@ -135,25 +160,42 @@ public class KittingService {
         if (wo == null || available == null) {
             return true;
         }
-        String finished = BomComponentEntity.resolveFinishedProduct(wo);
-        for (BomComponentEntity bom : BomComponentEntity.findChildren(finished, wo.productCode)) {
-            if (!ruleScopeHelper.criticalForDetailSchedule(bom)) {
-                continue;
-            }
-            BigDecimal need = bom.componentQty.multiply(wo.quantity != null ? wo.quantity : BigDecimal.ZERO);
-            BigDecimal avail = available.getOrDefault(bom.componentProductCode, BigDecimal.ZERO);
-            if (avail.compareTo(need) < 0) {
-                return false;
-            }
+        return checkAndConsumeWorkOrderKitting(
+                wo, wo.quantity != null ? wo.quantity : BigDecimal.ZERO, available);
+    }
+
+    /**
+     * 按指定生产量检查并消耗库存池（S05 批次齐套）。
+     */
+    public boolean checkAndConsumeWorkOrderKitting(
+            WorkOrderEntity wo, BigDecimal runQuantity, Map<String, BigDecimal> available) {
+        if (wo == null || available == null) {
+            return true;
         }
-        for (BomComponentEntity bom : BomComponentEntity.findChildren(finished, wo.productCode)) {
-            if (!ruleScopeHelper.criticalForDetailSchedule(bom)) {
-                continue;
-            }
-            BigDecimal need = bom.componentQty.multiply(wo.quantity != null ? wo.quantity : BigDecimal.ZERO);
-            String component = bom.componentProductCode;
-            available.put(component, available.getOrDefault(component, BigDecimal.ZERO).subtract(need));
+        BigDecimal qty = runQuantity != null ? runQuantity : BigDecimal.ZERO;
+        if (!canDetailScheduleKit(wo, qty, available)) {
+            return false;
         }
+        consumeDetailScheduleKitting(wo, qty, available);
         return true;
+    }
+
+    /** 当前库存池下最多可齐套生产的数量（不超过 capQuantity）。 */
+    public BigDecimal maxDetailScheduleKittingQuantity(
+            WorkOrderEntity wo, BigDecimal capQuantity, Map<String, BigDecimal> available) {
+        return com.plantops.scenario.batch.BatchKittingQuantityCalculator.maxKittingQuantity(
+                wo, capQuantity, available, ruleScopeHelper);
+    }
+
+    public boolean canDetailScheduleKit(
+            WorkOrderEntity wo, BigDecimal runQuantity, Map<String, BigDecimal> available) {
+        return com.plantops.scenario.batch.BatchKittingQuantityCalculator.canKitQuantity(
+                wo, runQuantity, available, ruleScopeHelper);
+    }
+
+    public void consumeDetailScheduleKitting(
+            WorkOrderEntity wo, BigDecimal runQuantity, Map<String, BigDecimal> available) {
+        com.plantops.scenario.batch.BatchKittingQuantityCalculator.consumeForQuantity(
+                wo, runQuantity, available, ruleScopeHelper);
     }
 }

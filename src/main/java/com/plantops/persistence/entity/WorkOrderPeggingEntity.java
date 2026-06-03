@@ -37,6 +37,16 @@ public class WorkOrderPeggingEntity extends WorkspaceScopedEntity {
         delete("workspaceId = ?1 and workOrderNo = ?2", ws(), workOrderNo);
     }
 
+    public static int deleteForOrderLineAndWorkOrder(String salesOrderNo, int salesOrderLineNo, String workOrderNo) {
+        long deleted = delete(
+                "workspaceId = ?1 and salesOrderNo = ?2 and salesOrderLineNo = ?3 and workOrderNo = ?4",
+                ws(),
+                salesOrderNo,
+                salesOrderLineNo,
+                workOrderNo);
+        return (int) deleted;
+    }
+
     public static void deleteForWorkOrders(List<String> workOrderNos) {
         if (workOrderNos == null || workOrderNos.isEmpty()) {
             return;

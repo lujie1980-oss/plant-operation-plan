@@ -1,0 +1,84 @@
+.production-task-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.production-task-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 0 0 0.65rem;
+  flex-shrink: 0;
+}
+
+.production-task-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.production-task-filter .input {
+  width: auto;
+  min-width: 8rem;
+}
+
+.production-task-hint {
+  font-size: 0.8rem;
+}
+
+.production-task-error {
+  margin: 0 0 0.5rem;
+  flex-shrink: 0;
+}
+
+.production-task-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.production-task-state {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.production-task-state.state-released {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.production-task-state.state-running {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.production-task-state.state-completed {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.production-task-state.state-unplanned {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.production-task-state.state-archived {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+tr.production-task-row-running td {
+  background: #fffbeb;
+}
+
+.btn-sm {
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8rem;
+}

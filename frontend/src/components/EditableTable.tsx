@@ -16,6 +16,8 @@ export interface EditableColumn<T> {
   options?: { value: string; label: string }[];
   width?: number;
   step?: number;
+  /** 从 row.extensions[fieldKey] 读写（用于动态 Custom 字段） */
+  extensionKey?: string;
   /** 用于格式化展示（非编辑时） */
   format?: (value: T[keyof T & string], row: T) => ReactNode;
   /** 是否允许编辑（默认 true） */
@@ -57,6 +59,27 @@ function parseInput(raw: string, type: EditableFieldType): unknown {
   if (type === 'number') return raw === '' ? 0 : Number.parseFloat(raw);
   if (type === 'date') return raw === '' ? null : raw;
   return raw;
+}
+
+type RowWithExtensions = { extensions?: Record<string, unknown> | null };
+
+function readCellValue<T>(row: T, col: EditableColumn<T>): unknown {
+  if (col.extensionKey) {
+    const ext = (row as T & RowWithExtensions).extensions ?? {};
+    return ext[col.extensionKey];
+  }
+  return row[col.key];
+}
+
+function writeCellValue<T>(row: T, col: EditableColumn<T>, value: unknown): T {
+  if (col.extensionKey) {
+    const current = (row as T & RowWithExtensions).extensions ?? {};
+    return {
+      ...row,
+      extensions: { ...current, [col.extensionKey]: value },
+    } as T;
+  }
+  return { ...row, [col.key]: value } as T;
 }
 
 export function EditableTable<T extends MasterDataRecord>({
@@ -131,12 +154,12 @@ export function EditableTable<T extends MasterDataRecord>({
       (row, key) => {
       const col = columns.find((c) => c.key === key);
       if (!col) return '';
-      const value = row[col.key];
+      const value = readCellValue(row, col);
       if (col.getFilterText) {
-        return col.getFilterText(value, row);
+        return col.getFilterText(value as T[keyof T & string], row);
       }
       if (col.format) {
-        const rendered = col.format(value, row);
+        const rendered = col.format(value as T[keyof T & string], row);
         if (typeof rendered === 'string' || typeof rendered === 'number') {
           return String(rendered);
         }
@@ -171,14 +194,16 @@ export function EditableTable<T extends MasterDataRecord>({
     setPendingError(null);
   };
 
-  const updateField = (key: keyof T & string, type: EditableFieldType, raw: string) => {
-    setDraft((prev) => (prev ? { ...prev, [key]: parseInput(raw, type) as T[typeof key] } : prev));
+  const updateField = (col: EditableColumn<T>, type: EditableFieldType, raw: string) => {
+    setDraft((prev) =>
+      prev ? writeCellValue(prev, col, parseInput(raw, type)) : prev,
+    );
   };
 
   const validate = (row: T): string | null => {
     for (const col of columns) {
       if (col.required) {
-        const v = row[col.key];
+        const v = readCellValue(row, col);
         if (v === null || v === undefined || v === '') {
           return `${col.label} 不能为空`;
         }
@@ -213,7 +238,7 @@ export function EditableTable<T extends MasterDataRecord>({
   };
 
   const renderCellEdit = (col: EditableColumn<T>, row: T) => {
-    const raw = inputValue(row[col.key], col.type);
+    const raw = inputValue(readCellValue(row, col), col.type);
     if (col.editable === false) {
       return <span className="md-readonly">{String(raw)}</span>;
     }
@@ -222,7 +247,7 @@ export function EditableTable<T extends MasterDataRecord>({
         <input
           type="checkbox"
           checked={raw === 'true'}
-          onChange={(e) => updateField(col.key, col.type, e.target.checked ? 'true' : 'false')}
+          onChange={(e) => updateField(col, col.type, e.target.checked ? 'true' : 'false')}
         />
       );
     }
@@ -231,7 +256,7 @@ export function EditableTable<T extends MasterDataRecord>({
         <select
           className="md-input"
           value={raw}
-          onChange={(e) => updateField(col.key, col.type, e.target.value)}
+          onChange={(e) => updateField(col, col.type, e.target.value)}
         >
           <option value="">--</option>
           {col.options.map((opt) => (
@@ -250,15 +275,15 @@ export function EditableTable<T extends MasterDataRecord>({
         type={inputType}
         value={raw}
         step={step}
-        onChange={(e) => updateField(col.key, col.type, e.target.value)}
+        onChange={(e) => updateField(col, col.type, e.target.value)}
       />
     );
   };
 
   const renderCellRead = (col: EditableColumn<T>, row: T): ReactNode => {
-    const value = row[col.key];
+    const value = readCellValue(row, col);
     if (col.format) {
-      return col.format(value, row);
+      return col.format(value as T[keyof T & string], row);
     }
     if (col.type === 'boolean') {
       return value ? '✓' : '—';

@@ -15,7 +15,6 @@ import java.util.List;
 public final class DetailSchedulePlanningContext {
 
     private final LocalDate planningAnchor;
-    private final int shiftCapacityMinutes;
     private final ScheduleContractSettings contractSettings;
     private final List<ScheduleLine> lines;
     private final List<OperationAssignment> operations;
@@ -24,14 +23,12 @@ public final class DetailSchedulePlanningContext {
 
     public DetailSchedulePlanningContext(
             LocalDate planningAnchor,
-            int shiftCapacityMinutes,
             ScheduleContractSettings contractSettings,
             List<ScheduleLine> lines,
             List<OperationAssignment> operations,
             DetailSchedulePlanningDiagnosticsDto diagnostics,
             MaterialPlanningContext materialPlanning) {
         this.planningAnchor = planningAnchor != null ? planningAnchor : LocalDate.now();
-        this.shiftCapacityMinutes = shiftCapacityMinutes;
         this.contractSettings = contractSettings;
         this.lines = lines != null ? List.copyOf(lines) : List.of();
         this.operations = operations != null ? List.copyOf(operations) : List.of();
@@ -41,20 +38,15 @@ public final class DetailSchedulePlanningContext {
 
     public DetailSchedulePlanningContext(
             LocalDate planningAnchor,
-            int shiftCapacityMinutes,
             ScheduleContractSettings contractSettings,
             List<ScheduleLine> lines,
             List<OperationAssignment> operations,
             DetailSchedulePlanningDiagnosticsDto diagnostics) {
-        this(planningAnchor, shiftCapacityMinutes, contractSettings, lines, operations, diagnostics, null);
+        this(planningAnchor, contractSettings, lines, operations, diagnostics, null);
     }
 
     public LocalDate planningAnchor() {
         return planningAnchor;
-    }
-
-    public int shiftCapacityMinutes() {
-        return shiftCapacityMinutes;
     }
 
     public ScheduleContractSettings contractSettings() {

@@ -24,6 +24,12 @@ import type {
   WorkOrderDispatchResult,
   WorkOrderGenerationBatchResult,
   WorkOrderKitting,
+  WorkOrderRoutingDetail,
+  BatchPlanWorkOrder,
+  BatchSplitResult,
+  ProductionBatch,
+  InventoryAvailabilitySummary,
+  InventoryWorkOrderAllocation,
   DemandTrackingEntry,
   DashboardSummary,
   PlanningPipelineRun,
@@ -33,6 +39,13 @@ import type {
   CreateRuleSetVersionPayload,
   ScenarioComparison,
 } from '../types/api';
+import type {
+  FactoryCalendarDay,
+  FactoryCalendarMonth,
+  FactoryCalendarPolicy,
+  FactoryDayOverrideRequest,
+  FactoryCalendarSyncResult,
+} from '../types/factoryCalendar';
 import type {
   BomMd,
   BusinessRuleScopeMd,
@@ -45,6 +58,9 @@ import type {
   InventoryMd,
   MaterialMd,
   MasterDataValidationReportMd,
+  MasterFieldDefinitionCreateMd,
+  MasterFieldDefinitionMd,
+  MasterFieldDefinitionUpdateMd,
   ProductResourceMd,
   ProductionLineMd,
   ResourceCalendarMd,
@@ -55,10 +71,28 @@ import type {
 } from '../types/masterData';
 import type { MasterPlanObjective, MasterPlanObjectiveUpdate } from '../types/masterPlanObjectives';
 import type {
+  DetailSchedulePlanningPreview,
+  DetailSchedulePlanningPreviewRequest,
+} from '../types/detailSchedulePlanningPreview';
+import type {
+  MasterPlanPlanningPreview,
+  MasterPlanPlanningPreviewRequest,
+} from '../types/masterPlanPlanningPreview';
+import type {
   DetailSchedulePlanningDiagnostics,
   MasterPlanPlanningDiagnostics,
 } from '../types/planningDiagnostics';
 import type { PlanningScoreExplanation } from '../types/planningScoreExplanation';
+import type {
+  OrderPlanningChain,
+  OrderPlanningChainPreviewRequest,
+} from '../types/orderPlanningChain';
+import type {
+  ConfirmScheduleSessionResult,
+  CreateScheduleSessionRequest,
+  ProductionTask,
+  ScheduleSession,
+} from '../types/scheduleSession';
 import type {
   MasterPlanStrategyCreate,
   MasterPlanStrategyDetail,
@@ -106,6 +140,12 @@ async function downloadBlob(path: string, fallbackName: string): Promise<void> {
 function versionQuery(masterPlanVersionId?: string): string {
   return masterPlanVersionId
     ? `?masterPlanVersionId=${encodeURIComponent(masterPlanVersionId)}`
+    : '';
+}
+
+function detailScheduleVersionQuery(detailScheduleVersionId?: string): string {
+  return detailScheduleVersionId
+    ? `?detailScheduleVersionId=${encodeURIComponent(detailScheduleVersionId)}`
     : '';
 }
 
@@ -170,6 +210,28 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ workOrderNos }),
       }),
+    listDispatched: (detailScheduleVersionId?: string) =>
+      request<WorkOrder[]>(
+        `/api/v1/work-orders/dispatched${detailScheduleVersionQuery(detailScheduleVersionId)}`,
+      ),
+    routingDetail: (workOrderNo: string, masterPlanVersionId?: string) =>
+      request<WorkOrderRoutingDetail>(
+        `/api/v1/work-orders/${encodeURIComponent(workOrderNo)}/routing-detail${versionQuery(masterPlanVersionId)}`,
+      ),
+    updatePendingScheduleEligible: (workOrderNo: string, pendingScheduleEligible: boolean) =>
+      request<WorkOrder>(
+        `/api/v1/work-orders/${encodeURIComponent(workOrderNo)}/pending-schedule-eligible`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({ pendingScheduleEligible }),
+        },
+      ),
+    inventoryAvailability: () =>
+      request<InventoryAvailabilitySummary[]>('/api/v1/work-orders/dispatched/inventory/availability'),
+    inventoryWorkOrders: (productCode: string) =>
+      request<InventoryWorkOrderAllocation[]>(
+        `/api/v1/work-orders/dispatched/inventory/${encodeURIComponent(productCode)}/work-orders`,
+      ),
     dispatchedKitting: () => request<WorkOrderKitting[]>('/api/v1/work-orders/dispatched/kitting'),
     computeDispatchedKitting: () =>
       request<WorkOrderKitting[]>('/api/v1/work-orders/dispatched/kitting/compute', { method: 'POST' }),
@@ -186,9 +248,77 @@ export const api = {
         `/api/v1/work-orders/${encodeURIComponent(workOrderNo)}/schedule-operations${versionQuery(masterPlanVersionId)}`,
       ),
   },
+  schedulingBatches: {
+    listWorkOrders: () => request<BatchPlanWorkOrder[]>('/api/v1/scheduling/batches/work-orders'),
+    listByWorkOrder: (workOrderNo: string) =>
+      request<ProductionBatch[]>(
+        `/api/v1/scheduling/batches/by-work-order/${encodeURIComponent(workOrderNo)}`,
+      ),
+    autoSplit: (workOrderNo: string) =>
+      request<BatchSplitResult>('/api/v1/scheduling/batches/split/auto', {
+        method: 'POST',
+        body: JSON.stringify({ workOrderNo, quantity: null }),
+      }),
+    autoSplitAll: () =>
+      request<import('../types/api').BulkBatchSplitResult>('/api/v1/scheduling/batches/split/auto-all', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      }),
+    manualSplit: (workOrderNo: string, quantity: number) =>
+      request<BatchSplitResult>('/api/v1/scheduling/batches/split/manual', {
+        method: 'POST',
+        body: JSON.stringify({ workOrderNo, quantity }),
+      }),
+    cancel: (payload: { batchNo?: string; workOrderNo?: string; cancelAll: boolean }) =>
+      request<BatchSplitResult>('/api/v1/scheduling/batches/cancel', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    refreshKitting: (workOrderNo: string) =>
+      request<BatchSplitResult>('/api/v1/scheduling/batches/refresh-kitting', {
+        method: 'POST',
+        body: JSON.stringify({ workOrderNo, quantity: null }),
+      }),
+    listKitting: () =>
+      request<import('../types/api').ProductionBatchKitting[]>('/api/v1/scheduling/batches/kitting'),
+    computeKitting: () =>
+      request<import('../types/api').ProductionBatchKitting[]>('/api/v1/scheduling/batches/kitting/compute', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      }),
+    batchAllocations: (productCode: string) =>
+      request<import('../types/api').InventoryBatchAllocation[]>(
+        `/api/v1/scheduling/batches/kitting/component/${encodeURIComponent(productCode)}/allocations`,
+      ),
+    updatePendingScheduleEligible: (batchNo: string, pendingScheduleEligible: boolean) =>
+      request<import('../types/api').ProductionBatchKitting>(
+        `/api/v1/scheduling/batches/${encodeURIComponent(batchNo)}/pending-schedule-eligible`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({ pendingScheduleEligible }),
+        },
+      ),
+    routing: (batchNo: string, masterPlanVersionId?: string) =>
+      request<WorkOrderRoutingDetail>(
+        `/api/v1/scheduling/batches/${encodeURIComponent(batchNo)}/routing${versionQuery(masterPlanVersionId)}`,
+      ),
+  },
   fulfillmentChain: (salesOrderNo: string, salesOrderLineNo: number, masterPlanVersionId?: string) =>
     request<OrderFulfillmentChain>(
       `/api/v1/demand/demand-pool/${encodeURIComponent(salesOrderNo)}/${salesOrderLineNo}/fulfillment-chain${versionQuery(masterPlanVersionId)}`,
+    ),
+  demandOrderAction: (
+    salesOrderNo: string,
+    salesOrderLineNo: number,
+    action: import('../types/demandActions').OrderDemandActionId,
+    body?: import('../types/demandActions').OrderDemandActionRequest,
+  ) =>
+    request<import('../types/demandActions').OrderDemandActionResult>(
+      `/api/v1/demand/demand-pool/${encodeURIComponent(salesOrderNo)}/${salesOrderLineNo}/actions/${action}`,
+      {
+        method: 'POST',
+        body: JSON.stringify(body ?? {}),
+      },
     ),
   computeKitting: () => request<KittingResult[]>('/api/v1/kitting/compute', { method: 'POST' }),
   materialBalance: (masterPlanVersionId?: string) =>
@@ -216,6 +346,11 @@ export const api = {
       body: JSON.stringify({ strategyId, capacityStrategy }),
     }),
   getMasterPlan: (versionId: string) => request<MasterPlanResult>(`/api/v1/planning/master-plan/result/${versionId}`),
+  previewMasterPlanPlanning: (body: MasterPlanPlanningPreviewRequest) =>
+    request<MasterPlanPlanningPreview>('/api/v1/planning/master-plan/preview', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
   previewMasterPlanDiagnostics: (strategyId?: string, feedbackCutoff?: string) => {
     const params = new URLSearchParams();
     if (strategyId) {
@@ -235,6 +370,57 @@ export const api = {
       `/api/v1/planning/detail-schedule/diagnostics/preview${q}`,
     );
   },
+  previewDetailSchedulePlanning: (body: DetailSchedulePlanningPreviewRequest) =>
+    request<DetailSchedulePlanningPreview>('/api/v1/planning/detail-schedule/preview', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  createScheduleSession: (body: CreateScheduleSessionRequest) =>
+    request<ScheduleSession>('/api/v1/planning/schedule-sessions', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  confirmScheduleSession: (sessionId: string) =>
+    request<ConfirmScheduleSessionResult>(
+      `/api/v1/planning/schedule-sessions/${encodeURIComponent(sessionId)}/confirm`,
+      { method: 'POST' },
+    ),
+  optimizeScheduleSession: (sessionId: string) =>
+    request<ScheduleSession>(
+      `/api/v1/planning/schedule-sessions/${encodeURIComponent(sessionId)}/optimize`,
+      { method: 'POST' },
+    ),
+  simulateScheduleSession: (sessionId: string, body?: import('../types/scheduleSession').SimulateScheduleSessionRequest) =>
+    request<import('../types/scheduleSession').ScheduleSessionSimulateResult>(
+      `/api/v1/planning/schedule-sessions/${encodeURIComponent(sessionId)}/simulate`,
+      { method: 'POST', body: JSON.stringify(body ?? {}) },
+    ),
+  scheduleSessionCandidateLines: (sessionId: string, operationId: string) =>
+    request<string[]>(
+      `/api/v1/planning/schedule-sessions/${encodeURIComponent(sessionId)}/operations/${encodeURIComponent(operationId)}/candidate-lines`,
+    ),
+  patchScheduleSessionSteps: (sessionId: string, patches: import('../types/scheduleSession').SessionStepPatch[]) =>
+    request<import('../types/scheduleSession').ScheduleSessionSimulateResult>(
+      `/api/v1/planning/schedule-sessions/${encodeURIComponent(sessionId)}/steps`,
+      { method: 'PATCH', body: JSON.stringify(patches) },
+    ),
+  listProductionTasks: (executionState?: string) => {
+    const q = executionState ? `?executionState=${encodeURIComponent(executionState)}` : '';
+    return request<ProductionTask[]>(`/api/v1/production-tasks${q}`);
+  },
+  startProductionTask: (stepId: string) =>
+    request<ProductionTask>(`/api/v1/production-tasks/${encodeURIComponent(stepId)}/start`, {
+      method: 'POST',
+    }),
+  completeProductionTask: (stepId: string) =>
+    request<ProductionTask>(`/api/v1/production-tasks/${encodeURIComponent(stepId)}/complete`, {
+      method: 'POST',
+    }),
+  previewOrderPlanningChain: (body: OrderPlanningChainPreviewRequest) =>
+    request<OrderPlanningChain>('/api/v1/planning/order-chain/preview', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
   explainMasterPlanScore: (versionId: string) =>
     request<PlanningScoreExplanation>(
       `/api/v1/planning/master-plan/${encodeURIComponent(versionId)}/score-explanation`,
@@ -449,6 +635,47 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ planVersionIds }),
     }),
+  listDetailScheduleVersions: (limit = 50) =>
+    request<import('../types/api').DetailScheduleVersionSummary[]>(
+      `/api/v1/planning/detail-schedule/versions?limit=${limit}`,
+    ),
+  getDetailSchedule: (versionId: string) =>
+    request<DetailScheduleResult>(
+      `/api/v1/planning/detail-schedule/${encodeURIComponent(versionId)}`,
+    ),
+  detailSchedulePageKpis: (
+    detailScheduleVersionIdOrBody?: string | null | {
+      detailScheduleVersionId?: string | null;
+      operations?: import('../types/api').DetailScheduleOperation[];
+    },
+  ) => {
+    if (
+      detailScheduleVersionIdOrBody != null &&
+      typeof detailScheduleVersionIdOrBody === 'object'
+    ) {
+      return request<import('../types/api').DemandPoolKpi[]>(
+        '/api/v1/planning/detail-schedule/page-kpis',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            detailScheduleVersionId: detailScheduleVersionIdOrBody.detailScheduleVersionId ?? null,
+            operations: detailScheduleVersionIdOrBody.operations ?? [],
+          }),
+        },
+      );
+    }
+    const q = detailScheduleVersionIdOrBody
+      ? `?detailScheduleVersionId=${encodeURIComponent(detailScheduleVersionIdOrBody)}`
+      : '';
+    return request<import('../types/api').DemandPoolKpi[]>(
+      `/api/v1/planning/detail-schedule/page-kpis${q}`,
+    );
+  },
+  compareDetailScheduleVersions: (planVersionIds: string[]) =>
+    request<ScenarioComparison>('/api/v1/planning/detail-schedule/versions/compare', {
+      method: 'POST',
+      body: JSON.stringify({ planVersionIds }),
+    }),
   comparePlans: (from: string, to: string) =>
     request<PlanVersionCompare>(`/api/v1/planning/compare?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
   erpOrders: () => request<unknown>('/api/v1/integration/erp/orders'),
@@ -623,6 +850,24 @@ export const api = {
         }),
     },
     validation: () => request<MasterDataValidationReportMd>('/api/v1/master-data/validation'),
+    fieldSchema: (entityType: string) =>
+      request<MasterFieldDefinitionMd[]>(
+        `/api/v1/master-data/field-schema/${encodeURIComponent(entityType)}`,
+      ),
+    fieldDefinitions: {
+      create: (dto: MasterFieldDefinitionCreateMd) =>
+        request<MasterFieldDefinitionMd>('/api/v1/master-data/field-definitions', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      update: (id: number, dto: MasterFieldDefinitionUpdateMd) =>
+        request<MasterFieldDefinitionMd>(`/api/v1/master-data/field-definitions/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/field-definitions/${id}`, { method: 'DELETE' }),
+    },
     downloadTemplate: () =>
       downloadBlob('/api/v1/master-data/excel/template', 'master-data-template.xlsx'),
     exportAll: () => downloadBlob('/api/v1/master-data/excel/export', 'master-data-export.xlsx'),
@@ -640,6 +885,23 @@ export const api = {
       downloadBlob(`/api/v1/business-rules/excel/${kind}/export`, `${kind}-export.xlsx`),
     importRules: async (kind: string, file: File, replace = true): Promise<MasterDataImportResult> =>
       importMasterDataExcel(`/api/v1/business-rules/excel/${kind}/import`, file, replace),
+  },
+  factoryCalendar: {
+    getPolicy: () => request<FactoryCalendarPolicy>('/api/v1/factory-calendar/policy'),
+    savePolicy: (dto: FactoryCalendarPolicy) =>
+      request<FactoryCalendarPolicy>('/api/v1/factory-calendar/policy', {
+        method: 'PUT',
+        body: JSON.stringify(dto),
+      }),
+    getMonth: (year: number, month: number) =>
+      request<FactoryCalendarMonth>(`/api/v1/factory-calendar/month?year=${year}&month=${month}`),
+    saveDay: (dto: FactoryDayOverrideRequest) =>
+      request<FactoryCalendarDay>('/api/v1/factory-calendar/day', {
+        method: 'PUT',
+        body: JSON.stringify(dto),
+      }),
+    sync: () =>
+      request<FactoryCalendarSyncResult>('/api/v1/factory-calendar/sync', { method: 'POST' }),
   },
 };
 

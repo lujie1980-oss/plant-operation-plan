@@ -8,12 +8,23 @@ import com.plantops.api.dto.WorkOrderKittingDto;
 import com.plantops.api.dto.WorkOrderKittingLineDto;
 import com.plantops.api.dto.WorkOrderScheduleOperationDto;
 import com.plantops.api.dto.WorkOrderTimingWindowDto;
+import com.plantops.api.dto.InventoryAvailabilitySummaryDto;
+import com.plantops.api.dto.InventoryWorkOrderAllocationDto;
+import com.plantops.api.dto.WorkOrderPendingScheduleEligibleRequestDto;
+import com.plantops.config.BatchSplitConfigService;
 import com.plantops.persistence.entity.BomComponentEntity;
+import com.plantops.scenario.batch.BatchSplitMode;
+import com.plantops.scenario.batch.ProductionBatchSplitService;
+import com.plantops.persistence.entity.DetailScheduleOperationEntity;
 import com.plantops.persistence.entity.InventoryEntity;
 import com.plantops.persistence.entity.KittingResultEntity;
-import com.plantops.persistence.entity.MasterPlanAllocationEntity;
+import com.plantops.persistence.entity.ProductionBatchEntity;
+import com.plantops.persistence.entity.ProductionLineEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.api.dto.WorkOrderPeggingDto;
+import com.plantops.api.dto.WorkOrderRoutingDetailDto;
+import com.plantops.api.dto.WorkOrderRoutingOperationDto;
+import com.plantops.api.dto.WorkOrderRoutingResourceOptionDto;
 import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.persistence.entity.WorkOrderPeggingEntity;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -28,6 +39,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -55,19 +67,30 @@ public class WorkOrderService {
     @Inject
     WorkOrderTimingService workOrderTimingService;
 
+    @Inject
+    BatchSplitConfigService batchSplitConfig;
+
+    @Inject
+    ProductionBatchSplitService productionBatchSplitService;
+
     public List<WorkOrderDto> listAll() {
         return listAll(null);
     }
 
     public List<WorkOrderDto> listAll(String masterPlanVersionId) {
-        String detailScheduleVersionId = scheduleFeedbackService.resolveDetailScheduleVersionId(masterPlanVersionId);
+        return listAll(masterPlanVersionId, null);
+    }
+
+    public List<WorkOrderDto> listAll(String masterPlanVersionId, String detailScheduleVersionId) {
+        String resolvedDetailScheduleVersionId = resolveDetailScheduleVersionId(
+                masterPlanVersionId, detailScheduleVersionId);
         Map<String, ScheduleFeedbackService.WorkOrderFeedbackFlags> feedbackFlags =
-                scheduleFeedbackService.feedbackFlagsByWorkOrder(detailScheduleVersionId);
+                scheduleFeedbackService.feedbackFlagsByWorkOrder(resolvedDetailScheduleVersionId);
         return WorkOrderEntity.listInWorkspace().stream()
                 .sorted(Comparator
                         .comparingInt((WorkOrderEntity w) -> w.sequenceNo)
                         .thenComparing(w -> w.workOrderNo))
-                .map(wo -> toDto(wo, masterPlanVersionId, detailScheduleVersionId, feedbackFlags))
+                .map(wo -> toDto(wo, masterPlanVersionId, resolvedDetailScheduleVersionId, feedbackFlags))
                 .toList();
     }
 
@@ -81,8 +104,203 @@ public class WorkOrderService {
     public List<WorkOrderScheduleOperationDto> scheduleOperations(
             String workOrderNo,
             String masterPlanVersionId) {
-        String detailScheduleVersionId = scheduleFeedbackService.resolveDetailScheduleVersionId(masterPlanVersionId);
-        return scheduleFeedbackService.scheduleOperationsForWorkOrder(workOrderNo, detailScheduleVersionId);
+        return scheduleOperations(workOrderNo, masterPlanVersionId, null);
+    }
+
+    public List<WorkOrderScheduleOperationDto> scheduleOperations(
+            String workOrderNo,
+            String masterPlanVersionId,
+            String detailScheduleVersionId) {
+        String resolved = resolveDetailScheduleVersionId(masterPlanVersionId, detailScheduleVersionId);
+        return scheduleFeedbackService.scheduleOperationsForWorkOrder(workOrderNo, resolved);
+    }
+
+    /** 已下发、待进入细排的工单列表。 */
+    public List<WorkOrderDto> listDispatched(String masterPlanVersionId) {
+        return listDispatched(masterPlanVersionId, null);
+    }
+
+    public List<WorkOrderDto> listDispatched(String masterPlanVersionId, String detailScheduleVersionId) {
+        return listAll(masterPlanVersionId, detailScheduleVersionId).stream()
+                .filter(wo -> DISPATCH_DISPATCHED.equals(wo.dispatchStatus()))
+                .toList();
+    }
+
+    private String resolveDetailScheduleVersionId(String masterPlanVersionId, String detailScheduleVersionId) {
+        if (detailScheduleVersionId != null && !detailScheduleVersionId.isBlank()) {
+            return detailScheduleVersionId;
+        }
+        return scheduleFeedbackService.resolveDetailScheduleVersionId(masterPlanVersionId);
+    }
+
+    @Transactional
+    public WorkOrderDto updatePendingScheduleEligible(String workOrderNo, boolean pendingScheduleEligible) {
+        WorkOrderEntity wo = WorkOrderEntity.findByNo(workOrderNo);
+        if (wo == null) {
+            throw new NotFoundException("工单不存在: " + workOrderNo);
+        }
+        if (!DISPATCH_DISPATCHED.equals(normalizeDispatch(wo))) {
+            throw new BadRequestException("仅已下发工单可设定待排状态: " + workOrderNo);
+        }
+        if (hasActiveBatches(wo)) {
+            for (ProductionBatchEntity batch : ProductionBatchEntity.listActiveByWorkOrder(workOrderNo)) {
+                batch.pendingScheduleEligible = pendingScheduleEligible;
+            }
+        } else {
+            wo.pendingScheduleEligible = pendingScheduleEligible;
+        }
+        return toWorkOrderDto(wo, null);
+    }
+
+    /** 已拆批工单以批次待排开关为准；未拆批时看工单字段。 */
+    static boolean resolvePendingScheduleEligible(WorkOrderEntity wo) {
+        if (wo == null) {
+            return true;
+        }
+        if (hasActiveBatches(wo)) {
+            return ProductionBatchEntity.listActiveByWorkOrder(wo.workOrderNo).stream()
+                    .anyMatch(b -> b.pendingScheduleEligible == null || b.pendingScheduleEligible);
+        }
+        return wo.pendingScheduleEligible == null || wo.pendingScheduleEligible;
+    }
+
+    static boolean hasActiveBatches(WorkOrderEntity wo) {
+        if (wo == null || wo.batchSplitStatus == null
+                || WorkOrderEntity.BATCH_SPLIT_NONE.equals(wo.batchSplitStatus)) {
+            return false;
+        }
+        return ProductionBatchEntity.sumActiveQuantity(wo.workOrderNo).compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    /** 按料号汇总可用库存（齐套页）。 */
+    public List<InventoryAvailabilitySummaryDto> inventoryAvailabilitySummary() {
+        Map<String, BigDecimal> onhand = new HashMap<>();
+        Map<String, BigDecimal> available = new HashMap<>();
+        Map<String, Integer> points = new HashMap<>();
+        for (InventoryEntity inv : InventoryEntity.listInWorkspace()) {
+            if (inv.productCode == null || inv.productCode.isBlank()) {
+                continue;
+            }
+            onhand.merge(inv.productCode, inv.onhandQty != null ? inv.onhandQty : BigDecimal.ZERO, BigDecimal::add);
+            available.merge(inv.productCode, inv.availableQty(), BigDecimal::add);
+            points.merge(inv.productCode, 1, Integer::sum);
+        }
+        return available.keySet().stream()
+                .sorted()
+                .map(code -> new InventoryAvailabilitySummaryDto(
+                        code,
+                        onhand.getOrDefault(code, BigDecimal.ZERO),
+                        available.getOrDefault(code, BigDecimal.ZERO),
+                        points.getOrDefault(code, 0)))
+                .toList();
+    }
+
+    /** 已下发工单中对某料号有需求的占用明细。 */
+    public List<InventoryWorkOrderAllocationDto> workOrdersUsingComponent(String componentProductCode) {
+        if (componentProductCode == null || componentProductCode.isBlank()) {
+            return List.of();
+        }
+        List<InventoryWorkOrderAllocationDto> out = new ArrayList<>();
+        for (WorkOrderEntity wo : WorkOrderEntity.listInWorkspace()) {
+            if (!DISPATCH_DISPATCHED.equals(normalizeDispatch(wo))) {
+                continue;
+            }
+            WorkOrderKittingCheck check = computeKittingCheck(wo);
+            for (WorkOrderKittingLineDto line : check.lines()) {
+                if (!componentProductCode.equals(line.componentProductCode())) {
+                    continue;
+                }
+                out.add(new InventoryWorkOrderAllocationDto(
+                        wo.workOrderNo,
+                        wo.productCode,
+                        wo.quantity,
+                        line.requiredQty(),
+                        check.status()));
+            }
+        }
+        out.sort(Comparator.comparing(InventoryWorkOrderAllocationDto::workOrderNo));
+        return out;
+    }
+
+    /** 工单工艺路径：工序顺序、可选资源及可用产线。 */
+    public WorkOrderRoutingDetailDto routingDetail(String workOrderNo, String masterPlanVersionId) {
+        WorkOrderEntity wo = WorkOrderEntity.findByNo(workOrderNo);
+        if (wo == null) {
+            throw new NotFoundException("工单不存在: " + workOrderNo);
+        }
+        if (!DISPATCH_DISPATCHED.equals(normalizeDispatch(wo))) {
+            throw new BadRequestException("仅已下发工单可查看工艺路径: " + workOrderNo);
+        }
+        return buildRoutingDetail(wo, wo.quantity, masterPlanVersionId, null);
+    }
+
+    /** 批次工艺路径：工时按批次量计算。 */
+    public WorkOrderRoutingDetailDto routingDetailForQuantity(
+            String workOrderNo,
+            BigDecimal quantity,
+            String masterPlanVersionId,
+            String batchNo) {
+        WorkOrderEntity wo = WorkOrderEntity.findByNo(workOrderNo);
+        if (wo == null) {
+            throw new NotFoundException("工单不存在: " + workOrderNo);
+        }
+        if (!DISPATCH_DISPATCHED.equals(normalizeDispatch(wo))) {
+            throw new BadRequestException("仅已下发工单可查看工艺路径: " + workOrderNo);
+        }
+        BigDecimal effectiveQty = quantity != null ? quantity : wo.quantity;
+        return buildRoutingDetail(wo, effectiveQty, masterPlanVersionId, batchNo);
+    }
+
+    private WorkOrderRoutingDetailDto buildRoutingDetail(
+            WorkOrderEntity wo,
+            BigDecimal runQuantity,
+            String masterPlanVersionId,
+            String batchNo) {
+        Map<String, List<String>> lineIdsByResource = lineIdsByResourceIndex();
+        List<ProductRoutingSteps.Operation> routingOps = ProductRoutingSteps.operationsForProduct(wo.productCode);
+        List<WorkOrderRoutingOperationDto> operations = new ArrayList<>(routingOps.size());
+        for (ProductRoutingSteps.Operation op : routingOps) {
+            List<WorkOrderRoutingResourceOptionDto> options = new ArrayList<>(op.resourceOptions().size());
+            for (ProductRoutingSteps.ResourceOption resource : op.resourceOptions()) {
+                int duration = ProductRoutingSteps.durationMinutesForResource(
+                        wo.productCode, resource.resourceId(), runQuantity);
+                if (duration <= 0) {
+                    duration = ProductRoutingSteps.durationMinutesForOperation(op, runQuantity);
+                }
+                int priority = resource.resourcePriority() != null ? resource.resourcePriority() : 1;
+                List<String> lineIds = lineIdsByResource.getOrDefault(resource.resourceId(), List.of());
+                options.add(new WorkOrderRoutingResourceOptionDto(
+                        resource.resourceId(), priority, duration, lineIds));
+            }
+            operations.add(new WorkOrderRoutingOperationDto(op.sequenceNo(), op.operationName(), options));
+        }
+        WorkOrderDto summary = toWorkOrderDto(wo, masterPlanVersionId);
+        return new WorkOrderRoutingDetailDto(
+                wo.workOrderNo,
+                wo.productCode,
+                runQuantity,
+                summary.dispatchStatus(),
+                wo.dispatchedTs,
+                summary.plannedSlotDate(),
+                summary.plannedShiftId(),
+                summary.resourceId(),
+                operations,
+                batchNo);
+    }
+
+    private static Map<String, List<String>> lineIdsByResourceIndex() {
+        Map<String, LinkedHashSet<String>> index = new HashMap<>();
+        for (ProductionLineEntity line : ProductionLineEntity.listInWorkspace()) {
+            if (line.resourceId == null || line.lineId == null) {
+                continue;
+            }
+            index.computeIfAbsent(line.resourceId, k -> new LinkedHashSet<>()).add(line.lineId);
+        }
+        Map<String, List<String>> out = new HashMap<>();
+        for (Map.Entry<String, LinkedHashSet<String>> e : index.entrySet()) {
+            out.put(e.getKey(), List.copyOf(e.getValue()));
+        }
+        return out;
     }
 
     @Transactional
@@ -108,6 +326,19 @@ public class WorkOrderService {
             throw new BadRequestException("????????");
         }
         kittingService.computeForWorkOrders(dispatched);
+        if (batchSplitConfig.mode() == BatchSplitMode.NONE) {
+            for (String woNo : dispatched) {
+                productionBatchSplitService.ensureDefaultBatchOnDispatch(woNo);
+            }
+        } else if (batchSplitConfig.autoOnDispatch()) {
+            for (String woNo : dispatched) {
+                try {
+                    productionBatchSplitService.autoSplit(woNo);
+                } catch (BadRequestException ignored) {
+                    // 暂不可拆时跳过，不影响下发
+                }
+            }
+        }
         return new WorkOrderDispatchResultDto(dispatched.size(), now, dispatched);
     }
 
@@ -283,6 +514,18 @@ public class WorkOrderService {
             timingWindow = workOrderTimingService.compute(wo.workOrderNo, masterPlanVersionId);
         }
 
+        int routingOperationCount = ProductRoutingSteps.operationsForProduct(wo.productCode).size();
+        int detailScheduledOperationCount = 0;
+        if (detailScheduleVersionId != null && !detailScheduleVersionId.isBlank()) {
+            detailScheduledOperationCount = DetailScheduleOperationEntity
+                    .findByPlanAndWorkOrder(detailScheduleVersionId, wo.workOrderNo)
+                    .size();
+        }
+        boolean detailScheduled = routingOperationCount > 0
+                ? detailScheduledOperationCount >= routingOperationCount
+                : detailScheduledOperationCount > 0;
+        boolean pendingScheduleEligible = resolvePendingScheduleEligible(wo);
+
         return new WorkOrderDto(
                 wo.id,
                 wo.workOrderNo,
@@ -306,7 +549,15 @@ public class WorkOrderService {
                 wo.needDate,
                 wo.bomLevel,
                 peggingCount,
-                timingWindow);
+                timingWindow,
+                pendingScheduleEligible,
+                detailScheduled,
+                routingOperationCount,
+                detailScheduledOperationCount);
+    }
+
+    public static boolean isPendingScheduleEligible(WorkOrderEntity wo) {
+        return wo.pendingScheduleEligible == null || wo.pendingScheduleEligible;
     }
 
     private static String normalizeDispatch(WorkOrderEntity wo) {

@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 
 import jakarta.persistence.Table;
 
+import java.util.List;
+
 
 
 @Entity
@@ -32,6 +34,16 @@ public class DetailScheduleOperationEntity extends WorkspaceScopedEntity {
 
     public boolean pinned;
 
+    /** 排程批次号（拆批后 S05 最小单位）。 */
+    public String batchNo;
+
+    public static List<DetailScheduleOperationEntity> findByPlanAndWorkOrder(
+            String planVersionId, String workOrderNo) {
+        return list(
+                "workspaceId = ?1 and planVersionId = ?2 and workOrderNo = ?3",
+                ws(),
+                planVersionId,
+                workOrderNo);
+    }
+
 }
-
-

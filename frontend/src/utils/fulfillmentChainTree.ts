@@ -1,5 +1,6 @@
 import type { Task } from 'gantt-task-react';
 import type { FulfillmentChainNode, FulfillmentPegEdge } from '../types/api';
+import { isMaterialNodeType } from './fulfillmentMaterial';
 import { ganttVisibleTasks } from './ganttLayout';
 
 const SUPPLIER_TYPE_ORDER: Record<string, number> = {
@@ -45,6 +46,7 @@ function computeDepthFromSo(
     suppliersByDemander.set(e.toNodeId, list);
   }
 
+  const nodeById = new Map(nodes.map((n) => [n.nodeId, n]));
   const depths = new Map<string, number>();
   for (const so of nodes.filter((n) => n.nodeType === 'SALES_ORDER')) {
     depths.set(so.nodeId, 0);
@@ -52,6 +54,10 @@ function computeDepthFromSo(
     while (queue.length > 0) {
       const { id, depth } = queue.shift()!;
       for (const sid of suppliersByDemander.get(id) ?? []) {
+        const supplier = nodeById.get(sid);
+        if (supplier && isMaterialNodeType(supplier.nodeType)) {
+          continue;
+        }
         if (!depths.has(sid)) {
           depths.set(sid, depth + 1);
           queue.push({ id: sid, depth: depth + 1 });

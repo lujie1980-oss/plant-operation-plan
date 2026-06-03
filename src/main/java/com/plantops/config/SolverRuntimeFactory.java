@@ -1,6 +1,6 @@
 package com.plantops.config;
 
-import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
+import ai.timefold.solver.core.api.score.HardSoftScore;
 import ai.timefold.solver.core.api.solver.SolutionManager;
 import ai.timefold.solver.core.api.solver.SolverFactory;
 import ai.timefold.solver.core.api.solver.SolverManager;
@@ -9,6 +9,7 @@ import ai.timefold.solver.core.config.solver.termination.TerminationConfig;
 import com.plantops.solver.detailschedule.DetailSchedule;
 import com.plantops.solver.detailschedule.DetailScheduleConstraintProvider;
 import com.plantops.solver.detailschedule.OperationAssignment;
+import com.plantops.solver.detailschedule.ScheduleLine;
 import com.plantops.solver.masterplan.MasterPlanConstraintProvider;
 import com.plantops.solver.masterplan.MasterPlanSchedule;
 import com.plantops.solver.masterplan.OrderAllocation;
@@ -24,11 +25,11 @@ public class SolverRuntimeFactory {
     @Inject
     ParameterRegistry parameters;
 
-    public SolverManager<MasterPlanSchedule, String> createMasterPlanSolver() {
+    public SolverManager<MasterPlanSchedule> createMasterPlanSolver() {
         return SolverManager.create(SolverFactory.create(masterPlanSolverConfig(true)));
     }
 
-    public SolverManager<DetailSchedule, String> createDetailScheduleSolver() {
+    public SolverManager<DetailSchedule> createDetailScheduleSolver() {
         return SolverManager.create(SolverFactory.create(detailScheduleSolverConfig(true)));
     }
 
@@ -55,7 +56,7 @@ public class SolverRuntimeFactory {
     private SolverConfig detailScheduleSolverConfig(boolean withTermination) {
         SolverConfig config = new SolverConfig()
                 .withSolutionClass(DetailSchedule.class)
-                .withEntityClasses(OperationAssignment.class)
+                .withEntityClasses(ScheduleLine.class, OperationAssignment.class)
                 .withConstraintProviderClass(DetailScheduleConstraintProvider.class);
         if (withTermination) {
             long seconds = Math.max(1L, parameters.getInt("detail_schedule_solver_seconds", 30));

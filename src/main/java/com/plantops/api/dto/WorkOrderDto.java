@@ -27,7 +27,11 @@ public record WorkOrderDto(
         LocalDate needDate,
         int bomLevel,
         int peggingCount,
-        WorkOrderTimingWindowDto timingWindow
+        WorkOrderTimingWindowDto timingWindow,
+        boolean pendingScheduleEligible,
+        boolean detailScheduled,
+        int routingOperationCount,
+        int detailScheduledOperationCount
 ) {
 
     public WorkOrderDto(
@@ -69,6 +73,10 @@ public record WorkOrderDto(
                 null,
                 0,
                 0,
-                null);
+                null,
+                true,
+                false,
+                0,
+                0);
     }
 }

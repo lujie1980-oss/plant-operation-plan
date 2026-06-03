@@ -4,6 +4,8 @@ import type { BusinessRuleScopeMd } from '../types/masterData';
 
 type Props = {
   ruleTypeId: string;
+  scope: BusinessRuleScopeMd | null;
+  onScopeUpdated: (scope: BusinessRuleScopeMd) => void;
 };
 
 function formatScopeError(e: unknown, fallback = '加载启用范围失败'): string {
@@ -21,24 +23,9 @@ function formatScopeError(e: unknown, fallback = '加载启用范围失败'): st
   return msg.length > 240 ? fallback : msg;
 }
 
-export function BusinessRuleScopePanel({ ruleTypeId }: Props) {
-  const [scope, setScope] = useState<BusinessRuleScopeMd | null>(null);
+export function BusinessRuleScopePanel({ ruleTypeId, scope, onScopeUpdated }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      const list = await api.masterData.businessRuleScopes.list();
-      setScope(list.find((s) => s.ruleTypeId === ruleTypeId) ?? null);
-    } catch (e) {
-      setError(formatScopeError(e));
-    }
-  }, [ruleTypeId]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
 
   const save = async (patch: Partial<Pick<BusinessRuleScopeMd, 'enableMasterPlan' | 'enableDetailSchedule'>>) => {
     if (!scope) return;
@@ -50,7 +37,7 @@ export function BusinessRuleScopePanel({ ruleTypeId }: Props) {
         ...patch,
       };
       const saved = await api.masterData.businessRuleScopes.save(ruleTypeId, next);
-      setScope(saved);
+      onScopeUpdated(saved);
     } catch (e) {
       setError(formatScopeError(e, '保存失败'));
     } finally {
@@ -59,7 +46,7 @@ export function BusinessRuleScopePanel({ ruleTypeId }: Props) {
   };
 
   if (!scope) {
-    return error ? <p className="br-scope-error">{error}</p> : null;
+    return null;
   }
 
   return (
@@ -86,4 +73,43 @@ export function BusinessRuleScopePanel({ ruleTypeId }: Props) {
       {error && <span className="br-scope-error">{error}</span>}
     </div>
   );
+}
+
+export function useBusinessRuleScopes() {
+  const [scopesById, setScopesById] = useState<Record<string, BusinessRuleScopeMd>>({});
+  const [scopeError, setScopeError] = useState<string | null>(null);
+  const [scopeLoading, setScopeLoading] = useState(false);
+
+  const loadScopes = useCallback(async () => {
+    setScopeLoading(true);
+    setScopeError(null);
+    try {
+      const list = await api.masterData.businessRuleScopes.list();
+      setScopesById(Object.fromEntries(list.map((s) => [s.ruleTypeId, s])));
+    } catch (e) {
+      setScopeError(formatScopeError(e));
+    } finally {
+      setScopeLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadScopes();
+  }, [loadScopes]);
+
+  const updateScope = useCallback(async (ruleTypeId: string, patch: Partial<BusinessRuleScopeMd>) => {
+    const current = scopesById[ruleTypeId];
+    if (!current) {
+      throw new Error('规则配置尚未加载');
+    }
+    const saved = await api.masterData.businessRuleScopes.save(ruleTypeId, { ...current, ...patch });
+    setScopesById((prev) => ({ ...prev, [ruleTypeId]: saved }));
+    return saved;
+  }, [scopesById]);
+
+  const replaceScope = useCallback((scope: BusinessRuleScopeMd) => {
+    setScopesById((prev) => ({ ...prev, [scope.ruleTypeId]: scope }));
+  }, []);
+
+  return { scopesById, scopeError, scopeLoading, loadScopes, updateScope, replaceScope };
 }

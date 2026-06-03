@@ -1,8 +1,11 @@
 package com.plantops.solver.detailschedule;
 
+import ai.timefold.solver.core.api.domain.common.PlanningId;
 import ai.timefold.solver.core.api.domain.entity.PlanningEntity;
-import ai.timefold.solver.core.api.domain.lookup.PlanningId;
-import ai.timefold.solver.core.api.domain.variable.PlanningVariable;
+import ai.timefold.solver.core.api.domain.variable.InverseRelationShadowVariable;
+import ai.timefold.solver.core.api.domain.variable.NextElementShadowVariable;
+import ai.timefold.solver.core.api.domain.variable.PreviousElementShadowVariable;
+import ai.timefold.solver.core.api.domain.variable.ShadowSources;
 import ai.timefold.solver.core.api.domain.variable.ShadowVariable;
 
 import java.time.LocalDate;
@@ -15,12 +18,16 @@ public class OperationAssignment {
     @PlanningId
     private String operationId;
     private String workOrderNo;
+    private String batchNo;
+    private java.math.BigDecimal batchQuantity;
     private String productCode;
     private String resourceId;
     private String operationName;
     private int durationMinutes;
     private LocalDate dueDate;
     private boolean kittingEligible;
+    /** 相对排程锚点的最早可开工分钟（未齐套时由 kitting_lock_t_hours 推导）。 */
+    private int earliestStartMinute;
     private boolean pinned;
     private int sequenceHint;
     private int operationSeq;
@@ -50,12 +57,20 @@ public class OperationAssignment {
     private String continuousGroupId;
     private boolean continuousProduction;
 
-    @PlanningVariable(valueRangeProviderRefs = "lineRange")
+    /** 工艺链上前道工序（固定引用，非规划变量）。 */
+    private OperationAssignment routingPredecessor;
+
+    /** 所属产线（由 {@link ScheduleLine#assignedOperations} 逆推）。 */
+    @InverseRelationShadowVariable(sourceVariableName = "assignedOperations")
     private ScheduleLine line;
 
-    @ShadowVariable(
-            variableListenerClass = OperationStartMinuteUpdatingVariableListener.class,
-            sourceVariableName = "line")
+    @PreviousElementShadowVariable(sourceVariableName = "assignedOperations")
+    private OperationAssignment previousOnLine;
+
+    @NextElementShadowVariable(sourceVariableName = "assignedOperations")
+    private OperationAssignment nextOnLine;
+
+    @ShadowVariable(supplierName = "startMinuteSupplier")
     private Integer startMinute;
 
     public OperationAssignment() {
@@ -75,6 +90,22 @@ public class OperationAssignment {
 
     public void setWorkOrderNo(String workOrderNo) {
         this.workOrderNo = workOrderNo;
+    }
+
+    public String getBatchNo() {
+        return batchNo;
+    }
+
+    public void setBatchNo(String batchNo) {
+        this.batchNo = batchNo;
+    }
+
+    public java.math.BigDecimal getBatchQuantity() {
+        return batchQuantity;
+    }
+
+    public void setBatchQuantity(java.math.BigDecimal batchQuantity) {
+        this.batchQuantity = batchQuantity;
     }
 
     public String getProductCode() {
@@ -123,6 +154,14 @@ public class OperationAssignment {
 
     public void setKittingEligible(boolean kittingEligible) {
         this.kittingEligible = kittingEligible;
+    }
+
+    public int getEarliestStartMinute() {
+        return earliestStartMinute;
+    }
+
+    public void setEarliestStartMinute(int earliestStartMinute) {
+        this.earliestStartMinute = Math.max(0, earliestStartMinute);
     }
 
     public boolean isPinned() {
@@ -299,12 +338,45 @@ public class OperationAssignment {
         return resourceId != null && resourceId.equals(lineResourceId);
     }
 
+    public OperationAssignment getRoutingPredecessor() {
+        return routingPredecessor;
+    }
+
+    public void setRoutingPredecessor(OperationAssignment routingPredecessor) {
+        this.routingPredecessor = routingPredecessor;
+    }
+
+    @ShadowSources({
+            "previousOnLine.startMinute",
+            "routingPredecessor.startMinute",
+            "routingPredecessor.line",
+            "line"})
+    public Integer startMinuteSupplier(DetailSchedule schedule) {
+        return OperationStartTimeCalculator.compute(this, schedule);
+    }
+
     public ScheduleLine getLine() {
         return line;
     }
 
     public void setLine(ScheduleLine line) {
         this.line = line;
+    }
+
+    public OperationAssignment getPreviousOnLine() {
+        return previousOnLine;
+    }
+
+    public void setPreviousOnLine(OperationAssignment previousOnLine) {
+        this.previousOnLine = previousOnLine;
+    }
+
+    public OperationAssignment getNextOnLine() {
+        return nextOnLine;
+    }
+
+    public void setNextOnLine(OperationAssignment nextOnLine) {
+        this.nextOnLine = nextOnLine;
     }
 
     public Integer getStartMinute() {

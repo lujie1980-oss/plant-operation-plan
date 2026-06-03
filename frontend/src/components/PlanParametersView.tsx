@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { EditableTable } from './EditableTable';
 import { PageHeader } from './PageHeader';
 import { StatusBanner } from './StatusBanner';
@@ -8,6 +8,7 @@ import {
   type ParamGroupDef,
 } from '../pages/planParameterGroups';
 import type { SystemParameterMd } from '../types/masterData';
+import '../pages/BusinessRulesPage.css';
 import '../pages/MasterDataPage.css';
 
 type ParamSection = ParamGroupDef & {
@@ -21,6 +22,9 @@ type PlanParametersViewProps = {
   /** 展示未归入任一分组且非专用页维护的参数（单独「其他」页签） */
   showOtherGroup?: boolean;
   otherKnownParamIds?: Set<string>;
+  /** 自定义页签内容（key 为 group.id） */
+  customGroupContent?: Record<string, ReactNode>;
+  showScheduleVersionSelector?: boolean;
 };
 
 export function PlanParametersView({
@@ -29,6 +33,8 @@ export function PlanParametersView({
   description,
   showOtherGroup = false,
   otherKnownParamIds,
+  customGroupContent,
+  showScheduleVersionSelector = false,
 }: PlanParametersViewProps) {
   const [rows, setRows] = useState<SystemParameterMd[]>([]);
   const [activeTabId, setActiveTabId] = useState(groups[0]?.id ?? '');
@@ -70,7 +76,7 @@ export function PlanParametersView({
           id: 'other',
           label: '其他',
           description:
-            '尚未归入标准分组的参数。请确认是否应纳入上述页签；优化目标与策略请在「优化目标」页维护。',
+            '尚未归入标准分组的参数。请确认是否应纳入上述分组；优化目标与策略请在「优化目标」页维护。',
           paramIds: [],
           rows: other,
         });
@@ -109,6 +115,7 @@ export function PlanParametersView({
       <PageHeader
         title={title}
         description={description}
+        showScheduleVersionSelector={showScheduleVersionSelector}
         actions={
           <button type="button" className="btn" onClick={() => void load()} disabled={loading}>
             刷新
@@ -118,48 +125,60 @@ export function PlanParametersView({
       <StatusBanner loading={loading || saving} error={error} />
 
       {sections.length > 0 && (
-        <>
-          <div className="md-tab-bar" role="tablist">
-            {sections.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                role="tab"
-                aria-selected={s.id === activeTabId}
-                className={`md-tab-btn ${s.id === activeTabId ? 'is-active' : ''}`}
-                onClick={() => setActiveTabId(s.id)}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
+        <div className="br-rules-layout">
+          <aside className="card br-rules-nav" aria-label="参数分组">
+            <h3 className="br-rules-nav-title">参数分组</h3>
+            <ul className="br-rules-nav-list" role="listbox">
+              {sections.map((s) => (
+                <li key={s.id}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={s.id === activeTabId}
+                    className={`br-rules-nav-item ${s.id === activeTabId ? 'is-active' : ''}`}
+                    onClick={() => setActiveTabId(s.id)}
+                  >
+                    <span className="br-rules-nav-item-label">{s.label}</span>
+                    {s.description && (
+                      <span className="br-rules-nav-item-desc">{s.description}</span>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </aside>
 
-          <div className="md-tab-content plan-param-tab-panel">
+          <div className="card br-rules-main">
             {activeSection && (
-              <section className="card plan-param-group">
+              <div className="br-rules-main-inner">
+                <h3 className="br-rules-config-title">{activeSection.label}</h3>
                 <p className="md-tab-desc">{activeSection.description}</p>
-                {activeSection.rows.length === 0 ? (
-                  <p className="plan-param-empty">
-                    暂无参数记录。请刷新页面或联系管理员执行参数初始化。
-                  </p>
-                ) : (
-                  <EditableTable<SystemParameterMd>
-                    tableId={`plan-params-${activeSection.id}`}
-                    rows={activeSection.rows}
-                    columns={parameterTab.columns}
-                    rowKey={parameterTab.rowKey}
-                    emptyRow={parameterTab.emptyRow}
-                    onSave={handleSave}
-                    onDelete={handleDelete}
-                    loading={loading}
-                    saving={saving}
-                    search={parameterTab.search}
-                  />
-                )}
-              </section>
+                <div className="plan-param-content">
+                  {customGroupContent?.[activeSection.id] ? (
+                    customGroupContent[activeSection.id]
+                  ) : activeSection.rows.length === 0 ? (
+                    <p className="plan-param-empty">
+                      暂无参数记录。请刷新页面或联系管理员执行参数初始化。
+                    </p>
+                  ) : (
+                    <EditableTable<SystemParameterMd>
+                      tableId={`plan-params-${activeSection.id}`}
+                      rows={activeSection.rows}
+                      columns={parameterTab.columns}
+                      rowKey={parameterTab.rowKey}
+                      emptyRow={parameterTab.emptyRow}
+                      onSave={handleSave}
+                      onDelete={handleDelete}
+                      loading={loading}
+                      saving={saving}
+                      search={parameterTab.search}
+                    />
+                  )}
+                </div>
+              </div>
             )}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

@@ -7,6 +7,10 @@ import com.plantops.api.dto.WorkOrderDto;
 import com.plantops.api.dto.WorkOrderGenerationBatchResultDto;
 import com.plantops.api.dto.WorkOrderKittingDto;
 import com.plantops.api.dto.WorkOrderPeggingDto;
+import com.plantops.api.dto.InventoryAvailabilitySummaryDto;
+import com.plantops.api.dto.InventoryWorkOrderAllocationDto;
+import com.plantops.api.dto.WorkOrderPendingScheduleEligibleRequestDto;
+import com.plantops.api.dto.WorkOrderRoutingDetailDto;
 import com.plantops.api.dto.WorkOrderScheduleOperationDto;
 import com.plantops.api.dto.WorkOrderOrderLineTreeDto;
 import com.plantops.scenario.WorkOrderGenerationService;
@@ -60,6 +64,14 @@ public class WorkOrderResource {
     }
 
     @GET
+    @Path("/dispatched")
+    public List<WorkOrderDto> listDispatched(
+            @QueryParam("masterPlanVersionId") String masterPlanVersionId,
+            @QueryParam("detailScheduleVersionId") String detailScheduleVersionId) {
+        return workOrderService.listDispatched(masterPlanVersionId, detailScheduleVersionId);
+    }
+
+    @GET
     @Path("/dispatched/kitting")
     public List<WorkOrderKittingDto> dispatchedKitting() {
         return workOrderService.kittingForDispatched();
@@ -69,6 +81,38 @@ public class WorkOrderResource {
     @Path("/dispatched/kitting/compute")
     public List<WorkOrderKittingDto> computeDispatchedKitting() {
         return workOrderService.recomputeDispatchedKitting();
+    }
+
+    @GET
+    @Path("/dispatched/inventory/availability")
+    public List<InventoryAvailabilitySummaryDto> inventoryAvailability() {
+        return workOrderService.inventoryAvailabilitySummary();
+    }
+
+    @GET
+    @Path("/dispatched/inventory/{productCode}/work-orders")
+    public List<InventoryWorkOrderAllocationDto> inventoryWorkOrders(
+            @PathParam("productCode") String productCode) {
+        return workOrderService.workOrdersUsingComponent(productCode);
+    }
+
+    @PATCH
+    @Path("/{workOrderNo}/pending-schedule-eligible")
+    public WorkOrderDto updatePendingScheduleEligiblePatch(
+            @PathParam("workOrderNo") String workOrderNo,
+            WorkOrderPendingScheduleEligibleRequestDto request) {
+        return updatePendingScheduleEligible(workOrderNo, request);
+    }
+
+    @PUT
+    @Path("/{workOrderNo}/pending-schedule-eligible")
+    public WorkOrderDto updatePendingScheduleEligible(
+            @PathParam("workOrderNo") String workOrderNo,
+            WorkOrderPendingScheduleEligibleRequestDto request) {
+        if (request == null) {
+            throw new BadRequestException("请求体不能为空");
+        }
+        return workOrderService.updatePendingScheduleEligible(workOrderNo, request.pendingScheduleEligible());
     }
 
     @GET
@@ -94,10 +138,19 @@ public class WorkOrderResource {
     }
 
     @GET
+    @Path("/{workOrderNo}/routing-detail")
+    public WorkOrderRoutingDetailDto routingDetail(
+            @PathParam("workOrderNo") String workOrderNo,
+            @QueryParam("masterPlanVersionId") String masterPlanVersionId) {
+        return workOrderService.routingDetail(workOrderNo, masterPlanVersionId);
+    }
+
+    @GET
     @Path("/{workOrderNo}/schedule-operations")
     public List<WorkOrderScheduleOperationDto> scheduleOperations(
             @PathParam("workOrderNo") String workOrderNo,
-            @QueryParam("masterPlanVersionId") String masterPlanVersionId) {
-        return workOrderService.scheduleOperations(workOrderNo, masterPlanVersionId);
+            @QueryParam("masterPlanVersionId") String masterPlanVersionId,
+            @QueryParam("detailScheduleVersionId") String detailScheduleVersionId) {
+        return workOrderService.scheduleOperations(workOrderNo, masterPlanVersionId, detailScheduleVersionId);
     }
 }

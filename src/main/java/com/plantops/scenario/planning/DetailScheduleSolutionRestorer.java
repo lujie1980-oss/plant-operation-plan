@@ -5,8 +5,8 @@ import com.plantops.persistence.entity.PlanVersionEntity;
 import com.plantops.sample.SampleDataLoader;
 import com.plantops.scenario.DetailScheduleService;
 import com.plantops.solver.detailschedule.DetailSchedule;
+import com.plantops.solver.detailschedule.DetailScheduleLineInitializer;
 import com.plantops.solver.detailschedule.OperationAssignment;
-import com.plantops.solver.detailschedule.ScheduleLine;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
@@ -54,26 +54,23 @@ public class DetailScheduleSolutionRestorer {
         List<DetailScheduleOperationEntity> rows = DetailScheduleOperationEntity
                 .find("planVersionId = ?1", planVersionId)
                 .list();
-        Map<String, DetailScheduleOperationEntity> byOperationId = new HashMap<>();
+        Map<String, Integer> startMinuteByOperationId = new HashMap<>();
+        Map<String, String> lineIdByOperationId = new HashMap<>();
         for (DetailScheduleOperationEntity row : rows) {
-            if (row.operationId != null) {
-                byOperationId.put(row.operationId, row);
-            }
-        }
-        Map<String, ScheduleLine> lineById = new HashMap<>();
-        for (ScheduleLine line : schedule.getLineRange()) {
-            lineById.put(line.getLineId(), line);
-        }
-        for (OperationAssignment op : schedule.getOperations()) {
-            DetailScheduleOperationEntity row = byOperationId.get(op.getOperationId());
-            if (row == null || row.lineId == null) {
+            if (row.operationId == null) {
                 continue;
             }
-            ScheduleLine line = lineById.get(row.lineId);
-            if (line != null) {
-                op.setLine(line);
+            if (row.lineId != null) {
+                lineIdByOperationId.put(row.operationId, row.lineId);
             }
-            op.setStartMinute(row.startMinute);
+            startMinuteByOperationId.put(row.operationId, row.startMinute);
+        }
+        DetailScheduleLineInitializer.restoreLineQueues(schedule, startMinuteByOperationId, lineIdByOperationId);
+        for (OperationAssignment op : schedule.getOperations()) {
+            Integer start = startMinuteByOperationId.get(op.getOperationId());
+            if (start != null) {
+                op.setStartMinute(start);
+            }
         }
     }
 }

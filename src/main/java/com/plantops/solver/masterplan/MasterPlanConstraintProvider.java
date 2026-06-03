@@ -1,6 +1,7 @@
 package com.plantops.solver.masterplan;
 
-import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
+import com.plantops.scenario.ChangeoverRuleIndex;
+import ai.timefold.solver.core.api.score.HardSoftScore;
 import ai.timefold.solver.core.api.score.stream.Constraint;
 import ai.timefold.solver.core.api.score.stream.ConstraintFactory;
 import ai.timefold.solver.core.api.score.stream.ConstraintProvider;
@@ -29,7 +30,10 @@ public class MasterPlanConstraintProvider implements ConstraintProvider {
                 prioritizeHighPriority(factory),
                 balanceAdjacentSlotLoadingBothAllocated(factory),
                 balanceAdjacentSlotLoadingAgainstEmptyLater(factory),
-                balanceAdjacentSlotLoadingAgainstEmptyEarlier(factory)
+                balanceAdjacentSlotLoadingAgainstEmptyEarlier(factory),
+                minimizeActiveSlotCount(factory),
+                minimizeUnusedCapacityInActiveSlots(factory),
+                minimizeSlotProductChangeover(factory)
         };
     }
 
@@ -286,6 +290,64 @@ public class MasterPlanConstraintProvider implements ConstraintProvider {
                         (pair, loadLater, settings) -> loadLater
                                 * settings.weight(MasterPlanObjectiveCatalog.BALANCE_ADJACENT_SLOT_LOADING))
                 .asConstraint("Balance adjacent slot loading empty earlier");
+    }
+
+    /**
+     * 产能集中（1/2）：同一资源每多一个「有占用」的时间槽计一次开线成本。
+     */
+    private Constraint minimizeActiveSlotCount(ConstraintFactory factory) {
+        return factory.forEach(OrderAllocation.class)
+                .filter(a -> a.getTimeSlot() != null)
+                .groupBy(OrderAllocation::getTimeSlot, ConstraintCollectors.sum(OrderAllocation::getDurationMinutes))
+                .join(MasterPlanObjectiveSettings.class)
+                .filter((slot, total, settings) -> settings.isEnabled(MasterPlanObjectiveCatalog.CONCENTRATE_CAPACITY)
+                        && total > 0)
+                .penalize(HardSoftScore.ONE_SOFT,
+                        (slot, total, settings) -> MasterPlanCapacityConcentration.activeSlotPenalty(
+                                slot.getCapacityMinutes(),
+                                settings.weight(MasterPlanObjectiveCatalog.CONCENTRATE_CAPACITY)))
+                .asConstraint("Minimize active slot count");
+    }
+
+    /**
+     * 产能集中（2/2）：已占用槽位内剩余产能（分钟）惩罚，促使连续用足单槽产能。
+     */
+    private Constraint minimizeUnusedCapacityInActiveSlots(ConstraintFactory factory) {
+        return factory.forEach(OrderAllocation.class)
+                .filter(a -> a.getTimeSlot() != null)
+                .groupBy(OrderAllocation::getTimeSlot, ConstraintCollectors.sum(OrderAllocation::getDurationMinutes))
+                .join(MasterPlanObjectiveSettings.class)
+                .join(MasterPlanCapacityOverlay.class)
+                .filter((slot, total, settings, overlay) -> settings.isEnabled(
+                        MasterPlanObjectiveCatalog.CONCENTRATE_CAPACITY)
+                        && total > 0)
+                .penalize(HardSoftScore.ONE_SOFT,
+                        (slot, total, settings, overlay) -> MasterPlanCapacityConcentration.unusedCapacityPenalty(
+                                slot.getCapacityMinutes(),
+                                overlay.fixedMinutesForSlot(slot.getId()),
+                                Math.toIntExact(total),
+                                settings.weight(MasterPlanObjectiveCatalog.CONCENTRATE_CAPACITY)))
+                .asConstraint("Minimize unused capacity in active slots");
+    }
+
+    /**
+     * 减少槽内换型：同一时间槽内不同产品对的切换成本（换型矩阵 + 名义 fallback）。
+     */
+    private Constraint minimizeSlotProductChangeover(ConstraintFactory factory) {
+        return factory.forEachUniquePair(OrderAllocation.class, Joiners.equal(OrderAllocation::getTimeSlot))
+                .filter((a, b) -> a.getTimeSlot() != null
+                        && a.getProductCode() != null
+                        && b.getProductCode() != null
+                        && !a.getProductCode().equals(b.getProductCode()))
+                .join(MasterPlanObjectiveSettings.class)
+                .join(ChangeoverRuleIndex.class)
+                .filter((a, b, settings, changeoverRules) -> settings.isEnabled(
+                        MasterPlanObjectiveCatalog.MINIMIZE_SLOT_CHANGEOVER))
+                .penalize(HardSoftScore.ONE_SOFT,
+                        (a, b, settings, changeoverRules) -> MasterPlanSlotChangeover.switchPenaltyMinutes(
+                                a, b, changeoverRules)
+                                * settings.weight(MasterPlanObjectiveCatalog.MINIMIZE_SLOT_CHANGEOVER))
+                .asConstraint("Minimize slot product changeover");
     }
 
 }

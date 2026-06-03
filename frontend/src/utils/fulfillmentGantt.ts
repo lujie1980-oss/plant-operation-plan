@@ -4,6 +4,7 @@ import type {
   FulfillmentOperation,
   FulfillmentPegEdge,
 } from '../types/api';
+import { isGanttChainNodeType, isMaterialNodeType } from './fulfillmentMaterial';
 
 const STATUS_COLORS: Record<string, string> = {
   OK: '#10b981',
@@ -103,9 +104,12 @@ export function fulfillmentChainToGanttTasks(
 
   function emit(nodeId: string, level: number) {
     if (visited.has(nodeId)) return;
-    visited.add(nodeId);
     const node = nodeById.get(nodeId);
     if (!node) return;
+    if (isMaterialNodeType(node.nodeType)) {
+      return;
+    }
+    visited.add(nodeId);
 
     const color = STATUS_COLORS[node.status] ?? '#64748b';
     const ops = node.operations ?? [];
@@ -147,9 +151,12 @@ export function fulfillmentChainToGanttTasks(
       });
     }
 
-    const supplierIds = [...(suppliersByDemander.get(nodeId) ?? [])].sort((a, b) =>
-      compareSupplierIds(a, b, nodeById),
-    );
+    const supplierIds = [...(suppliersByDemander.get(nodeId) ?? [])]
+      .filter((sid) => {
+        const supplier = nodeById.get(sid);
+        return supplier != null && !isMaterialNodeType(supplier.nodeType);
+      })
+      .sort((a, b) => compareSupplierIds(a, b, nodeById));
     for (const sid of supplierIds) {
       emit(sid, level + 1);
     }
@@ -184,13 +191,25 @@ function operationToTask(op: FulfillmentOperation, projectId: string): Task {
   };
 }
 
-/** 甘特满足链箭头：库存→工单、工单→工单；不画向销售订单或缺料箭头 */
-export function ganttPegEdges(edges: FulfillmentPegEdge[]): FulfillmentPegEdge[] {
-  return edges.filter(
-    (e) =>
-      (e.pegType === 'INVENTORY_PEG' || e.pegType === 'WORK_ORDER_PEG') &&
-      !e.toNodeId.startsWith('so-'),
-  );
+/** 甘特满足链箭头：仅工单→工单（物料节点已分离至右侧面板） */
+export function ganttPegEdges(
+  edges: FulfillmentPegEdge[],
+  nodes: FulfillmentChainNode[] = [],
+): FulfillmentPegEdge[] {
+  const nodeById = new Map(nodes.map((n) => [n.nodeId, n]));
+  return edges.filter((e) => {
+    if (e.pegType !== 'WORK_ORDER_PEG') {
+      return false;
+    }
+    const from = nodeById.get(e.fromNodeId);
+    const to = nodeById.get(e.toNodeId);
+    return (
+      from != null
+      && to != null
+      && isGanttChainNodeType(from.nodeType)
+      && isGanttChainNodeType(to.nodeType)
+    );
+  });
 }
 
 export function formatPegEdges(

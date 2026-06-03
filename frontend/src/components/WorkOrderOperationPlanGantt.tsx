@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { WorkOrderCapacityBucket, WorkOrderCapacityGantt } from '../types/api';
+import type { WorkOrderCapacityBucket, WorkOrderCapacityGantt, WorkOrderCapacityOperation } from '../types/api';
 import {
   UTILIZATION_BAND_ORDER,
   utilizationBand,
@@ -9,9 +9,11 @@ import { fmtShortTs } from '../utils/formatTiming';
 import './WorkOrderOperationPlanGantt.css';
 
 const LABEL_W = 200;
-const ROW_H = 34;
+const OP_ROW_H = 34;
+const RESOURCE_ROW_H = 28;
 const HEADER_H = 31;
 const CELL_W = 76;
+const DEFAULT_SHIFT_MINUTES = 480;
 
 function toDateKey(ts: string): string {
   const d = new Date(ts);
@@ -39,6 +41,106 @@ interface WorkOrderOperationPlanGanttProps {
   markerOptions?: GanttTimingMarkerOptions;
 }
 
+interface OpBlock {
+  op: WorkOrderCapacityOperation;
+  resources: string[];
+}
+
+function resourcesForOp(op: WorkOrderCapacityOperation): string[] {
+  const ids = op.allowedResourceIds?.filter(Boolean) ?? [];
+  if (ids.length > 0) {
+    return ids;
+  }
+  return op.resourceId ? [op.resourceId] : [];
+}
+
+function bucketForDate(
+  cells: Map<string, WorkOrderCapacityBucket>,
+  date: string,
+): WorkOrderCapacityBucket | undefined {
+  return (
+    cells.get(`${date}|DAY`) ??
+    cells.get(`${date}|WEEK`) ??
+    [...cells.values()].find((c) => c.date === date)
+  );
+}
+
+function shiftStartHour(shiftId: string | undefined): number {
+  if (shiftId === 'S2' || shiftId === 'NIGHT') return 16;
+  return 8;
+}
+
+function availableForDate(
+  cells: Map<string, WorkOrderCapacityBucket>,
+  date: string,
+): { availableMinutes: number; shiftId: string } {
+  const bucket = bucketForDate(cells, date);
+  return {
+    availableMinutes: bucket?.availableMinutes ?? DEFAULT_SHIFT_MINUTES,
+    shiftId: bucket?.shiftId ?? 'DAY',
+  };
+}
+
+/** 按「加工分钟 / 当日可用产能」比例绘制工序条，支持跨日拆段。 */
+function barGeometryProportional(
+  op: WorkOrderCapacityOperation,
+  columns: { date: string; label: string }[],
+  bucketsByResource: Map<string, Map<string, WorkOrderCapacityBucket>>,
+  axisStartMs: number,
+  spanMs: number,
+  totalWidth: number,
+): { left: number; width: number } {
+  const startKey = toDateKey(op.plannedStartTs);
+  const startIdx = columns.findIndex((c) => c.date === startKey);
+  if (startIdx < 0) {
+    const left = ((new Date(op.plannedStartTs).getTime() - axisStartMs) / spanMs) * totalWidth;
+    const width = Math.max(
+      4,
+      ((new Date(op.plannedEndTs).getTime() - new Date(op.plannedStartTs).getTime()) / spanMs) * totalWidth,
+    );
+    return { left, width };
+  }
+
+  const cells = bucketsByResource.get(op.resourceId) ?? new Map();
+  const { availableMinutes: startAvail, shiftId } = availableForDate(cells, startKey);
+  const shiftHour = shiftStartHour(shiftId);
+  const shiftStartMs = new Date(
+    `${startKey}T${String(shiftHour).padStart(2, '0')}:00:00`,
+  ).getTime();
+  const startMs = new Date(op.plannedStartTs).getTime();
+  let offsetInDay = Math.max(0, (startMs - shiftStartMs) / 60_000);
+  if (offsetInDay >= startAvail) {
+    offsetInDay = 0;
+  }
+
+  let remaining = Math.max(1, op.durationMinutes);
+  let left = 0;
+  let width = 0;
+  let idx = startIdx;
+
+  while (remaining > 0 && idx < columns.length) {
+    const { availableMinutes } = availableForDate(cells, columns[idx].date);
+    const avail = Math.max(1, availableMinutes);
+    const spaceInDay = Math.max(0, avail - offsetInDay);
+    if (spaceInDay <= 0) {
+      idx += 1;
+      offsetInDay = 0;
+      continue;
+    }
+    const take = Math.min(remaining, spaceInDay);
+    const segWidth = (take / avail) * CELL_W;
+    if (width === 0) {
+      left = idx * CELL_W + (offsetInDay / avail) * CELL_W;
+    }
+    width += segWidth;
+    remaining -= take;
+    idx += 1;
+    offsetInDay = 0;
+  }
+
+  return { left, width: Math.max(4, width) };
+}
+
 function TimingVLine({
   left,
   variant,
@@ -58,6 +160,46 @@ function TimingVLine({
   );
 }
 
+function CapacityCells({
+  resourceId,
+  columns,
+  cells,
+  totalWidth,
+}: {
+  resourceId: string;
+  columns: { date: string; label: string }[];
+  cells: Map<string, WorkOrderCapacityBucket>;
+  totalWidth: number;
+}) {
+  return (
+    <div className="wo-op-plan-track wo-op-plan-track--resource" style={{ width: totalWidth, height: RESOURCE_ROW_H }}>
+      {columns.map((col) => {
+        const bucket = bucketForDate(cells, col.date);
+        if (!bucket) {
+          return (
+            <div
+              key={col.date}
+              className="wo-op-plan-cell wo-op-plan-cell-empty"
+              style={{ width: CELL_W }}
+            />
+          );
+        }
+        const band = utilizationBand(bucket.utilizationPct);
+        return (
+          <div
+            key={col.date}
+            className={`wo-op-plan-cell band-${band}`}
+            style={{ width: CELL_W }}
+            title={`${resourceId} · ${col.date}：${bucket.utilizationPct}% (${bucket.demandMinutes}/${bucket.availableMinutes}分)`}
+          >
+            <span className="wo-op-plan-cell-pct">{bucket.utilizationPct}%</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function WorkOrderOperationPlanGantt({
   data,
   loading,
@@ -70,6 +212,11 @@ export function WorkOrderOperationPlanGantt({
   const model = useMemo(() => {
     if (!data || data.operations.length === 0) return null;
     const ops = [...data.operations].sort((a, b) => a.sequenceNo - b.sequenceNo);
+    const blocks: OpBlock[] = ops.map((op) => ({
+      op,
+      resources: resourcesForOp(op),
+    }));
+
     let axisStartMs = new Date(data.horizonStartTs ?? data.plannedStartTs).getTime();
     let axisEndMs = new Date(data.horizonEndTs ?? data.plannedEndTs).getTime();
     const tw = data.timingWindow;
@@ -98,7 +245,6 @@ export function WorkOrderOperationPlanGantt({
         }
       }
     }
-    // 轴起点对齐到当天 0 点，使位于起点附近的时间线不会被裁到可视区外。
     const startDay = new Date(axisStartMs);
     startDay.setHours(0, 0, 0, 0);
     axisStartMs = startDay.getTime();
@@ -129,13 +275,17 @@ export function WorkOrderOperationPlanGantt({
       return { date, label: `${d.getMonth() + 1}/${d.getDate()}` };
     });
 
-    // 工序条与日列必须共用同一宽度：每列固定 CELL_W，时间轴按整天线性映射。
     const MS_PER_DAY = 86_400_000;
     const dayCount = Math.max(3, columns.length);
     const totalWidth = dayCount * CELL_W;
     const spanMs = dayCount * MS_PER_DAY;
 
-    return { ops, axisStartMs, spanMs, totalWidth, columns, bucketsByResource };
+    const chartHeight = blocks.reduce(
+      (sum, b) => sum + OP_ROW_H + b.resources.length * RESOURCE_ROW_H,
+      0,
+    );
+
+    return { blocks, axisStartMs, spanMs, totalWidth, columns, bucketsByResource, chartHeight };
   }, [data]);
 
   if (loading) {
@@ -155,28 +305,8 @@ export function WorkOrderOperationPlanGantt({
     if (!ts) return null;
     return ((new Date(ts).getTime() - model.axisStartMs) / model.spanMs) * model.totalWidth;
   };
-  const widthFor = (start: string, end: string) =>
-    Math.max(8, ((new Date(end).getTime() - new Date(start).getTime()) / model.spanMs) * model.totalWidth);
-
-  /** 主计划 DAY 槽位甘特：工序条按「日列」对齐，宽度 = 占用的日历天数 × CELL_W */
-  const barGeometry = (startTs: string, endTs: string) => {
-    const startKey = toDateKey(startTs);
-    const endKey = toDateKey(endTs);
-    let startIdx = model.columns.findIndex((c) => c.date === startKey);
-    let endIdx = model.columns.findIndex((c) => c.date === endKey);
-    if (startIdx >= 0 && endIdx >= 0) {
-      if (endIdx < startIdx) endIdx = startIdx;
-      return {
-        left: startIdx * CELL_W,
-        width: Math.max(CELL_W, (endIdx - startIdx + 1) * CELL_W),
-      };
-    }
-    const left = leftFor(startTs) ?? 0;
-    return { left, width: widthFor(startTs, endTs) };
-  };
 
   const totalWidth = LABEL_W + model.totalWidth;
-  const chartHeight = model.ops.length * ROW_H;
 
   const markerLayer =
     tw &&
@@ -185,7 +315,7 @@ export function WorkOrderOperationPlanGantt({
       markerOptions.showEarliestOwn) ? (
       <div
         className="wo-op-plan-marker-layer"
-        style={{ left: LABEL_W, top: HEADER_H, width: model.totalWidth, height: chartHeight }}
+        style={{ left: LABEL_W, top: HEADER_H, width: model.totalWidth, height: model.chartHeight }}
       >
         {markerOptions.showEarliestOwn && (
           <>
@@ -261,6 +391,7 @@ export function WorkOrderOperationPlanGantt({
             {utilizationBandLabel(band)}
           </span>
         ))}
+        <span className="wo-op-plan-leg wo-op-plan-leg-bar">工序计划条</span>
         {markerOptions.showLatestConstraints && (
           <span className="wo-op-plan-leg wo-op-plan-leg-line wo-op-plan-leg-line--red">最晚完成 / 可行开始</span>
         )}
@@ -293,61 +424,76 @@ export function WorkOrderOperationPlanGantt({
               ))}
             </div>
           </div>
-          {model.ops.map((op) => {
-            const cells = model.bucketsByResource.get(op.resourceId) ?? new Map();
-            const bar = barGeometry(op.plannedStartTs, op.plannedEndTs);
+
+          {model.blocks.map(({ op, resources }) => {
+            const bar = barGeometryProportional(
+              op,
+              model.columns,
+              model.bucketsByResource,
+              model.axisStartMs,
+              model.spanMs,
+              model.totalWidth,
+            );
             return (
-              <div
-                key={op.operationId}
-                className="wo-op-plan-row"
-                style={{
-                  gridTemplateColumns: `${LABEL_W}px ${model.totalWidth}px`,
-                  minHeight: ROW_H,
-                }}
-              >
-                <div className="wo-op-plan-label" title={op.resourceId}>
-                  <span className="wo-op-plan-seq">{op.sequenceNo}</span>
-                  <span className="wo-op-plan-name">{op.operationName}</span>
-                  <span className="wo-op-plan-resource">{op.resourceId}</span>
-                </div>
-                <div className="wo-op-plan-track" style={{ width: model.totalWidth, height: ROW_H }}>
-                  {model.columns.map((col) => {
-                    const bucket =
-                      cells.get(`${col.date}|DAY`) ??
-                      cells.get(`${col.date}|WEEK`) ??
-                      [...cells.values()].find((c) => c.date === col.date);
-                    if (!bucket) {
-                      return (
-                        <div
-                          key={col.date}
-                          className="wo-op-plan-cell wo-op-plan-cell-empty"
-                          style={{ width: CELL_W }}
-                        />
-                      );
-                    }
-                    const band = utilizationBand(bucket.utilizationPct);
-                    return (
+              <div key={op.operationId} className="wo-op-plan-op-block">
+                <div
+                  className="wo-op-plan-row wo-op-plan-row--operation"
+                  style={{
+                    gridTemplateColumns: `${LABEL_W}px ${model.totalWidth}px`,
+                    minHeight: OP_ROW_H,
+                  }}
+                >
+                  <div className="wo-op-plan-label wo-op-plan-label--operation" title={op.operationName}>
+                    <span className="wo-op-plan-op-title">
+                      {op.sequenceNo} - {op.operationName}
+                    </span>
+                  </div>
+                  <div className="wo-op-plan-track wo-op-plan-track--operation" style={{ width: model.totalWidth, height: OP_ROW_H }}>
+                    {model.columns.map((col) => (
                       <div
                         key={col.date}
-                        className={`wo-op-plan-cell band-${band}`}
+                        className="wo-op-plan-grid-cell"
                         style={{ width: CELL_W }}
-                        title={`${op.resourceId} · ${col.date}：${bucket.utilizationPct}%`}
-                      >
-                        <span className="wo-op-plan-cell-pct">{bucket.utilizationPct}%</span>
-                      </div>
-                    );
-                  })}
-                  <div
-                    className="wo-op-plan-bar"
-                    style={{
-                      left: bar.left,
-                      width: bar.width,
-                    }}
-                    title={`${op.operationName} · ${fmtTime(op.plannedStartTs)} → ${fmtTime(op.plannedEndTs)} · ${op.durationMinutes} 分钟`}
-                  >
-                    <span className="wo-op-plan-bar-label">{op.durationMinutes}′</span>
+                      />
+                    ))}
+                    <div
+                      className="wo-op-plan-bar"
+                      style={{ left: bar.left, width: bar.width }}
+                      title={`${op.operationName} · ${fmtTime(op.plannedStartTs)} → ${fmtTime(op.plannedEndTs)} · ${op.durationMinutes} 分钟 · ${op.resourceId}`}
+                    >
+                      <span className="wo-op-plan-bar-label">{op.durationMinutes}′</span>
+                    </div>
                   </div>
                 </div>
+
+                {resources.map((resourceId) => {
+                  const cells = model.bucketsByResource.get(resourceId) ?? new Map();
+                  const assigned = resourceId === op.resourceId;
+                  return (
+                    <div
+                      key={`${op.operationId}-${resourceId}`}
+                      className="wo-op-plan-row wo-op-plan-row--resource"
+                      style={{
+                        gridTemplateColumns: `${LABEL_W}px ${model.totalWidth}px`,
+                        minHeight: RESOURCE_ROW_H,
+                      }}
+                    >
+                      <div className="wo-op-plan-label wo-op-plan-label--resource" title={resourceId}>
+                        <span className="wo-op-plan-resource-prefix">└</span>
+                        <span className={`wo-op-plan-resource${assigned ? ' is-assigned' : ''}`}>
+                          {resourceId}
+                          {assigned ? ' ★' : ''}
+                        </span>
+                      </div>
+                      <CapacityCells
+                        resourceId={resourceId}
+                        columns={model.columns}
+                        cells={cells}
+                        totalWidth={model.totalWidth}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             );
           })}

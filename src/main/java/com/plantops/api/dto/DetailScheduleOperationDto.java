@@ -9,6 +9,9 @@ public record DetailScheduleOperationDto(
         Integer startMinute,
         Integer endMinute,
         String productCode,
-        boolean pinned
-) {
+        boolean pinned,
+        String batchNo,
+        int operationSeq,
+        String operationName,
+        Integer changeoverMinutesBefore) {
 }

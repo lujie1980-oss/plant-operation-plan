@@ -1,15 +1,15 @@
 package com.plantops.scenario.planning;
 
-import ai.timefold.solver.core.api.score.ScoreExplanation;
-import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
-import ai.timefold.solver.core.api.score.constraint.ConstraintMatch;
-import ai.timefold.solver.core.api.score.constraint.ConstraintMatchTotal;
+import ai.timefold.solver.core.api.score.HardSoftScore;
+import ai.timefold.solver.core.api.score.analysis.ConstraintAnalysis;
+import ai.timefold.solver.core.api.score.analysis.MatchAnalysis;
+import ai.timefold.solver.core.api.score.analysis.ScoreAnalysis;
+import ai.timefold.solver.core.api.score.stream.ConstraintJustification;
+import ai.timefold.solver.core.api.score.stream.DefaultConstraintJustification;
 import com.plantops.api.dto.planning.PlanningConstraintMatchDto;
 import com.plantops.api.dto.planning.PlanningConstraintMatchTotalDto;
 import com.plantops.api.dto.planning.PlanningScoreExplanationDto;
-import com.plantops.solver.detailschedule.DetailSchedule;
 import com.plantops.solver.detailschedule.OperationAssignment;
-import com.plantops.solver.masterplan.MasterPlanSchedule;
 import com.plantops.solver.masterplan.OrderAllocation;
 import com.plantops.solver.masterplan.TimeSlot;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,10 +18,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 /**
- * 将 Timefold {@link ScoreExplanation} 转为 REST DTO（含匹配样本截断）。
+ * 将 Timefold 2.0 {@link ScoreAnalysis} 转为 REST DTO（含匹配样本截断）。
  */
 @ApplicationScoped
 public class PlanningScoreExplainer {
@@ -29,60 +28,57 @@ public class PlanningScoreExplainer {
     static final int MAX_MATCHES_PER_CONSTRAINT = 15;
     static final int MAX_TOTAL_MATCHES = 150;
 
-    public PlanningScoreExplanationDto explainMasterPlan(
-            String planVersionId,
-            ScoreExplanation<MasterPlanSchedule, HardSoftScore> explanation) {
-        return toDto(planVersionId, "MASTER_PLAN", null, explanation);
+    public PlanningScoreExplanationDto explainMasterPlan(String planVersionId, ScoreAnalysis<HardSoftScore> analysis) {
+        return toDto(planVersionId, "MASTER_PLAN", null, analysis);
     }
 
     public PlanningScoreExplanationDto explainDetailSchedule(
             String planVersionId,
             String masterPlanVersionId,
-            ScoreExplanation<DetailSchedule, HardSoftScore> explanation) {
-        return toDto(planVersionId, "DETAIL_SCHEDULE", masterPlanVersionId, explanation);
+            ScoreAnalysis<HardSoftScore> analysis) {
+        return toDto(planVersionId, "DETAIL_SCHEDULE", masterPlanVersionId, analysis);
     }
 
-    private static <Solution_> PlanningScoreExplanationDto toDto(
+    private static PlanningScoreExplanationDto toDto(
             String planVersionId,
             String planType,
             String masterPlanVersionId,
-            ScoreExplanation<Solution_, HardSoftScore> explanation) {
-        HardSoftScore score = explanation.getScore();
+            ScoreAnalysis<HardSoftScore> analysis) {
+        HardSoftScore score = analysis.score();
         boolean truncated = false;
         int matchBudget = MAX_TOTAL_MATCHES;
         List<PlanningConstraintMatchTotalDto> totals = new ArrayList<>();
 
-        Map<String, ConstraintMatchTotal<HardSoftScore>> map = explanation.getConstraintMatchTotalMap();
-        List<ConstraintMatchTotal<HardSoftScore>> sorted = new ArrayList<>(map.values());
+        List<ConstraintAnalysis<HardSoftScore>> sorted = new ArrayList<>(analysis.constraintAnalyses());
         sorted.sort(Comparator
-                .comparing((ConstraintMatchTotal<HardSoftScore> t) -> t.getScore().hardScore())
-                .thenComparing(t -> t.getScore().softScore()));
+                .comparing((ConstraintAnalysis<HardSoftScore> t) -> t.score().hardScore())
+                .thenComparing(t -> t.score().softScore()));
 
-        for (ConstraintMatchTotal<HardSoftScore> total : sorted) {
-            HardSoftScore totalScore = total.getScore();
+        for (ConstraintAnalysis<HardSoftScore> total : sorted) {
+            HardSoftScore totalScore = total.score();
             if (totalScore.hardScore() == 0 && totalScore.softScore() == 0) {
                 continue;
             }
-            int matchCount = total.getConstraintMatchCount();
+            int matchCount = total.matchCount();
             List<PlanningConstraintMatchDto> samples = new ArrayList<>();
             boolean sampleTruncated = false;
             int perConstraintLimit = Math.min(MAX_MATCHES_PER_CONSTRAINT, matchBudget);
             int added = 0;
-            for (ConstraintMatch<HardSoftScore> match : total.getConstraintMatchSet()) {
+            for (MatchAnalysis<HardSoftScore> match : total.matches()) {
                 if (added >= perConstraintLimit) {
                     sampleTruncated = true;
                     truncated = true;
                     break;
                 }
-                HardSoftScore matchScore = match.getScore();
+                HardSoftScore matchScore = match.score();
                 if (matchScore.hardScore() == 0 && matchScore.softScore() == 0) {
                     continue;
                 }
                 samples.add(new PlanningConstraintMatchDto(
-                        match.getIdentificationString(),
-                        matchScore.hardScore(),
-                        matchScore.softScore(),
-                        stringifyIndicted(match.getIndictedObjectList())));
+                        match.justification().toString(),
+                        (int) matchScore.hardScore(),
+                        (int) matchScore.softScore(),
+                        stringifyJustification(match.justification())));
                 added++;
                 matchBudget--;
                 if (matchBudget <= 0) {
@@ -95,11 +91,11 @@ public class PlanningScoreExplainer {
                 sampleTruncated = true;
             }
             totals.add(new PlanningConstraintMatchTotalDto(
-                    total.getConstraintId(),
-                    total.getConstraintPackage(),
-                    total.getConstraintName(),
-                    totalScore.hardScore(),
-                    totalScore.softScore(),
+                    total.constraintId(),
+                    "",
+                    total.constraintId(),
+                    (int) totalScore.hardScore(),
+                    (int) totalScore.softScore(),
                     matchCount,
                     samples,
                     sampleTruncated));
@@ -114,11 +110,18 @@ public class PlanningScoreExplainer {
                 planType,
                 masterPlanVersionId,
                 score.toString(),
-                score.hardScore(),
-                score.softScore(),
-                explanation.getSummary(),
+                (int) score.hardScore(),
+                (int) score.softScore(),
+                analysis.summarize(),
                 totals,
                 truncated);
+    }
+
+    static List<String> stringifyJustification(ConstraintJustification justification) {
+        if (justification instanceof DefaultConstraintJustification defaultJustification) {
+            return stringifyIndicted(defaultJustification.getFacts());
+        }
+        return List.of(justification != null ? justification.toString() : "null");
     }
 
     static List<String> stringifyIndicted(List<Object> indicted) {

@@ -9,6 +9,9 @@ import com.plantops.api.dto.MasterPlanAllocationDto;
 import com.plantops.api.dto.MasterPlanRefreshResultDto;
 import com.plantops.api.dto.MasterPlanResultDto;
 import com.plantops.api.dto.planning.MasterPlanPlanningDiagnosticsDto;
+import com.plantops.api.dto.planning.MasterPlanPlanningPreviewAllocationDto;
+import com.plantops.api.dto.planning.MasterPlanPlanningPreviewDto;
+import com.plantops.api.dto.planning.MasterPlanPlanningPreviewRequest;
 import com.plantops.api.dto.WorkOrderTimingWindowDto;
 import com.plantops.api.dto.WorkOrderCapacityBucketDto;
 import com.plantops.api.dto.WorkOrderCapacityGanttDto;
@@ -40,6 +43,7 @@ import com.plantops.sample.SampleDataLoader;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 
 import java.math.BigDecimal;
@@ -71,7 +75,12 @@ public class MasterPlanService {
      * 工艺路由步骤：优先从 product_resource 表中按 sequence_no 取出；
      * 当数据库没有维护任何工序时回退到 {@link ProductRoutingCatalog}。
      */
-    public record RoutingStep(int sequenceNo, String operationName, String resourceId, BigDecimal processTimeSeconds) {
+    public record RoutingStep(
+            int sequenceNo,
+            String operationName,
+            String resourceId,
+            BigDecimal processTimeSeconds,
+            List<String> allowedResourceIds) {
     }
 
     private List<RoutingStep> routingStepsFor(String productCode, List<MasterPlanAllocationEntity> allocRows) {
@@ -81,7 +90,8 @@ public class MasterPlanService {
             List<RoutingStep> out = new ArrayList<>(fallback.size());
             for (int i = 0; i < fallback.size(); i++) {
                 ProductRoutingCatalog.RoutingStep s = fallback.get(i);
-                out.add(new RoutingStep(i + 1, s.operationName(), s.resourceId(), null));
+                out.add(new RoutingStep(
+                        i + 1, s.operationName(), s.resourceId(), null, List.of(s.resourceId())));
             }
             return out;
         }
@@ -91,7 +101,12 @@ public class MasterPlanService {
             String resourceId = assignedResourceBySeq.getOrDefault(op.sequenceNo(), op.primaryResourceId());
             ProductResourceEntity row = ProductResourceEntity.findByProductAndResource(productCode, resourceId);
             BigDecimal processTime = row != null ? row.processTimeSeconds : op.primaryProcessTimeSeconds();
-            out.add(new RoutingStep(op.sequenceNo(), op.operationName(), resourceId, processTime));
+            out.add(new RoutingStep(
+                    op.sequenceNo(),
+                    op.operationName(),
+                    resourceId,
+                    processTime,
+                    op.allowedResourceIds()));
         }
         return out;
     }
@@ -224,7 +239,7 @@ public class MasterPlanService {
     private MasterPlanSchedule solveProblem(MasterPlanSchedule problem)
             throws ExecutionException, InterruptedException {
         String jobId = "MP-SOLVE-" + UUID.randomUUID();
-        try (SolverManager<MasterPlanSchedule, String> solver = solverRuntimeFactory.createMasterPlanSolver()) {
+        try (SolverManager<MasterPlanSchedule> solver = solverRuntimeFactory.createMasterPlanSolver()) {
             return solver.solve(jobId, problem).getFinalBestSolution();
         }
     }
@@ -454,7 +469,11 @@ public class MasterPlanService {
             LocalDate axisEndDate) {
         java.util.LinkedHashSet<String> resourceIds = new java.util.LinkedHashSet<>();
         for (WorkOrderCapacityOperationDto op : operations) {
-            resourceIds.add(op.resourceId());
+            if (op.allowedResourceIds() != null && !op.allowedResourceIds().isEmpty()) {
+                resourceIds.addAll(op.allowedResourceIds());
+            } else if (op.resourceId() != null) {
+                resourceIds.add(op.resourceId());
+            }
         }
         LocalDate horizonStart = axisStartDate;
         LocalDate horizonEnd = axisEndDate;
@@ -518,6 +537,75 @@ public class MasterPlanService {
             d = d.plusDays(1);
         }
         return rows;
+    }
+
+    /**
+     * 推演层统一入口：诊断 + 分配候选快照；可选内存求解或持久化（结果反写到同一批 {@link OrderAllocation}）。
+     */
+    public MasterPlanPlanningPreviewDto previewPlanning(MasterPlanPlanningPreviewRequest request)
+            throws ExecutionException, InterruptedException {
+        if (request == null) {
+            throw new BadRequestException("request body required");
+        }
+        if (request.resolvePersist() && !request.resolveSolve()) {
+            throw new BadRequestException("persist requires solve=true");
+        }
+
+        MasterPlanStrategyConfigService.ResolvedStrategy resolved = strategyConfigService.resolve(
+                request.strategyId() != null && !request.strategyId().isBlank() ? request.strategyId() : null);
+        sampleDataLoader.extendCalendarsToHorizon();
+        LocalDate feedbackCutoff = parseFeedbackCutoff(request.feedbackCutoff());
+        MasterPlanCapacityOverlay overlay = feedbackCutoff != null
+                ? buildFeedbackOverlay(feedbackCutoff)
+                : MasterPlanCapacityOverlay.empty();
+        MasterPlanPlanningContext context = buildPlanningContext(resolved, overlay);
+        LocalDateTime computedAt = LocalDateTime.now();
+        boolean overlayActive = feedbackCutoff != null;
+
+        if (request.resolveSolve() && request.resolvePersist()) {
+            MasterPlanResultDto persisted = solveWithPlanningContext(context, resolved, null, null);
+            return toPreviewDto(
+                    context,
+                    resolved,
+                    computedAt,
+                    overlayActive,
+                    true,
+                    true,
+                    persisted.planVersionId(),
+                    persisted.score(),
+                    persisted.solveDurationMs(),
+                    persisted.allocations());
+        }
+
+        if (request.resolveSolve()) {
+            long start = System.currentTimeMillis();
+            MasterPlanSchedule problem = problemMapper.toSchedule(context);
+            MasterPlanSchedule solution = solveProblem(problem);
+            long duration = System.currentTimeMillis() - start;
+            return toPreviewDto(
+                    context,
+                    resolved,
+                    computedAt,
+                    overlayActive,
+                    true,
+                    false,
+                    null,
+                    solution.score() != null ? solution.score().toString() : null,
+                    duration,
+                    allocationsFromSolution(solution));
+        }
+
+        return toPreviewDto(
+                context,
+                resolved,
+                computedAt,
+                overlayActive,
+                false,
+                false,
+                null,
+                null,
+                null,
+                List.of());
     }
 
     /**
@@ -591,7 +679,7 @@ public class MasterPlanService {
         version.planGeneratedTs = LocalDateTime.now();
         version.changeSource = parentPlanVersionId != null ? "APS_FEEDBACK" : "APS";
         version.solveDurationMs = durationMs;
-        version.score = solution.getScore() != null ? solution.getScore().toString() : null;
+        version.score = solution.score() != null ? solution.score().toString() : null;
         version.capacityStrategy = resolved.capacityStrategy().name();
         version.strategyId = resolved.id();
         version.strategyName = resolved.name();
@@ -841,6 +929,9 @@ public class MasterPlanService {
                     step.operationName(),
                     displaySeq,
                     step.resourceId(),
+                    step.allowedResourceIds() != null && !step.allowedResourceIds().isEmpty()
+                            ? step.allowedResourceIds()
+                            : List.of(step.resourceId()),
                     opStart,
                     opEnd,
                     dur));
@@ -925,5 +1016,139 @@ public class MasterPlanService {
         }
         int hour = "S2".equals(shiftId) || "NIGHT".equals(shiftId) ? 16 : 8;
         return date.atTime(hour, 0);
+    }
+
+    private static LocalDate parseFeedbackCutoff(String feedbackCutoff) {
+        if (feedbackCutoff == null || feedbackCutoff.isBlank()) {
+            return null;
+        }
+        return LocalDate.parse(feedbackCutoff);
+    }
+
+    List<MasterPlanAllocationDto> allocationsFromSolution(MasterPlanSchedule solution) {
+        if (solution == null || solution.getOrderAllocations() == null) {
+            return List.of();
+        }
+        return solution.getOrderAllocations().stream()
+                .filter(a -> a.getTimeSlot() != null)
+                .map(this::toAllocationDto)
+                .toList();
+    }
+
+    private MasterPlanPlanningPreviewDto toPreviewDto(
+            MasterPlanPlanningContext context,
+            MasterPlanStrategyConfigService.ResolvedStrategy resolved,
+            LocalDateTime computedAt,
+            boolean overlayActive,
+            boolean solved,
+            boolean persisted,
+            String planVersionId,
+            String score,
+            Long solveDurationMs,
+            List<MasterPlanAllocationDto> scheduledAllocations) {
+        List<MasterPlanPlanningPreviewAllocationDto> allocations =
+                buildPreviewAllocations(context.orderAllocations(), scheduledAllocations);
+        int scheduledCount = (int) allocations.stream()
+                .filter(MasterPlanPlanningPreviewAllocationDto::scheduled)
+                .count();
+        return new MasterPlanPlanningPreviewDto(
+                computedAt,
+                context.planningStart(),
+                resolved.id(),
+                resolved.name(),
+                resolved.capacityStrategy().name(),
+                overlayActive,
+                solved,
+                persisted,
+                planVersionId,
+                score,
+                solveDurationMs,
+                context.diagnostics(),
+                allocations,
+                allocations.size(),
+                scheduledCount);
+    }
+
+    private List<MasterPlanPlanningPreviewAllocationDto> buildPreviewAllocations(
+            List<OrderAllocation> candidates,
+            List<MasterPlanAllocationDto> scheduledAllocations) {
+        java.util.Map<String, MasterPlanAllocationDto> scheduledById = new java.util.HashMap<>();
+        if (scheduledAllocations != null) {
+            for (MasterPlanAllocationDto row : scheduledAllocations) {
+                scheduledById.put(row.allocationId(), row);
+            }
+        }
+        if (candidates == null) {
+            return List.of();
+        }
+        List<MasterPlanPlanningPreviewAllocationDto> out = new ArrayList<>(candidates.size());
+        for (OrderAllocation a : candidates) {
+            MasterPlanAllocationDto scheduled = scheduledById.get(a.getId());
+            if (scheduled != null) {
+                Integer opSeq = parseOpSeqFromAllocationId(scheduled.allocationId());
+                out.add(new MasterPlanPlanningPreviewAllocationDto(
+                        scheduled.allocationId(),
+                        scheduled.segmentIndex(),
+                        scheduled.workOrderNo(),
+                        scheduled.productCode(),
+                        scheduled.resourceId(),
+                        opSeq != null ? opSeq : a.getOperationSeq(),
+                        a.getOperationName(),
+                        a.getDueDate(),
+                        scheduled.durationMinutes(),
+                        true,
+                        scheduled.slotIndex(),
+                        scheduled.slotDate(),
+                        scheduled.shiftId(),
+                        scheduled.plannedStartTs(),
+                        scheduled.plannedEndTs()));
+            } else if (a.getTimeSlot() != null) {
+                LocalDate slotDate = a.getTimeSlot().getDate();
+                String shiftId = a.getTimeSlot().getShiftId();
+                int duration = a.getDurationMinutes();
+                LocalDateTime startTs = shiftStart(slotDate, shiftId);
+                LocalDateTime endTs = a.getTimeSlot().isWeekly()
+                        ? shiftStart(a.getTimeSlot().getPeriodEnd(), shiftId).plusHours(8)
+                        : startTs.plusMinutes(Math.max(1, duration));
+                out.add(new MasterPlanPlanningPreviewAllocationDto(
+                        a.getId(),
+                        a.getSegmentIndex(),
+                        a.getWorkOrderNo(),
+                        a.getProductCode(),
+                        a.getResourceId(),
+                        a.getOperationSeq(),
+                        a.getOperationName(),
+                        a.getDueDate(),
+                        duration,
+                        true,
+                        a.getTimeSlot().getIndex(),
+                        slotDate,
+                        shiftId,
+                        startTs,
+                        endTs));
+            } else {
+                out.add(new MasterPlanPlanningPreviewAllocationDto(
+                        a.getId(),
+                        a.getSegmentIndex(),
+                        a.getWorkOrderNo(),
+                        a.getProductCode(),
+                        a.getResourceId(),
+                        a.getOperationSeq(),
+                        a.getOperationName(),
+                        a.getDueDate(),
+                        a.getDurationMinutes(),
+                        false,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null));
+            }
+        }
+        out.sort(Comparator
+                .comparing(MasterPlanPlanningPreviewAllocationDto::workOrderNo, Comparator.nullsLast(String::compareTo))
+                .thenComparingInt(MasterPlanPlanningPreviewAllocationDto::operationSeq)
+                .thenComparing(MasterPlanPlanningPreviewAllocationDto::allocationId));
+        return out;
     }
 }
