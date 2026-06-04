@@ -13,6 +13,9 @@ import com.plantops.solver.detailschedule.ScheduleLine;
 import com.plantops.solver.masterplan.MasterPlanConstraintProvider;
 import com.plantops.solver.masterplan.MasterPlanSchedule;
 import com.plantops.solver.masterplan.OrderAllocation;
+import com.plantops.solver.slitting.NestAssignment;
+import com.plantops.solver.slitting.SlittingConstraintProvider;
+import com.plantops.solver.slitting.SlittingNestSolution;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -41,6 +44,14 @@ public class SolverRuntimeFactory {
         return SolutionManager.create(SolverFactory.create(detailScheduleSolverConfig(false)));
     }
 
+    public SolverManager<SlittingNestSolution> createSlittingNestSolver() {
+        return SolverManager.create(SolverFactory.create(slittingNestSolverConfig(true)));
+    }
+
+    public SolutionManager<SlittingNestSolution, HardSoftScore> createSlittingNestSolutionManager() {
+        return SolutionManager.create(SolverFactory.create(slittingNestSolverConfig(false)));
+    }
+
     private SolverConfig masterPlanSolverConfig(boolean withTermination) {
         SolverConfig config = new SolverConfig()
                 .withSolutionClass(MasterPlanSchedule.class)
@@ -60,6 +71,18 @@ public class SolverRuntimeFactory {
                 .withConstraintProviderClass(DetailScheduleConstraintProvider.class);
         if (withTermination) {
             long seconds = Math.max(1L, parameters.getInt("detail_schedule_solver_seconds", 30));
+            config.withTerminationConfig(new TerminationConfig().withSecondsSpentLimit(seconds));
+        }
+        return config;
+    }
+
+    private SolverConfig slittingNestSolverConfig(boolean withTermination) {
+        SolverConfig config = new SolverConfig()
+                .withSolutionClass(SlittingNestSolution.class)
+                .withEntityClasses(NestAssignment.class)
+                .withConstraintProviderClass(SlittingConstraintProvider.class);
+        if (withTermination) {
+            long seconds = Math.max(1L, parameters.getInt("slitting_solver_seconds", 30));
             config.withTerminationConfig(new TerminationConfig().withSecondsSpentLimit(seconds));
         }
         return config;

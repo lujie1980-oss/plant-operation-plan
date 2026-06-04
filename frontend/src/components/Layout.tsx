@@ -80,7 +80,17 @@ const SCHEDULING_GROUP: NavGroup = {
   ],
 };
 
-const ALL_GROUPS = [DATA_GROUP, BUSINESS_RULES_GROUP, MASTER_PLAN_GROUP, SCHEDULING_GROUP];
+const SLITTING_GROUP: NavGroup = {
+  id: 'slitting',
+  label: '分切排样',
+  items: [
+    { to: '/slitting/master-data', label: '主数据' },
+    { to: '/slitting/plans', label: '分切方案' },
+    { to: '/slitting/workbench', label: '画板工作台' },
+  ],
+};
+
+const ALL_GROUPS = [DATA_GROUP, BUSINESS_RULES_GROUP, MASTER_PLAN_GROUP, SCHEDULING_GROUP, SLITTING_GROUP];
 
 function pathMatchesItem(pathname: string, item: NavLinkItem) {
   return pathname === item.to || pathname.startsWith(`${item.to}/`);

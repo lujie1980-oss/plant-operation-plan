@@ -25,6 +25,7 @@ public class ParameterRegistry {
             Map.entry("timeslot_weekly_buckets", "6"),
             Map.entry("master_plan_solver_seconds", "30"),
             Map.entry("detail_schedule_solver_seconds", "30"),
+            Map.entry("slitting_solver_seconds", "30"),
             Map.entry("capacity_overload_threshold_pct", "110"),
             Map.entry("master_plan_objective_weights",
                     "{\"minimize_lateness\":10,\"prioritize_high_priority\":1,\"locked_orders_prefer_earlier\":1,\"balance_adjacent_slot_loading\":1,\"concentrate_capacity\":1,\"minimize_slot_changeover\":1}"),

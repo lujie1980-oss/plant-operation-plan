@@ -1,0 +1,58 @@
+.slitting-workbench-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.slitting-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.slitting-kpi {
+  font-weight: 600;
+  color: #0f766e;
+}
+
+.slitting-tree-panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #fff;
+  max-height: 520px;
+  overflow: auto;
+}
+
+.slitting-tree-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 0.25rem 0;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.slitting-tree-btn.active {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.slitting-stage {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.slitting-canvas-empty {
+  padding: 2rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  text-align: center;
+}
