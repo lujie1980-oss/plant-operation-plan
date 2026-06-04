@@ -13,8 +13,7 @@ import com.plantops.persistence.entity.SlittingPlanChildOrderEntity;
 import com.plantops.persistence.entity.SlittingPlanMasterRollEntity;
 import com.plantops.persistence.entity.SlittingPlanVersionEntity;
 import com.plantops.persistence.entity.SlittingRollNodeEntity;
-import com.plantops.solver.slitting.NestAssignment;
-import com.plantops.solver.slitting.RollNode;
+import io.quarkus.hibernate.orm.panache.Panache;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -40,6 +39,9 @@ public class SlittingPlanService {
 
     @Inject
     ChildSlittingOrderService childSlittingOrderService;
+
+    @Inject
+    SlittingPlanResultPersister resultPersister;
 
     public List<SlittingPlanSummaryDto> listPlans() {
         return SlittingPlanVersionEntity.listInWorkspace().stream().map(SlittingPlanService::toSummary).toList();
@@ -95,16 +97,15 @@ public class SlittingPlanService {
         return toSummary(plan);
     }
 
-    @Transactional
     public SlittingPlanSummaryDto solvePlan(String planVersionId) throws ExecutionException, InterruptedException {
-        SlittingPlanVersionEntity plan = requirePlan(planVersionId);
+        requirePlan(planVersionId);
         long start = System.currentTimeMillis();
         SlittingPlanningContext ctx = contextBuilder.build(planVersionId);
         SlittingLayeredResult result = solverPipeline.solve(ctx);
         long duration = System.currentTimeMillis() - start;
-        persistResult(planVersionId, result, duration);
-        plan = requirePlan(planVersionId);
-        return toSummary(plan);
+        resultPersister.persistResult(planVersionId, result, duration);
+        Panache.getEntityManager().clear();
+        return toSummary(requirePlan(planVersionId));
     }
 
     @Transactional
@@ -113,6 +114,7 @@ public class SlittingPlanService {
         if (request == null || request.assignments() == null) {
             throw new BadRequestException("assignments required");
         }
+        SlittingAssignmentValidator.validate(planVersionId, request.assignments());
         SlittingAssignmentEntity.deleteByPlanVersionId(planVersionId);
         for (SlittingAssignmentDto dto : request.assignments()) {
             SlittingAssignmentEntity entity = new SlittingAssignmentEntity();
@@ -128,53 +130,6 @@ public class SlittingPlanService {
             entity.persist();
         }
         return getTree(planVersionId);
-    }
-
-    private void persistResult(String planVersionId, SlittingLayeredResult result, long durationMs) {
-        SlittingRollNodeEntity.deleteByPlanVersionId(planVersionId);
-        SlittingAssignmentEntity.deleteByPlanVersionId(planVersionId);
-
-        for (RollNode node : result.allNodes()) {
-            SlittingRollNodeEntity entity = new SlittingRollNodeEntity();
-            entity.stampWorkspace();
-            entity.planVersionId = planVersionId;
-            entity.nodeId = node.getNodeId();
-            entity.nodeType = node.getType().name();
-            entity.parentNodeId = node.getParent() != null ? node.getParent().getNodeId() : null;
-            entity.widthMm = BigDecimal.valueOf(node.getDimensions().widthMm());
-            entity.lengthMm = BigDecimal.valueOf(node.getDimensions().lengthMm());
-            entity.thicknessMm = BigDecimal.valueOf(node.getDimensions().thicknessMm());
-            if (node.getCuttingMethod() != null) {
-                entity.cuttingMethod = node.getCuttingMethod().name();
-            }
-            entity.kerfMm = BigDecimal.valueOf(node.getKerfMm());
-            entity.sourceSpecCode = node.getSourceSpecCode();
-            entity.sourceChildOrderId = node.getSourceChildOrderId();
-            entity.sourceMasterRollId = node.getSourceMasterRollId();
-            entity.persist();
-        }
-
-        int seq = 0;
-        for (NestAssignment assignment : result.allAssignments()) {
-            SlittingAssignmentEntity entity = new SlittingAssignmentEntity();
-            entity.stampWorkspace();
-            entity.planVersionId = planVersionId;
-            entity.assignmentId = assignment.getAssignmentId();
-            entity.childNodeId = assignment.getPlacedNode().getNodeId();
-            entity.parentNodeId = assignment.getParentNode().getNodeId();
-            entity.posXMm = BigDecimal.valueOf(assignment.getPositionX() != null ? assignment.getPositionX() : 0);
-            entity.posYMm = BigDecimal.valueOf(assignment.getPositionY() != null ? assignment.getPositionY() : 0);
-            entity.rotated = assignment.isRotated();
-            entity.sequence = seq++;
-            entity.persist();
-        }
-
-        SlittingPlanVersionEntity plan = requirePlan(planVersionId);
-        plan.status = SlittingPlanVersionEntity.STATUS_SOLVED;
-        plan.score = result.score();
-        plan.utilizationPct = SlittingUtilizationCalculator.computeUtilizationPct(result.allNodes(), result.allAssignments());
-        plan.solveDurationMs = durationMs;
-        plan.solverPhase = "COMPLETE";
     }
 
     private static SlittingPlanVersionEntity requirePlan(String planVersionId) {
