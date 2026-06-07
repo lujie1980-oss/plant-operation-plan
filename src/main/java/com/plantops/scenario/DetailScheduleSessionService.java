@@ -24,6 +24,7 @@ import com.plantops.scenario.planning.simulation.ValidationPipeline;
 import com.plantops.solver.detailschedule.DetailSchedule;
 import com.plantops.solver.detailschedule.OperationAssignment;
 import com.plantops.solver.detailschedule.ScheduleLine;
+import com.plantops.workspace.WorkspaceResolver;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -105,6 +106,7 @@ public class DetailScheduleSessionService {
                 request != null ? request.simulationProfileId() : null);
         SchedulingSession session = new SchedulingSession(
                 sessionId,
+                WorkspaceResolver.currentWorkspaceId(),
                 masterPlanVersionId,
                 context.planningAnchor(),
                 schedule,
@@ -138,7 +140,7 @@ public class DetailScheduleSessionService {
 
     /** 工序在当前 Session 下可分配的产线（acceptsLine）。 */
     public List<String> candidateLines(String sessionId, String operationId) {
-        SchedulingSession session = sessionStore.require(sessionId);
+        SchedulingSession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
         OperationAssignment op = findOperation(session.schedule(), operationId);
         if (op == null) {
             throw new NotFoundException("Unknown step: " + operationId);
@@ -169,7 +171,7 @@ public class DetailScheduleSessionService {
     }
 
     public ScheduleSessionDto get(String sessionId) {
-        SchedulingSession session = sessionStore.require(sessionId);
+        SchedulingSession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
         DetailSchedulePlanningContext context =
                 detailScheduleService.buildPlanningContext(session.masterPlanVersionId());
         DetailSchedulePlanningPreviewDto preview = detailScheduleService.toSessionPreviewDto(
@@ -187,7 +189,7 @@ public class DetailScheduleSessionService {
 
     @Transactional
     public ConfirmScheduleSessionResultDto confirm(String sessionId) {
-        SchedulingSession session = sessionStore.require(sessionId);
+        SchedulingSession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
         enforceConfirmPolicy(session);
         DetailSchedule schedule = session.schedule();
         long duration = session.solveDurationMs() != null ? session.solveDurationMs() : 0L;
@@ -211,7 +213,7 @@ public class DetailScheduleSessionService {
     }
 
     public ScheduleSessionDto optimize(String sessionId) throws ExecutionException, InterruptedException {
-        SchedulingSession session = sessionStore.require(sessionId);
+        SchedulingSession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
         long start = System.currentTimeMillis();
         DetailSchedule solved = detailScheduleService.solveScheduleInMemory(session.schedule());
         detailScheduleService.applyTiming(solved);
@@ -220,6 +222,7 @@ public class DetailScheduleSessionService {
 
         SchedulingSession updated = new SchedulingSession(
                 session.sessionId(),
+                session.workspaceId(),
                 session.masterPlanVersionId(),
                 session.planningAnchor(),
                 solved,
@@ -237,7 +240,7 @@ public class DetailScheduleSessionService {
      * 增量/全量内存推演：应用手动 patch → 链式赋时 → 校验（不调用 Timefold）。
      */
     public ScheduleSessionSimulateResultDto simulate(String sessionId, SimulateScheduleSessionRequest request) {
-        SchedulingSession session = sessionStore.require(sessionId);
+        SchedulingSession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
         DetailSchedule schedule = session.schedule();
 
         List<String> patchTouched = List.of();
@@ -271,6 +274,7 @@ public class DetailScheduleSessionService {
 
         SchedulingSession updated = new SchedulingSession(
                 session.sessionId(),
+                session.workspaceId(),
                 session.masterPlanVersionId(),
                 session.planningAnchor(),
                 schedule,

@@ -230,6 +230,30 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 
 **前端**：**生产排程**页 Session 推演面板 + 甘特/列表「Session 推演」视图；**推演诊断**页保留预览入口。
 
+### 5.7 OTD 本体 M1
+
+M1 在主计划侧引入 **OTD 本体图 + ROL-lite 传播** 的内存 Session，与 Timefold 主计划求解并行存在；本体装载自已发布 `planVersionId`，不替代 `MasterPlanPlanningContext` / `OrderAllocation` 求解路径。
+
+| 类 | 职责 |
+|----|------|
+| `OntologyGraph` | MPS 最小对象集内存图（Product、Period、SupplyOrder、PISP 等） |
+| `MasterPlanOntologySession` | 工作区隔离的 Session 快照（图 + `RolEngine`，8h TTL） |
+| `MasterPlanOntologySessionService` | create / get / simulate / confirm |
+| `OntologyLoader` | 从 `planVersionId` 投影本体图 |
+
+**REST**（`MasterPlanSessionResource`）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/v1/master-plan/sessions` | 从 `planVersionId` 创建本体 Session |
+| GET | `/api/v1/master-plan/sessions/{sessionId}` | 查看 Session 与图摘要 |
+| POST | `/api/v1/master-plan/sessions/{sessionId}/simulate` | ROL-lite 字段变更 + 传播 |
+| POST | `/api/v1/master-plan/sessions/{sessionId}/confirm` | 确认（M1 占位，204） |
+
+映射与对象集详见 [otd-ontology-mapping.md](./otd-ontology-mapping.md)。
+
+与 §5.6 `SchedulingSession`（S05 细排）区分：本体 Session 操作 **供需时段图**，不直接改 `OrderAllocation` 槽位。
+
 ---
 
 ## 6. Timefold 边界一览
@@ -513,8 +537,6 @@ POST /api/v1/planning/order-chain/preview
 
 与 `FulfillmentPeggingService` 满足链的区别：时间窗来自 **推演 eligible 槽** 而非 lead-time 启发式；可选 `baselineMasterPlanVersionId` 与求解结果对比。
 
----
-
 ## 9. 关键文件索引
 
 | 主题 | 路径 |
@@ -536,6 +558,7 @@ POST /api/v1/planning/order-chain/preview
 | 推演诊断采集 | `scenario/planning/diagnostics/` |
 | 订单推演链 | `scenario/planning/OrderPlanningChainService.java` |
 | Session / 增量推演 | `scenario/DetailScheduleSessionService.java`, `scenario/planning/DetailScheduleSimulationEngine.java` |
+| OTD 本体 M1 Session | `scenario/planning/MasterPlanOntologySessionService.java`, `api/MasterPlanSessionResource.java` |
 | 生产任务 | `scenario/execution/ProductionTaskService.java`, `api/ScheduleSessionResource.java` |
 
 ---
@@ -548,3 +571,4 @@ POST /api/v1/planning/order-chain/preview
 | 2026-05-30 | §8.3 推演可观测性：Collector、API、reasonCode、解读工作流 |
 | 2026-05-30 | §8.3.10 选优层得分分解：SolutionManager explain API + 前端面板 |
 | 2026-06-02 | §5.6 Session + 增量推演 + 生产任务 RELEASED 发布 |
+| 2026-06-07 | §8.6 OTD 本体 M1：OntologyGraph Session API + 映射文档链接 |

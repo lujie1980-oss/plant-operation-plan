@@ -4,37 +4,38 @@ import com.plantops.workspace.WorkspaceResolver;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.NotFoundException;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
-public class SchedulingSessionStore {
+public class MasterPlanOntologySessionStore {
 
-    private static final java.time.Duration DEFAULT_TTL = java.time.Duration.ofHours(8);
+    private static final Duration DEFAULT_TTL = Duration.ofHours(8);
 
-    private final Map<String, SchedulingSession> sessions = new ConcurrentHashMap<>();
+    private final Map<String, MasterPlanOntologySession> sessions = new ConcurrentHashMap<>();
 
-    public SchedulingSession put(SchedulingSession session) {
+    public MasterPlanOntologySession put(MasterPlanOntologySession session) {
         sessions.put(session.sessionId(), session);
         return session;
     }
 
-    public SchedulingSession require(String sessionId) {
+    public MasterPlanOntologySession require(String sessionId) {
         return require(sessionId, WorkspaceResolver.currentWorkspaceId());
     }
 
-    public SchedulingSession require(String sessionId, String workspaceId) {
-        SchedulingSession session = sessions.get(sessionId);
+    public MasterPlanOntologySession require(String sessionId, String workspaceId) {
+        MasterPlanOntologySession session = sessions.get(sessionId);
         if (session == null) {
-            throw new NotFoundException("Schedule session not found: " + sessionId);
+            throw new NotFoundException("Master plan session not found: " + sessionId);
         }
         if (!session.workspaceId().equals(workspaceId)) {
-            throw new NotFoundException("Schedule session not found: " + sessionId);
+            throw new NotFoundException("Master plan session not found: " + sessionId);
         }
         if (session.expired(LocalDateTime.now())) {
             sessions.remove(sessionId);
-            throw new NotFoundException("Schedule session expired: " + sessionId);
+            throw new NotFoundException("Master plan session expired: " + sessionId);
         }
         return session;
     }

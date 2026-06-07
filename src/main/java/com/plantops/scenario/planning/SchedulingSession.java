@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public final class SchedulingSession {
 
     private final String sessionId;
+    private final String workspaceId;
     private final String masterPlanVersionId;
     private final LocalDate planningAnchor;
     private final DetailSchedule schedule;
@@ -24,6 +25,7 @@ public final class SchedulingSession {
 
     public SchedulingSession(
             String sessionId,
+            String workspaceId,
             String masterPlanVersionId,
             LocalDate planningAnchor,
             DetailSchedule schedule,
@@ -32,11 +34,12 @@ public final class SchedulingSession {
             boolean solved,
             Long solveDurationMs,
             String score) {
-        this(sessionId, masterPlanVersionId, planningAnchor, schedule, createdAt, expiresAt, solved, solveDurationMs, score, null);
+        this(sessionId, workspaceId, masterPlanVersionId, planningAnchor, schedule, createdAt, expiresAt, solved, solveDurationMs, score, null);
     }
 
     public SchedulingSession(
             String sessionId,
+            String workspaceId,
             String masterPlanVersionId,
             LocalDate planningAnchor,
             DetailSchedule schedule,
@@ -47,6 +50,7 @@ public final class SchedulingSession {
             String score,
             SimulationProfileSnapshot simulationProfile) {
         this.sessionId = sessionId;
+        this.workspaceId = workspaceId;
         this.masterPlanVersionId = masterPlanVersionId;
         this.planningAnchor = planningAnchor;
         this.schedule = schedule;
@@ -60,6 +64,10 @@ public final class SchedulingSession {
 
     public String sessionId() {
         return sessionId;
+    }
+
+    public String workspaceId() {
+        return workspaceId;
     }
 
     public String masterPlanVersionId() {
