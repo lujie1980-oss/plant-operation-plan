@@ -5,6 +5,7 @@ import com.plantops.ontology.master.ProductInStockingPoint;
 import com.plantops.ontology.master.StockingPoint;
 import com.plantops.ontology.period.Period;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
+import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.ontology.supply.SupplyOrder;
 
 import java.util.Collections;
@@ -19,6 +20,7 @@ public final class OntologyGraph {
     private final Map<String, ProductInStockingPoint> pispsById;
     private final Map<String, SupplyOrder> supplyOrdersById;
     private final Map<String, ProductInStockingPointPeriod> pispPeriodsById;
+    private final Map<String, StandardResourcePeriod> srpById;
     private final List<Period> periodsOrdered;
 
     private OntologyGraph(
@@ -27,12 +29,14 @@ public final class OntologyGraph {
             Map<String, ProductInStockingPoint> pispsById,
             Map<String, SupplyOrder> supplyOrdersById,
             Map<String, ProductInStockingPointPeriod> pispPeriodsById,
+            Map<String, StandardResourcePeriod> srpById,
             List<Period> periodsOrdered) {
         this.productsById = Collections.unmodifiableMap(productsById);
         this.defaultStockingPoint = defaultStockingPoint;
         this.pispsById = Collections.unmodifiableMap(pispsById);
         this.supplyOrdersById = Collections.unmodifiableMap(supplyOrdersById);
         this.pispPeriodsById = Collections.unmodifiableMap(pispPeriodsById);
+        this.srpById = Collections.unmodifiableMap(srpById);
         this.periodsOrdered = List.copyOf(periodsOrdered);
     }
 
@@ -72,6 +76,14 @@ public final class OntologyGraph {
         return pispPeriodsById;
     }
 
+    public StandardResourcePeriod srp(String id) {
+        return srpById.get(id);
+    }
+
+    public Map<String, StandardResourcePeriod> srpById() {
+        return srpById;
+    }
+
     public List<Period> periodsOrdered() {
         return periodsOrdered;
     }
@@ -83,6 +95,7 @@ public final class OntologyGraph {
         private final Map<String, ProductInStockingPoint> pispsById = new LinkedHashMap<>();
         private final Map<String, SupplyOrder> supplyOrdersById = new LinkedHashMap<>();
         private final Map<String, ProductInStockingPointPeriod> pispPeriodsById = new LinkedHashMap<>();
+        private final Map<String, StandardResourcePeriod> srpById = new LinkedHashMap<>();
         private List<Period> periodsOrdered = List.of();
 
         public Builder product(Product product) {
@@ -110,6 +123,11 @@ public final class OntologyGraph {
             return this;
         }
 
+        public Builder standardResourcePeriod(StandardResourcePeriod srp) {
+            srpById.put(srp.getId(), srp);
+            return this;
+        }
+
         public Builder periodsOrdered(List<Period> periods) {
             this.periodsOrdered = periods;
             return this;
@@ -122,6 +140,7 @@ public final class OntologyGraph {
                     pispsById,
                     supplyOrdersById,
                     pispPeriodsById,
+                    srpById,
                     periodsOrdered);
         }
     }

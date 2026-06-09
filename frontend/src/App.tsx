@@ -23,12 +23,14 @@ import { PlanRunPage } from './pages/PlanRunPage';
 import { ScheduleKittingPage } from './pages/ScheduleKittingPage';
 import { PendingScheduleWorkOrdersPage } from './pages/PendingScheduleWorkOrdersPage';
 import { BatchPlanPage } from './pages/BatchPlanPage';
+import { MasterPlanOntologyPage } from './pages/MasterPlanOntologyPage';
 import { SchedulingPlanParametersPage } from './pages/SchedulingPlanParametersPage';
 import { ScenarioComparisonPage } from './pages/ScenarioComparisonPage';
 import { ScheduleVersionComparisonPage } from './pages/ScheduleVersionComparisonPage';
 import { SlittingMasterDataPage } from './pages/slitting/SlittingMasterDataPage';
-import { SlittingPlansPage } from './pages/slitting/SlittingPlansPage';
-import { SlittingWorkbenchPage } from './pages/slitting/SlittingWorkbenchPage';
+import { SlittingParametersPage } from './pages/slitting/SlittingParametersPage';
+import { SlittingOptimizeRunPage } from './pages/slitting/SlittingOptimizeRunPage';
+import { SlittingStudioPage } from './pages/slitting/SlittingStudioPage';
 
 export default function App() {
   return (
@@ -47,6 +49,7 @@ export default function App() {
             <Route path="business-rules" element={<Navigate to="/business-rules/production" replace />} />
             <Route path="business-rules/:categoryId" element={<BusinessRulesPage />} />
             <Route path="master-plan/plan-run" element={<PlanRunPage />} />
+            <Route path="master-plan/ontology" element={<MasterPlanOntologyPage />} />
             <Route path="master-plan/analysis" element={<Navigate to="/master-plan/analysis/demand" replace />} />
             <Route path="master-plan/analysis/demand" element={<DemandPage />} />
             <Route path="master-plan/analysis/capacity" element={<CapacityPage />} />
@@ -82,8 +85,12 @@ export default function App() {
             </Route>
 
             <Route path="slitting/master-data" element={<SlittingMasterDataPage />} />
-            <Route path="slitting/plans" element={<SlittingPlansPage />} />
-            <Route path="slitting/workbench" element={<SlittingWorkbenchPage />} />
+            <Route path="slitting/parameters" element={<SlittingParametersPage />} />
+            <Route path="slitting/runs" element={<SlittingOptimizeRunPage />} />
+            <Route path="slitting/studio" element={<SlittingStudioPage />} />
+            <Route path="slitting/bom-studio" element={<Navigate to="/slitting/studio" replace />} />
+            <Route path="slitting/plans" element={<Navigate to="/slitting/studio" replace />} />
+            <Route path="slitting/workbench" element={<Navigate to="/slitting/studio" replace />} />
 
             <Route path="factory-calendar" element={<FactoryCalendarPage />} />
             <Route path="demand-tracking" element={<DemandTrackingPage />} />

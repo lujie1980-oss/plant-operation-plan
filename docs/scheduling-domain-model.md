@@ -203,8 +203,12 @@ DetailSchedulePlanningContextBuilder.build()
 | `SchedulingSessionStore` | 会话存储 |
 | `OrderPlanningChainService` | 订单级满足链（需求→工单→工序→槽位） |
 | `OntologyGraph` | OTD MPS 本体内存图（`com.plantops.ontology`）；由 `OntologyLoader` 从 `planVersionId` 投影 |
+| `StandardResourcePeriod` | 资源×时段产能视图（`freeCapacity` derived）；M2 |
+| `ChangeSet` / `RolTransaction` | optimize 结果写回本体；`RolTransaction.apply` 委托 `RolEngine` |
 | `MasterPlanOntologySession` | 主计划本体 Session（图 + `RolEngine`）；`MasterPlanOntologySessionStore` 按工作区隔离，8h TTL |
-| `MasterPlanOntologySessionService` | create / simulate（ROL-lite 传播）/ confirm；REST 见 `MasterPlanSessionResource` |
+| `MasterPlanOntologySessionService` | create / simulate / optimize / confirm；REST 见 `MasterPlanSessionResource` |
+| `OntologyTimefoldMapper` | `OrderAllocation` 求解结果 → `ChangeSet`（M2 optimize 桥接） |
+| `MasterPlanOntologyConfirmService` | confirm：`MasterPlanService.solve()` → L1 `MasterPlanAllocationEntity` + 新 `PlanVersionEntity` |
 
 ---
 
@@ -357,7 +361,7 @@ ProductRoutingSteps.forProduct(productCode)
 | 细排推演/预览 | `DetailSchedulePlanningContextBuilder`, `DetailScheduleProblemMapper` |
 | 反馈滚动主计划 | `MasterPlanService.refreshSubsequentPlan`, `ScheduleFeedbackService` |
 | 订单满足链 | `OrderPlanningChainService`, `FulfillmentPeggingService` |
-| 主计划本体 Session（M1） | `MasterPlanOntologySessionService`, `OntologyLoader`, `RolEngine` |
+| 主计划本体 Session（M1/M2） | `MasterPlanOntologySessionService`, `OntologyTimefoldMapper`, `MasterPlanOntologyConfirmService`, `RolEngine` |
 | 齐套 | `KittingService` |
 | 得分解释 | `PlanningScoreExplainService` |
 

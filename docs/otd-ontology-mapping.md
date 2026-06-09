@@ -51,7 +51,7 @@
 | **ScheduledResource** | — | `ProductionResourceEntity` | `TimeSlot.resourceId` | `MasterDataDtos.ResourceDto` | 映射 |
 | **ProductionLine** | — | `ProductionLineEntity` | `ScheduleLine`（S05） | `MasterDataDtos.ProductionLineDto` | 映射 |
 | **ResourceSchedulingPeriod** | — | `ResourceCalendarEntity`（日历源） | `TimeSlot` | `MasterDataDtos.ResourceCalendarDto` / `LoadBucketDto` | 暂缓 |
-| **ResourceAssignment** | — | `MasterPlanAllocationEntity` | `OrderAllocation` | `MasterPlanAllocationDto` | 暂缓 |
+| **ResourceAssignment** | — | `MasterPlanAllocationEntity` | `OrderAllocation` | `MasterPlanAllocationDto` | M2 实现（confirm） |
 | **InventoryBalance** | — | `InventoryEntity` | `MaterialFeasibilityContext` | `MasterDataDtos.InventoryDto` | 映射 |
 | **PlanVersion** | — | `PlanVersionEntity` | — | —（`MasterPlanResultDto.versionId` 等字段） | 映射 |
 | **Workspace** | — | `WorkspaceEntity` | — | — | 映射 |
@@ -99,8 +99,8 @@
 | JPA | **—**（纯内存，不落库） |
 | 生成 | `OntologyLoader`：每个 PISP × 28 个 `Period`（日桶，自 `PlanVersionEntity` 规划起点） |
 | 期初 | `PISPP[P-0].onHand` ← `InventoryEntity` 汇总 |
-| 供应输入 | M1 PoC：`plannedSupplyTotal` 可 simulate 修改；长期来自 WO/SO 聚合（M2） |
-| 需求输入 | M1：可手工/测试注入；长期来自 Demand pegging（M2） |
+| 供应输入 | **M2 实现** — `OntologyLoader` 按 `SupplyOrder.dueDate` 聚合至 `plannedSupplyTotal` |
+| 需求输入 | **M2 实现** — 销售需求按 `needDate` 聚合至 `plannedDemandQuantityTotal` |
 | API | `POST .../sessions/{id}/simulate` → `PispPeriodSnapshotDto` |
 | M1 状态 | **实现** |
 
@@ -113,8 +113,8 @@
 | Solver 运行时 | **`OrderAllocation`** + `TimeSlot`（`MasterPlanSchedule`） |
 | 推演预览 | `MasterPlanPlanningPreviewAllocationDto` |
 | API 结果 | `MasterPlanAllocationDto` |
-| M1 | **暂缓** — Session 仅 create/simulate PISPP；confirm 占位 501 |
-| M2 | `OntologyTimefoldMapper` + confirm → 批量写 `MasterPlanAllocationEntity` |
+| M1 | Session 仅 create/simulate PISPP |
+| M2 | **实现** — `confirm` 委托 `MasterPlanService.solve()` 持久化 `MasterPlanAllocationEntity`；`OntologyTimefoldMapper` 用于 optimize |
 
 ---
 
@@ -133,13 +133,13 @@
 
 **传播验收：** 修改任一 Period 的 `plannedSupplyTotal` → 下游 Period 链式重算；单线程 1000 次 P95 &lt; 10ms（见 M1 计划 Task 3.2）。
 
-### 2.2 M2 暂缓
+### 2.2 M2 实现 / 暂缓
 
-| 目标 | OTD 对象 | 现有代码锚点 | 说明 |
+| 目标 | OTD 对象 | 现有代码锚点 | 状态 |
 |------|----------|--------------|------|
-| `free_capacity` | `ResourceSchedulingPeriod` | `TimeSlot.capacityMinutes` − 已分配负荷 | 需 SRP 本体 + 与 `OrderAllocation` 联动 |
-| `earliest_possible` | `Operation` | `WorkOrderTimingBoundsContext` / `OrderAllocation.eligibleTimeSlots` | 推演已部分存在，未纳入 OntologyGraph |
-| `latest_possible` | `Operation` | 交期回溯 + `WorkOrderScheduleContext` | M2 与 Timefold 候选域统一 |
+| `free_capacity` | `StandardResourcePeriod` | `SrpCapacityDerivations`；`TimeSlot.capacityMinutes` − 负荷 | **M2 实现** |
+| `earliest_possible` | `Operation` | `WorkOrderTimingBoundsContext` / `OrderAllocation.eligibleTimeSlots` | 暂缓 |
+| `latest_possible` | `Operation` | 交期回溯 + `WorkOrderScheduleContext` | 暂缓 |
 
 ---
 
@@ -184,7 +184,7 @@ M1 实现 **create → simulate**；方括号内为 M2 能力。
 | create | 装载本体图 + 初始 PISPP 链 | 无 |
 | simulate | 改 PISPP 属性 → ROL 传播 | 无 |
 | optimize | **未实现** | — |
-| confirm | **501 Not Implemented**（stub） | M2 → `MasterPlanAllocationEntity` |
+| confirm | **实现** — `MasterPlanService.solve()` → 新 `planVersionId` + `MasterPlanAllocationEntity` | 是 |
 
 ---
 
@@ -205,11 +205,11 @@ M1 实现 **create → simulate**；方括号内为 M2 能力。
 | 缺口 | 说明 | 计划 |
 |------|------|------|
 | Period vs TimeSlot | M1 PISPP 用固定 **28 日桶**；S04 `TimeSlot` 可日/周粒度且绑 `resourceId` | M2 对齐或文档化转换 |
-| PISPP 供应/需求来源 | M1 simulate 可改字段；未与 MRP `MaterialFeasibilityContext` 闭合 | M2 与 `OntologyLoader` 聚合 WO/Demand |
+| PISPP 供应/需求来源 | **M2 已实现** — `OntologyLoader` 聚合 WO/SO；未与 MRP `MaterialFeasibilityContext` 闭合 | 后续 |
 | DemandOrder 本体类 | 暂无 `ontology.demand.*` | M1 **映射**到 `SalesOrderLineEntity` 即可 |
 | Operation 本体类 | S04/S05 求解类已存在，无 OTD Operation POJO | M2 |
-| ResourceAssignment confirm | M1 stub | M2 Epic（Timefold 桥接） |
-| 前端 PISPP 曲线 | `PispPeriodSnapshotDto` 后端计划中有，UI 未建 | M2 前端 |
+| ResourceAssignment confirm | **M2 实现** — `POST .../confirm` → `MasterPlanService.solve()` | — |
+| 前端 PISPP 曲线 | **M2 实现** — `/master-plan/ontology` + `GET .../pisps/{id}/periods` | — |
 | OTD Python 运行时 | 仅语义对照 | 不引入依赖 |
 
 ---

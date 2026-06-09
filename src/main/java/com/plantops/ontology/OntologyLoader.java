@@ -10,16 +10,21 @@ import com.plantops.ontology.supply.WorkOrderSupplyOrderMapper;
 import com.plantops.persistence.entity.InventoryEntity;
 import com.plantops.persistence.entity.MaterialEntity;
 import com.plantops.persistence.entity.PlanVersionEntity;
+import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
+import com.plantops.rol.PispRolling;
 import com.plantops.scenario.WorkOrderService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.NotFoundException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @ApplicationScoped
@@ -60,19 +65,23 @@ public class OntologyLoader {
                     productCode));
         }
 
+        List<SupplyOrder> supplyOrders = new ArrayList<>();
         for (WorkOrderEntity wo : WorkOrderEntity.listInWorkspace()) {
             if (!isOpenWorkOrder(wo)) {
                 continue;
             }
             SupplyOrder supplyOrder = WorkOrderSupplyOrderMapper.toSupplyOrder(wo);
             if (supplyOrder != null) {
+                supplyOrders.add(supplyOrder);
                 builder.supplyOrder(supplyOrder);
             }
         }
 
+        Map<String, List<ProductInStockingPointPeriod>> pisppChainByPispId = new LinkedHashMap<>();
         for (String productCode : productCodes) {
             String pispId = OntologyIds.pispId(productCode);
             double openingOnHand = sumInventoryOnHand(productCode);
+            List<ProductInStockingPointPeriod> chain = new ArrayList<>(periods.size());
             for (int i = 0; i < periods.size(); i++) {
                 Period period = periods.get(i);
                 ProductInStockingPointPeriod pispp = new ProductInStockingPointPeriod(
@@ -83,8 +92,16 @@ public class OntologyLoader {
                     pispp.setOnHand(openingOnHand);
                     pispp.recalculatePlanningFields();
                 }
+                chain.add(pispp);
                 builder.pispPeriod(pispp);
             }
+            pisppChainByPispId.put(pispId, chain);
+        }
+
+        aggregateSupplyIntoPispp(supplyOrders, planningStart, pisppChainByPispId);
+        aggregateSalesDemandIntoPispp(planningStart, pisppChainByPispId);
+        for (List<ProductInStockingPointPeriod> chain : pisppChainByPispId.values()) {
+            PispRolling.rollChain(chain);
         }
 
         return builder.build();
@@ -132,5 +149,55 @@ public class OntologyLoader {
     private static boolean isOpenWorkOrder(WorkOrderEntity wo) {
         return wo.dispatchStatus == null
                 || !WorkOrderService.DISPATCH_DISPATCHED.equals(wo.dispatchStatus);
+    }
+
+    private static void aggregateSupplyIntoPispp(
+            List<SupplyOrder> supplyOrders,
+            LocalDate planningStart,
+            Map<String, List<ProductInStockingPointPeriod>> pisppChainByPispId) {
+        for (SupplyOrder supplyOrder : supplyOrders) {
+            List<ProductInStockingPointPeriod> chain = pisppChainByPispId.get(supplyOrder.getPispId());
+            if (chain == null) {
+                continue;
+            }
+            int periodIndex = periodIndexForDate(supplyOrder.getNeedDate(), planningStart);
+            ProductInStockingPointPeriod pispp = chain.get(periodIndex);
+            pispp.setPlannedSupplyTotal(pispp.getPlannedSupplyTotal() + supplyOrder.getQuantity());
+        }
+    }
+
+    private static void aggregateSalesDemandIntoPispp(
+            LocalDate planningStart,
+            Map<String, List<ProductInStockingPointPeriod>> pisppChainByPispId) {
+        for (SalesOrderLineEntity line : SalesOrderLineEntity.listInWorkspace()) {
+            if ("CANCELLED".equals(line.status)) {
+                continue;
+            }
+            if (line.productCode == null || line.productCode.isBlank()) {
+                continue;
+            }
+            List<ProductInStockingPointPeriod> chain = pisppChainByPispId.get(OntologyIds.pispId(line.productCode));
+            if (chain == null) {
+                continue;
+            }
+            int periodIndex = periodIndexForDate(line.dueDate, planningStart);
+            ProductInStockingPointPeriod pispp = chain.get(periodIndex);
+            double orderQty = line.orderQty != null ? line.orderQty.doubleValue() : 0.0;
+            pispp.setPlannedDemandQuantityTotal(pispp.getPlannedDemandQuantityTotal() + orderQty);
+        }
+    }
+
+    static int periodIndexForDate(LocalDate date, LocalDate planningStart) {
+        if (date == null) {
+            return 0;
+        }
+        long days = ChronoUnit.DAYS.between(planningStart, date);
+        if (days < 0) {
+            return 0;
+        }
+        if (days >= OntologyIds.DEFAULT_PERIOD_COUNT) {
+            return OntologyIds.DEFAULT_PERIOD_COUNT - 1;
+        }
+        return (int) days;
     }
 }

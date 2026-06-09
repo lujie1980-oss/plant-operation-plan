@@ -2,6 +2,7 @@ package com.plantops.rol;
 
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
+import com.plantops.ontology.period.StandardResourcePeriod;
 
 public final class RolEngine {
 
@@ -18,10 +19,23 @@ public final class RolEngine {
         return new RolEngine(graph, PispPeriodDerivations.register(graph));
     }
 
+    public static RolEngine withSrpCapacityRules(OntologyGraph graph) {
+        return new RolEngine(graph, SrpCapacityDerivations.register(graph));
+    }
+
     public void applyPropertyChange(ProductInStockingPointPeriod node, String property, double value) {
-        setProperty(node, property, value);
+        setPisppProperty(node, property, value);
+        propagateFrom(node.getId(), property);
+    }
+
+    public void applyPropertyChange(StandardResourcePeriod node, String property, double value) {
+        setSrpProperty(node, property, value);
+        propagateFrom(node.getId(), property);
+    }
+
+    private void propagateFrom(String nodeId, String property) {
         DirtySet dirty = new DirtySet();
-        markDependents(Derivation.propertyKey(node.getId(), property), dirty);
+        markDependents(Derivation.propertyKey(nodeId, property), dirty);
         propagator.propagate(dirty, registry, graph);
     }
 
@@ -31,13 +45,23 @@ public final class RolEngine {
         }
     }
 
-    private static void setProperty(ProductInStockingPointPeriod node, String property, double value) {
+    private static void setPisppProperty(ProductInStockingPointPeriod node, String property, double value) {
         switch (property) {
             case "onHand" -> node.setOnHand(value);
             case "plannedSupplyTotal" -> node.setPlannedSupplyTotal(value);
             case "plannedDemandQuantityTotal" -> node.setPlannedDemandQuantityTotal(value);
             case "inventoryTargetQuantity" -> node.setInventoryTargetQuantity(value);
             default -> throw new IllegalArgumentException("Unsupported PISPP property: " + property);
+        }
+    }
+
+    private static void setSrpProperty(StandardResourcePeriod node, String property, double value) {
+        switch (property) {
+            case "totalCapacity" -> node.setTotalCapacity(value);
+            case "calendarDowntime" -> node.setCalendarDowntime(value);
+            case "technicalDowntime" -> node.setTechnicalDowntime(value);
+            case "reservedCapacity" -> node.setReservedCapacity(value);
+            default -> throw new IllegalArgumentException("Unsupported SRP property: " + property);
         }
     }
 }

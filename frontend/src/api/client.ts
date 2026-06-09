@@ -99,6 +99,15 @@ import type {
   MasterPlanStrategySummary,
   MasterPlanStrategyUpdate,
 } from '../types/masterPlanStrategies';
+import type {
+  MasterPlanSessionConfirmResultDto,
+  MasterPlanSessionDto,
+  MasterPlanSessionOptimizeResultDto,
+  MasterPlanSessionSimulateResultDto,
+  PispPeriodSnapshotDto,
+  PispSummaryDto,
+  SimulateMasterPlanSessionRequest,
+} from '../types/ontology';
 import { getStoredWorkspaceId } from '../context/WorkspaceContext';
 import type { Workspace, WorkspaceCreatePayload } from '../types/workspace';
 
@@ -165,6 +174,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     return undefined as T;
   }
   return res.json() as Promise<T>;
+}
+
+type MasterPlanSessionDtoWire = Omit<MasterPlanSessionDto, 'basePlanVersionId'> & {
+  basePlanVersionId?: string;
+  planVersionId?: string;
+};
+
+function normalizeMasterPlanSessionDto(dto: MasterPlanSessionDtoWire): MasterPlanSessionDto {
+  return {
+    sessionId: dto.sessionId,
+    basePlanVersionId: dto.basePlanVersionId ?? dto.planVersionId ?? '',
+    pispCount: dto.pispCount,
+    periodCount: dto.periodCount,
+    expiresAt: dto.expiresAt,
+  };
 }
 
 export const api = {
@@ -395,6 +419,40 @@ export const api = {
       `/api/v1/planning/schedule-sessions/${encodeURIComponent(sessionId)}/simulate`,
       { method: 'POST', body: JSON.stringify(body ?? {}) },
     ),
+  masterPlanSessions: {
+    create: (planVersionId: string) =>
+      request<MasterPlanSessionDtoWire>('/api/v1/master-plan/sessions', {
+        method: 'POST',
+        body: JSON.stringify({ planVersionId }),
+      }).then(normalizeMasterPlanSessionDto),
+    get: (id: string) =>
+      request<MasterPlanSessionDtoWire>(
+        `/api/v1/master-plan/sessions/${encodeURIComponent(id)}`,
+      ).then(normalizeMasterPlanSessionDto),
+    listPisps: (id: string) =>
+      request<PispSummaryDto[]>(
+        `/api/v1/master-plan/sessions/${encodeURIComponent(id)}/pisps`,
+      ),
+    listPeriods: (id: string, pispId: string) =>
+      request<PispPeriodSnapshotDto[]>(
+        `/api/v1/master-plan/sessions/${encodeURIComponent(id)}/pisps/${encodeURIComponent(pispId)}/periods`,
+      ),
+    simulate: (id: string, body: SimulateMasterPlanSessionRequest) =>
+      request<MasterPlanSessionSimulateResultDto>(
+        `/api/v1/master-plan/sessions/${encodeURIComponent(id)}/simulate`,
+        { method: 'POST', body: JSON.stringify(body) },
+      ),
+    optimize: (id: string) =>
+      request<MasterPlanSessionOptimizeResultDto>(
+        `/api/v1/master-plan/sessions/${encodeURIComponent(id)}/optimize`,
+        { method: 'POST' },
+      ),
+    confirm: (id: string) =>
+      request<MasterPlanSessionConfirmResultDto>(
+        `/api/v1/master-plan/sessions/${encodeURIComponent(id)}/confirm`,
+        { method: 'POST' },
+      ),
+  },
   scheduleSessionCandidateLines: (sessionId: string, operationId: string) =>
     request<string[]>(
       `/api/v1/planning/schedule-sessions/${encodeURIComponent(sessionId)}/operations/${encodeURIComponent(operationId)}/candidate-lines`,

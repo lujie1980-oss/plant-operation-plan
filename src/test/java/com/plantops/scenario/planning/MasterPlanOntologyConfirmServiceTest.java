@@ -1,12 +1,8 @@
 package com.plantops.scenario.planning;
 
 import com.plantops.api.dto.planning.CreateMasterPlanSessionRequest;
+import com.plantops.api.dto.planning.MasterPlanSessionConfirmResultDto;
 import com.plantops.api.dto.planning.MasterPlanSessionDto;
-import com.plantops.api.dto.planning.MasterPlanSessionOptimizeResultDto;
-import com.plantops.api.dto.planning.MasterPlanSessionSimulateResultDto;
-import com.plantops.api.dto.planning.PispPeriodSnapshotDto;
-import com.plantops.api.dto.planning.PispSummaryDto;
-import com.plantops.api.dto.planning.SimulateMasterPlanSessionRequest;
 import com.plantops.ontology.OntologyIds;
 import com.plantops.persistence.entity.InventoryEntity;
 import com.plantops.persistence.entity.MasterPlanAllocationEntity;
@@ -22,21 +18,18 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
-class MasterPlanOntologySessionServiceTest {
+class MasterPlanOntologyConfirmServiceTest {
 
-    private static final String PLAN_VERSION_ID = "MPV-OTD-SESSION-TEST";
-    private static final String PRODUCT_CODE = "FG-OTD-SESSION-100";
-    private static final String WORK_ORDER_NO = "WO-OTD-SESSION-001";
-    private static final String ALLOCATION_ID = "ALLOC-OTD-SESSION-001";
+    private static final String PLAN_VERSION_ID = "MPV-OTD-CONFIRM-TEST";
+    private static final String PRODUCT_CODE = "FG-OTD-CONFIRM-100";
+    private static final String WORK_ORDER_NO = "WO-OTD-CONFIRM-001";
+    private static final String ALLOCATION_ID = "ALLOC-OTD-CONFIRM-001";
 
     @Inject
     MasterPlanOntologySessionService service;
@@ -62,11 +55,11 @@ class MasterPlanOntologySessionServiceTest {
         if (workOrder == null) {
             workOrder = new WorkOrderEntity();
             workOrder.workOrderNo = WORK_ORDER_NO;
-            workOrder.salesOrderNo = "SO-OTD-SESSION-001";
+            workOrder.salesOrderNo = "SO-OTD-CONFIRM-001";
             workOrder.salesOrderLineNo = 1;
             workOrder.productCode = PRODUCT_CODE;
             workOrder.quantity = new BigDecimal("120");
-            workOrder.resourceId = "RES-OTD-SESSION-01";
+            workOrder.resourceId = "RES-OTD-CONFIRM-01";
             workOrder.sequenceNo = 1;
             workOrder.sourceType = WorkOrderEntity.SOURCE_MRP;
             workOrder.stampWorkspace();
@@ -85,9 +78,9 @@ class MasterPlanOntologySessionServiceTest {
             allocation.allocationId = ALLOCATION_ID;
             allocation.workOrderNo = WORK_ORDER_NO;
             allocation.productCode = PRODUCT_CODE;
-            allocation.salesOrderNo = "SO-OTD-SESSION-001";
+            allocation.salesOrderNo = "SO-OTD-CONFIRM-001";
             allocation.salesOrderLineNo = 1;
-            allocation.resourceId = "RES-OTD-SESSION-01";
+            allocation.resourceId = "RES-OTD-CONFIRM-01";
             allocation.slotIndex = 0;
             allocation.slotDate = LocalDate.now();
             allocation.shiftId = "DAY";
@@ -114,69 +107,17 @@ class MasterPlanOntologySessionServiceTest {
     }
 
     @Test
-    void createAndSimulateSupplyChangeUpdatesPispChain() {
-        MasterPlanSessionDto created = service.create(new CreateMasterPlanSessionRequest(PLAN_VERSION_ID, null));
-        assertNotNull(created.sessionId());
-        assertTrue(created.sessionId().startsWith("MOS-"));
-        assertEquals(PLAN_VERSION_ID, created.basePlanVersionId());
-        assertTrue(created.pispCount() > 0);
-
-        String pispId = OntologyIds.pispId(PRODUCT_CODE);
-        String p0Id = OntologyIds.pisppId(pispId, 0);
-        String p1Id = OntologyIds.pisppId(pispId, 1);
-
-        MasterPlanSessionSimulateResultDto result = service.simulate(
-                created.sessionId(),
-                new SimulateMasterPlanSessionRequest(p0Id, "plannedSupplyTotal", 200.0));
-
-        assertTrue(result.recalculatedPeriodIds().size() >= 2);
-
-        Map<String, PispPeriodSnapshotDto> snapshots = new HashMap<>();
-        for (PispPeriodSnapshotDto snapshot : result.snapshots()) {
-            snapshots.put(snapshot.id(), snapshot);
-        }
-
-        PispPeriodSnapshotDto p0 = snapshots.get(p0Id);
-        PispPeriodSnapshotDto p1 = snapshots.get(p1Id);
-        assertNotNull(p0);
-        assertNotNull(p1);
-        assertEquals(200.0, p0.plannedSupplyTotal(), 1e-6);
-        assertEquals(p0.plannedInventoryLevel(), p1.onHand(), 1e-6);
-    }
-
-    @Test
-    void optimizeProjectsAllocationsToAffectedSnapshots() throws Exception {
+    void confirmPersistsAllocationsAndReturnsPlanVersionId() throws Exception {
         MasterPlanSessionDto created = service.create(new CreateMasterPlanSessionRequest(PLAN_VERSION_ID, null));
 
-        MasterPlanSessionOptimizeResultDto result = service.optimize(created.sessionId());
+        MasterPlanSessionConfirmResultDto result = service.confirm(created.sessionId());
 
         assertNotNull(result);
         assertEquals(created.sessionId(), result.sessionId());
-        assertTrue(result.allocationCount() >= 0);
-        if (result.allocationCount() > 0) {
-            assertNotNull(result.affectedSnapshots());
-            assertTrue(!result.affectedSnapshots().isEmpty());
-            String pispId = OntologyIds.pispId(PRODUCT_CODE);
-            assertTrue(result.affectedSnapshots().stream()
-                    .anyMatch(snapshot -> pispId.equals(snapshot.pispId())
-                            && snapshot.plannedSupplyTotal() > 0));
-        }
-    }
-
-    @Test
-    void listPispsAndPeriodsReturnsOrderedSnapshots() {
-        MasterPlanSessionDto created = service.create(new CreateMasterPlanSessionRequest(PLAN_VERSION_ID, null));
-        String pispId = OntologyIds.pispId(PRODUCT_CODE);
-
-        List<PispSummaryDto> pisps = service.listPisps(created.sessionId());
-        assertTrue(pisps.stream().anyMatch(p -> pispId.equals(p.pispId()) && PRODUCT_CODE.equals(p.productCode())));
-
-        List<PispPeriodSnapshotDto> periods = service.listPispPeriods(created.sessionId(), pispId);
-        assertEquals(28, periods.size());
-        for (int idx = 0; idx < periods.size(); idx++) {
-            PispPeriodSnapshotDto snapshot = periods.get(idx);
-            assertEquals(OntologyIds.pisppId(pispId, idx), snapshot.id());
-            assertEquals(pispId, snapshot.pispId());
-        }
+        assertFalse(result.planVersionId().isBlank());
+        assertEquals(
+                (int) MasterPlanAllocationEntity.count("planVersionId = ?1", result.planVersionId()),
+                result.allocationCount());
+        assertFalse(result.allocationCount() < 0);
     }
 }

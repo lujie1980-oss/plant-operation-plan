@@ -49,6 +49,7 @@ const MASTER_PLAN_GROUP: NavGroup = {
     { to: '/master-plan/parameters', label: '计划参数' },
     { to: '/master-plan/objectives', label: '优化目标' },
     { to: '/master-plan/plan-run', label: '计划运行' },
+    { to: '/master-plan/ontology', label: '本体推演' },
     { to: '/master-plan/scenario-comparison', label: '场景对比' },
   ],
   subGroups: [
@@ -84,9 +85,10 @@ const SLITTING_GROUP: NavGroup = {
   id: 'slitting',
   label: '分切排样',
   items: [
-    { to: '/slitting/master-data', label: '主数据' },
-    { to: '/slitting/plans', label: '分切方案' },
-    { to: '/slitting/workbench', label: '画板工作台' },
+    { to: '/slitting/master-data', label: '基础数据' },
+    { to: '/slitting/parameters', label: '优化参数' },
+    { to: '/slitting/runs', label: '优化运行' },
+    { to: '/slitting/studio', label: '母卷分切' },
   ],
 };
 

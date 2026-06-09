@@ -230,16 +230,19 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 
 **前端**：**生产排程**页 Session 推演面板 + 甘特/列表「Session 推演」视图；**推演诊断**页保留预览入口。
 
-### 5.7 OTD 本体 M1
+### 5.7 OTD 本体 M1 + M2
 
-M1 在主计划侧引入 **OTD 本体图 + ROL-lite 传播** 的内存 Session，与 Timefold 主计划求解并行存在；本体装载自已发布 `planVersionId`，不替代 `MasterPlanPlanningContext` / `OrderAllocation` 求解路径。
+M1 在主计划侧引入 **OTD 本体图 + ROL-lite 传播** 的内存 Session；M2 将 SupplyOrder/销售需求聚合进 PISPP、打通 Timefold optimize 与 confirm 持久化。本体装载自已发布 `planVersionId`，不替代 `MasterPlanPlanningContext` / `OrderAllocation` 求解路径。
 
 | 类 | 职责 |
 |----|------|
 | `OntologyGraph` | MPS 最小对象集内存图（Product、Period、SupplyOrder、PISP 等） |
 | `MasterPlanOntologySession` | 工作区隔离的 Session 快照（图 + `RolEngine`，8h TTL） |
-| `MasterPlanOntologySessionService` | create / get / simulate / confirm |
-| `OntologyLoader` | 从 `planVersionId` 投影本体图 |
+| `MasterPlanOntologySessionService` | create / get / simulate / optimize / confirm |
+| `OntologyLoader` | 从 `planVersionId` 投影本体图；M2 按 dueDate/needDate 聚合供需进 PISPP |
+| `OntologyTimefoldMapper` | 求解 `OrderAllocation` ↔ 本体 `ChangeSet` |
+| `RolTransaction` | 应用 ChangeSet 并触发 PISPP/SRP 传播 |
+| `MasterPlanOntologyConfirmService` | confirm → `MasterPlanService.solve()` → `MasterPlanAllocationEntity` |
 
 **REST**（`MasterPlanSessionResource`）
 
@@ -247,8 +250,13 @@ M1 在主计划侧引入 **OTD 本体图 + ROL-lite 传播** 的内存 Session�
 |------|------|------|
 | POST | `/api/v1/master-plan/sessions` | 从 `planVersionId` 创建本体 Session |
 | GET | `/api/v1/master-plan/sessions/{sessionId}` | 查看 Session 与图摘要 |
+| GET | `/api/v1/master-plan/sessions/{sessionId}/pisps` | PISP 列表 |
+| GET | `/api/v1/master-plan/sessions/{sessionId}/pisps/{pispId}/periods` | PISPP 时段快照（库存曲线） |
 | POST | `/api/v1/master-plan/sessions/{sessionId}/simulate` | ROL-lite 字段变更 + 传播 |
-| POST | `/api/v1/master-plan/sessions/{sessionId}/confirm` | 确认（M1 占位，204） |
+| POST | `/api/v1/master-plan/sessions/{sessionId}/optimize` | Timefold 求解 → ChangeSet → 本体传播 |
+| POST | `/api/v1/master-plan/sessions/{sessionId}/confirm` | 持久化至 `MasterPlanAllocationEntity`，返回 `planVersionId` |
+
+**前端**：`/master-plan/ontology`（`MasterPlanOntologyPage`）— PISPP 曲线、simulate、optimize、confirm。
 
 映射与对象集详见 [otd-ontology-mapping.md](./otd-ontology-mapping.md)。
 
@@ -572,3 +580,4 @@ POST /api/v1/planning/order-chain/preview
 | 2026-05-30 | §8.3.10 选优层得分分解：SolutionManager explain API + 前端面板 |
 | 2026-06-02 | §5.6 Session + 增量推演 + 生产任务 RELEASED 发布 |
 | 2026-06-07 | §8.6 OTD 本体 M1：OntologyGraph Session API + 映射文档链接 |
+| 2026-06-09 | §5.7 OTD 本体 M2：供需聚合、optimize/confirm、PISPP GET、前端本体页 |
