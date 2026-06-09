@@ -47,7 +47,7 @@ public class SimulationProfileResolver {
         return new SimulationRuleContext(
                 schedule,
                 facts,
-                null,
+                facts != null ? facts.detailScheduleEnabledRuleTypes() : null,
                 Map.of(),
                 mode,
                 seedOperationIds != null ? seedOperationIds : Set.of(),
@@ -77,7 +77,8 @@ public class SimulationProfileResolver {
                     null,
                     null,
                     null,
-                    FeedbackFreezeIndex.fromWorkspace(anchor, feedbackCutoff));
+                    FeedbackFreezeIndex.fromWorkspace(anchor, feedbackCutoff),
+                    null);
         }
         return new DetailScheduleProblemFacts(
                 facts.contractSettings(),
@@ -85,7 +86,8 @@ public class SimulationProfileResolver {
                 facts.changeoverRules(),
                 facts.transferRules(),
                 facts.workingCalendar(),
-                FeedbackFreezeIndex.fromWorkspace(anchor, feedbackCutoff));
+                FeedbackFreezeIndex.fromWorkspace(anchor, feedbackCutoff),
+                facts.detailScheduleEnabledRuleTypes());
     }
 
     private SimulationProfileSnapshot resolveEffectiveSnapshot(

@@ -92,10 +92,14 @@ public class SimulationRuleRegistry {
         if (ruleTypeId == null || ruleTypeId.isBlank()) {
             return true;
         }
-        if (ctx.enabledRuleTypes() != null && !ctx.enabledRuleTypes().contains(ruleTypeId)) {
-            return false;
-        }
-        if (!ruleScope.isDetailScheduleEnabled(ruleTypeId)) {
+        // 预加载的启用规则项快照（请求线程注入）视为权威：求解线程据此判断，避免在
+        // 无 CDI 请求上下文/事务的 SolverManager 工作线程上访问 JPA。未预加载时回退实时查询。
+        Set<String> enabled = ctx.enabledRuleTypes();
+        if (enabled != null) {
+            if (!enabled.contains(ruleTypeId)) {
+                return false;
+            }
+        } else if (!ruleScope.isDetailScheduleEnabled(ruleTypeId)) {
             return false;
         }
         return ctx.profileSettings().isRuleEnabled(ruleTypeId, true);

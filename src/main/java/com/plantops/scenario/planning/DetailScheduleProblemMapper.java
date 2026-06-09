@@ -38,7 +38,8 @@ public class DetailScheduleProblemMapper {
                 businessRuleScopeService.loadChangeoverIndex(),
                 businessRuleScopeService.loadDetailScheduleTransferTimeIndex(),
                 ResourceWorkingCalendarIndex.fromWorkspace(anchor, timeslotHorizonService.totalCalendarDays()),
-                FeedbackFreezeIndex.empty()));
+                FeedbackFreezeIndex.empty(),
+                businessRuleScopeService.detailScheduleEnabledRuleTypeIds()));
         DetailScheduleLineInitializer.seedInitialQueues(schedule);
         return schedule;
     }

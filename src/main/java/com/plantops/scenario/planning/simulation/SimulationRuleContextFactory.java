@@ -23,7 +23,7 @@ public final class SimulationRuleContextFactory {
         return new SimulationRuleContext(
                 schedule,
                 facts,
-                null,
+                facts != null ? facts.detailScheduleEnabledRuleTypes() : null,
                 Map.of(),
                 mode,
                 seedOperationIds != null ? seedOperationIds : Set.of(),
