@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { PispInventoryChart } from '../components/PispInventoryChart';
+import { PispPeriodInventoryTable } from '../components/PispPeriodInventoryTable';
 import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { usePlan } from '../context/PlanContext';
@@ -334,8 +335,14 @@ export function MasterPlanOntologyPage() {
             </button>
           </div>
 
-          <div className="ontology-chart-body">
-            <PispInventoryChart snapshots={periods} />
+          <div className="ontology-detail-body">
+            <div className="ontology-chart-body">
+              <PispInventoryChart snapshots={periods} />
+            </div>
+            <PispPeriodInventoryTable
+              productCode={selectedPisp?.productCode ?? null}
+              snapshots={periods}
+            />
           </div>
         </section>
       </div>

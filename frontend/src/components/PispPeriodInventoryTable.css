@@ -1,0 +1,61 @@
+.pisp-period-inventory-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-height: 0;
+}
+
+.pisp-period-inventory-table-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.pisp-period-inventory-table-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.pisp-period-inventory-table-product {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-family: ui-monospace, monospace;
+}
+
+.pisp-period-inventory-table-wrap {
+  max-height: 280px;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.pisp-period-inventory-table-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: 0 1px 0 #e2e8f0;
+}
+
+.pisp-period-inventory-table-grid .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pisp-period-inventory-table-grid .period-cell {
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.pisp-period-inventory-table-grid tbody tr.is-shortage {
+  background: #fef2f2;
+}
+
+.pisp-period-inventory-table-grid .shortage-qty {
+  color: #b91c1c;
+  font-weight: 600;
+}

@@ -35,7 +35,7 @@ async function fetchWorkspaces(): Promise<Workspace[]> {
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [workspaceId, setWorkspaceIdState] = useState(
-    () => localStorage.getItem(STORAGE_KEY) ?? 'default',
+    () => localStorage.getItem(STORAGE_KEY) ?? 'jinghua',
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +48,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setWorkspaces(list);
       const ids = new Set(list.map((w) => w.workspaceId));
       if (!ids.has(workspaceId)) {
-        const fallback = list.find((w) => w.isDefault)?.workspaceId ?? 'default';
+        const fallback =
+          list.find((w) => w.isDefault)?.workspaceId ?? list.find((w) => w.workspaceId === 'jinghua')?.workspaceId ?? 'jinghua';
         setWorkspaceIdState(fallback);
         localStorage.setItem(STORAGE_KEY, fallback);
       }
@@ -135,5 +136,6 @@ export function useWorkspace() {
 }
 
 export function getStoredWorkspaceId(): string {
-  return localStorage.getItem(STORAGE_KEY) ?? 'default';
+  // 与 WorkspaceProvider 的初始值保持一致，避免首次访问时 API 误用 default workspace
+  return localStorage.getItem(STORAGE_KEY) ?? 'jinghua';
 }
