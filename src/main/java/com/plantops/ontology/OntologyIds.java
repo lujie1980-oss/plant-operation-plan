@@ -19,4 +19,8 @@ public final class OntologyIds {
     public static String pisppId(String pispId, int sequenceNr) {
         return "PISPP-" + pispId + "-" + periodId(sequenceNr);
     }
+
+    public static String srpId(String resourceId, int sequenceNr) {
+        return "SRP-" + resourceId + "-" + periodId(sequenceNr);
+    }
 }

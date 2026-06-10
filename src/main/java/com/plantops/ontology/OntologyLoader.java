@@ -7,11 +7,14 @@ import com.plantops.ontology.period.Period;
 import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.PeriodSequenceSpec;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
+import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.ontology.supply.SupplyOrder;
 import com.plantops.ontology.supply.WorkOrderSupplyOrderMapper;
 import com.plantops.persistence.entity.InventoryEntity;
 import com.plantops.persistence.entity.MaterialEntity;
 import com.plantops.persistence.entity.PlanVersionEntity;
+import com.plantops.persistence.entity.ProductionLineEntity;
+import com.plantops.persistence.entity.ResourceCalendarEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.SystemParameterEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
@@ -106,7 +109,38 @@ public class OntologyLoader {
             PispRolling.rollChain(chain);
         }
 
+        loadStandardResourcePeriods(builder, periods, periodIndex);
+
         return builder.build();
+    }
+
+    private static void loadStandardResourcePeriods(
+            OntologyGraph.Builder builder, List<Period> periods, PeriodIndex periodIndex) {
+        Set<String> resourceIds = new LinkedHashSet<>();
+        for (ProductionLineEntity line : ProductionLineEntity.listInWorkspace()) {
+            if (line.resourceId != null && !line.resourceId.isBlank()) {
+                resourceIds.add(line.resourceId);
+            }
+        }
+        Map<String, StandardResourcePeriod> srpByKey = new LinkedHashMap<>();
+        for (String resourceId : resourceIds) {
+            for (Period period : periods) {
+                StandardResourcePeriod srp = new StandardResourcePeriod(
+                        OntologyIds.srpId(resourceId, period.getSequenceNr()), resourceId, period.getId());
+                srpByKey.put(srp.getId(), srp);
+                builder.standardResourcePeriod(srp);
+            }
+        }
+        for (ResourceCalendarEntity cal : ResourceCalendarEntity.listInWorkspace()) {
+            if (cal.resourceId == null || !resourceIds.contains(cal.resourceId) || cal.calendarDate == null) {
+                continue;
+            }
+            int seq = periodIndex.sequenceFor(cal.calendarDate);
+            StandardResourcePeriod srp = srpByKey.get(OntologyIds.srpId(cal.resourceId, seq));
+            srp.setTotalCapacity(srp.getTotalCapacity() + cal.availableCapacityMinutes + cal.unavailableCapacityMinutes);
+            srp.setCalendarDowntime(srp.getCalendarDowntime() + cal.unavailableCapacityMinutes);
+        }
+        srpByKey.values().forEach(StandardResourcePeriod::recalculateCapacityFields);
     }
 
     private static Set<String> collectProductCodes() {
