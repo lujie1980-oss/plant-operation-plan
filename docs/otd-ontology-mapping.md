@@ -196,6 +196,7 @@ M1 实现 **create → simulate**；方括号内为 M2 能力。
 | **D2** | WorkOrder ↔ SupplyOrder | **双对象 + 映射** | 本体 `SupplyOrder` + JPA `WorkOrderEntity`；`WorkOrderSupplyOrderMapper` |
 | **D3** | 首批 derived | M1 **仅 PISPP 滚动链** | SRP `free_capacity`、Operation 时间窗 → M2 |
 | **D4** | confirm 持久化 | 仍写 **`MasterPlanAllocationEntity`** | M1 Session 不写库；与现有 S04 结果表兼容 |
+| **D16** | 本体直驱求解评估（2026-06-10） | **维持复用（D5）**；本体作结果投影层，直驱缺口过大暂不实施 | [otd-ontology-direct-solve-evaluation.md](./otd-ontology-direct-solve-evaluation.md) |
 | **隔离** | Session | **`workspaceId` 硬隔离** | `MasterPlanOntologySessionStore.require(id, ws)`；跨 workspace 返回 404；同 Session 内多 Customer 共存 |
 
 ---
