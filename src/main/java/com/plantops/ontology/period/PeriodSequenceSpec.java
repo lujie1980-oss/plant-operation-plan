@@ -39,7 +39,12 @@ public final class PeriodSequenceSpec {
                 case "m" -> 30;
                 default -> throw new IllegalArgumentException(token);
             };
-            segments.add(new Segment(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)) * unitDays));
+            int count = Integer.parseInt(m.group(1));
+            int lengthDays = Integer.parseInt(m.group(2)) * unitDays;
+            if (count < 1 || lengthDays < 1) {
+                throw new IllegalArgumentException("Invalid period segment: " + token);
+            }
+            segments.add(new Segment(count, lengthDays));
         }
         if (segments.isEmpty()) {
             throw new IllegalArgumentException("Empty spec");
