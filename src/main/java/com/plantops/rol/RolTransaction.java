@@ -2,6 +2,7 @@ package com.plantops.rol;
 
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
+import com.plantops.ontology.period.StandardResourcePeriod;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
@@ -18,6 +19,14 @@ public class RolTransaction {
             ProductInStockingPointPeriod target = graph.pispPeriod(operation.targetId());
             if (target == null) {
                 throw new IllegalArgumentException("PISPP not found: " + operation.targetId());
+            }
+            rolEngine.applyPropertyChange(target, operation.property(), toDouble(operation.value()));
+            return;
+        }
+        if (ChangeOperation.TARGET_STANDARD_RESOURCE_PERIOD.equals(operation.targetType())) {
+            StandardResourcePeriod target = graph.srp(operation.targetId());
+            if (target == null) {
+                throw new IllegalArgumentException("SRP not found: " + operation.targetId());
             }
             rolEngine.applyPropertyChange(target, operation.property(), toDouble(operation.value()));
             return;

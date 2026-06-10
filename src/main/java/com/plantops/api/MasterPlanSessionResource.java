@@ -8,6 +8,7 @@ import com.plantops.api.dto.planning.MasterPlanSessionSimulateResultDto;
 import com.plantops.api.dto.planning.PispPeriodSnapshotDto;
 import com.plantops.api.dto.planning.PispSummaryDto;
 import com.plantops.api.dto.planning.SimulateMasterPlanSessionRequest;
+import com.plantops.api.dto.planning.SrpSnapshotDto;
 import com.plantops.scenario.planning.MasterPlanOntologySessionService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -52,6 +53,12 @@ public class MasterPlanSessionResource {
             @PathParam("sessionId") String sessionId,
             @PathParam("pispId") String pispId) {
         return sessionService.listPispPeriods(sessionId, pispId);
+    }
+
+    @GET
+    @Path("/{sessionId}/resources")
+    public List<SrpSnapshotDto> listResources(@PathParam("sessionId") String sessionId) {
+        return sessionService.listResources(sessionId);
     }
 
     @POST

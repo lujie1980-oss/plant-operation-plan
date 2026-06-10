@@ -22,6 +22,18 @@ export interface PispPeriodSnapshotDto {
   stockShortageQuantity: number;
 }
 
+export interface SrpSnapshotDto {
+  id: string;
+  resourceId: string;
+  periodId: string;
+  totalCapacity: number;
+  calendarDowntime: number;
+  reservedCapacity: number;
+  availableCapacity: number;
+  freeCapacity: number;
+  overloadCapacity: number;
+}
+
 export interface MasterPlanSessionSimulateResultDto {
   recalculatedPeriodIds: string[];
   snapshots: PispPeriodSnapshotDto[];

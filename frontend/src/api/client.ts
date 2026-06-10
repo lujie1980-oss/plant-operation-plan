@@ -107,6 +107,7 @@ import type {
   PispPeriodSnapshotDto,
   PispSummaryDto,
   SimulateMasterPlanSessionRequest,
+  SrpSnapshotDto,
 } from '../types/ontology';
 import { getStoredWorkspaceId } from '../context/WorkspaceContext';
 import type { Workspace, WorkspaceCreatePayload } from '../types/workspace';
@@ -436,6 +437,10 @@ export const api = {
     listPeriods: (id: string, pispId: string) =>
       request<PispPeriodSnapshotDto[]>(
         `/api/v1/master-plan/sessions/${encodeURIComponent(id)}/pisps/${encodeURIComponent(pispId)}/periods`,
+      ),
+    listResources: (id: string) =>
+      request<SrpSnapshotDto[]>(
+        `/api/v1/master-plan/sessions/${encodeURIComponent(id)}/resources`,
       ),
     simulate: (id: string, body: SimulateMasterPlanSessionRequest) =>
       request<MasterPlanSessionSimulateResultDto>(

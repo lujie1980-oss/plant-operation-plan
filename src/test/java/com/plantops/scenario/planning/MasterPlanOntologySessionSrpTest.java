@@ -5,6 +5,7 @@ import com.plantops.api.dto.planning.MasterPlanSessionDto;
 import com.plantops.ontology.OntologyIds;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.persistence.entity.InventoryEntity;
+import com.plantops.persistence.entity.MasterPlanAllocationEntity;
 import com.plantops.persistence.entity.PlanVersionEntity;
 import com.plantops.persistence.entity.ProductionLineEntity;
 import com.plantops.persistence.entity.ResourceCalendarEntity;
@@ -29,6 +30,7 @@ class MasterPlanOntologySessionSrpTest {
     private static final String PRODUCT_CODE = "FG-OTD-SRP-SESSION-100";
     private static final String WORK_ORDER_NO = "WO-OTD-SRP-SESSION-001";
     private static final String RESOURCE_ID = "RES-OTD-SRP-S1";
+    private static final String ALLOCATION_ID = "ALLOC-OTD-SRP-SESSION-001";
 
     @Inject
     MasterPlanOntologySessionService service;
@@ -48,6 +50,20 @@ class MasterPlanOntologySessionSrpTest {
         assertEquals(480, srp.getAvailableCapacity(), 1e-6);
         stored.rolEngine().applyPropertyChange(srp, "reservedCapacity", 120.0);
         assertEquals(360, srp.getFreeCapacity(), 1e-6); // 480 - 120, derived via merged registry
+    }
+
+    @Test
+    @TestTransaction
+    void optimizeWritesReservedCapacityToSrp() throws Exception {
+        ensureFixtureData();
+
+        MasterPlanSessionDto session = service.create(new CreateMasterPlanSessionRequest(PLAN_VERSION_ID, null));
+        service.optimize(session.sessionId());
+        MasterPlanOntologySession stored = store.require(session.sessionId(), WorkspaceResolver.currentWorkspaceId());
+        StandardResourcePeriod srp = stored.graph().srp(OntologyIds.srpId(RESOURCE_ID, 0));
+        assertNotNull(srp);
+        assertEquals(90, srp.getReservedCapacity(), 1e-6);
+        assertEquals(390, srp.getFreeCapacity(), 1e-6); // 480 available - 90 reserved
     }
 
     private void ensureFixtureData() {
@@ -74,6 +90,29 @@ class MasterPlanOntologySessionSrpTest {
             workOrder.sourceType = WorkOrderEntity.SOURCE_MRP;
             workOrder.stampWorkspace();
             workOrder.persist();
+        }
+
+        MasterPlanAllocationEntity allocation = MasterPlanAllocationEntity.find(
+                        "workspaceId = ?1 and planVersionId = ?2 and allocationId = ?3",
+                        WorkspaceResolver.currentWorkspaceId(),
+                        PLAN_VERSION_ID,
+                        ALLOCATION_ID)
+                .firstResult();
+        if (allocation == null) {
+            allocation = new MasterPlanAllocationEntity();
+            allocation.planVersionId = PLAN_VERSION_ID;
+            allocation.allocationId = ALLOCATION_ID;
+            allocation.workOrderNo = WORK_ORDER_NO;
+            allocation.productCode = PRODUCT_CODE;
+            allocation.salesOrderNo = "SO-OTD-SRP-SESSION-001";
+            allocation.salesOrderLineNo = 1;
+            allocation.resourceId = RESOURCE_ID;
+            allocation.slotIndex = 0;
+            allocation.slotDate = LocalDate.now();
+            allocation.shiftId = "DAY";
+            allocation.durationMinutes = 90;
+            allocation.stampWorkspace();
+            allocation.persist();
         }
 
         InventoryEntity inventory = InventoryEntity.find(

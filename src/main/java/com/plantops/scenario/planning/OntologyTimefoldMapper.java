@@ -52,6 +52,24 @@ public class OntologyTimefoldMapper {
                     PROPERTY_PLANNED_SUPPLY_TOTAL,
                     entry.getValue()));
         }
+
+        Map<String, Double> reservedBySrpId = new LinkedHashMap<>();
+        for (MasterPlanAllocationDto allocation : allocations) {
+            if (allocation == null || allocation.resourceId() == null || allocation.resourceId().isBlank()) {
+                continue;
+            }
+            int seq = periodIndex.sequenceFor(resolvePlannedDate(allocation));
+            String srpId = OntologyIds.srpId(allocation.resourceId(), seq);
+            if (graph.srp(srpId) == null) {
+                continue;
+            }
+            reservedBySrpId.merge(srpId, (double) allocation.durationMinutes(), Double::sum);
+        }
+        for (Map.Entry<String, Double> entry : reservedBySrpId.entrySet()) {
+            operations.add(new ChangeOperation(
+                    ChangeOperation.TARGET_STANDARD_RESOURCE_PERIOD,
+                    entry.getKey(), "reservedCapacity", entry.getValue()));
+        }
         return new ChangeSet(operations, "Project allocations into PISPP supply");
     }
 

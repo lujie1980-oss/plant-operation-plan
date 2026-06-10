@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { PispInventoryChart } from '../components/PispInventoryChart';
 import { PispPeriodInventoryTable } from '../components/PispPeriodInventoryTable';
+import { SrpCapacityTable } from '../components/SrpCapacityTable';
 import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { usePlan } from '../context/PlanContext';
@@ -12,6 +13,7 @@ import type {
   PispPeriodSnapshotDto,
   PispSummaryDto,
   SimulateMasterPlanSessionRequest,
+  SrpSnapshotDto,
 } from '../types/ontology';
 import './MasterPlanOntologyPage.css';
 
@@ -37,6 +39,7 @@ export function MasterPlanOntologyPage() {
   const [pisps, setPisps] = useState<PispSummaryDto[]>([]);
   const [selectedPispId, setSelectedPispId] = useState<string>('');
   const [periods, setPeriods] = useState<PispPeriodSnapshotDto[]>([]);
+  const [resources, setResources] = useState<SrpSnapshotDto[]>([]);
   const [simulatePeriodId, setSimulatePeriodId] = useState('');
   const [simulateProperty, setSimulateProperty] =
     useState<SimulateMasterPlanSessionRequest['property']>('plannedSupplyTotal');
@@ -80,6 +83,11 @@ export function MasterPlanOntologyPage() {
     }
   }
 
+  async function loadResources(sessionId: string) {
+    const rows = await api.masterPlanSessions.listResources(sessionId);
+    setResources(rows);
+  }
+
   async function loadPisps(sessionId: string) {
     setLoadingPisps(true);
     try {
@@ -110,12 +118,13 @@ export function MasterPlanOntologyPage() {
     try {
       const created = await api.masterPlanSessions.create(planVersionId.trim());
       setSession(created);
-      await loadPisps(created.sessionId);
+      await Promise.all([loadPisps(created.sessionId), loadResources(created.sessionId)]);
     } catch (e) {
       setSession(null);
       setPisps([]);
       setSelectedPispId('');
       setPeriods([]);
+      setResources([]);
       setSimulatePeriodId('');
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -179,6 +188,7 @@ export function MasterPlanOntologyPage() {
       } else {
         setPeriods((prev) => mergeSnapshots(prev, result.affectedSnapshots));
       }
+      await loadResources(session.sessionId);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -343,6 +353,7 @@ export function MasterPlanOntologyPage() {
               productCode={selectedPisp?.productCode ?? null}
               snapshots={periods}
             />
+            <SrpCapacityTable rows={resources} />
           </div>
         </section>
       </div>

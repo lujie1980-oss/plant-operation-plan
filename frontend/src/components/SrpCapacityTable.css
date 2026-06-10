@@ -1,0 +1,62 @@
+.srp-capacity-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-height: 0;
+}
+
+.srp-capacity-table-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.srp-capacity-table-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.srp-capacity-table-count {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-family: ui-monospace, monospace;
+}
+
+.srp-capacity-table-wrap {
+  max-height: 280px;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.srp-capacity-table-grid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: 0 1px 0 #e2e8f0;
+}
+
+.srp-capacity-table-grid .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.srp-capacity-table-grid .resource-cell,
+.srp-capacity-table-grid .period-cell {
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.srp-capacity-table-grid tbody tr.is-overload {
+  background: #fef2f2;
+}
+
+.srp-capacity-table-grid .overload-qty {
+  color: #b91c1c;
+  font-weight: 600;
+}

@@ -11,10 +11,12 @@ import com.plantops.persistence.entity.MasterPlanAllocationEntity;
 import com.plantops.api.dto.planning.PispPeriodSnapshotDto;
 import com.plantops.api.dto.planning.PispSummaryDto;
 import com.plantops.api.dto.planning.SimulateMasterPlanSessionRequest;
+import com.plantops.api.dto.planning.SrpSnapshotDto;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.OntologyLoader;
 import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
+import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.rol.ChangeOperation;
 import com.plantops.rol.ChangeSet;
 import com.plantops.rol.RolEngine;
@@ -111,6 +113,22 @@ public class MasterPlanOntologySessionService {
                 .sorted(Comparator.comparingInt(period ->
                         periodSeqById.getOrDefault(period.getPeriodId(), Integer.MAX_VALUE)))
                 .map(MasterPlanOntologySessionService::toSnapshot)
+                .toList();
+    }
+
+    public List<SrpSnapshotDto> listResources(String sessionId) {
+        MasterPlanOntologySession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
+        OntologyGraph graph = session.graph();
+        Map<String, Integer> periodSeqById = new HashMap<>();
+        for (var period : graph.periodsOrdered()) {
+            periodSeqById.put(period.getId(), period.getSequenceNr());
+        }
+        return graph.srpById().values().stream()
+                .sorted(Comparator.comparing(StandardResourcePeriod::getStandardResourceId)
+                        .thenComparingInt(srp -> periodSeqById.getOrDefault(srp.getPeriodId(), Integer.MAX_VALUE)))
+                .map(srp -> new SrpSnapshotDto(srp.getId(), srp.getStandardResourceId(), srp.getPeriodId(),
+                        srp.getTotalCapacity(), srp.getCalendarDowntime(), srp.getReservedCapacity(),
+                        srp.getAvailableCapacity(), srp.getFreeCapacity(), srp.getOverloadCapacity()))
                 .toList();
     }
 
