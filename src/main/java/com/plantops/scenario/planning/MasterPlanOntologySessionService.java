@@ -62,7 +62,7 @@ public class MasterPlanOntologySessionService {
         }
 
         OntologyGraph graph = ontologyLoader.loadForPlanVersion(request.planVersionId());
-        RolEngine rolEngine = RolEngine.withDefaultPispRules(graph);
+        RolEngine rolEngine = RolEngine.withMasterPlanRules(graph);
         LocalDateTime createdAt = LocalDateTime.now();
         String sessionId = "MOS-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
 

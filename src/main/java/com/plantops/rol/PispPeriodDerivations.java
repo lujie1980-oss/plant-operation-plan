@@ -13,6 +13,10 @@ public final class PispPeriodDerivations {
     }
 
     public static DerivationRegistry register(com.plantops.ontology.OntologyGraph graph) {
+        return new DerivationRegistry(derivations(graph));
+    }
+
+    public static List<Derivation> derivations(com.plantops.ontology.OntologyGraph graph) {
         List<Derivation> derivations = new ArrayList<>();
         Map<String, Map<String, com.plantops.ontology.period.ProductInStockingPointPeriod>> byPispAndPeriod =
                 indexByPispAndPeriod(graph);
@@ -38,7 +42,7 @@ public final class PispPeriodDerivations {
                 }
             }
         }
-        return new DerivationRegistry(derivations);
+        return derivations;
     }
 
     private static void registerSamePeriodDerivations(

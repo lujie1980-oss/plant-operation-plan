@@ -3,6 +3,8 @@ package com.plantops.rol;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class RolEngine {
 
@@ -21,6 +23,14 @@ public final class RolEngine {
 
     public static RolEngine withSrpCapacityRules(OntologyGraph graph) {
         return new RolEngine(graph, SrpCapacityDerivations.register(graph));
+    }
+
+    public static RolEngine withMasterPlanRules(OntologyGraph graph) {
+        List<Derivation> all = new ArrayList<>();
+        all.addAll(PispPeriodDerivations.derivations(graph));
+        all.addAll(SrpCapacityDerivations.derivations(graph));
+        // C.2 将追加 OperationTimeWindowDerivations
+        return new RolEngine(graph, new DerivationRegistry(all));
     }
 
     public void applyPropertyChange(ProductInStockingPointPeriod node, String property, double value) {

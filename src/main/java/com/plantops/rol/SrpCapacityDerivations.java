@@ -10,11 +10,15 @@ public final class SrpCapacityDerivations {
     }
 
     public static DerivationRegistry register(com.plantops.ontology.OntologyGraph graph) {
+        return new DerivationRegistry(derivations(graph));
+    }
+
+    public static List<Derivation> derivations(com.plantops.ontology.OntologyGraph graph) {
         List<Derivation> derivations = new ArrayList<>();
         for (com.plantops.ontology.period.StandardResourcePeriod period : graph.srpById().values()) {
             registerCapacityDerivations(derivations, period);
         }
-        return new DerivationRegistry(derivations);
+        return derivations;
     }
 
     private static void registerCapacityDerivations(
