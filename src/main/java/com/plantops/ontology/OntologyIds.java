@@ -23,4 +23,8 @@ public final class OntologyIds {
     public static String srpId(String resourceId, int sequenceNr) {
         return "SRP-" + resourceId + "-" + periodId(sequenceNr);
     }
+
+    public static String operationId(String supplyOrderId, int sequenceNr) {
+        return "OP-" + supplyOrderId + "-" + sequenceNr;
+    }
 }

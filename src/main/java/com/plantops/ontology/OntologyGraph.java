@@ -6,9 +6,11 @@ import com.plantops.ontology.master.StockingPoint;
 import com.plantops.ontology.period.Period;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
+import com.plantops.ontology.supply.Operation;
 import com.plantops.ontology.supply.SupplyOrder;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,7 @@ public final class OntologyGraph {
     private final StockingPoint defaultStockingPoint;
     private final Map<String, ProductInStockingPoint> pispsById;
     private final Map<String, SupplyOrder> supplyOrdersById;
+    private final Map<String, Operation> operationsById;
     private final Map<String, ProductInStockingPointPeriod> pispPeriodsById;
     private final Map<String, StandardResourcePeriod> srpById;
     private final List<Period> periodsOrdered;
@@ -28,6 +31,7 @@ public final class OntologyGraph {
             StockingPoint defaultStockingPoint,
             Map<String, ProductInStockingPoint> pispsById,
             Map<String, SupplyOrder> supplyOrdersById,
+            Map<String, Operation> operationsById,
             Map<String, ProductInStockingPointPeriod> pispPeriodsById,
             Map<String, StandardResourcePeriod> srpById,
             List<Period> periodsOrdered) {
@@ -35,6 +39,7 @@ public final class OntologyGraph {
         this.defaultStockingPoint = defaultStockingPoint;
         this.pispsById = Collections.unmodifiableMap(pispsById);
         this.supplyOrdersById = Collections.unmodifiableMap(supplyOrdersById);
+        this.operationsById = Collections.unmodifiableMap(operationsById);
         this.pispPeriodsById = Collections.unmodifiableMap(pispPeriodsById);
         this.srpById = Collections.unmodifiableMap(srpById);
         this.periodsOrdered = List.copyOf(periodsOrdered);
@@ -68,6 +73,21 @@ public final class OntologyGraph {
         return supplyOrdersById;
     }
 
+    public Operation operation(String id) {
+        return operationsById.get(id);
+    }
+
+    public Map<String, Operation> operationsById() {
+        return operationsById;
+    }
+
+    public List<Operation> operationsForSupplyOrder(String supplyOrderId) {
+        return operationsById.values().stream()
+                .filter(op -> supplyOrderId.equals(op.getSupplyOrderId()))
+                .sorted(Comparator.comparingInt(Operation::getSequenceNr))
+                .toList();
+    }
+
     public ProductInStockingPointPeriod pispPeriod(String id) {
         return pispPeriodsById.get(id);
     }
@@ -94,6 +114,7 @@ public final class OntologyGraph {
         private StockingPoint defaultStockingPoint = StockingPoint.defaultFg();
         private final Map<String, ProductInStockingPoint> pispsById = new LinkedHashMap<>();
         private final Map<String, SupplyOrder> supplyOrdersById = new LinkedHashMap<>();
+        private final Map<String, Operation> operationsById = new LinkedHashMap<>();
         private final Map<String, ProductInStockingPointPeriod> pispPeriodsById = new LinkedHashMap<>();
         private final Map<String, StandardResourcePeriod> srpById = new LinkedHashMap<>();
         private List<Period> periodsOrdered = List.of();
@@ -118,6 +139,11 @@ public final class OntologyGraph {
             return this;
         }
 
+        public Builder operation(Operation operation) {
+            operationsById.put(operation.getId(), operation);
+            return this;
+        }
+
         public Builder pispPeriod(ProductInStockingPointPeriod pispPeriod) {
             pispPeriodsById.put(pispPeriod.getId(), pispPeriod);
             return this;
@@ -139,6 +165,7 @@ public final class OntologyGraph {
                     defaultStockingPoint,
                     pispsById,
                     supplyOrdersById,
+                    operationsById,
                     pispPeriodsById,
                     srpById,
                     periodsOrdered);

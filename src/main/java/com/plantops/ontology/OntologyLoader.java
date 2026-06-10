@@ -8,12 +8,14 @@ import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.PeriodSequenceSpec;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
+import com.plantops.ontology.supply.Operation;
 import com.plantops.ontology.supply.SupplyOrder;
 import com.plantops.ontology.supply.WorkOrderSupplyOrderMapper;
 import com.plantops.persistence.entity.InventoryEntity;
 import com.plantops.persistence.entity.MaterialEntity;
 import com.plantops.persistence.entity.PlanVersionEntity;
 import com.plantops.persistence.entity.ProductionLineEntity;
+import com.plantops.persistence.entity.ProductResourceEntity;
 import com.plantops.persistence.entity.ResourceCalendarEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.SystemParameterEntity;
@@ -25,6 +27,7 @@ import jakarta.ws.rs.NotFoundException;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -82,6 +85,8 @@ public class OntologyLoader {
             }
         }
 
+        loadOperations(builder, supplyOrders);
+
         Map<String, List<ProductInStockingPointPeriod>> pisppChainByPispId = new LinkedHashMap<>();
         for (String productCode : productCodes) {
             String pispId = OntologyIds.pispId(productCode);
@@ -112,6 +117,48 @@ public class OntologyLoader {
         loadStandardResourcePeriods(builder, periods, periodIndex);
 
         return builder.build();
+    }
+
+    private static void loadOperations(OntologyGraph.Builder builder, List<SupplyOrder> supplyOrders) {
+        Map<String, List<ProductResourceEntity>> routingByProduct = new LinkedHashMap<>();
+        for (ProductResourceEntity pr : ProductResourceEntity.listInWorkspace()) {
+            if (pr.productCode == null || pr.operationName == null || pr.operationName.isBlank()) {
+                continue;
+            }
+            routingByProduct.computeIfAbsent(pr.productCode, k -> new ArrayList<>()).add(pr);
+        }
+        for (SupplyOrder supplyOrder : supplyOrders) {
+            List<ProductResourceEntity> steps = distinctOrderedSteps(routingByProduct.get(supplyOrder.getProductCode()));
+            for (int i = 0; i < steps.size(); i++) {
+                ProductResourceEntity step = steps.get(i);
+                double processSeconds = step.processTimeSeconds != null ? step.processTimeSeconds.doubleValue() : 0.0;
+                double prodMinutes = step.setupTimeMinutes + processSeconds * supplyOrder.getQuantity() / 60.0;
+                builder.operation(new Operation(
+                        OntologyIds.operationId(supplyOrder.getId(), i),
+                        supplyOrder.getId(), i, step.operationName, prodMinutes));
+            }
+        }
+    }
+
+    /** 同名工序去重（取 sequenceNo 最小行），再按 sequenceNo 升序；缺 sequenceNo 排末位。 */
+    private static List<ProductResourceEntity> distinctOrderedSteps(List<ProductResourceEntity> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return List.of();
+        }
+        Map<String, ProductResourceEntity> byName = new LinkedHashMap<>();
+        for (ProductResourceEntity row : rows) {
+            ProductResourceEntity existing = byName.get(row.operationName);
+            if (existing == null || sequenceOf(row) < sequenceOf(existing)) {
+                byName.put(row.operationName, row);
+            }
+        }
+        return byName.values().stream()
+                .sorted(Comparator.comparingInt(OntologyLoader::sequenceOf))
+                .toList();
+    }
+
+    private static int sequenceOf(ProductResourceEntity row) {
+        return row.sequenceNo != null ? row.sequenceNo : Integer.MAX_VALUE;
     }
 
     private static void loadStandardResourcePeriods(
