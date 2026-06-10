@@ -54,7 +54,7 @@ class OperationTimeWindowDerivationTest {
         OntologyGraph g = graphWithOperations(LocalDate.of(2026, 6, 2));
         OperationTimeWindowDerivations.recalculate(g, "SO-1", LocalDate.of(2026, 6, 1));
         List<Operation> ops = g.operationsForSupplyOrder("SO-1");
-        assertTrue(ops.stream().anyMatch(Operation::isInfeasible));
+        assertTrue(ops.stream().allMatch(Operation::isInfeasible));
     }
 
     @Test
@@ -64,5 +64,7 @@ class OperationTimeWindowDerivationTest {
         engine.applySupplyOrderNeedDateChange(g.supplyOrder("SO-1"), LocalDate.of(2026, 6, 25));
         assertEquals(LocalDate.of(2026, 6, 25),
                 g.operationsForSupplyOrder("SO-1").get(2).getLatestPossibleEnd());
+        assertEquals(LocalDate.of(2026, 6, 22), // 25 − 1d (op2 prod) − 2d (op1 prod): whole chain re-ran
+                g.operationsForSupplyOrder("SO-1").get(0).getLatestPossibleEnd());
     }
 }
