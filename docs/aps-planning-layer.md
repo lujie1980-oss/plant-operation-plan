@@ -230,18 +230,21 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 
 **前端**：**生产排程**页 Session 推演面板 + 甘特/列表「Session 推演」视图；**推演诊断**页保留预览入口。
 
-### 5.7 OTD 本体 M1 + M2
+### 5.7 OTD 本体 M1 + M2 + M3
 
-M1 在主计划侧引入 **OTD 本体图 + ROL-lite 传播** 的内存 Session；M2 将 SupplyOrder/销售需求聚合进 PISPP、打通 Timefold optimize 与 confirm 持久化。本体装载自已发布 `planVersionId`，不替代 `MasterPlanPlanningContext` / `OrderAllocation` 求解路径。
+M1 在主计划侧引入 **OTD 本体图 + ROL-lite 传播** 的内存 Session；M2 将 SupplyOrder/销售需求聚合进 PISPP、打通 Timefold optimize 与 confirm 持久化；**M3** 升级可配置混合周期桶、SRP 进 Session 与 optimize 回写、Operation 时间窗 derived，并统一 S05/M2 的 Sandbox Store 基础设施。本体装载自已发布 `planVersionId`，不替代 `MasterPlanPlanningContext` / `OrderAllocation` 求解路径（D5/D16 维持复用）。
 
 | 类 | 职责 |
 |----|------|
-| `OntologyGraph` | MPS 最小对象集内存图（Product、Period、SupplyOrder、PISP 等） |
-| `MasterPlanOntologySession` | 工作区隔离的 Session 快照（图 + `RolEngine`，8h TTL） |
-| `MasterPlanOntologySessionService` | create / get / simulate / optimize / confirm |
-| `OntologyLoader` | 从 `planVersionId` 投影本体图；M2 按 dueDate/needDate 聚合供需进 PISPP |
-| `OntologyTimefoldMapper` | 求解 `OrderAllocation` ↔ 本体 `ChangeSet` |
-| `RolTransaction` | 应用 ChangeSet 并触发 PISPP/SRP 传播 |
+| `OntologyGraph` | MPS 最小对象集内存图（Product、Period、SupplyOrder、PISP、**M3** SRP、Operation 等） |
+| `PeriodSequenceSpec` / `PeriodIndex` | **M3** — 系统参数 `ontology_period_sequence`（如 `"14x1d,4x1w,2x1m"`）展开混合桶；缺省 `28×1d`；统一 date→period |
+| `MasterPlanOntologySession` | 工作区隔离的 Session 快照（图 + `RolEngine`，8h TTL；**M3** `implements OntologySandbox`） |
+| `OntologySandbox` / `OntologySandboxStore` | **M3** — S05 `SchedulingSessionStore` 与本体 Store 共用泛型基类（TTL / require / workspace 隔离） |
+| `MasterPlanOntologySessionService` | create / get / simulate / optimize / confirm；**M3** `listResources` / `listOperations` |
+| `OntologyLoader` | 从 `planVersionId` 投影本体图；M2 按 dueDate/needDate 聚合供需进 PISPP；**M3** 装载 SRP（`ResourceCalendarEntity`）与 Operation 链 |
+| `OntologyTimefoldMapper` | 求解 `OrderAllocation` ↔ 本体 `ChangeSet`；**M3** 使用 `PeriodIndex`；optimize 写 PISPP supply + SRP `reservedCapacity` |
+| `RolEngine.withMasterPlanRules` | **M3** — PISPP + SRP + Operation 三组 derivation 合一 registry |
+| `RolTransaction` | 应用 ChangeSet 并触发 PISPP/SRP/Operation 传播 |
 | `MasterPlanOntologyConfirmService` | confirm → `MasterPlanService.solve()` → `MasterPlanAllocationEntity` |
 
 **REST**（`MasterPlanSessionResource`）
@@ -252,13 +255,17 @@ M1 在主计划侧引入 **OTD 本体图 + ROL-lite 传播** 的内存 Session�
 | GET | `/api/v1/master-plan/sessions/{sessionId}` | 查看 Session 与图摘要 |
 | GET | `/api/v1/master-plan/sessions/{sessionId}/pisps` | PISP 列表 |
 | GET | `/api/v1/master-plan/sessions/{sessionId}/pisps/{pispId}/periods` | PISPP 时段快照（库存曲线） |
+| GET | `/api/v1/master-plan/sessions/{sessionId}/resources` | **M3** — SRP 产能快照（`SrpSnapshotDto`） |
+| GET | `/api/v1/master-plan/sessions/{sessionId}/supply-orders/{supplyOrderId}/operations` | **M3** — Operation 链与时间窗（`OperationSnapshotDto`） |
 | POST | `/api/v1/master-plan/sessions/{sessionId}/simulate` | ROL-lite 字段变更 + 传播 |
-| POST | `/api/v1/master-plan/sessions/{sessionId}/optimize` | Timefold 求解 → ChangeSet → 本体传播 |
+| POST | `/api/v1/master-plan/sessions/{sessionId}/optimize` | Timefold 求解 → ChangeSet → 本体传播（PISPP `plannedSupplyTotal` + **M3** SRP `reservedCapacity`） |
 | POST | `/api/v1/master-plan/sessions/{sessionId}/confirm` | 持久化至 `MasterPlanAllocationEntity`，返回 `planVersionId` |
 
-**前端**：`/master-plan/ontology`（`MasterPlanOntologyPage`）— PISPP 曲线、simulate、optimize、confirm。
+**系统参数（M3）：** 工作区 `SystemParameterEntity` 键 `ontology_period_sequence`，格式 `"<count>x<length><unit>,..."`（`d`=日、`w`=周、`m`=月）；无效或空值回退 `28×1d`。
 
-映射与对象集详见 [otd-ontology-mapping.md](./otd-ontology-mapping.md)。
+**前端**：`/master-plan/ontology`（`MasterPlanOntologyPage`）— PISPP 曲线、simulate、optimize、confirm；**M3** 增加 `SrpCapacityTable` 资源产能表（optimize 后刷新）。
+
+映射与对象集详见 [otd-ontology-mapping.md](./otd-ontology-mapping.md)；直驱求解评估见 [otd-ontology-direct-solve-evaluation.md](./otd-ontology-direct-solve-evaluation.md)。
 
 与 §5.6 `SchedulingSession`（S05 细排）区分：本体 Session 操作 **供需时段图**，不直接改 `OrderAllocation` 槽位。
 
@@ -567,6 +574,7 @@ POST /api/v1/planning/order-chain/preview
 | 订单推演链 | `scenario/planning/OrderPlanningChainService.java` |
 | Session / 增量推演 | `scenario/DetailScheduleSessionService.java`, `scenario/planning/DetailScheduleSimulationEngine.java` |
 | OTD 本体 M1 Session | `scenario/planning/MasterPlanOntologySessionService.java`, `api/MasterPlanSessionResource.java` |
+| OTD 本体 M3 周期/Sandbox | `ontology/period/PeriodSequenceSpec.java`, `scenario/planning/sandbox/OntologySandboxStore.java` |
 | 生产任务 | `scenario/execution/ProductionTaskService.java`, `api/ScheduleSessionResource.java` |
 
 ---
@@ -581,3 +589,4 @@ POST /api/v1/planning/order-chain/preview
 | 2026-06-02 | §5.6 Session + 增量推演 + 生产任务 RELEASED 发布 |
 | 2026-06-07 | §8.6 OTD 本体 M1：OntologyGraph Session API + 映射文档链接 |
 | 2026-06-09 | §5.7 OTD 本体 M2：供需聚合、optimize/confirm、PISPP GET、前端本体页 |
+| 2026-06-10 | §5.7 OTD 本体 M3：混合周期桶、SRP/Operation API、optimize 回写 SRP、Sandbox 统一、直驱评估链接 |
