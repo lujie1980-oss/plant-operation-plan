@@ -5,6 +5,7 @@ import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.OntologyIds;
 import com.plantops.ontology.master.ProductInStockingPoint;
 import com.plantops.ontology.period.Period;
+import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.rol.ChangeOperation;
 import com.plantops.rol.ChangeSet;
@@ -62,7 +63,7 @@ class OntologyTimefoldMapperTest {
                 allocation("ALLOC-1", productCode, new BigDecimal("10"), planningStart),
                 allocation("ALLOC-2", productCode, new BigDecimal("6.5"), planningStart.plusDays(2)));
 
-        ChangeSet changeSet = mapper.toChangeSet(allocations, graph, planningStart);
+        ChangeSet changeSet = mapper.toChangeSet(allocations, graph, PeriodIndex.of(graph.periodsOrdered()));
         assertEquals(2, changeSet.operations().size());
 
         Map<String, ChangeOperation> opByTarget = changeSet.operations().stream()

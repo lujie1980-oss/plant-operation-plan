@@ -13,6 +13,7 @@ import com.plantops.api.dto.planning.PispSummaryDto;
 import com.plantops.api.dto.planning.SimulateMasterPlanSessionRequest;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.OntologyLoader;
+import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.rol.ChangeOperation;
 import com.plantops.rol.ChangeSet;
@@ -24,7 +25,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -174,8 +174,8 @@ public class MasterPlanOntologySessionService {
         List<MasterPlanAllocationDto> allocations = solveResult != null && solveResult.allocations() != null
                 ? solveResult.allocations()
                 : List.of();
-        LocalDate planningStart = resolvePlanningStart(session.graph());
-        ChangeSet changeSet = ontologyTimefoldMapper.toChangeSet(allocations, session.graph(), planningStart);
+        PeriodIndex periodIndex = PeriodIndex.of(session.graph().periodsOrdered());
+        ChangeSet changeSet = ontologyTimefoldMapper.toChangeSet(allocations, session.graph(), periodIndex);
 
         List<ProductInStockingPointPeriod> candidates = collectChangeSetCandidates(changeSet, session.graph());
         Map<String, PispPeriodSnapshotDto> before = snapshotById(candidates);
@@ -238,14 +238,6 @@ public class MasterPlanOntologySessionService {
             snapshots.put(period.getId(), toSnapshot(period));
         }
         return snapshots;
-    }
-
-    private static LocalDate resolvePlanningStart(OntologyGraph graph) {
-        if (graph.periodsOrdered().isEmpty()) {
-            return LocalDate.now();
-        }
-        LocalDate startDate = graph.periodsOrdered().get(0).getStartDate();
-        return startDate != null ? startDate : LocalDate.now();
     }
 
     private static List<ProductInStockingPointPeriod> collectChangeSetCandidates(

@@ -3,12 +3,12 @@ package com.plantops.scenario.planning;
 import com.plantops.api.dto.MasterPlanAllocationDto;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.OntologyIds;
+import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.rol.ChangeOperation;
 import com.plantops.rol.ChangeSet;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,11 +22,10 @@ public class OntologyTimefoldMapper {
     public ChangeSet toChangeSet(
             List<MasterPlanAllocationDto> allocations,
             OntologyGraph graph,
-            LocalDate planningStart) {
+            PeriodIndex periodIndex) {
         if (allocations == null || allocations.isEmpty()) {
             return new ChangeSet(List.of(), "No allocations to project");
         }
-        LocalDate effectivePlanningStart = planningStart != null ? planningStart : LocalDate.now();
         Map<String, Double> supplyByPisppId = new LinkedHashMap<>();
         for (MasterPlanAllocationDto allocation : allocations) {
             if (allocation == null || allocation.productCode() == null || allocation.productCode().isBlank()) {
@@ -36,8 +35,8 @@ public class OntologyTimefoldMapper {
             if (graph.pisp(pispId) == null) {
                 continue;
             }
-            int periodIndex = periodIndexForDate(resolvePlannedDate(allocation), effectivePlanningStart);
-            String pisppId = OntologyIds.pisppId(pispId, periodIndex);
+            int sequenceNr = periodIndex.sequenceFor(resolvePlannedDate(allocation));
+            String pisppId = OntologyIds.pisppId(pispId, sequenceNr);
             if (graph.pispPeriod(pisppId) == null) {
                 continue;
             }
@@ -67,19 +66,5 @@ public class OntologyTimefoldMapper {
             return allocation.plannedStartTs().toLocalDate();
         }
         return null;
-    }
-
-    private static int periodIndexForDate(LocalDate date, LocalDate planningStart) {
-        if (date == null) {
-            return 0;
-        }
-        long days = ChronoUnit.DAYS.between(planningStart, date);
-        if (days < 0) {
-            return 0;
-        }
-        if (days >= OntologyIds.DEFAULT_PERIOD_COUNT) {
-            return OntologyIds.DEFAULT_PERIOD_COUNT - 1;
-        }
-        return (int) days;
     }
 }

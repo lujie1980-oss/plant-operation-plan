@@ -4,6 +4,8 @@ import com.plantops.ontology.master.Product;
 import com.plantops.ontology.master.ProductInStockingPoint;
 import com.plantops.ontology.master.StockingPoint;
 import com.plantops.ontology.period.Period;
+import com.plantops.ontology.period.PeriodIndex;
+import com.plantops.ontology.period.PeriodSequenceSpec;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.supply.SupplyOrder;
 import com.plantops.ontology.supply.WorkOrderSupplyOrderMapper;
@@ -11,15 +13,14 @@ import com.plantops.persistence.entity.InventoryEntity;
 import com.plantops.persistence.entity.MaterialEntity;
 import com.plantops.persistence.entity.PlanVersionEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
+import com.plantops.persistence.entity.SystemParameterEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.rol.PispRolling;
 import com.plantops.scenario.WorkOrderService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.NotFoundException;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -52,6 +53,7 @@ public class OntologyLoader {
     private OntologyGraph buildGraph(LocalDate planningStart) {
         Set<String> productCodes = collectProductCodes();
         List<Period> periods = buildPeriods(planningStart);
+        PeriodIndex periodIndex = PeriodIndex.of(periods);
         OntologyGraph.Builder builder = OntologyGraph.builder()
                 .defaultStockingPoint(StockingPoint.defaultFg())
                 .periodsOrdered(periods);
@@ -98,8 +100,8 @@ public class OntologyLoader {
             pisppChainByPispId.put(pispId, chain);
         }
 
-        aggregateSupplyIntoPispp(supplyOrders, planningStart, pisppChainByPispId);
-        aggregateSalesDemandIntoPispp(planningStart, pisppChainByPispId);
+        aggregateSupplyIntoPispp(supplyOrders, periodIndex, pisppChainByPispId);
+        aggregateSalesDemandIntoPispp(periodIndex, pisppChainByPispId);
         for (List<ProductInStockingPointPeriod> chain : pisppChainByPispId.values()) {
             PispRolling.rollChain(chain);
         }
@@ -128,12 +130,9 @@ public class OntologyLoader {
     }
 
     private static List<Period> buildPeriods(LocalDate planningStart) {
-        List<Period> periods = new ArrayList<>(OntologyIds.DEFAULT_PERIOD_COUNT);
-        for (int i = 0; i < OntologyIds.DEFAULT_PERIOD_COUNT; i++) {
-            LocalDate day = planningStart.plusDays(i);
-            periods.add(new Period(OntologyIds.periodId(i), i, day, day));
-        }
-        return periods;
+        SystemParameterEntity specRow = SystemParameterEntity.findByParamId("ontology_period_sequence");
+        String specText = specRow != null ? specRow.paramValue : null;
+        return PeriodSequenceSpec.parseOrDefault(specText).expand(planningStart);
     }
 
     private static double sumInventoryOnHand(String productCode) {
@@ -153,21 +152,20 @@ public class OntologyLoader {
 
     private static void aggregateSupplyIntoPispp(
             List<SupplyOrder> supplyOrders,
-            LocalDate planningStart,
+            PeriodIndex periodIndex,
             Map<String, List<ProductInStockingPointPeriod>> pisppChainByPispId) {
         for (SupplyOrder supplyOrder : supplyOrders) {
             List<ProductInStockingPointPeriod> chain = pisppChainByPispId.get(supplyOrder.getPispId());
             if (chain == null) {
                 continue;
             }
-            int periodIndex = periodIndexForDate(supplyOrder.getNeedDate(), planningStart);
-            ProductInStockingPointPeriod pispp = chain.get(periodIndex);
+            ProductInStockingPointPeriod pispp = chain.get(periodIndex.sequenceFor(supplyOrder.getNeedDate()));
             pispp.setPlannedSupplyTotal(pispp.getPlannedSupplyTotal() + supplyOrder.getQuantity());
         }
     }
 
     private static void aggregateSalesDemandIntoPispp(
-            LocalDate planningStart,
+            PeriodIndex periodIndex,
             Map<String, List<ProductInStockingPointPeriod>> pisppChainByPispId) {
         for (SalesOrderLineEntity line : SalesOrderLineEntity.listInWorkspace()) {
             if ("CANCELLED".equals(line.status)) {
@@ -180,24 +178,9 @@ public class OntologyLoader {
             if (chain == null) {
                 continue;
             }
-            int periodIndex = periodIndexForDate(line.dueDate, planningStart);
-            ProductInStockingPointPeriod pispp = chain.get(periodIndex);
+            ProductInStockingPointPeriod pispp = chain.get(periodIndex.sequenceFor(line.dueDate));
             double orderQty = line.orderQty != null ? line.orderQty.doubleValue() : 0.0;
             pispp.setPlannedDemandQuantityTotal(pispp.getPlannedDemandQuantityTotal() + orderQty);
         }
-    }
-
-    static int periodIndexForDate(LocalDate date, LocalDate planningStart) {
-        if (date == null) {
-            return 0;
-        }
-        long days = ChronoUnit.DAYS.between(planningStart, date);
-        if (days < 0) {
-            return 0;
-        }
-        if (days >= OntologyIds.DEFAULT_PERIOD_COUNT) {
-            return OntologyIds.DEFAULT_PERIOD_COUNT - 1;
-        }
-        return (int) days;
     }
 }

@@ -2,6 +2,7 @@ package com.plantops.ontology;
 
 import com.plantops.persistence.entity.MaterialEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
+import com.plantops.persistence.entity.SystemParameterEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
@@ -38,6 +40,25 @@ class OntologyLoaderSupplyDemandTest {
 
         assertTrue(anySupply, "expected some PISPP supply from work orders");
         assertTrue(anyDemand, "expected some PISPP demand from sales orders");
+    }
+
+    @Test
+    @TestTransaction
+    void mixedBucketSpecChangesPeriodCount() {
+        setSystemParameter("ontology_period_sequence", "2x1d,1x1w");
+        OntologyGraph g = loader.loadForWorkspace(LocalDate.now());
+        assertEquals(3, g.periodsOrdered().size());
+    }
+
+    private static void setSystemParameter(String paramId, String value) {
+        SystemParameterEntity row = SystemParameterEntity.findByParamId(paramId);
+        if (row == null) {
+            row = new SystemParameterEntity();
+            row.paramId = paramId;
+            row.stampWorkspace();
+        }
+        row.paramValue = value;
+        row.persist();
     }
 
     private void ensureFixture(LocalDate planningStart) {
