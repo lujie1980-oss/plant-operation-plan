@@ -1,5 +1,6 @@
 package com.plantops.scenario.planning;
 
+import com.plantops.scenario.planning.sandbox.OntologySandbox;
 import com.plantops.scenario.planning.simulation.SimulationProfileSnapshot;
 import com.plantops.solver.detailschedule.DetailSchedule;
 
@@ -9,7 +10,7 @@ import java.time.LocalDateTime;
 /**
  * 细排程推演工作副本：预览/手动改/确认发布前的内存态，不写执行表。
  */
-public final class SchedulingSession {
+public final class SchedulingSession implements OntologySandbox {
 
     private final String sessionId;
     private final String workspaceId;

@@ -2,10 +2,11 @@ package com.plantops.scenario.planning;
 
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.rol.RolEngine;
+import com.plantops.scenario.planning.sandbox.OntologySandbox;
 
 import java.time.LocalDateTime;
 
-public final class MasterPlanOntologySession {
+public final class MasterPlanOntologySession implements OntologySandbox {
 
     private final String sessionId;
     private final String workspaceId;
