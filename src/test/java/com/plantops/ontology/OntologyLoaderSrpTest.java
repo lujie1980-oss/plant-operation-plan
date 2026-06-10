@@ -33,6 +33,15 @@ class OntologyLoaderSrpTest {
         assertEquals(960, srp.getTotalCapacity(), 1e-6);     // (480+0)+(420+60)
         assertEquals(60, srp.getCalendarDowntime(), 1e-6);
         assertEquals(900, srp.getAvailableCapacity(), 1e-6); // total - downtime
+
+        // Out-of-horizon calendar row must not be clamped into the last bucket.
+        int lastSeq = g.periodsOrdered().size() - 1;
+        StandardResourcePeriod lastSrp = g.srp(OntologyIds.srpId(RESOURCE_ID, lastSeq));
+        assertNotNull(lastSrp);
+        assertEquals(0, lastSrp.getTotalCapacity(), 1e-6);
+
+        // A period without calendar rows still gets a zero-capacity SRP.
+        assertEquals(0, g.srp(OntologyIds.srpId(RESOURCE_ID, 1)).getTotalCapacity(), 1e-6);
     }
 
     private void ensureFixture(LocalDate planningStart) {
@@ -65,6 +74,15 @@ class OntologyLoaderSrpTest {
             shift2.unavailableCapacityMinutes = 60;
             shift2.stampWorkspace();
             shift2.persist();
+
+            ResourceCalendarEntity farFuture = new ResourceCalendarEntity();
+            farFuture.resourceId = RESOURCE_ID;
+            farFuture.shiftId = "SHIFT-FUTURE";
+            farFuture.calendarDate = planningStart.plusYears(1);
+            farFuture.availableCapacityMinutes = 999;
+            farFuture.unavailableCapacityMinutes = 0;
+            farFuture.stampWorkspace();
+            farFuture.persist();
         }
     }
 }

@@ -135,6 +135,10 @@ public class OntologyLoader {
             if (cal.resourceId == null || !resourceIds.contains(cal.resourceId) || cal.calendarDate == null) {
                 continue;
             }
+            if (cal.calendarDate.isBefore(periods.get(0).getStartDate())
+                    || cal.calendarDate.isAfter(periods.get(periods.size() - 1).getEndDate())) {
+                continue;
+            }
             int seq = periodIndex.sequenceFor(cal.calendarDate);
             StandardResourcePeriod srp = srpByKey.get(OntologyIds.srpId(cal.resourceId, seq));
             srp.setTotalCapacity(srp.getTotalCapacity() + cal.availableCapacityMinutes + cal.unavailableCapacityMinutes);
