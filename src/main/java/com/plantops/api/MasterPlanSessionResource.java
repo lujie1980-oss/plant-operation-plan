@@ -5,6 +5,7 @@ import com.plantops.api.dto.planning.MasterPlanSessionConfirmResultDto;
 import com.plantops.api.dto.planning.MasterPlanSessionDto;
 import com.plantops.api.dto.planning.MasterPlanSessionOptimizeResultDto;
 import com.plantops.api.dto.planning.MasterPlanSessionSimulateResultDto;
+import com.plantops.api.dto.planning.OperationSnapshotDto;
 import com.plantops.api.dto.planning.PispPeriodSnapshotDto;
 import com.plantops.api.dto.planning.PispSummaryDto;
 import com.plantops.api.dto.planning.SimulateMasterPlanSessionRequest;
@@ -59,6 +60,14 @@ public class MasterPlanSessionResource {
     @Path("/{sessionId}/resources")
     public List<SrpSnapshotDto> listResources(@PathParam("sessionId") String sessionId) {
         return sessionService.listResources(sessionId);
+    }
+
+    @GET
+    @Path("/{sessionId}/supply-orders/{supplyOrderId}/operations")
+    public List<OperationSnapshotDto> listOperations(
+            @PathParam("sessionId") String sessionId,
+            @PathParam("supplyOrderId") String supplyOrderId) {
+        return sessionService.listOperations(sessionId, supplyOrderId);
     }
 
     @POST

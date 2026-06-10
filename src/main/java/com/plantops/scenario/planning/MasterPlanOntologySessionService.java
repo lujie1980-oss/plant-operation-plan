@@ -7,6 +7,7 @@ import com.plantops.api.dto.planning.MasterPlanSessionDto;
 import com.plantops.api.dto.planning.MasterPlanSessionConfirmResultDto;
 import com.plantops.api.dto.planning.MasterPlanSessionOptimizeResultDto;
 import com.plantops.api.dto.planning.MasterPlanSessionSimulateResultDto;
+import com.plantops.api.dto.planning.OperationSnapshotDto;
 import com.plantops.persistence.entity.MasterPlanAllocationEntity;
 import com.plantops.api.dto.planning.PispPeriodSnapshotDto;
 import com.plantops.api.dto.planning.PispSummaryDto;
@@ -129,6 +130,18 @@ public class MasterPlanOntologySessionService {
                 .map(srp -> new SrpSnapshotDto(srp.getId(), srp.getStandardResourceId(), srp.getPeriodId(),
                         srp.getTotalCapacity(), srp.getCalendarDowntime(), srp.getReservedCapacity(),
                         srp.getAvailableCapacity(), srp.getFreeCapacity(), srp.getOverloadCapacity()))
+                .toList();
+    }
+
+    public List<OperationSnapshotDto> listOperations(String sessionId, String supplyOrderId) {
+        MasterPlanOntologySession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
+        if (session.graph().supplyOrder(supplyOrderId) == null) {
+            throw new NotFoundException("Supply order not found: " + supplyOrderId);
+        }
+        return session.graph().operationsForSupplyOrder(supplyOrderId).stream()
+                .map(op -> new OperationSnapshotDto(op.getId(), op.getSupplyOrderId(), op.getSequenceNr(),
+                        op.getOperationName(), op.getProductionTimeMinutes(),
+                        op.getEarliestPossibleStart(), op.getLatestPossibleEnd(), op.isInfeasible()))
                 .toList();
     }
 

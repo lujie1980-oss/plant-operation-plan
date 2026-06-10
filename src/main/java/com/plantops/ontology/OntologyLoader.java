@@ -20,6 +20,7 @@ import com.plantops.persistence.entity.ResourceCalendarEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.SystemParameterEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
+import com.plantops.rol.OperationTimeWindowDerivations;
 import com.plantops.rol.PispRolling;
 import com.plantops.scenario.WorkOrderService;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -116,7 +117,11 @@ public class OntologyLoader {
 
         loadStandardResourcePeriods(builder, periods, periodIndex);
 
-        return builder.build();
+        OntologyGraph graph = builder.build();
+        for (SupplyOrder supplyOrder : supplyOrders) {
+            OperationTimeWindowDerivations.recalculate(graph, supplyOrder.getId(), planningStart);
+        }
+        return graph;
     }
 
     private static void loadOperations(OntologyGraph.Builder builder, List<SupplyOrder> supplyOrders) {
