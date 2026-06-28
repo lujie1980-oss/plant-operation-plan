@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import { api } from '../api/client';
 import { MachineScheduleGantt } from './MachineScheduleGantt';
-import { PlanningDiagnosticsPanel } from './PlanningDiagnosticsPanel';
 import { ScheduleSessionWorkbench } from './ScheduleSessionWorkbench';
 import type { DetailSchedulePlanningPreview } from '../types/detailSchedulePlanningPreview';
 import { previewOperationsToGantt } from '../utils/previewOperationsToGantt';
@@ -116,15 +115,6 @@ export function DetailSchedulePlanningPreviewPanel({
             </span>
           )}
         </div>
-      )}
-      {displayPreview?.diagnostics && (
-        <PlanningDiagnosticsPanel
-          layer="detail-schedule"
-          contextId={masterPlanVersionId}
-          snapshot={displayPreview.diagnostics}
-          readOnly
-          compact
-        />
       )}
       {ganttOps.length > 0 && (
         <div className="ds-planning-preview-gantt card">

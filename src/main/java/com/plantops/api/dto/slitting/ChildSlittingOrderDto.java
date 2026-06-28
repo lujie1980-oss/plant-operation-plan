@@ -12,5 +12,7 @@ public record ChildSlittingOrderDto(
         String salesOrderNo,
         Integer salesOrderLineNo,
         String workOrderNo,
+        String productCode,
+        String finishedProductCode,
         String status) {
 }

@@ -1,6 +1,6 @@
 import type {
   CapacityAnalysis,
-  DemandPoolEntry,
+  CustomerOrderLineDeliveryListItem,
   DemandPoolSummary,
   OrderFulfillmentChain,
   DetailScheduleResult,
@@ -17,6 +17,7 @@ import type {
   PipelineResult,
   PlanVersionCompare,
   RescheduleResult,
+  SrpCapacityGantt,
   WorkOrderCapacityGantt,
   WorkOrder,
   WorkOrderOrderLineTree,
@@ -54,6 +55,11 @@ import type {
   OperationPostProcessingMd,
   MaterialLeadTimeMd,
   ContinuousProductionMd,
+  DeliveryDateStrategyMd,
+  SupplyQuantityRuleMd,
+  ResourceEfficiencyMd,
+  RoutingStepTimingMd,
+  RoutingStepResourceMd,
   ParallelOperationMd,
   InventoryMd,
   MaterialMd,
@@ -78,15 +84,8 @@ import type {
   MasterPlanPlanningPreview,
   MasterPlanPlanningPreviewRequest,
 } from '../types/masterPlanPlanningPreview';
-import type {
-  DetailSchedulePlanningDiagnostics,
-  MasterPlanPlanningDiagnostics,
-} from '../types/planningDiagnostics';
 import type { PlanningScoreExplanation } from '../types/planningScoreExplanation';
-import type {
-  OrderPlanningChain,
-  OrderPlanningChainPreviewRequest,
-} from '../types/orderPlanningChain';
+import type { PromiseDatePreview } from '../types/demandActions';
 import type {
   ConfirmScheduleSessionResult,
   CreateScheduleSessionRequest,
@@ -208,10 +207,71 @@ export const api = {
         { method: 'POST' },
       ),
   },
-  demandPool: (masterPlanVersionId?: string) =>
-    request<DemandPoolEntry[]>(`/api/v1/demand/demand-pool${versionQuery(masterPlanVersionId)}`),
-  demandPoolSummary: (masterPlanVersionId?: string) =>
-    request<DemandPoolSummary>(`/api/v1/demand/demand-pool/summary${versionQuery(masterPlanVersionId)}`),
+  ontologyDeliveries: (masterPlanVersionId?: string) =>
+    request<CustomerOrderLineDeliveryListItem[]>(
+      `/api/v1/ontology/fulfillment/deliveries${versionQuery(masterPlanVersionId)}`,
+    ),
+  ontologyDeliverySummary: (masterPlanVersionId?: string) =>
+    request<DemandPoolSummary>(
+      `/api/v1/ontology/fulfillment/deliveries/summary${versionQuery(masterPlanVersionId)}`,
+    ),
+  ontologyFulfillmentChain: (deliveryId: string, masterPlanVersionId?: string) =>
+    request<OrderFulfillmentChain>(
+      `/api/v1/ontology/fulfillment/deliveries/${encodeURIComponent(deliveryId)}/fulfillment-chain${versionQuery(masterPlanVersionId)}`,
+    ),
+  ontologyPromiseDatePreview: (deliveryId: string, masterPlanVersionId?: string) =>
+    request<PromiseDatePreview>(
+      `/api/v1/ontology/fulfillment/deliveries/${encodeURIComponent(deliveryId)}/promise-date-preview${versionQuery(masterPlanVersionId)}`,
+    ),
+  ontologyDeliveryAction: (
+    deliveryId: string,
+    action: import('../types/demandActions').OrderDemandActionId,
+    body?: import('../types/demandActions').OrderDemandActionRequest,
+    masterPlanVersionId?: string,
+  ) =>
+    request<import('../types/demandActions').OrderDemandActionResult>(
+      `/api/v1/ontology/fulfillment/deliveries/${encodeURIComponent(deliveryId)}/actions/${action}${versionQuery(masterPlanVersionId)}`,
+      {
+        method: 'POST',
+        body: JSON.stringify(body ?? {}),
+      },
+    ),
+  ontologySupplyOrderUpstreamChain: (workOrderNo: string, masterPlanVersionId?: string) =>
+    request<OrderFulfillmentChain>(
+      `/api/v1/ontology/fulfillment/supply-orders/${encodeURIComponent(workOrderNo)}/upstream-chain${versionQuery(masterPlanVersionId)}`,
+    ),
+  ontologySupplyOrderDownstreamChain: (workOrderNo: string, masterPlanVersionId?: string) =>
+    request<OrderFulfillmentChain>(
+      `/api/v1/ontology/fulfillment/supply-orders/${encodeURIComponent(workOrderNo)}/downstream-chain${versionQuery(masterPlanVersionId)}`,
+    ),
+  ontologyAnalyzeCapacity: (masterPlanVersionId?: string) =>
+    request<CapacityAnalysis>(
+      `/api/v1/ontology/capacity/analyze${versionQuery(masterPlanVersionId)}`,
+      { method: 'POST' },
+    ),
+  ontologySrpCapacityGantt: (masterPlanVersionId?: string) =>
+    request<SrpCapacityGantt>(`/api/v1/ontology/capacity/srp-gantt${versionQuery(masterPlanVersionId)}`),
+  ontologyMaterialPlanningBalance: (masterPlanVersionId?: string) =>
+    request<MaterialRequirementReport>(
+      `/api/v1/ontology/material-planning/balance${versionQuery(masterPlanVersionId)}`,
+    ),
+  ontologyMaterialPlanningCompute: (masterPlanVersionId?: string) =>
+    request<MaterialRequirementReport>(
+      `/api/v1/ontology/material-planning/compute${versionQuery(masterPlanVersionId)}`,
+      { method: 'POST' },
+    ),
+  ontologyMaterialPlanningDemandDetail: (productCode: string, masterPlanVersionId?: string) =>
+    request<MaterialDemandDetail>(
+      `/api/v1/ontology/material-planning/materials/${encodeURIComponent(productCode)}/demand-detail${versionQuery(masterPlanVersionId)}`,
+    ),
+  masterPlanDataModelTree: () =>
+    request<import('../types/masterPlanDataModel').MasterPlanDataModelTree>(
+      '/api/v1/ontology/master-model/tree',
+    ),
+  masterPlanPispRouting: (pispId: string) =>
+    request<import('../types/masterPlanDataModel').MasterPlanPispRoutingDetail>(
+      `/api/v1/ontology/master-model/pisps/${encodeURIComponent(pispId)}/routing`,
+    ),
   demandTracking: () => request<DemandTrackingEntry[]>('/api/v1/demand/tracking'),
   dashboardSummary: () => request<DashboardSummary>('/api/v1/dashboard/summary'),
   workOrders: {
@@ -260,14 +320,6 @@ export const api = {
     dispatchedKitting: () => request<WorkOrderKitting[]>('/api/v1/work-orders/dispatched/kitting'),
     computeDispatchedKitting: () =>
       request<WorkOrderKitting[]>('/api/v1/work-orders/dispatched/kitting/compute', { method: 'POST' }),
-    fulfillmentChain: (workOrderNo: string, masterPlanVersionId?: string) =>
-      request<OrderFulfillmentChain>(
-        `/api/v1/work-orders/${encodeURIComponent(workOrderNo)}/fulfillment-chain${versionQuery(masterPlanVersionId)}`,
-      ),
-    downstreamFulfillmentChain: (workOrderNo: string, masterPlanVersionId?: string) =>
-      request<OrderFulfillmentChain>(
-        `/api/v1/work-orders/${encodeURIComponent(workOrderNo)}/downstream-fulfillment-chain${versionQuery(masterPlanVersionId)}`,
-      ),
     scheduleOperations: (workOrderNo: string, masterPlanVersionId?: string) =>
       request<WorkOrderScheduleOperation[]>(
         `/api/v1/work-orders/${encodeURIComponent(workOrderNo)}/schedule-operations${versionQuery(masterPlanVersionId)}`,
@@ -328,43 +380,7 @@ export const api = {
         `/api/v1/scheduling/batches/${encodeURIComponent(batchNo)}/routing${versionQuery(masterPlanVersionId)}`,
       ),
   },
-  fulfillmentChain: (salesOrderNo: string, salesOrderLineNo: number, masterPlanVersionId?: string) =>
-    request<OrderFulfillmentChain>(
-      `/api/v1/demand/demand-pool/${encodeURIComponent(salesOrderNo)}/${salesOrderLineNo}/fulfillment-chain${versionQuery(masterPlanVersionId)}`,
-    ),
-  demandOrderAction: (
-    salesOrderNo: string,
-    salesOrderLineNo: number,
-    action: import('../types/demandActions').OrderDemandActionId,
-    body?: import('../types/demandActions').OrderDemandActionRequest,
-  ) =>
-    request<import('../types/demandActions').OrderDemandActionResult>(
-      `/api/v1/demand/demand-pool/${encodeURIComponent(salesOrderNo)}/${salesOrderLineNo}/actions/${action}`,
-      {
-        method: 'POST',
-        body: JSON.stringify(body ?? {}),
-      },
-    ),
   computeKitting: () => request<KittingResult[]>('/api/v1/kitting/compute', { method: 'POST' }),
-  materialBalance: (masterPlanVersionId?: string) =>
-    request<MaterialRequirementReport>(
-      `/api/v1/material-requirements/balance${versionQuery(masterPlanVersionId)}`,
-    ),
-  computeMaterialRequirements: (masterPlanVersionId?: string) =>
-    request<MaterialRequirementReport>(
-      `/api/v1/material-requirements/compute${versionQuery(masterPlanVersionId)}`,
-      { method: 'POST' },
-    ),
-  materialDemandUsages: (productCode: string, masterPlanVersionId?: string) =>
-    request<MaterialDemandDetail>(
-      `/api/v1/material-requirements/materials/${encodeURIComponent(productCode)}/demand-usages${versionQuery(masterPlanVersionId)}`,
-    ),
-  analyzeCapacity: (masterPlanVersionId?: string) => {
-    const q = masterPlanVersionId
-      ? `?masterPlanVersionId=${encodeURIComponent(masterPlanVersionId)}`
-      : '';
-    return request<CapacityAnalysis>(`/api/v1/capacity/analyze${q}`, { method: 'POST' });
-  },
   solveMasterPlan: (strategyId?: string, capacityStrategy?: MasterPlanCapacityStrategy) =>
     request<MasterPlanResult>('/api/v1/planning/master-plan/solve', {
       method: 'POST',
@@ -376,25 +392,6 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
-  previewMasterPlanDiagnostics: (strategyId?: string, feedbackCutoff?: string) => {
-    const params = new URLSearchParams();
-    if (strategyId) {
-      params.set('strategyId', strategyId);
-    }
-    if (feedbackCutoff) {
-      params.set('feedbackCutoff', feedbackCutoff);
-    }
-    const q = params.toString() ? `?${params}` : '';
-    return request<MasterPlanPlanningDiagnostics>(`/api/v1/planning/master-plan/diagnostics/preview${q}`);
-  },
-  previewDetailScheduleDiagnostics: (masterPlanVersionId?: string) => {
-    const q = masterPlanVersionId
-      ? `?masterPlanVersionId=${encodeURIComponent(masterPlanVersionId)}`
-      : '';
-    return request<DetailSchedulePlanningDiagnostics>(
-      `/api/v1/planning/detail-schedule/diagnostics/preview${q}`,
-    );
-  },
   previewDetailSchedulePlanning: (body: DetailSchedulePlanningPreviewRequest) =>
     request<DetailSchedulePlanningPreview>('/api/v1/planning/detail-schedule/preview', {
       method: 'POST',
@@ -478,11 +475,6 @@ export const api = {
   completeProductionTask: (stepId: string) =>
     request<ProductionTask>(`/api/v1/production-tasks/${encodeURIComponent(stepId)}/complete`, {
       method: 'POST',
-    }),
-  previewOrderPlanningChain: (body: OrderPlanningChainPreviewRequest) =>
-    request<OrderPlanningChain>('/api/v1/planning/order-chain/preview', {
-      method: 'POST',
-      body: JSON.stringify(body),
     }),
   explainMasterPlanScore: (versionId: string) =>
     request<PlanningScoreExplanation>(
@@ -903,6 +895,56 @@ export const api = {
         }),
       delete: (id: number) =>
         request<void>(`/api/v1/master-data/parameters/${id}`, { method: 'DELETE' }),
+    },
+    deliveryDateStrategy: {
+      list: () => request<DeliveryDateStrategyMd[]>('/api/v1/master-data/delivery-date-strategy'),
+      save: (dto: DeliveryDateStrategyMd) =>
+        request<DeliveryDateStrategyMd>('/api/v1/master-data/delivery-date-strategy', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/delivery-date-strategy/${id}`, { method: 'DELETE' }),
+    },
+    supplyQuantityRules: {
+      list: () => request<SupplyQuantityRuleMd[]>('/api/v1/master-data/supply-quantity-rules'),
+      save: (dto: SupplyQuantityRuleMd) =>
+        request<SupplyQuantityRuleMd>('/api/v1/master-data/supply-quantity-rules', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/supply-quantity-rules/${id}`, { method: 'DELETE' }),
+    },
+    resourceEfficiency: {
+      list: () => request<ResourceEfficiencyMd[]>('/api/v1/master-data/resource-efficiency'),
+      save: (dto: ResourceEfficiencyMd) =>
+        request<ResourceEfficiencyMd>('/api/v1/master-data/resource-efficiency', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/resource-efficiency/${id}`, { method: 'DELETE' }),
+    },
+    routingStepTiming: {
+      list: () => request<RoutingStepTimingMd[]>('/api/v1/master-data/routing-step-timing'),
+      save: (dto: RoutingStepTimingMd) =>
+        request<RoutingStepTimingMd>('/api/v1/master-data/routing-step-timing', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/routing-step-timing/${id}`, { method: 'DELETE' }),
+    },
+    routingStepResource: {
+      list: () => request<RoutingStepResourceMd[]>('/api/v1/master-data/routing-step-resource'),
+      save: (dto: RoutingStepResourceMd) =>
+        request<RoutingStepResourceMd>('/api/v1/master-data/routing-step-resource', {
+          method: 'POST',
+          body: JSON.stringify(dto),
+        }),
+      delete: (id: number) =>
+        request<void>(`/api/v1/master-data/routing-step-resource/${id}`, { method: 'DELETE' }),
     },
     businessRuleScopes: {
       list: () => request<BusinessRuleScopeMd[]>('/api/v1/master-data/business-rule-scopes'),

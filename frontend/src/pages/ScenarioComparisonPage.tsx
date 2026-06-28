@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { FilterableTable, type TableColumnDef } from '../components/table/FilterableTable';
 import type { MasterPlanCapacityStrategy, PlanningScenario, ScenarioComparison, ScenarioMetric } from '../types/api';
@@ -26,6 +26,29 @@ function formatValue(metricId: string, value: number, unit: string): string {
   if (metricId.startsWith('mp_score')) return String(Math.round(value));
   if (unit === '秒') return `${value.toFixed(1)}s`;
   return `${Math.round(value)} ${unit}`;
+}
+
+function formatDelta(metricId: string, delta: number, unit: string): string {
+  if (unit === '%') return `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}%`;
+  if (metricId.startsWith('mp_score')) return `${delta >= 0 ? '+' : ''}${Math.round(delta)}`;
+  if (unit === '秒') return `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}s`;
+  return `${delta >= 0 ? '+' : ''}${Math.round(delta)} ${unit}`;
+}
+
+function scenarioVersionId(s: PlanningScenario): string | undefined {
+  const id = s.currentPlanVersionId ?? s.planVersionId;
+  return id ?? undefined;
+}
+
+function metricValue(
+  comparison: ScenarioComparison | null,
+  planVersionId: string,
+  metricId: string,
+): number | null {
+  const point = comparison?.series.find(
+    (x) => x.planVersionId === planVersionId && x.metricId === metricId,
+  );
+  return point != null ? point.value : null;
 }
 
 function seriesForMetric(comparison: ScenarioComparison | null, metricId: string) {
@@ -125,8 +148,8 @@ function GroupedColumnChart({
 
 export function ScenarioComparisonPage({
   title = '场景对比',
-  description = '勾选多个主计划场景，对比 Score、产能与排产关键 KPI',
-  emptyHint = '暂无主计划场景，请先在「计划运行」执行主计划运行',
+  description = '勾选多个订单协同计划场景，对比 Score、产能与排产关键 KPI',
+  emptyHint = '暂无订单协同计划场景，请先在「计划运行」执行计划运行',
 }: {
   title?: string;
   description?: string;
@@ -200,29 +223,48 @@ export function ScenarioComparisonPage({
       (m) => m.metricId.startsWith('mp_') && !m.metricId.includes('score'),
     ) ?? [];
 
+  const baselineId = selectedIds[0];
+
   const kpiColumns = useMemo((): TableColumnDef<ScenarioMetric>[] => {
     const cols: TableColumnDef<ScenarioMetric>[] = [
       { key: 'label', header: '指标', render: (metric) => metric.label },
     ];
-    selectedIds.forEach((id) => {
-      const s = scenarios.find((x) => x.planVersionId === id);
+    selectedIds.forEach((id, idx) => {
+      const s = scenarios.find((x) => scenarioVersionId(x) === id);
+      const isBaseline = id === baselineId;
       cols.push({
         key: id,
-        header: s?.label ?? id,
+        header: isBaseline ? `${s?.name ?? id}（基线）` : (s?.name ?? id),
+        className: `scn-td-scenario scn-td-scenario-${idx % SCENARIO_COLORS.length}`,
         render: (metric) => {
-          const point = comparison?.series.find(
-            (x) => x.planVersionId === id && x.metricId === metric.metricId,
+          const value = metricValue(comparison, id, metric.metricId);
+          if (value == null) return '—';
+          const main = formatValue(metric.metricId, value, metric.unit);
+          if (isBaseline || !baselineId) {
+            return <span className="scn-val-baseline">{main}</span>;
+          }
+          const baseVal = metricValue(comparison, baselineId, metric.metricId);
+          if (baseVal == null) return main;
+          const delta = value - baseVal;
+          if (Math.abs(delta) < 0.0001) {
+            return <span className="scn-val-same">{main}</span>;
+          }
+          return (
+            <span className="scn-val-wrap">
+              <span className="scn-val-main">{main}</span>
+              <span className="scn-val-delta">{formatDelta(metric.metricId, delta, metric.unit)}</span>
+            </span>
           );
-          return point != null ? formatValue(metric.metricId, point.value, metric.unit) : '—';
         },
       });
     });
     return cols;
-  }, [selectedIds, scenarios, comparison]);
+  }, [selectedIds, scenarios, comparison, baselineId]);
 
   return (
     <div className="scenario-page">
       <PageHeader
+        variant={DECISION_PAGE_HEADER}
         title={title}
         description={description}
         actions={
@@ -236,7 +278,7 @@ export function ScenarioComparisonPage({
       <div className="scn-layout">
         <aside className="scn-list card">
           <h3>场景列表</h3>
-          <p className="scn-list-hint">勾选 2 个及以上场景以生成对比图表</p>
+          <p className="scn-list-hint">勾选场景；首列为 KPI 基线，其余列显示差异</p>
           <ul className="scn-scenario-list">
             {scenarios.length === 0 ? (
               <li className="scn-empty">{emptyHint}</li>
@@ -270,76 +312,87 @@ export function ScenarioComparisonPage({
           </ul>
         </aside>
 
-        <section className="scn-charts">
+        <section className="scn-main">
           {selectedIds.length === 0 ? (
             <div className="card scn-placeholder">
-              <p>请在左侧勾选一个或多个主计划场景</p>
+              <p>请在左侧勾选一个或多个订单协同计划场景</p>
             </div>
           ) : comparison ? (
             <>
               <div className="card scn-kpi-table-wrap">
-                <h3>KPI 对比表</h3>
+                <div className="scn-kpi-table-head">
+                  <h3>KPI 对比表</h3>
+                  <span className="scn-kpi-table-meta">
+                    {selectedIds.length} 个场景 · 基线：
+                    {scenarios.find((s) => scenarioVersionId(s) === baselineId)?.name ?? baselineId}
+                  </span>
+                </div>
                 <FilterableTable
                   tableId="scenario-comparison-kpi"
-                  tableClassName="scn-kpi-table"
-                  wrapClassName="ft-table-wrap"
+                  tableClassName="scn-kpi-table data-table"
+                  wrapClassName="scn-kpi-table-scroll ft-table-wrap"
                   rows={comparison.metrics}
                   rowKey={(metric) => metric.metricId}
                   columns={kpiColumns}
                 />
               </div>
 
-              <div className="scn-chart-section">
-                <h3>Score 对比</h3>
-                <div className="scn-chart-grid">
-                  {scoreMetrics.map((m) => (
-                    <GroupedColumnChart
-                      key={m.metricId}
-                      metric={m}
-                      comparison={comparison}
-                      selectedIds={selectedIds}
-                    />
-                  ))}
-                </div>
-              </div>
+              <details className="scn-charts-details">
+                <summary>图表对比（Score / 产能 / 排产）</summary>
+                <div className="scn-charts-details-body">
+                  <div className="scn-chart-section">
+                    <h4>Score</h4>
+                    <div className="scn-chart-grid scn-chart-grid--compact">
+                      {scoreMetrics.map((m) => (
+                        <GroupedColumnChart
+                          key={m.metricId}
+                          metric={m}
+                          comparison={comparison}
+                          selectedIds={selectedIds}
+                        />
+                      ))}
+                    </div>
+                  </div>
 
-              <div className="scn-chart-section">
-                <h3>产能 KPI</h3>
-                <div className="scn-chart-grid">
-                  {capacityMetrics.map((m) => (
-                    <BarChart
-                      key={m.metricId}
-                      metric={m}
-                      comparison={comparison}
-                      selectedIds={selectedIds}
-                    />
-                  ))}
-                </div>
-              </div>
+                  <div className="scn-chart-section">
+                    <h4>产能 KPI</h4>
+                    <div className="scn-chart-grid scn-chart-grid--compact">
+                      {capacityMetrics.map((m) => (
+                        <BarChart
+                          key={m.metricId}
+                          metric={m}
+                          comparison={comparison}
+                          selectedIds={selectedIds}
+                        />
+                      ))}
+                    </div>
+                  </div>
 
-              <div className="scn-chart-section">
-                <h3>主计划排产 KPI</h3>
-                <div className="scn-chart-grid">
-                  {planMetrics.map((m) => (
-                    <BarChart
-                      key={m.metricId}
-                      metric={m}
-                      comparison={comparison}
-                      selectedIds={selectedIds}
-                    />
-                  ))}
-                  {comparison.metrics
-                    .filter((m) => m.metricId === 'solve_duration')
-                    .map((m) => (
-                      <GroupedColumnChart
-                        key={m.metricId}
-                        metric={m}
-                        comparison={comparison}
-                        selectedIds={selectedIds}
-                      />
-                    ))}
+                  <div className="scn-chart-section">
+                    <h4>订单协同计划排产</h4>
+                    <div className="scn-chart-grid scn-chart-grid--compact">
+                      {planMetrics.map((m) => (
+                        <BarChart
+                          key={m.metricId}
+                          metric={m}
+                          comparison={comparison}
+                          selectedIds={selectedIds}
+                        />
+                      ))}
+                      {comparison.metrics
+                        .filter((m) => m.metricId === 'solve_duration')
+                        .map((m) => (
+                          <GroupedColumnChart
+                            key={m.metricId}
+                            metric={m}
+                            comparison={comparison}
+                            selectedIds={selectedIds}
+                          />
+                        ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </details>
             </>
           ) : (
             <div className="card scn-placeholder">

@@ -30,7 +30,8 @@
 
 .demand-kpi-panel,
 .demand-orders-panel,
-.demand-chain-panel {
+.demand-fulfillment-panel,
+.demand-gantt-panel {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -40,13 +41,47 @@
   padding: 0.85rem 1rem;
 }
 
+.demand-fulfillment-stack {
+  flex: 1;
+  min-height: 0;
+}
+
+.demand-fulfillment-stack .vertical-resize-top,
+.demand-fulfillment-stack .vertical-resize-bottom {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.demand-fulfillment-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.demand-gantt-panel {
+  height: 100%;
+}
+
+.demand-gantt-header {
+  margin-bottom: 0.35rem;
+}
+
+.demand-gantt-panel .fulfillment-material-drawer-host {
+  flex: 1;
+  min-height: 0;
+}
+
 .demand-kpi-panel {
   grid-row: 1 / -1;
   grid-column: 1;
 }
 
 .demand-orders-panel,
-.demand-chain-panel {
+.demand-fulfillment-panel,
+.demand-gantt-panel {
   height: 100%;
 }
 

@@ -3,6 +3,10 @@ package com.plantops.workspace;
 import com.plantops.api.dto.WorkspaceCreateRequest;
 import com.plantops.api.dto.WorkspaceDto;
 import com.plantops.config.ParameterRegistry;
+import com.plantops.iam.context.SecurityContext;
+import com.plantops.iam.entity.WorkspaceEnabledAdapterEntity;
+import com.plantops.iam.entity.WorkspaceEnabledModuleEntity;
+import com.plantops.iam.entity.WorkspaceMemberEntity;
 import com.plantops.masterdata.MasterFieldDefinitionService;
 import com.plantops.persistence.entity.*;
 import com.plantops.scenario.PlanningScenarioService;
@@ -40,6 +44,9 @@ public class WorkspaceService {
     @Inject
     MasterFieldDefinitionService masterFieldDefinitionService;
 
+    @Inject
+    SecurityContext securityContext;
+
     public List<WorkspaceDto> list() {
         return WorkspaceEntity.listAllOrdered().stream().map(this::toDto).toList();
     }
@@ -68,6 +75,16 @@ public class WorkspaceService {
         e.createdAt = LocalDateTime.now();
         e.isDefault = false;
         e.persist();
+        // IAM M1: 三合一创建 — member OWNER + 默认模块 + 默认适配器
+        String userId = securityContext.getCurrentUserId();
+        if (userId != null) {
+            WorkspaceMemberEntity member = new WorkspaceMemberEntity();
+            member.workspaceId = id;
+            member.userId = userId;
+            member.role = "OWNER";
+            member.persist();
+            ensureDefaultModulesForWorkspace(id);
+        }
         String prev = workspaceContext.getWorkspaceId();
         try {
             workspaceContext.setWorkspaceId(id);
@@ -94,6 +111,11 @@ public class WorkspaceService {
 
     @Transactional
     void deleteWorkspaceData(String workspaceId) {
+        // IAM 表
+        WorkspaceEnabledModuleEntity.delete("workspaceId", workspaceId);
+        WorkspaceEnabledAdapterEntity.delete("workspaceId", workspaceId);
+        WorkspaceMemberEntity.delete("workspaceId", workspaceId);
+        // 业务表
         DetailScheduleOperationEntity.delete("workspaceId", workspaceId);
         ProductionBatchEntity.delete("workspaceId", workspaceId);
         MasterPlanAllocationEntity.delete("workspaceId", workspaceId);
@@ -132,6 +154,26 @@ public class WorkspaceService {
     }
 
     private WorkspaceDto toDto(WorkspaceEntity e) {
-        return new WorkspaceDto(e.workspaceId, e.name, e.description, e.createdAt, e.isDefault);
+        return new WorkspaceDto(e.workspaceId, e.name, e.description, e.createdAt, e.isDefault,
+                e.ownerUserId, e.workspaceType);
+    }
+
+    private void ensureDefaultModulesForWorkspace(String workspaceId) {
+        String[][] defaults = {
+                {"MOD-DI", "true"}, {"MOD-OCP", "true"}, {"MOD-SCH", "true"},
+                {"MOD-SLT", "false"}, {"MOD-CAL", "true"}
+        };
+        for (String[] pair : defaults) {
+            WorkspaceEnabledModuleEntity mod = new WorkspaceEnabledModuleEntity();
+            mod.workspaceId = workspaceId;
+            mod.moduleId = pair[0];
+            mod.enabled = Boolean.parseBoolean(pair[1]);
+            mod.persist();
+        }
+        WorkspaceEnabledAdapterEntity adp = new WorkspaceEnabledAdapterEntity();
+        adp.workspaceId = workspaceId;
+        adp.adapterId = "ADP-EXCEL";
+        adp.enabled = true;
+        adp.persist();
     }
 }

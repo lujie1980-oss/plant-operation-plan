@@ -6,12 +6,9 @@ import com.plantops.api.dto.DetailScheduleResultDto;
 import com.plantops.api.dto.MasterPlanResultDto;
 import com.plantops.api.dto.PipelineRunLogLineDto;
 import com.plantops.api.dto.PlanningPipelineRunDto;
-import com.plantops.api.dto.planning.DetailSchedulePlanningDiagnosticsDto;
-import com.plantops.api.dto.planning.MasterPlanPlanningDiagnosticsDto;
 import com.plantops.api.dto.planning.PlanningPipelineRunDiagnosticsDto;
 import com.plantops.config.MasterPlanStrategyConfigService;
 import com.plantops.persistence.entity.PlanningPipelineRunEntity;
-import com.plantops.scenario.planning.diagnostics.PlanningDiagnosticsSummarizer;
 import com.plantops.solver.masterplan.MasterPlanCapacityStrategy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -100,57 +97,6 @@ public class PipelineRunService {
     }
 
     @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public void appendMasterPlanDiagnostics(String runId, MasterPlanPlanningDiagnosticsDto diagnostics) {
-        if (diagnostics == null) {
-            return;
-        }
-        appendLog(runId, "INFO", PlanningDiagnosticsSummarizer.masterPlanOneLine(diagnostics));
-        for (String line : PlanningDiagnosticsSummarizer.masterPlanDetailLines(diagnostics)) {
-            appendLog(runId, "INFO", line);
-        }
-    }
-
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public void appendDetailScheduleDiagnostics(String runId, DetailSchedulePlanningDiagnosticsDto diagnostics) {
-        if (diagnostics == null) {
-            return;
-        }
-        appendLog(runId, "INFO", PlanningDiagnosticsSummarizer.detailScheduleOneLine(diagnostics));
-        for (String line : PlanningDiagnosticsSummarizer.detailScheduleDetailLines(diagnostics)) {
-            appendLog(runId, "INFO", line);
-        }
-    }
-
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public void saveDiagnostics(
-            String runId,
-            MasterPlanPlanningDiagnosticsDto masterPlan,
-            DetailSchedulePlanningDiagnosticsDto detailSchedule) {
-        PlanningPipelineRunEntity row = PlanningPipelineRunEntity.findByRunId(runId);
-        if (row == null) {
-            return;
-        }
-        if (masterPlan == null && detailSchedule == null) {
-            row.diagnosticsJson = null;
-        } else {
-            row.diagnosticsJson = serializeDiagnostics(new PlanningPipelineRunDiagnosticsDto(masterPlan, detailSchedule));
-        }
-        row.persist();
-    }
-
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
-    public void completeSuccess(
-            String runId,
-            MasterPlanResultDto masterPlan,
-            DetailScheduleResultDto detailSchedule,
-            MasterPlanPlanningDiagnosticsDto masterPlanDiagnostics,
-            DetailSchedulePlanningDiagnosticsDto detailScheduleDiagnostics) {
-        completeSuccess(runId, masterPlan, detailSchedule);
-        saveDiagnostics(runId, masterPlanDiagnostics, detailScheduleDiagnostics);
-    }
-
-    /** 兼容旧调用 */
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
     public void completeSuccess(
             String runId,
             MasterPlanResultDto masterPlan,
@@ -210,14 +156,6 @@ public class PipelineRunService {
                 e.errorMessage,
                 parseLogs(e.executionLog),
                 parseDiagnostics(e.diagnosticsJson));
-    }
-
-    private String serializeDiagnostics(PlanningPipelineRunDiagnosticsDto diagnostics) {
-        try {
-            return objectMapper.writeValueAsString(diagnostics);
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     private PlanningPipelineRunDiagnosticsDto parseDiagnostics(String json) {

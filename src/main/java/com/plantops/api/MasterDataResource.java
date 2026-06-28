@@ -229,11 +229,13 @@ public class MasterDataResource {
     @GET
     @Path("/boms")
     public List<BomDto> listBoms() {
+        var materialByCode = MaterialEntity.listInWorkspace().stream()
+                .collect(java.util.stream.Collectors.toMap(m -> m.materialCode, m -> m, (a, b) -> a));
         return BomComponentEntity.listInWorkspace().stream()
                 .sorted(Comparator
                         .comparing((BomComponentEntity e) -> e.parentProductCode)
                         .thenComparing(e -> e.componentProductCode))
-                .map(MasterDataResource::toBomDto)
+                .map(e -> toBomDto(e, materialByCode))
                 .toList();
     }
 
@@ -274,6 +276,15 @@ public class MasterDataResource {
     }
 
     private static BomDto toBomDto(BomComponentEntity e) {
+        var materialByCode = MaterialEntity.listInWorkspace().stream()
+                .collect(java.util.stream.Collectors.toMap(m -> m.materialCode, m -> m, (a, b) -> a));
+        return toBomDto(e, materialByCode);
+    }
+
+    static BomDto toBomDto(BomComponentEntity e, java.util.Map<String, MaterialEntity> materialByCode) {
+        MaterialEntity finished = lookupMaterial(materialByCode, e.finishedProductCode);
+        MaterialEntity parent = lookupMaterial(materialByCode, e.parentProductCode);
+        MaterialEntity component = lookupMaterial(materialByCode, e.componentProductCode);
         return new BomDto(
                 e.id,
                 e.finishedProductCode,
@@ -289,7 +300,18 @@ public class MasterDataResource {
                 e.componentEffectiveTo,
                 e.scrapRate,
                 e.lotSize,
-                e.lotSizeMultiple);
+                e.lotSizeMultiple,
+                finished != null ? finished.id : null,
+                parent != null ? parent.id : null,
+                component != null ? component.id : null);
+    }
+
+    private static MaterialEntity lookupMaterial(
+            java.util.Map<String, MaterialEntity> materialByCode, String materialCode) {
+        if (materialCode == null || materialCode.isBlank()) {
+            return null;
+        }
+        return materialByCode.get(materialCode);
     }
 
     // -------------------------- 物料主数据 --------------------------
@@ -995,7 +1017,9 @@ public class MasterDataResource {
     @Path("/material-lead-time")
     public List<MaterialLeadTimeRuleDto> listMaterialLeadTime() {
         return MaterialLeadTimeRuleEntity.listInWorkspace().stream()
-                .sorted(Comparator.comparing((MaterialLeadTimeRuleEntity e) -> e.productCode))
+                .sorted(Comparator
+                        .comparing((MaterialLeadTimeRuleEntity e) -> !"*".equals(e.productCode))
+                        .thenComparing(e -> e.productCode))
                 .map(MasterDataResource::toMaterialLeadTimeDto)
                 .toList();
     }
@@ -1004,12 +1028,12 @@ public class MasterDataResource {
     @Path("/material-lead-time")
     @Transactional
     public MaterialLeadTimeRuleDto upsertMaterialLeadTime(MaterialLeadTimeRuleDto dto) {
-        String productCode = requiredText(dto.productCode(), "物料");
+        String productCode = requiredText(dto.productCode(), "物料编码");
         if (dto.leadTimeDays() < 0) {
-            throw new IllegalArgumentException("采购提前期不能为负");
+            throw new IllegalArgumentException("最长采购周期(天)不能为负");
         }
         MaterialLeadTimeRuleEntity e = dto.id() != null
-                ? findRequired(MaterialLeadTimeRuleEntity.findById(dto.id()), "采购提前期规则不存在")
+                ? findRequired(MaterialLeadTimeRuleEntity.findById(dto.id()), "最长采购周期规则不存在")
                 : MaterialLeadTimeRuleEntity.findByProduct(productCode);
         if (e == null) {
             e = new MaterialLeadTimeRuleEntity();
@@ -1120,6 +1144,7 @@ public class MasterDataResource {
     @GET
     @Path("/parameters")
     public List<SystemParameterDto> listParameters() {
+        parameterRegistry.ensureDefaults();
         return SystemParameterEntity.listInWorkspace().stream()
                 .sorted(Comparator.comparing((SystemParameterEntity e) -> e.paramId))
                 .map(MasterDataResource::toParameterDto)

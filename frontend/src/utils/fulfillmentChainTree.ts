@@ -171,13 +171,31 @@ export function buildFulfillmentChainTree(
   return roots;
 }
 
+function resolveWorkOrderRootId(nodes: FulfillmentChainNode[], workOrderNo: string): string {
+  for (const id of [`supo-${workOrderNo}`, `wo-${workOrderNo}`]) {
+    if (nodes.some((n) => n.nodeId === id)) {
+      return id;
+    }
+  }
+  const byAttr = nodes.find(
+    (n) =>
+      n.attributes?.workOrderNo === workOrderNo || n.attributes?.supplyOrderId === workOrderNo,
+  );
+  return byAttr?.nodeId ?? `supo-${workOrderNo}`;
+}
+
 /** 上游满足链：以工单为根，子级为供应方（子件工单 / 库存 / 缺料） */
 export function buildUpstreamChainTree(
   nodes: FulfillmentChainNode[],
   edges: FulfillmentPegEdge[],
   rootWorkOrderNo: string,
 ): FulfillmentTreeNode[] {
-  return buildWorkOrderDirectedTree(nodes, edges, `wo-${rootWorkOrderNo}`, 'upstream');
+  return buildWorkOrderDirectedTree(
+    nodes,
+    edges,
+    resolveWorkOrderRootId(nodes, rootWorkOrderNo),
+    'upstream',
+  );
 }
 
 /** 下游满足链：以工单为根，子级为消费方（父工单 / 销售订单） */
@@ -186,7 +204,12 @@ export function buildDownstreamChainTree(
   edges: FulfillmentPegEdge[],
   rootWorkOrderNo: string,
 ): FulfillmentTreeNode[] {
-  return buildWorkOrderDirectedTree(nodes, edges, `wo-${rootWorkOrderNo}`, 'downstream');
+  return buildWorkOrderDirectedTree(
+    nodes,
+    edges,
+    resolveWorkOrderRootId(nodes, rootWorkOrderNo),
+    'downstream',
+  );
 }
 
 function buildWorkOrderDirectedTree(
@@ -243,9 +266,108 @@ function buildWorkOrderDirectedTree(
 }
 
 export function fulfillmentTreeNodeTypeLabel(nodeType: string): string {
-  if (nodeType === 'SALES_ORDER') return '销售订单';
+  if (nodeType === 'SALES_ORDER') return '客户交付';
+  if (nodeType === 'SUPPLY_ORDER') return '供应订单';
   if (nodeType === 'WORK_ORDER') return '工单';
   if (nodeType === 'INVENTORY') return '库存';
   if (nodeType === 'SHORTAGE') return '缺料';
   return nodeType;
+}
+
+/** 左侧供应订单树：仅销售订单 / 供应订单 / 工单（不含库存、缺料） */
+export function isSupplyOrderTreeNodeType(nodeType: string): boolean {
+  return nodeType === 'SALES_ORDER' || nodeType === 'SUPPLY_ORDER' || nodeType === 'WORK_ORDER';
+}
+
+/** 满足链供应订单树（过滤物料叶子，物料在右侧面板展示） */
+export function buildSupplyOrderChainTree(
+  nodes: FulfillmentChainNode[],
+  edges: FulfillmentPegEdge[],
+): FulfillmentTreeNode[] {
+  const full = buildFulfillmentChainTree(nodes, edges);
+  return filterTreeToSupplyOrders(full);
+}
+
+function filterTreeToSupplyOrders(tree: FulfillmentTreeNode[]): FulfillmentTreeNode[] {
+  const out: FulfillmentTreeNode[] = [];
+  for (const node of tree) {
+    if (!isSupplyOrderTreeNodeType(node.nodeType)) {
+      continue;
+    }
+    out.push({
+      ...node,
+      children: filterTreeToSupplyOrders(node.children),
+    });
+  }
+  return out;
+}
+
+export interface SupplyOrderTreeRow {
+  nodeId: string;
+  nodeType: string;
+  label: string;
+  productCode: string;
+  quantity: number;
+  startTs: string;
+  endTs: string;
+  depth: number;
+  hasChildren: boolean;
+}
+
+function formatDayTime(ts: string): string {
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return '—';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
+}
+
+/** 按展开状态扁平化供应订单树（行序与甘特对齐） */
+export function flattenSupplyOrderTreeRows(
+  tree: FulfillmentTreeNode[],
+  nodes: FulfillmentChainNode[],
+  collapsed: Set<string>,
+): SupplyOrderTreeRow[] {
+  const nodeById = new Map(nodes.map((n) => [n.nodeId, n]));
+  const rows: SupplyOrderTreeRow[] = [];
+
+  function walk(items: FulfillmentTreeNode[], depth: number) {
+    for (const item of items) {
+      const meta = nodeById.get(item.nodeId);
+      rows.push({
+        nodeId: item.nodeId,
+        nodeType: item.nodeType,
+        label: item.label,
+        productCode: meta?.productCode ?? '',
+        quantity: item.quantity,
+        startTs: meta?.startTs ?? '',
+        endTs: meta?.endTs ?? '',
+        depth,
+        hasChildren: item.children.length > 0,
+      });
+      if (item.children.length > 0 && !collapsed.has(item.nodeId)) {
+        walk(item.children, depth + 1);
+      }
+    }
+  }
+
+  walk(tree, 0);
+  return rows;
+}
+
+export function formatSupplyOrderTreeDate(ts: string): string {
+  return formatDayTime(ts);
+}
+
+export function defaultCollapsedSupplyOrderIds(tree: FulfillmentTreeNode[]): Set<string> {
+  const collapsed = new Set<string>();
+  function walk(nodes: FulfillmentTreeNode[], depth: number) {
+    for (const n of nodes) {
+      if (depth >= 1 && n.children.length > 0) {
+        collapsed.add(n.nodeId);
+      }
+      walk(n.children, depth + 1);
+    }
+  }
+  walk(tree, 0);
+  return collapsed;
 }

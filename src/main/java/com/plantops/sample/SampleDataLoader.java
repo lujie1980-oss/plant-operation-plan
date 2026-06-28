@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.plantops.config.ParameterRegistry;
 import com.plantops.masterdata.ProductResourceOperationNames;
 import com.plantops.persistence.entity.*;
+import com.plantops.scenario.slitting.SlittingDemoSeedService;
 import com.plantops.workspace.WorkspaceConstants;
 import com.plantops.workspace.WorkspaceContext;
 import com.plantops.workspace.WorkspaceResolver;
@@ -59,6 +60,9 @@ public class SampleDataLoader {
 
     @Inject
     com.plantops.masterdata.FactoryCalendarService factoryCalendarService;
+
+    @Inject
+    SlittingDemoSeedService slittingDemoSeedService;
 
     private static final String DEFAULT_CHANGEOVER_XLSX = "/sample-data/changeover-kt-prefix-duration.xlsx";
     private static final String DEFAULT_PARALLEL_OPERATION_XLSX = "/sample-data/u-line-parallel-operation-list.xlsx";
@@ -121,10 +125,19 @@ public class SampleDataLoader {
         ShiftHeadcountEntity.delete("workspaceId", ws);
         InventoryEntity.delete("workspaceId", ws);
         BomComponentEntity.delete("workspaceId", ws);
+        MaterialEntity.delete("workspaceId", ws);
         SalesOrderLineEntity.delete("workspaceId", ws);
         ProductionResourceEntity.delete("workspaceId", ws);
         PlanningPipelineRunEntity.delete("workspaceId", ws);
         SystemParameterEntity.delete("workspaceId", ws);
+        SlittingAssignmentEntity.delete("workspaceId", ws);
+        SlittingRollNodeEntity.delete("workspaceId", ws);
+        SlittingPlanChildOrderEntity.delete("workspaceId", ws);
+        SlittingPlanMasterRollEntity.delete("workspaceId", ws);
+        SlittingPlanVersionEntity.delete("workspaceId", ws);
+        ChildSlittingOrderEntity.delete("workspaceId", ws);
+        MasterRollEntity.delete("workspaceId", ws);
+        IntermediateRollCatalogEntity.delete("workspaceId", ws);
     }
 
     @Transactional
@@ -148,17 +161,33 @@ public class SampleDataLoader {
             JsonNode root = objectMapper.readTree(in);
             root.get("salesOrderLines").forEach(n -> persistOrder(n));
             root.get("bomComponents").forEach(n -> persistBom(n));
+            if (root.has("materials")) {
+                root.get("materials").forEach(n -> persistMaterial(n));
+            }
             root.get("inventory").forEach(n -> persistInventory(n));
             root.get("resources").forEach(n -> persistResource(n));
             root.get("productResources").forEach(n -> persistProductResource(n));
             root.get("lines").forEach(n -> persistLine(n));
-            root.get("changeoverMatrix").forEach(n -> persistChangeover(n));
+            if (root.has("changeoverMatrix")) {
+                root.get("changeoverMatrix").forEach(n -> persistChangeover(n));
+            }
             seedDefaultChangeoverIfEmpty();
+            if (root.has("parallelOperationRules")) {
+                root.get("parallelOperationRules").forEach(n -> persistParallelRule(n));
+            }
             seedDefaultParallelOperationsIfEmpty();
             seedDefaultContinuousProductionIfEmpty();
             root.get("workOrders").forEach(n -> persistWorkOrder(n));
+            if (root.has("masterRolls")) {
+                root.get("masterRolls").forEach(this::persistMasterRoll);
+            }
+            if (root.has("childSlittingOrders")) {
+                root.get("childSlittingOrders").forEach(this::persistChildSlittingOrder);
+            }
             seedCalendars();
             factoryCalendarService.syncResourceCalendarsToHorizon();
+            slittingDemoSeedService.seedFromJson(root);
+            parameterRegistry.ensureDefaults();
         } catch (Exception e) {
             throw new IllegalStateException("Failed to load sample data", e);
         }
@@ -269,8 +298,14 @@ public class SampleDataLoader {
         e.customerCode = textOrNull(n, "customerCode");
         e.productCode = n.get("productCode").asText();
         e.orderQty = BigDecimal.valueOf(n.get("orderQty").asDouble());
-        e.promiseDate = LocalDate.parse(n.get("promiseDate").asText());
-        e.dueDate = LocalDate.parse(n.get("dueDate").asText());
+        e.promiseDate = parseLocalDate(n, "promiseDate");
+        e.dueDate = parseLocalDate(n, "dueDate");
+        if (e.promiseDate == null && e.dueDate != null) {
+            e.promiseDate = e.dueDate;
+        }
+        if (e.dueDate == null && e.promiseDate != null) {
+            e.dueDate = e.promiseDate;
+        }
         e.priority = n.path("priority").asInt(5);
         e.expediteLevel = n.path("expediteLevel").asInt(0);
         e.status = n.path("status").asText("OPEN");
@@ -400,6 +435,30 @@ public class SampleDataLoader {
         }
     }
 
+    private void persistMaterial(JsonNode n) {
+        MaterialEntity e = MaterialEntity.findByCode(n.get("materialCode").asText());
+        if (e == null) {
+            e = new MaterialEntity();
+            e.materialCode = n.get("materialCode").asText();
+        }
+        e.materialName = textOrNull(n, "materialName");
+        e.uomCode = textOrNull(n, "uomCode");
+        e.materialType = textOrNull(n, "materialType");
+        e.stampWorkspace();
+        if (e.id == null) {
+            e.persist();
+        }
+    }
+
+    private void persistParallelRule(JsonNode n) {
+        ParallelOperationRuleEntity e = new ParallelOperationRuleEntity();
+        e.lineId = n.get("lineId").asText();
+        e.firstProductCode = n.get("firstProductCode").asText();
+        e.secondProductCode = n.get("secondProductCode").asText();
+        e.stampWorkspace();
+        e.persist();
+    }
+
     private void persistChangeover(JsonNode n) {
         ChangeoverMatrixEntity e = new ChangeoverMatrixEntity();
         if (n.has("operationName")) {
@@ -443,11 +502,73 @@ public class SampleDataLoader {
         if (n.has("parentWorkOrderNo") && !n.get("parentWorkOrderNo").isNull()) {
             e.parentWorkOrderNo = n.get("parentWorkOrderNo").asText();
         }
+        e.sourceType = textOrNull(n, "sourceType");
+        if (e.sourceType == null || e.sourceType.isBlank()) {
+            e.sourceType = WorkOrderEntity.SOURCE_MRP;
+        }
+        e.stampWorkspace();
+        e.persist();
+    }
+
+    private void persistMasterRoll(JsonNode n) {
+        String rollCode = n.get("rollCode").asText();
+        if (MasterRollEntity.findByRollCode(rollCode) != null) {
+            return;
+        }
+        MasterRollEntity e = new MasterRollEntity();
+        e.rollCode = rollCode;
+        e.widthMm = BigDecimal.valueOf(n.get("widthMm").asDouble());
+        e.lengthMm = BigDecimal.valueOf(n.get("lengthMm").asDouble());
+        if (n.has("thicknessMm") && !n.get("thicknessMm").isNull()) {
+            e.thicknessMm = BigDecimal.valueOf(n.get("thicknessMm").asDouble());
+        }
+        e.materialCode = textOrNull(n, "materialCode");
+        e.productCode = textOrNull(n, "productCode");
+        e.finishedProductCode = textOrNull(n, "finishedProductCode");
+        e.kerfLongitudinalMm = BigDecimal.valueOf(n.path("kerfLongitudinalMm").asDouble(2));
+        e.kerfTransverseMm = BigDecimal.valueOf(n.path("kerfTransverseMm").asDouble(2));
+        e.status = n.path("status").asText(MasterRollEntity.STATUS_AVAILABLE);
+        e.stampWorkspace();
+        e.persist();
+    }
+
+    private void persistChildSlittingOrder(JsonNode n) {
+        String orderCode = n.get("orderCode").asText();
+        if (ChildSlittingOrderEntity.findByOrderCode(orderCode) != null) {
+            return;
+        }
+        ChildSlittingOrderEntity e = new ChildSlittingOrderEntity();
+        e.orderCode = orderCode;
+        e.widthMm = BigDecimal.valueOf(n.get("widthMm").asDouble());
+        e.lengthMm = BigDecimal.valueOf(n.get("lengthMm").asDouble());
+        if (n.has("thicknessMm") && !n.get("thicknessMm").isNull()) {
+            e.thicknessMm = BigDecimal.valueOf(n.get("thicknessMm").asDouble());
+        }
+        e.quantity = n.path("quantity").asInt(1);
+        e.priority = n.path("priority").asInt(5);
+        e.salesOrderNo = textOrNull(n, "salesOrderNo");
+        if (n.has("salesOrderLineNo") && !n.get("salesOrderLineNo").isNull()) {
+            e.salesOrderLineNo = n.get("salesOrderLineNo").asInt();
+        }
+        e.productCode = textOrNull(n, "productCode");
+        e.finishedProductCode = textOrNull(n, "finishedProductCode");
+        e.status = n.path("status").asText(ChildSlittingOrderEntity.STATUS_OPEN);
         e.stampWorkspace();
         e.persist();
     }
 
     private static String textOrNull(JsonNode n, String field) {
         return n.has(field) && !n.get(field).isNull() ? n.get(field).asText() : null;
+    }
+
+    private static LocalDate parseLocalDate(JsonNode n, String field) {
+        if (!n.has(field) || n.get(field).isNull()) {
+            return null;
+        }
+        String text = n.get(field).asText();
+        if (text == null || text.isBlank() || "null".equalsIgnoreCase(text)) {
+            return null;
+        }
+        return LocalDate.parse(text);
     }
 }

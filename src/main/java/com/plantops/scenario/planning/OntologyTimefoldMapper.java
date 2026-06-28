@@ -17,7 +17,7 @@ import java.util.Map;
 @ApplicationScoped
 public class OntologyTimefoldMapper {
 
-    private static final String PROPERTY_PLANNED_SUPPLY_TOTAL = "plannedSupplyTotal";
+    private static final String PROPERTY_PLANNED_SUPPLY_TOTAL_OPTIMIZED = "plannedSupplyTotalOptimized";
 
     public ChangeSet toChangeSet(
             List<MasterPlanAllocationDto> allocations,
@@ -49,7 +49,7 @@ public class OntologyTimefoldMapper {
             operations.add(new ChangeOperation(
                     ChangeOperation.TARGET_PRODUCT_IN_STOCKING_POINT_PERIOD,
                     entry.getKey(),
-                    PROPERTY_PLANNED_SUPPLY_TOTAL,
+                    PROPERTY_PLANNED_SUPPLY_TOTAL_OPTIMIZED,
                     entry.getValue()));
         }
 

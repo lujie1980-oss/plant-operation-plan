@@ -109,6 +109,7 @@ class MasterPlanOntologyConfirmServiceTest {
     @Test
     void confirmPersistsAllocationsAndReturnsPlanVersionId() throws Exception {
         MasterPlanSessionDto created = service.create(new CreateMasterPlanSessionRequest(PLAN_VERSION_ID, null));
+        service.optimize(created.sessionId());
 
         MasterPlanSessionConfirmResultDto result = service.confirm(created.sessionId());
 

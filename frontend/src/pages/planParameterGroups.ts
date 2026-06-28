@@ -42,7 +42,25 @@ export const MASTER_PLAN_PARAM_GROUPS: ParamGroupDef[] = [
     id: 'capacity',
     label: '产能约束',
     description: '产能超载判定与主计划求解器时限；保存后下次主计划运行生效。',
-    paramIds: ['capacity_overload_threshold_pct', 'master_plan_solver_seconds'],
+    paramIds: [
+      'capacity_overload_threshold_pct',
+      'master_plan_solver_seconds',
+      'master_plan_demand_scale',
+    ],
+  },
+  {
+    id: 'multi-resource',
+    label: '多机台拆分',
+    description:
+      '启用后同一工序可按分钟拆到多台候选设备（OR-Tools CP-SAT）；全局主计划与单交付有限能力计划均生效。关闭时仍用 Timefold 单机台落槽。',
+    paramIds: ['master_plan_multi_resource_split', 'master_plan_jit_warm_start'],
+  },
+  {
+    id: 'material',
+    label: '物料约束',
+    description:
+      '主计划 Timefold 硬约束：排产日 BOM/库存物料必须可满足。关闭后求解不再因缺料扣分（齐套分析、需求满足 KPI 仍会显示缺料）。保存后下次主计划运行生效。',
+    paramIds: ['master_plan_material_constraint_enabled'],
   },
 ];
 
@@ -82,4 +100,8 @@ export const ALL_PLAN_PARAM_IDS = new Set([
   ...MASTER_PLAN_PARAM_GROUPS.flatMap((g) => g.paramIds),
   ...SCHEDULING_PARAM_GROUPS.flatMap((g) => g.paramIds),
   ...PARAMS_MANAGED_ELSEWHERE,
+  'slitting_solver_seconds',
+  'slitting_session_solver_seconds',
+  'slitting_default_child_width_mm',
+  'slitting_default_child_length_mm',
 ]);

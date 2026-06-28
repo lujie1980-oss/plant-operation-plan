@@ -5,6 +5,7 @@ import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 @Entity
@@ -23,6 +24,16 @@ public class WorkOrderPeggingEntity extends WorkspaceScopedEntity {
                 "workspaceId = ?1 and workOrderNo = ?2 order by salesOrderNo, salesOrderLineNo",
                 ws(),
                 workOrderNo);
+    }
+
+    public static List<WorkOrderPeggingEntity> findByWorkOrders(Collection<String> workOrderNos) {
+        if (workOrderNos == null || workOrderNos.isEmpty()) {
+            return List.of();
+        }
+        return list(
+                "workspaceId = ?1 and workOrderNo in ?2 order by workOrderNo, salesOrderNo, salesOrderLineNo",
+                ws(),
+                workOrderNos);
     }
 
     public static List<WorkOrderPeggingEntity> findByOrderLine(String salesOrderNo, int salesOrderLineNo) {

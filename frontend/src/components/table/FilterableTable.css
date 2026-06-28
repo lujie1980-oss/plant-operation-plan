@@ -19,8 +19,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 1.65rem;
-  padding: 0.25rem 0.35rem;
+  min-height: var(--ui-row-h);
+  padding: 0.15rem 0.35rem;
   gap: 0.15rem;
 }
 
@@ -30,6 +30,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.ft-th-label--icon {
+  display: flex;
+  justify-content: center;
+  overflow: visible;
+}
+
+.ft-th-violation-icon {
+  justify-content: center;
+  cursor: default;
+}
+
+.ft-th-unified .ft-th-inner {
+  justify-content: center;
+}
+
+.ft-th-unified .ft-th-label--icon,
+.ft-th-unified .ft-th-label:has(.ft-th-violation-icon) {
+  flex: 0;
 }
 
 .ft-th-filter-trigger {
@@ -71,6 +91,57 @@
 
 .ft-th-filter-trigger.is-active .ft-th-filter-icon {
   color: #2563eb;
+}
+
+.ft-th-sort-trigger {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.3rem;
+  margin: -0.15rem -0.3rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ft-th-sort-trigger:hover,
+.ft-th-sort-trigger.is-active {
+  background: #f0fdfa;
+  border-color: #99f6e4;
+  color: #0f766e;
+}
+
+.ft-th-sort-icon {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  color: #64748b;
+}
+
+.ft-th-sort-btn {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 0.65rem;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.ft-th-sort-btn:hover,
+.ft-th-sort-btn.is-active {
+  background: #f0fdfa;
+  border-color: #99f6e4;
+  color: #0f766e;
 }
 
 .ft-col-resize {
@@ -176,6 +247,33 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.ft-table.ft-table-clip-rows tbody td {
+  height: var(--ui-row-h);
+  max-height: var(--ui-row-h);
+  padding-top: 0;
+  padding-bottom: 0;
+  vertical-align: middle;
+}
+
+.ft-cell-inner {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ft-cell-inner code,
+.ft-cell-inner .badge {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 
 .ft-table td.ft-cell-wrap {

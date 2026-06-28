@@ -1,6 +1,9 @@
 package com.plantops.workspace;
 
-import com.plantops.persistence.entity.SalesOrderLineEntity;
+import com.plantops.iam.entity.WorkspaceEnabledModuleEntity;
+import com.plantops.iam.entity.WorkspaceEnabledAdapterEntity;
+import com.plantops.iam.entity.WorkspaceMemberEntity;
+import com.plantops.persistence.entity.MaterialEntity;
 import com.plantops.persistence.entity.WorkspaceEntity;
 import com.plantops.sample.SampleDataLoader;
 import io.quarkus.runtime.StartupEvent;
@@ -13,8 +16,10 @@ import org.jboss.logging.Logger;
 
 import java.time.LocalDateTime;
 
+import static jakarta.transaction.Transactional.TxType.REQUIRES_NEW;
+
 /**
- * 启动时确保马勒 / 盾安演示 workspace 存在并已灌入对应 sample-data。
+ * 启动时确保演示 workspace 存在并已灌入对应 sample-data。
  */
 @ApplicationScoped
 public class WorkspaceSeedService {
@@ -23,6 +28,9 @@ public class WorkspaceSeedService {
 
     public static final String MAHLE_ID = "mahle";
     public static final String DUNAN_LITE_ID = "dunan-lite";
+    public static final String JINGHUA_ID = "jinghua";
+    public static final String TE_ID = "te";
+    public static final String SLITTING_DEMO_ID = "slitting-demo";
 
     @Inject
     WorkspaceContext workspaceContext;
@@ -49,15 +57,20 @@ public class WorkspaceSeedService {
     @Transactional
     public void seedDemoWorkspaces() {
         ensureWorkspaceWithData(
-                MAHLE_ID,
-                "马勒演示",
-                "马勒 factory-demo 演示数据集",
-                "sample-data/factory-demo.json");
+                JINGHUA_ID,
+                "晶华新材",
+                "晶华新材 MRP测试用例.xlsx 演示数据集",
+                "sample-data/factory-jinghua-demo.json");
         ensureWorkspaceWithData(
-                DUNAN_LITE_ID,
-                "盾安 Lite",
-                "盾安精简演示数据集（dunan-lite）",
-                "sample-data/factory-dunan-demo-lite.json");
+                TE_ID,
+                "TE",
+                "TE 100成品子集 + 工艺/规则演示数据集",
+                "sample-data/factory-te-demo.json");
+        ensureWorkspaceWithData(
+                SLITTING_DEMO_ID,
+                "分切演示",
+                "多场景分切优化演示：宽母卷拼排、N83 多级 BOM、锁定/重算验证",
+                "sample-data/factory-slitting-demo.json");
     }
 
     private void ensureWorkspaceWithData(String workspaceId, String name, String description, String resourcePath) {
@@ -67,11 +80,18 @@ public class WorkspaceSeedService {
             row.name = name;
             row.description = description;
             row.createdAt = LocalDateTime.now();
-            row.isDefault = false;
+            row.isDefault = JINGHUA_ID.equals(workspaceId);
+            row.ownerUserId = "dev";
+            row.workspaceType = "SHARED";
             row.persist();
             workspaceRegistry.register(workspaceId);
+
+            // IAM M1: dev 用户为 OWNER
+            ensureWorkspaceMember(workspaceId, "dev", "OWNER");
+            // 默认模块开关
+            ensureDefaultModules(workspaceId);
         }
-        if (SalesOrderLineEntity.count("workspaceId", workspaceId) > 0) {
+        if (MaterialEntity.count("workspaceId", workspaceId) > 0) {
             return;
         }
         String prev = workspaceContext.getWorkspaceId();
@@ -80,6 +100,39 @@ public class WorkspaceSeedService {
             sampleDataLoader.reloadDemo(resourcePath);
         } finally {
             workspaceContext.setWorkspaceId(prev);
+        }
+    }
+
+    private void ensureWorkspaceMember(String workspaceId, String userId, String role) {
+        if (WorkspaceMemberEntity.count("workspaceId = ?1 and userId = ?2", workspaceId, userId) == 0) {
+            WorkspaceMemberEntity m = new WorkspaceMemberEntity();
+            m.workspaceId = workspaceId;
+            m.userId = userId;
+            m.role = role;
+            m.persist();
+        }
+    }
+
+    private void ensureDefaultModules(String workspaceId) {
+        String[][] defaults = {
+                {"MOD-DI", "true"}, {"MOD-OCP", "true"}, {"MOD-SCH", "true"},
+                {"MOD-SLT", "false"}, {"MOD-CAL", "true"}
+        };
+        for (String[] pair : defaults) {
+            if (WorkspaceEnabledModuleEntity.count("workspaceId = ?1 and moduleId = ?2", workspaceId, pair[0]) == 0) {
+                WorkspaceEnabledModuleEntity mod = new WorkspaceEnabledModuleEntity();
+                mod.workspaceId = workspaceId;
+                mod.moduleId = pair[0];
+                mod.enabled = Boolean.parseBoolean(pair[1]);
+                mod.persist();
+            }
+        }
+        if (WorkspaceEnabledAdapterEntity.count("workspaceId = ?1 and adapterId = ?2", workspaceId, "ADP-EXCEL") == 0) {
+            WorkspaceEnabledAdapterEntity adp = new WorkspaceEnabledAdapterEntity();
+            adp.workspaceId = workspaceId;
+            adp.adapterId = "ADP-EXCEL";
+            adp.enabled = true;
+            adp.persist();
         }
     }
 }

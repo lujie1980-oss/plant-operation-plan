@@ -47,7 +47,11 @@ public final class MasterDataDtos {
             LocalDate componentEffectiveTo,
             BigDecimal scrapRate,
             BigDecimal lotSize,
-            BigDecimal lotSizeMultiple
+            BigDecimal lotSizeMultiple,
+            /** 关联物料主数据 material.id（展示用物料名称，存储仍用 productCode） */
+            Long finishedMaterialId,
+            Long parentMaterialId,
+            Long componentMaterialId
     ) {
     }
 
@@ -212,7 +216,9 @@ public final class MasterDataDtos {
 
     public record MaterialLeadTimeRuleDto(
             Long id,
+            /** 物料编码；{@code *} = 默认最长采购周期（RULE-MRP-04） */
             String productCode,
+            /** 最长采购周期（天） */
             int leadTimeDays
     ) {
     }

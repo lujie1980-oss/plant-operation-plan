@@ -1,8 +1,6 @@
 package com.plantops.scenario;
 
 import com.plantops.api.dto.*;
-import com.plantops.api.dto.planning.DetailSchedulePlanningDiagnosticsDto;
-import com.plantops.api.dto.planning.MasterPlanPlanningDiagnosticsDto;
 import com.plantops.domain.RescheduleLevel;
 import com.plantops.persistence.entity.PlanningPipelineRunEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
@@ -201,10 +199,7 @@ public class PlanningOrchestrator {
                             + "，产能 " + effective.capacityStrategy().name() + "）");
             MasterPlanPlanningContext masterPlanContext = masterPlanService.buildPlanningContext(
                     effective, MasterPlanCapacityOverlay.empty(), materialPlanning);
-            MasterPlanPlanningDiagnosticsDto masterPlanDiagnostics = masterPlanContext.diagnostics();
-            pipelineRunService.appendMasterPlanDiagnostics(runId, masterPlanDiagnostics);
-
-            pipelineRunService.appendLog(runId, "INFO", "S04 Timefold 主计划求解");
+            pipelineRunService.appendLog(runId, "INFO", "S04 主计划求解");
             MasterPlanResultDto masterPlan = masterPlanService.solveWithPlanningContext(
                     masterPlanContext, effective, null, null);
             pipelineRunService.appendLog(
@@ -214,14 +209,11 @@ public class PlanningOrchestrator {
             DetailScheduleResultDto detailSchedule = null;
             MasterPlanRefreshResultDto masterPlanRefresh = null;
             MasterPlanResultDto effectiveMasterPlan = masterPlan;
-            DetailSchedulePlanningDiagnosticsDto detailScheduleDiagnostics = null;
 
             if (options != null && options.includeDetailSchedule()) {
                 pipelineRunService.appendLog(runId, "INFO", "S05 推演层构建");
                 DetailSchedulePlanningContext detailContext = detailScheduleService.buildPlanningContext(
                         masterPlan.planVersionId(), materialPlanning);
-                detailScheduleDiagnostics = detailContext.diagnostics();
-                pipelineRunService.appendDetailScheduleDiagnostics(runId, detailScheduleDiagnostics);
 
                 pipelineRunService.appendLog(runId, "INFO", "S05 Timefold 详细排程求解");
                 boolean refresh = options.refreshMasterPlanAfterSchedule();
@@ -252,8 +244,7 @@ public class PlanningOrchestrator {
                         "请在「生产计划」确认并发布工单后，再到「生产排程」执行排程");
             }
 
-            pipelineRunService.completeSuccess(
-                    runId, effectiveMasterPlan, detailSchedule, masterPlanDiagnostics, detailScheduleDiagnostics);
+            pipelineRunService.completeSuccess(runId, effectiveMasterPlan, detailSchedule);
             if (run.scenarioId != null && effectiveMasterPlan != null) {
                 planningScenarioService.recordMasterPlanVersion(
                         run.scenarioId, effectiveMasterPlan.planVersionId());

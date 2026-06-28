@@ -393,7 +393,7 @@ ProductRoutingSteps.forProduct(productCode)
 - [主计划 BOM / 工艺粒度对比](master-plan-bom-routing.md)
 - [OTD 本体映射基线 M1](otd-ontology-mapping.md)
 - [APS 推演层（含 §8.6 本体 Session API）](aps-planning-layer.md)
-- [项目总览](PROJECT_DOCUMENTATION.md)
+- [项目总览](SDD.md)（历史 `PROJECT_DOCUMENTATION.md` 已归档）
 
 ---
 

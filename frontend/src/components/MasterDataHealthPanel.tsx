@@ -189,7 +189,6 @@ export function MasterDataHealthPanel({ dataRevision = 0, onNavigateToRecord }: 
                         key: 'action',
                         header: '',
                         filterable: false,
-                        resizable: false,
                         className: 'mdh-action-cell',
                         render: (item) =>
                           item.navigable ? (

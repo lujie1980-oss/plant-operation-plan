@@ -1,6 +1,7 @@
 package com.plantops.scenario.slitting;
 
 import com.plantops.api.dto.slitting.SlittingAssignmentDto;
+import com.plantops.persistence.entity.MasterRollEntity;
 import com.plantops.persistence.entity.SlittingRollNodeEntity;
 import com.plantops.solver.slitting.Dimensions;
 import com.plantops.solver.slitting.NestAssignment;
@@ -24,10 +25,14 @@ public final class SlittingAssignmentValidator {
         if (assignments == null || assignments.isEmpty()) {
             return;
         }
+        List<SlittingRollNodeEntity> entities = SlittingRollNodeEntity.listByPlanVersionId(planVersionId);
+        Map<String, SlittingRollNodeEntity> entityById = new HashMap<>();
         Map<String, RollNode> nodesById = new HashMap<>();
-        for (SlittingRollNodeEntity entity : SlittingRollNodeEntity.listByPlanVersionId(planVersionId)) {
+        for (SlittingRollNodeEntity entity : entities) {
+            entityById.put(entity.nodeId, entity);
             nodesById.put(entity.nodeId, toRollNode(entity));
         }
+        inheritKerfFromMaster(nodesById, entityById);
         List<NestAssignment> placed = new ArrayList<>();
         for (SlittingAssignmentDto dto : assignments) {
             if (dto.assignmentId() == null || dto.assignmentId().isBlank()) {
@@ -53,10 +58,16 @@ public final class SlittingAssignmentValidator {
             if (overflows(parent, assignment)) {
                 throw new BadRequestException("assignment " + dto.assignmentId() + " exceeds parent boundary");
             }
+            double kerfW = SlittingGeometryUtil.kerfWidthMm(parent);
+            double kerfL = SlittingGeometryUtil.kerfLengthMm(parent);
             for (NestAssignment existing : placed) {
-                if (SlittingGeometryUtil.overlaps(existing, assignment)) {
-                    throw new BadRequestException("assignment " + dto.assignmentId() + " overlaps another on parent "
-                            + dto.parentNodeId());
+                if (!existing.getParentNode().getNodeId().equals(assignment.getParentNode().getNodeId())) {
+                    continue;
+                }
+                if (SlittingGeometryUtil.violatesKerfClearance(existing, assignment, kerfW, kerfL)) {
+                    throw new BadRequestException("assignment " + dto.assignmentId()
+                            + " overlaps or violates kerf clearance on parent " + dto.parentNodeId()
+                            + " (width kerf " + kerfW + " mm, length kerf " + kerfL + " mm)");
                 }
             }
             placed.add(assignment);
@@ -67,9 +78,16 @@ public final class SlittingAssignmentValidator {
         if (child.getType() == RollType.CHILD && parent.getType() != RollType.INTERMEDIATE) {
             throw new BadRequestException("child assignment must use intermediate parent");
         }
-        if (child.getType() == RollType.INTERMEDIATE && parent.getType() != RollType.MASTER) {
-            throw new BadRequestException("intermediate assignment must use master parent");
+        if (child.getType() == RollType.INTERMEDIATE
+                && parent.getType() != RollType.MASTER
+                && parent.getType() != RollType.INTERMEDIATE) {
+            throw new BadRequestException("intermediate assignment must use master or intermediate parent");
         }
+    }
+
+    /** Studio editor: same geometry checks, allows nested intermediate regions. */
+    public static void validateStudio(String planVersionId, List<SlittingAssignmentDto> assignments) {
+        validate(planVersionId, assignments);
     }
 
     private static boolean overflows(RollNode parent, NestAssignment assignment) {
@@ -80,13 +98,64 @@ public final class SlittingAssignmentValidator {
         return px + w > parent.getDimensions().widthMm() || py + h > parent.getDimensions().lengthMm();
     }
 
+    private static void inheritKerfFromMaster(
+            Map<String, RollNode> nodesById, Map<String, SlittingRollNodeEntity> entityById) {
+        for (RollNode node : nodesById.values()) {
+            if (node.getType() == RollType.MASTER) {
+                continue;
+            }
+            RollNode master = findAncestorMaster(node.getNodeId(), nodesById, entityById);
+            if (master == null) {
+                continue;
+            }
+            if (node.getKerfTransverseMm() <= 0 && master.getKerfTransverseMm() > 0) {
+                node.setKerfTransverseMm(master.getKerfTransverseMm());
+            }
+            if (node.getKerfLongitudinalMm() <= 0 && master.getKerfLongitudinalMm() > 0) {
+                node.setKerfLongitudinalMm(master.getKerfLongitudinalMm());
+            }
+            if (node.getKerfMm() <= 0 && master.getKerfMm() > 0) {
+                node.setKerfMm(master.getKerfMm());
+            }
+        }
+    }
+
+    private static RollNode findAncestorMaster(
+            String nodeId, Map<String, RollNode> nodesById, Map<String, SlittingRollNodeEntity> entityById) {
+        SlittingRollNodeEntity current = entityById.get(nodeId);
+        while (current != null) {
+            RollNode roll = nodesById.get(current.nodeId);
+            if (roll != null && roll.getType() == RollType.MASTER) {
+                return roll;
+            }
+            current = current.parentNodeId != null ? entityById.get(current.parentNodeId) : null;
+        }
+        return null;
+    }
+
     private static RollNode toRollNode(SlittingRollNodeEntity entity) {
         RollType type = RollType.valueOf(entity.nodeType);
         Dimensions dims = new Dimensions(
                 toDouble(entity.widthMm),
                 toDouble(entity.lengthMm),
                 entity.thicknessMm != null ? toDouble(entity.thicknessMm) : 0);
-        return new RollNode(entity.nodeId, type, dims);
+        RollNode node = new RollNode(entity.nodeId, type, dims);
+        if (entity.kerfMm != null && entity.kerfMm.signum() > 0) {
+            double k = toDouble(entity.kerfMm);
+            node.setKerfMm(k);
+            node.setKerfTransverseMm(k);
+            node.setKerfLongitudinalMm(k);
+        }
+        if (type == RollType.MASTER && entity.nodeId != null && entity.nodeId.startsWith("MASTER-")) {
+            String rollCode = entity.nodeId.substring("MASTER-".length());
+            MasterRollEntity roll = MasterRollEntity.findByRollCode(rollCode);
+            if (roll != null) {
+                node.setKerfTransverseMm(toDouble(roll.kerfTransverseMm));
+                node.setKerfLongitudinalMm(toDouble(roll.kerfLongitudinalMm));
+                node.setKerfMm(Math.max(node.getKerfTransverseMm(), node.getKerfLongitudinalMm()));
+            }
+        }
+        return node;
     }
 
     private static int toInt(BigDecimal value) {

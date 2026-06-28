@@ -4,6 +4,7 @@ import type {
   FulfillmentOperation,
   FulfillmentPegEdge,
 } from '../types/api';
+import type { SupplyOrderTreeRow } from './fulfillmentChainTree';
 import { isGanttChainNodeType, isMaterialNodeType } from './fulfillmentMaterial';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -17,6 +18,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const SUPPLIER_TYPE_ORDER: Record<string, number> = {
+  SUPPLY_ORDER: 0,
   WORK_ORDER: 0,
   INVENTORY: 1,
   SHORTAGE: 2,
@@ -44,7 +46,7 @@ function ganttDisplayName(node: FulfillmentChainNode, level: number): string {
 
 function pegLabel(type: string): string {
   if (type === 'INVENTORY_PEG') return '库存满足';
-  if (type === 'WORK_ORDER_PEG') return '工单满足';
+  if (type === 'WORK_ORDER_PEG') return '供应订单满足';
   return '缺料';
 }
 
@@ -73,6 +75,55 @@ function buildSuppliersByDemander(
     map.set(e.toNodeId, list);
   }
   return map;
+}
+
+/** 供应订单树行 → 甘特任务（一行一工单，不含工序子行） */
+export function supplyOrderRowsToGanttTasks(rows: SupplyOrderTreeRow[]): Task[] {
+  if (rows.length === 0) {
+    const now = new Date();
+    return [
+      {
+        id: 'empty',
+        name: '暂无供应订单',
+        start: now,
+        end: new Date(now.getTime() + 3_600_000),
+        type: 'task',
+        progress: 0,
+      },
+    ];
+  }
+
+  const STATUS_COLORS: Record<string, string> = {
+    OK: '#10b981',
+    PLANNED: '#3b82f6',
+    DEMAND: '#6366f1',
+    PENDING: '#94a3b8',
+    SHORTAGE: '#ef4444',
+    ON_TRACK: '#0ea5e9',
+    AT_RISK: '#f59e0b',
+  };
+
+  return rows.map((row, index) => {
+    const start = parseTs(row.startTs);
+    const end = parseTs(row.endTs);
+    const color =
+      row.nodeType === 'SALES_ORDER'
+        ? STATUS_COLORS.DEMAND
+        : STATUS_COLORS.PLANNED;
+    return {
+      id: row.nodeId,
+      name: row.label,
+      start,
+      end: end.getTime() > start.getTime() ? end : new Date(start.getTime() + 3_600_000),
+      type: 'task',
+      progress: 100,
+      displayOrder: index + 1,
+      styles: {
+        backgroundColor: color,
+        progressColor: color,
+      },
+    };
+  });
 }
 
 /** 满足追溯链 → 甘特（左侧行序 = 上下游满足层级；箭头层单独绘制） */

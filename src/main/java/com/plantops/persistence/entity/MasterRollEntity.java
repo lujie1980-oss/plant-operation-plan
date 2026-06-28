@@ -32,6 +32,14 @@ public class MasterRollEntity extends WorkspaceScopedEntity {
     @Column(name = "material_code", length = 64)
     public String materialCode;
 
+    /** 母卷对应物料规格（BOM 父件） */
+    @Column(name = "product_code", length = 256)
+    public String productCode;
+
+    /** BOM 展开根（成品/母件料号） */
+    @Column(name = "finished_product_code", length = 256)
+    public String finishedProductCode;
+
     @Column(name = "kerf_longitudinal_mm", nullable = false)
     public BigDecimal kerfLongitudinalMm = BigDecimal.ZERO;
 

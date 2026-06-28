@@ -8,39 +8,218 @@ import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.PeriodSequenceSpec;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
+import com.plantops.ontology.demand.Demand;
+import com.plantops.ontology.fulfillment.OntologyUpstreamFulfillmentBuilder;
+import com.plantops.ontology.fulfillment.SupplyChainLoader;
+import com.plantops.ontology.fulfillment.UpstreamFulfillmentSession;
+import com.plantops.ontology.scheduling.SchedulingSlot;
+import com.plantops.ontology.scheduling.SchedulingSlotExpander;
 import com.plantops.ontology.supply.Operation;
+import com.plantops.ontology.supply.OperationOnStandardResource;
+import com.plantops.ontology.supply.OperationPostProcessingResolver;
+import com.plantops.ontology.supply.OperationResourceBinding;
+import com.plantops.ontology.supply.Supply;
 import com.plantops.ontology.supply.SupplyOrder;
 import com.plantops.ontology.supply.WorkOrderSupplyOrderMapper;
+import com.plantops.persistence.entity.BomComponentEntity;
 import com.plantops.persistence.entity.InventoryEntity;
 import com.plantops.persistence.entity.MaterialEntity;
 import com.plantops.persistence.entity.PlanVersionEntity;
 import com.plantops.persistence.entity.ProductionLineEntity;
-import com.plantops.persistence.entity.ProductResourceEntity;
+import com.plantops.persistence.entity.ProductionResourceEntity;
 import com.plantops.persistence.entity.ResourceCalendarEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.SystemParameterEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
-import com.plantops.rol.OperationTimeWindowDerivations;
+import com.plantops.persistence.entity.WorkOrderPeggingEntity;
+import com.plantops.ontology.supply.OperationParallelBindingService;
+import com.plantops.ontology.supply.OperationTimingBridgeService;
 import com.plantops.rol.PispRolling;
+import com.plantops.scenario.OntologyUpstreamChainWorkOrderPersister;
+import com.plantops.scenario.planning.PlanVersionAllocationHydrator;
+import com.plantops.scenario.ProductRoutingSteps;
+import com.plantops.scenario.RuleScopeHelper;
 import com.plantops.scenario.WorkOrderService;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.NotFoundException;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class OntologyLoader {
 
+    @Inject
+    SchedulingSlotExpander schedulingSlotExpander;
+
+    @Inject
+    SupplyChainLoader supplyChainLoader;
+
+    @Inject
+    OperationTimingBridgeService operationTimingBridgeService;
+
+    @Inject
+    OperationParallelBindingService operationParallelBindingService;
+
+    @Inject
+    PlanVersionAllocationHydrator planVersionAllocationHydrator;
+
+    @Inject
+    OntologyUpstreamFulfillmentBuilder upstreamFulfillmentBuilder;
+
+    @Inject
+    OntologyUpstreamChainWorkOrderPersister upstreamChainWorkOrderPersister;
+
+    @Inject
+    RuleScopeHelper ruleScopeHelper;
+
     public OntologyGraph loadForWorkspace(LocalDate planningStart) {
         LocalDate effectiveStart = planningStart != null ? planningStart : LocalDate.now();
         return buildGraph(effectiveStart);
+    }
+
+    /**
+     * 上游满足链：本体求解不在长事务中执行；仅 prepare/persist 使用独立的短事务（REQUIRES_NEW），
+     * 避免长时间占锁导致 H2 超时与 503。
+     */
+    /**
+     * 单交付行只读快照（过渡）。<strong>禁止</strong>作为 simulate / optimize / confirm 真相源（ADR-07 / RULE-SES-04）。
+     * 满足链请使用 {@link WorkspaceAuthoritativeOntologyGraphService} + {@link OntologyFulfillmentChainProjector}。
+     *
+     * @deprecated 规范路径为权威全厂图 + DTO 投影；保留仅供遗留只读调用排查。
+     */
+    @Deprecated
+    public OntologyGraph buildDeliveryFulfillmentProjectionGraph(String deliveryId, LocalDate planningStart) {
+        LocalDate effectiveStart = planningStart != null ? planningStart : LocalDate.now();
+        OntologyIds.CustomerOrderLineDeliveryKey deliveryKey =
+                OntologyIds.parseCustomerOrderLineDeliveryId(deliveryId);
+        UpstreamFulfillmentSession session =
+                UpstreamFulfillmentSession.create(deliveryKey, Set.of(), ruleScopeHelper);
+
+        OntologyGraph.Builder builder = createUpstreamScopedBuilder(effectiveStart, deliveryKey, session);
+        List<SupplyOrder> supplyOrders = new ArrayList<>(builder.supplyOrdersById().values());
+        loadOperations(builder, supplyOrders);
+        supplyChainLoader.expandDemandsAndStructureOnly(builder, supplyOrders);
+        supplyChainLoader.runFulfillmentPegging(builder, supplyOrders);
+
+        OntologyGraph graph = builder.build();
+        operationTimingBridgeService.applyToGraph(graph, effectiveStart);
+        return graph;
+    }
+
+    @Deprecated
+    public OntologyGraph buildDeliveryFulfillmentProjectionGraph(String deliveryId, String planVersionId) {
+        LocalDate planningStart = LocalDate.now();
+        if (planVersionId != null && !planVersionId.isBlank()) {
+            PlanVersionEntity planVersion = PlanVersionEntity.findByVersionId(planVersionId);
+            if (planVersion != null) {
+                planningStart = resolvePlanningStart(planVersion);
+            }
+        }
+        OntologyGraph graph = buildDeliveryFulfillmentProjectionGraph(deliveryId, planningStart);
+        if (planVersionId != null && !planVersionId.isBlank()) {
+            planVersionAllocationHydrator.hydrate(graph, planVersionId);
+        }
+        return graph;
+    }
+
+    public OntologyGraph buildUpstreamFulfillmentGraph(String deliveryId, LocalDate planningStart) {
+        LocalDate effectiveStart = planningStart != null ? planningStart : LocalDate.now();
+        OntologyIds.CustomerOrderLineDeliveryKey deliveryKey =
+                OntologyIds.parseCustomerOrderLineDeliveryId(deliveryId);
+        if (deliveryKey != null) {
+            upstreamChainWorkOrderPersister.prepareOrderLineRebuild(deliveryKey);
+        }
+
+        Set<String> workOrderNosBeforeBuild = snapshotWorkOrderNos();
+        UpstreamFulfillmentSession session =
+                UpstreamFulfillmentSession.create(deliveryKey, workOrderNosBeforeBuild, ruleScopeHelper);
+
+        OntologyGraph.Builder builder = createUpstreamScopedBuilder(effectiveStart, deliveryKey, session);
+        upstreamFulfillmentBuilder.buildForDelivery(builder, deliveryId, effectiveStart, session);
+        upstreamChainWorkOrderPersister.persistNewSupplyOrders(builder, deliveryKey, workOrderNosBeforeBuild, session);
+        return builder.build();
+    }
+
+    /**
+     * 上游建链专用：只装本交付行需求 + 可挂接库存/工单供应，不对全场景工单做工艺/BOM 展开。
+     */
+    private OntologyGraph.Builder createUpstreamScopedBuilder(
+            LocalDate planningStart,
+            OntologyIds.CustomerOrderLineDeliveryKey deliveryKey,
+            UpstreamFulfillmentSession session) {
+        OntologyGraph.Builder builder = OntologyGraph.builder()
+                .defaultStockingPoint(StockingPoint.defaultFg())
+                .periodsOrdered(buildPeriods(planningStart));
+
+        supplyChainLoader.loadSingleCustomerDelivery(builder, deliveryKey);
+        loadOpenSupplyOrdersForPegging(builder, deliveryKey, session);
+        return builder;
+    }
+
+    private static void loadOpenSupplyOrdersForPegging(
+            OntologyGraph.Builder builder,
+            OntologyIds.CustomerOrderLineDeliveryKey deliveryKey,
+            UpstreamFulfillmentSession session) {
+        Set<String> linePeggedWorkOrderNos = Set.of();
+        if (deliveryKey != null) {
+            linePeggedWorkOrderNos = WorkOrderPeggingEntity
+                    .findByOrderLine(deliveryKey.salesOrderNo(), deliveryKey.salesOrderLineNo())
+                    .stream()
+                    .map(peg -> peg.workOrderNo)
+                    .collect(Collectors.toUnmodifiableSet());
+        }
+        for (WorkOrderEntity wo : WorkOrderEntity.listInWorkspace()) {
+            if (!isOpenWorkOrder(wo)) {
+                continue;
+            }
+            if (!session.isRelevantOpenWorkOrder(wo, deliveryKey, linePeggedWorkOrderNos)) {
+                continue;
+            }
+            SupplyOrder supplyOrder = WorkOrderSupplyOrderMapper.toSupplyOrder(wo);
+            if (supplyOrder == null) {
+                continue;
+            }
+            ensureProduct(builder, supplyOrder.getProductCode());
+            builder.supplyOrder(supplyOrder);
+            String supplyId = OntologyIds.supplyId(supplyOrder.getId(), 0);
+            if (!builder.suppliesById().containsKey(supplyId)) {
+                builder.supply(new Supply(
+                        supplyId,
+                        supplyOrder.getProductCode(),
+                        supplyOrder.getPispId(),
+                        supplyOrder.getQuantity(),
+                        supplyOrder.getId()));
+            }
+        }
+    }
+
+    public static void ensureProduct(OntologyGraph.Builder builder, String productCode) {
+        if (productCode == null || productCode.isBlank()) {
+            return;
+        }
+        builder.product(new Product(productCode, productCode));
+        builder.pisp(new ProductInStockingPoint(
+                OntologyIds.pispId(productCode),
+                productCode,
+                StockingPoint.DEFAULT_FG,
+                productCode));
+    }
+
+    private static Set<String> snapshotWorkOrderNos() {
+        Set<String> workOrderNos = new LinkedHashSet<>();
+        for (WorkOrderEntity wo : WorkOrderEntity.listInWorkspace()) {
+            workOrderNos.add(wo.workOrderNo);
+        }
+        return workOrderNos;
     }
 
     public OntologyGraph loadForPlanVersion(String planVersionId) {
@@ -49,7 +228,44 @@ public class OntologyLoader {
             throw new NotFoundException("Plan version not found: " + planVersionId);
         }
         LocalDate planningStart = resolvePlanningStart(planVersion);
-        return buildGraph(planningStart);
+        OntologyGraph graph = buildGraph(planningStart);
+        planVersionAllocationHydrator.hydrate(graph, planVersionId);
+        return graph;
+    }
+
+    /**
+     * 加载交付相关图；若指定 {@code planVersionId} 则反灌已发布 allocation → Operation planned + SRP。
+     */
+    public OntologyGraph loadForDelivery(String deliveryId, String planVersionId) {
+        if (deliveryId == null || deliveryId.isBlank()) {
+            throw new NotFoundException("deliveryId required");
+        }
+        if (planVersionId != null && !planVersionId.isBlank()) {
+            return loadForPlanVersion(planVersionId);
+        }
+        return loadForWorkspace(LocalDate.now());
+    }
+
+    /**
+     * 轻量加载：仅 Period + SRP + 主计划 allocation 反灌，供产能甘特读取本体 reservedCapacity。
+     */
+    public OntologyGraph loadSrpCapacityForPlanVersion(String planVersionId) {
+        LocalDate planningStart = LocalDate.now();
+        if (planVersionId != null && !planVersionId.isBlank()) {
+            PlanVersionEntity planVersion = PlanVersionEntity.findByVersionId(planVersionId);
+            if (planVersion != null) {
+                planningStart = resolvePlanningStart(planVersion);
+            }
+        }
+        List<Period> periods = buildPeriods(planningStart);
+        PeriodIndex periodIndex = PeriodIndex.of(periods);
+        OntologyGraph.Builder builder = OntologyGraph.builder().periodsOrdered(periods);
+        loadStandardResourcePeriods(builder, periods, periodIndex);
+        OntologyGraph graph = builder.build();
+        if (planVersionId != null && !planVersionId.isBlank()) {
+            planVersionAllocationHydrator.hydrate(graph, planVersionId);
+        }
+        return graph;
     }
 
     private static LocalDate resolvePlanningStart(PlanVersionEntity planVersion) {
@@ -57,13 +273,11 @@ public class OntologyLoader {
         return LocalDate.now();
     }
 
-    private OntologyGraph buildGraph(LocalDate planningStart) {
+    private OntologyGraph.Builder createFulfillmentChainBuilder(LocalDate planningStart) {
         Set<String> productCodes = collectProductCodes();
-        List<Period> periods = buildPeriods(planningStart);
-        PeriodIndex periodIndex = PeriodIndex.of(periods);
         OntologyGraph.Builder builder = OntologyGraph.builder()
                 .defaultStockingPoint(StockingPoint.defaultFg())
-                .periodsOrdered(periods);
+                .periodsOrdered(buildPeriods(planningStart));
 
         for (String productCode : productCodes) {
             builder.product(new Product(productCode, productCode));
@@ -74,6 +288,13 @@ public class OntologyLoader {
                     productCode));
         }
 
+        List<SupplyOrder> supplyOrders = loadOpenSupplyOrders(builder);
+        loadOperations(builder, supplyOrders);
+        supplyChainLoader.expandDemandsAndStructureOnly(builder, supplyOrders);
+        return builder;
+    }
+
+    private static List<SupplyOrder> loadOpenSupplyOrders(OntologyGraph.Builder builder) {
         List<SupplyOrder> supplyOrders = new ArrayList<>();
         for (WorkOrderEntity wo : WorkOrderEntity.listInWorkspace()) {
             if (!isOpenWorkOrder(wo)) {
@@ -85,8 +306,18 @@ public class OntologyLoader {
                 builder.supplyOrder(supplyOrder);
             }
         }
+        return supplyOrders;
+    }
 
-        loadOperations(builder, supplyOrders);
+    private OntologyGraph buildGraph(LocalDate planningStart) {
+        Set<String> productCodes = collectProductCodes();
+        List<Period> periods = buildPeriods(planningStart);
+        PeriodIndex periodIndex = PeriodIndex.of(periods);
+        OntologyGraph.Builder builder = createFulfillmentChainBuilder(planningStart);
+        builder.periodsOrdered(periods);
+
+        List<SupplyOrder> supplyOrders = new ArrayList<>(builder.supplyOrdersById().values());
+        supplyChainLoader.runFulfillmentPegging(builder, supplyOrders);
 
         Map<String, List<ProductInStockingPointPeriod>> pisppChainByPispId = new LinkedHashMap<>();
         for (String productCode : productCodes) {
@@ -110,60 +341,73 @@ public class OntologyLoader {
         }
 
         aggregateSupplyIntoPispp(supplyOrders, periodIndex, pisppChainByPispId);
-        aggregateSalesDemandIntoPispp(periodIndex, pisppChainByPispId);
+        aggregateDemandsIntoPispp(builder.demandsById().values(), periodIndex, pisppChainByPispId);
         for (List<ProductInStockingPointPeriod> chain : pisppChainByPispId.values()) {
             PispRolling.rollChain(chain);
         }
 
         loadStandardResourcePeriods(builder, periods, periodIndex);
 
+        List<SchedulingSlot> schedulingSlots = schedulingSlotExpander.expand(
+                planningStart, ProductionResourceEntity.routingResourceIds());
+        builder.schedulingSlotsOrdered(schedulingSlots);
+
         OntologyGraph graph = builder.build();
-        for (SupplyOrder supplyOrder : supplyOrders) {
-            OperationTimeWindowDerivations.recalculate(graph, supplyOrder.getId(), planningStart);
-        }
+        operationTimingBridgeService.applyToGraph(graph, planningStart);
+        operationParallelBindingService.applyToGraph(graph);
         return graph;
     }
 
     private static void loadOperations(OntologyGraph.Builder builder, List<SupplyOrder> supplyOrders) {
-        Map<String, List<ProductResourceEntity>> routingByProduct = new LinkedHashMap<>();
-        for (ProductResourceEntity pr : ProductResourceEntity.listInWorkspace()) {
-            if (pr.productCode == null || pr.operationName == null || pr.operationName.isBlank()) {
-                continue;
-            }
-            routingByProduct.computeIfAbsent(pr.productCode, k -> new ArrayList<>()).add(pr);
-        }
         for (SupplyOrder supplyOrder : supplyOrders) {
-            List<ProductResourceEntity> steps = distinctOrderedSteps(routingByProduct.get(supplyOrder.getProductCode()));
-            for (int i = 0; i < steps.size(); i++) {
-                ProductResourceEntity step = steps.get(i);
-                double processSeconds = step.processTimeSeconds != null ? step.processTimeSeconds.doubleValue() : 0.0;
-                double prodMinutes = step.setupTimeMinutes + processSeconds * supplyOrder.getQuantity() / 60.0;
-                builder.operation(new Operation(
-                        OntologyIds.operationId(supplyOrder.getId(), i),
-                        supplyOrder.getId(), i, step.operationName, prodMinutes));
+            List<ProductRoutingSteps.Operation> routingOps =
+                    ProductRoutingSteps.operationsForProduct(supplyOrder.getProductCode());
+            BigDecimal quantity = BigDecimal.valueOf(supplyOrder.getQuantity());
+            for (int i = 0; i < routingOps.size(); i++) {
+                ProductRoutingSteps.Operation routingOp = routingOps.get(i);
+                String operationId = OntologyIds.operationId(supplyOrder.getId(), i);
+                Operation operation = new Operation(
+                        operationId,
+                        supplyOrder.getId(),
+                        i,
+                        routingOp.operationName());
+                operation.setRoutingSequenceNo(routingOp.sequenceNo());
+                operation.setSegmentIndex(0);
+                operation.setLastSegment(false);
+                operation.setLocked(false);
+                ProductRoutingSteps.ResourceOption primaryOption = routingOp.resourceOptions().isEmpty()
+                        ? null
+                        : routingOp.resourceOptions().get(0);
+                if (primaryOption != null) {
+                    OperationOnStandardResource primaryOosr = new OperationOnStandardResource(
+                            OntologyIds.operationOnStandardResourceId(operationId, primaryOption.resourceId()),
+                            operationId,
+                            primaryOption.resourceId(),
+                            OperationResourceBinding.defaultPriority(primaryOption.resourcePriority()),
+                            primaryOption.setupTimeMinutes(),
+                            OperationResourceBinding.processTimeSeconds(primaryOption.processTimeSeconds()));
+                    OperationResourceBinding.applyPrimaryTiming(
+                            operation, primaryOosr, supplyOrder.getQuantity());
+                }
+                if (i == routingOps.size() - 1) {
+                    operation.setPostprocessingTime(OperationPostProcessingResolver.postprocessingSeconds(
+                            supplyOrder.getProductCode(), routingOp.operationName()));
+                }
+                builder.operation(operation);
+                for (ProductRoutingSteps.ResourceOption option : routingOp.resourceOptions()) {
+                    if (option.resourceId() == null || option.resourceId().isBlank()) {
+                        continue;
+                    }
+                    builder.operationOnStandardResource(new OperationOnStandardResource(
+                            OntologyIds.operationOnStandardResourceId(operationId, option.resourceId()),
+                            operationId,
+                            option.resourceId(),
+                            OperationResourceBinding.defaultPriority(option.resourcePriority()),
+                            option.setupTimeMinutes(),
+                            OperationResourceBinding.processTimeSeconds(option.processTimeSeconds())));
+                }
             }
         }
-    }
-
-    /** 同名工序去重（取 sequenceNo 最小行），再按 sequenceNo 升序；缺 sequenceNo 排末位。 */
-    private static List<ProductResourceEntity> distinctOrderedSteps(List<ProductResourceEntity> rows) {
-        if (rows == null || rows.isEmpty()) {
-            return List.of();
-        }
-        Map<String, ProductResourceEntity> byName = new LinkedHashMap<>();
-        for (ProductResourceEntity row : rows) {
-            ProductResourceEntity existing = byName.get(row.operationName);
-            if (existing == null || sequenceOf(row) < sequenceOf(existing)) {
-                byName.put(row.operationName, row);
-            }
-        }
-        return byName.values().stream()
-                .sorted(Comparator.comparingInt(OntologyLoader::sequenceOf))
-                .toList();
-    }
-
-    private static int sequenceOf(ProductResourceEntity row) {
-        return row.sequenceNo != null ? row.sequenceNo : Integer.MAX_VALUE;
     }
 
     private static void loadStandardResourcePeriods(
@@ -216,6 +460,28 @@ public class OntologyLoader {
                 productCodes.add(inventory.productCode);
             }
         }
+        for (SalesOrderLineEntity line : SalesOrderLineEntity.listInWorkspace()) {
+            if (line.productCode != null && !line.productCode.isBlank()) {
+                productCodes.add(line.productCode);
+            }
+        }
+        for (com.plantops.persistence.entity.ForecastDemandEntity fc :
+                com.plantops.persistence.entity.ForecastDemandEntity.listInWorkspace()) {
+            if (fc.productCode != null && !fc.productCode.isBlank()) {
+                productCodes.add(fc.productCode);
+            }
+        }
+        for (BomComponentEntity bom : BomComponentEntity.listInWorkspace()) {
+            if (bom.parentProductCode != null && !bom.parentProductCode.isBlank()) {
+                productCodes.add(bom.parentProductCode);
+            }
+            if (bom.componentProductCode != null && !bom.componentProductCode.isBlank()) {
+                productCodes.add(bom.componentProductCode);
+            }
+            if (bom.finishedProductCode != null && !bom.finishedProductCode.isBlank()) {
+                productCodes.add(bom.finishedProductCode);
+            }
+        }
         return productCodes;
     }
 
@@ -250,27 +516,27 @@ public class OntologyLoader {
                 continue;
             }
             ProductInStockingPointPeriod pispp = chain.get(periodIndex.sequenceFor(supplyOrder.getNeedDate()));
-            pispp.setPlannedSupplyTotal(pispp.getPlannedSupplyTotal() + supplyOrder.getQuantity());
+            double added = supplyOrder.getQuantity();
+            pispp.setPlannedSupplyTotalMrp(pispp.getPlannedSupplyTotalMrp() + added);
+            pispp.setPlannedSupplyTotal(pispp.getPlannedSupplyTotal() + added);
         }
     }
 
-    private static void aggregateSalesDemandIntoPispp(
+    private static void aggregateDemandsIntoPispp(
+            Iterable<Demand> demands,
             PeriodIndex periodIndex,
             Map<String, List<ProductInStockingPointPeriod>> pisppChainByPispId) {
-        for (SalesOrderLineEntity line : SalesOrderLineEntity.listInWorkspace()) {
-            if ("CANCELLED".equals(line.status)) {
+        for (Demand demand : demands) {
+            if (demand.getNeedDate() == null || demand.getPispId() == null) {
                 continue;
             }
-            if (line.productCode == null || line.productCode.isBlank()) {
-                continue;
-            }
-            List<ProductInStockingPointPeriod> chain = pisppChainByPispId.get(OntologyIds.pispId(line.productCode));
+            List<ProductInStockingPointPeriod> chain = pisppChainByPispId.get(demand.getPispId());
             if (chain == null) {
                 continue;
             }
-            ProductInStockingPointPeriod pispp = chain.get(periodIndex.sequenceFor(line.dueDate));
-            double orderQty = line.orderQty != null ? line.orderQty.doubleValue() : 0.0;
-            pispp.setPlannedDemandQuantityTotal(pispp.getPlannedDemandQuantityTotal() + orderQty);
+            ProductInStockingPointPeriod pispp = chain.get(periodIndex.sequenceFor(demand.getNeedDate()));
+            pispp.setPlannedDemandQuantityTotal(
+                    pispp.getPlannedDemandQuantityTotal() + demand.getQuantity());
         }
     }
 }

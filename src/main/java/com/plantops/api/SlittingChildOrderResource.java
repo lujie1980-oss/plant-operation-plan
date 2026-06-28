@@ -1,6 +1,8 @@
 package com.plantops.api;
 
 import com.plantops.api.dto.slitting.ChildSlittingOrderDto;
+import com.plantops.api.dto.slitting.ImportChildOrdersFromDemandRequest;
+import com.plantops.api.dto.slitting.ImportChildOrdersFromDemandResult;
 import com.plantops.scenario.slitting.ChildSlittingOrderService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -12,10 +14,8 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 
 import java.util.List;
-import java.util.Map;
 
 @Path("/api/v1/slitting/child-orders")
 @Produces(MediaType.APPLICATION_JSON)
@@ -49,7 +49,7 @@ public class SlittingChildOrderResource {
 
     @POST
     @Path("/from-demand")
-    public Response fromDemand() {
-        return Response.status(501).entity(Map.of("message", "Not implemented in v1")).build();
+    public ImportChildOrdersFromDemandResult fromDemand(ImportChildOrdersFromDemandRequest request) {
+        return childSlittingOrderService.importFromDemand(request);
     }
 }

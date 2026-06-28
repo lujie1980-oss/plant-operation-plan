@@ -1,0 +1,242 @@
+.chain-tri-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chain-tri-main-split {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.chain-tri-main-split .horizontal-resize-left,
+.chain-tri-main-split .horizontal-resize-right {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chain-tri-pane-center {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.chain-tri-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 0 0.45rem;
+  flex-shrink: 0;
+}
+
+.chain-tri-toolbar-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.chain-tri-toolbar-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.chain-tri-tree-gantt-split {
+  flex: 1;
+  min-height: 0;
+}
+
+.chain-tri-tree-gantt-split .horizontal-resize-left,
+.chain-tri-tree-gantt-split .horizontal-resize-right {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chain-tri-sync-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.chain-tri-gantt-scroll {
+  background: #fff;
+}
+
+.chain-tri-tree-table {
+  width: 100%;
+  min-width: 400px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.8rem;
+}
+
+.chain-tri-tree-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: linear-gradient(180deg, #f1f5f9 0%, #e8eef4 100%);
+  border-bottom: 1px solid #cbd5e1;
+  padding: 0 0.4rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  box-shadow: 0 1px 0 #cbd5e1;
+  vertical-align: middle;
+}
+
+.chain-tri-tree-table .col-toggle {
+  width: 28px;
+}
+
+.chain-tri-tree-table .col-type {
+  width: 72px;
+}
+
+.chain-tri-tree-table .col-label {
+  width: 140px;
+}
+
+.chain-tri-tree-table .col-product {
+  width: 88px;
+}
+
+.chain-tri-tree-table .col-qty {
+  width: 56px;
+  text-align: right;
+}
+
+.chain-tri-tree-table .col-start,
+.chain-tri-tree-table .col-end {
+  width: 64px;
+}
+
+.chain-tri-tree-row {
+  cursor: pointer;
+  background: #fff;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.chain-tri-tree-row:hover {
+  background: #f8fafc;
+}
+
+.chain-tri-tree-row.is-selected {
+  background: #eff6ff;
+  box-shadow: inset 3px 0 0 #3b82f6;
+}
+
+.chain-tri-tree-row td {
+  padding: 0 0.35rem;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chain-tri-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.chain-tri-toggle:hover {
+  background: #e2e8f0;
+}
+
+.chain-tri-toggle-spacer {
+  display: inline-block;
+  width: 22px;
+}
+
+.chain-tri-indent {
+  display: inline-block;
+}
+
+.chain-tri-label {
+  vertical-align: middle;
+}
+
+.chain-tri-gantt-inner {
+  min-width: min-content;
+}
+
+.chain-tri-gantt-panel {
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.chain-tri-pane .chain-tri-gantt-panel.gantt-card {
+  border: none;
+  border-radius: 0;
+}
+
+.chain-tri-pane .chain-tri-gantt-panel .gantt-container {
+  overflow: visible !important;
+  min-height: unset !important;
+}
+
+.chain-tri-pane .chain-tri-gantt-panel [class*='ganttVerticalContainer'] > svg:first-of-type {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: block;
+  background: linear-gradient(180deg, #f1f5f9 0%, #e8eef4 100%);
+  box-shadow: 0 1px 0 #cbd5e1;
+}
+
+.chain-tri-pane .chain-tri-gantt-panel [class*='horizontalContainer'] {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+.chain-tri-pane .chain-tri-gantt-panel [class*='scrollWrapper'] {
+  display: none !important;
+}
+
+.chain-tri-pane .demand-tree-type {
+  display: inline-block;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.chain-tri-pane .demand-tree-type.sales_order {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.chain-tri-pane .demand-tree-type.supply_order,
+.chain-tri-pane .demand-tree-type.work_order {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.chain-tri-pane .mono {
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+}

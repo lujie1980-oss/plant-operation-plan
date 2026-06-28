@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { FulfillmentChainTree } from '../components/FulfillmentChainTree';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
+import { PpToolbar, PpToolbarHint, PpToolbarRow } from '../components/PpToolbar';
 import { StatusBanner } from '../components/StatusBanner';
 import { VerticalResizeSplit } from '../components/VerticalResizeSplit';
 import { WorkOrderHierarchyTable } from '../components/WorkOrderHierarchyTable';
@@ -114,7 +115,9 @@ export function ProductionPlanPage({ embedded = false }: { embedded?: boolean })
   const loadUpstream = useCallback(async (wo: WorkOrder, versionId: string | null | undefined) => {
     setUpstreamLoading(true);
     try {
-      setUpstreamChain(await api.workOrders.fulfillmentChain(wo.workOrderNo, versionId ?? undefined));
+      setUpstreamChain(
+        await api.ontologySupplyOrderUpstreamChain(wo.workOrderNo, versionId ?? undefined),
+      );
     } catch (e) {
       setUpstreamChain(null);
       setError(e instanceof Error ? e.message : '上游满足链加载失败');
@@ -127,7 +130,7 @@ export function ProductionPlanPage({ embedded = false }: { embedded?: boolean })
     setDownstreamLoading(true);
     try {
       setDownstreamChain(
-        await api.workOrders.downstreamFulfillmentChain(wo.workOrderNo, versionId ?? undefined),
+        await api.ontologySupplyOrderDownstreamChain(wo.workOrderNo, versionId ?? undefined),
       );
     } catch (e) {
       setDownstreamChain(null);
@@ -248,6 +251,7 @@ export function ProductionPlanPage({ embedded = false }: { embedded?: boolean })
     <div className={`production-plan-page ${embedded ? 'production-plan-page--embedded' : ''}`.trim()}>
       {!embedded && (
         <PageHeader
+          variant={DECISION_PAGE_HEADER}
           title="生产工单"
           showScenarioSelector
           description={`MRP 合并工单列表；选中工单后可查看工序计划、上游/下游满足链。${scenarioHint}`}
@@ -255,59 +259,63 @@ export function ProductionPlanPage({ embedded = false }: { embedded?: boolean })
       )}
       <StatusBanner loading={loading} error={error} success={success} />
 
-      <div className="pp-toolbar card">
-        <div className="pp-filters">
-          <button
-            type="button"
-            className={filter === 'all' ? 'pp-filter active' : 'pp-filter'}
-            onClick={() => setFilter('all')}
-          >
-            全部 ({rows.length})
-          </button>
-          <button
-            type="button"
-            className={filter === 'pending' ? 'pp-filter active' : 'pp-filter'}
-            onClick={() => setFilter('pending')}
-          >
-            待下发 ({rows.filter((r) => r.dispatchStatus !== 'DISPATCHED').length})
-          </button>
-          <button
-            type="button"
-            className={filter === 'dispatched' ? 'pp-filter active' : 'pp-filter'}
-            onClick={() => setFilter('dispatched')}
-          >
-            已下发 ({rows.filter((r) => r.dispatchStatus === 'DISPATCHED').length})
-          </button>
-        </div>
-        <div className="pp-toolbar-actions">
-          <button
-            type="button"
-            className="btn"
-            onClick={() => void load(activePlanVersionId)}
-            disabled={loading}
-          >
-            刷新
-          </button>
-          <button
-            type="button"
-            className="btn primary"
-            onClick={() => void dispatchSelected()}
-            disabled={loading || selected.size === 0}
-          >
-            下发排程 ({selected.size})
-          </button>
-        </div>
-        <p className="pp-hint">
-          平铺展示全部 MRP 工单（成品 + 组件），按 BOM 层级与序号排序。下发后可前往{' '}
-          <Link to="/scheduling/kitting">物料齐套</Link> 检查，并在{' '}
-          <Link to="/scheduling/detail-schedule">生产排程</Link> 求解工序排程。
-          {lastDispatch && (
-            <span className="pp-last-dispatch">
-              · 最近下发 {lastDispatch.dispatchedCount} 张 · {lastDispatch.dispatchedTs}
-            </span>
-          )}
-        </p>
-      </div>
+      <PpToolbar>
+        <PpToolbarRow>
+          <div className="pp-filters">
+            <button
+              type="button"
+              className={filter === 'all' ? 'pp-filter active' : 'pp-filter'}
+              onClick={() => setFilter('all')}
+            >
+              全部 ({rows.length})
+            </button>
+            <button
+              type="button"
+              className={filter === 'pending' ? 'pp-filter active' : 'pp-filter'}
+              onClick={() => setFilter('pending')}
+            >
+              待下发 ({rows.filter((r) => r.dispatchStatus !== 'DISPATCHED').length})
+            </button>
+            <button
+              type="button"
+              className={filter === 'dispatched' ? 'pp-filter active' : 'pp-filter'}
+              onClick={() => setFilter('dispatched')}
+            >
+              已下发 ({rows.filter((r) => r.dispatchStatus === 'DISPATCHED').length})
+            </button>
+          </div>
+          <div className="pp-toolbar-actions">
+            <button
+              type="button"
+              className="btn"
+              onClick={() => void load(activePlanVersionId)}
+              disabled={loading}
+            >
+              刷新
+            </button>
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => void dispatchSelected()}
+              disabled={loading || selected.size === 0}
+            >
+              下发排程 ({selected.size})
+            </button>
+          </div>
+        </PpToolbarRow>
+        <PpToolbarHint>
+          <p className="pp-hint">
+            平铺展示全部 MRP 工单（成品 + 组件），按 BOM 层级与序号排序。下发后可前往{' '}
+            <Link to="/scheduling/kitting">物料齐套</Link> 检查，并在{' '}
+            <Link to="/scheduling/detail-schedule">生产排程</Link> 求解工序排程。
+            {lastDispatch && (
+              <span className="pp-last-dispatch">
+                · 最近下发 {lastDispatch.dispatchedCount} 张 · {lastDispatch.dispatchedTs}
+              </span>
+            )}
+          </p>
+        </PpToolbarHint>
+      </PpToolbar>
 
       <VerticalResizeSplit
         className="pp-split"

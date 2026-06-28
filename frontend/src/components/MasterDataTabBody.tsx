@@ -4,6 +4,9 @@ import { EditableTable, type EditableColumn } from './EditableTable';
 import type { MasterDataRecord } from '../types/masterData';
 import type { MasterDataTableFocus } from '../utils/masterDataFocus';
 import { customColumnsFromSchema } from '../utils/masterFieldSchema';
+import { buildValidationIndexByEntityKey } from '../utils/tableViolations';
+import { relationsForMasterDataRow } from '../utils/tableRelationRegistry';
+import type { RowViolation } from './table/types';
 import '../pages/MasterDataPage.css';
 
 interface MasterDataApi<T extends MasterDataRecord> {
@@ -28,6 +31,14 @@ export interface TabConfig<T extends MasterDataRecord> {
   fieldSchemaEntityType?: string;
   /** Custom 列存入 row.extensions（物料等动态字段） */
   customFieldsUseExtensions?: boolean;
+  /** 与后端校验 entityType 一致，用于预警列索引 */
+  validationEntityType?: string;
+  /** 校验 entityKey，默认与 rowKey 相同 */
+  validationEntityKey?: (row: T) => string;
+  /** 为 false 时不重复渲染 tab 说明（由专用组件展示） */
+  showDescription?: boolean;
+  /** 额外 tr className（如默认最长采购周期行高亮） */
+  getRowClassName?: (row: T) => string | undefined;
 }
 
 export function MasterDataTabBody<T extends MasterDataRecord>({
@@ -44,6 +55,7 @@ export function MasterDataTabBody<T extends MasterDataRecord>({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warnContext, setWarnContext] = useState<unknown>(null);
+  const [validationIndex, setValidationIndex] = useState<Map<string, RowViolation[]>>(new Map());
   const [fieldSchema, setFieldSchema] = useState<Awaited<ReturnType<typeof api.masterData.fieldSchema>>>([]);
 
   const mergedColumns = useMemo(() => {
@@ -65,20 +77,34 @@ export function MasterDataTabBody<T extends MasterDataRecord>({
       const schemaPromise = config.fieldSchemaEntityType
         ? api.masterData.fieldSchema(config.fieldSchemaEntityType)
         : Promise.resolve([]);
-      const [list, ctx, schema] = await Promise.all([
+      const validationPromise = config.validationEntityType
+        ? api.masterData.validation().catch(() => null)
+        : Promise.resolve(null);
+      const [list, ctx, schema, report] = await Promise.all([
         config.api.list(),
         config.warningContext ? config.warningContext() : Promise.resolve(null),
         schemaPromise,
+        validationPromise,
       ]);
       setRows(list);
       setWarnContext(ctx);
       setFieldSchema(schema);
+      if (config.validationEntityType && report) {
+        setValidationIndex(buildValidationIndexByEntityKey(report, config.validationEntityType));
+      } else {
+        setValidationIndex(new Map());
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : '加载失败');
     } finally {
       setLoading(false);
     }
-  }, [config.api, config.warningContext, config.fieldSchemaEntityType]);
+  }, [
+    config.api,
+    config.warningContext,
+    config.fieldSchemaEntityType,
+    config.validationEntityType,
+  ]);
 
   useEffect(() => {
     void load();
@@ -112,7 +138,9 @@ export function MasterDataTabBody<T extends MasterDataRecord>({
 
   return (
     <div className="md-tab-body card">
-      {config.description && <p className="md-tab-desc">{config.description}</p>}
+      {config.description && config.showDescription !== false && (
+        <p className="md-tab-desc">{config.description}</p>
+      )}
       {error && <div className="editable-table-error">{error}</div>}
       <EditableTable<T>
         tableId={config.id}
@@ -125,11 +153,24 @@ export function MasterDataTabBody<T extends MasterDataRecord>({
         loading={loading}
         saving={saving}
         search={config.search}
+        validationEntityKey={
+          config.validationEntityKey ??
+          (config.validationEntityType ? config.rowKey : undefined)
+        }
+        validationIndex={validationIndex}
         rowWarning={
           config.rowWarning && warnContext != null
             ? (row) => config.rowWarning!(row, warnContext)
             : undefined
         }
+        getRowRelations={(row) =>
+          relationsForMasterDataRow(
+            config.validationEntityType,
+            row as MasterDataRecord,
+            config.rowKey as (r: MasterDataRecord) => string,
+          )
+        }
+        getRowClassName={config.getRowClassName}
         externalSearchQuery={appliedFocus?.searchQuery}
         highlightRowKey={appliedFocus?.highlightRowKey ?? null}
       />

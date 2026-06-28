@@ -70,6 +70,76 @@ docker run -d --name plantops `
 
 ## 发布到镜像仓库
 
+### 阿里云 ACR（推荐，第二步）
+
+**控制台准备（只需做一次）**
+
+1. 登录 [容器镜像服务 ACR](https://cr.console.aliyun.com/)
+2. 创建 **个人版实例**（选地域，如华东1 杭州 → 地址 `registry.cn-hangzhou.aliyuncs.com`）
+3. **命名空间** → 创建（如 `plantops`）
+4. **镜像仓库** → 创建仓库 `plant-operation-plan`
+5. **访问凭证** → 设置 **固定密码**（不是阿里云登录密码）
+
+**本机推送**
+
+```powershell
+cd d:\AILab\PlantOperationPlan\plant-operation-plan
+
+# 1. 确保本地已有镜像（第一步）
+powershell -ExecutionPolicy Bypass -File tools\docker-build-local.ps1
+
+# 2. 配置 ACR（复制示例并填写）
+copy tools\acr.env.example tools\acr.local.env
+notepad tools\acr.local.env
+
+# 3. 登录并推送
+powershell -ExecutionPolicy Bypass -File tools\docker-push-acr.ps1
+```
+
+推送成功后镜像地址形如：
+
+`registry.cn-hangzhou.aliyuncs.com/plantops/plant-operation-plan:1.0.0`
+
+### 阿里云 ECS 运行（第三步）
+
+**ECS 准备（只需做一次）**
+
+1. 创建 ECS（建议 4 核 8G+，与 ACR 同地域如华东1）
+2. 安全组 **入方向** 放行 **8080**（及 SSH 22）
+3. 绑定公网 IP，记下 IP 与 SSH 密钥（`.pem`）
+
+**本机一键部署（SSH 到 ECS 拉镜像并运行）**
+
+```powershell
+cd d:\AILab\PlantOperationPlan\plant-operation-plan
+
+# 1. 配置 ECS（复制示例并填写公网 IP、SSH 用户、密钥路径）
+copy tools\ecs.env.example tools\ecs.local.env
+notepad tools\ecs.local.env
+
+# 2. 确保 acr.local.env 已填写（第二步）
+# 3. 部署
+powershell -ExecutionPolicy Bypass -File tools\docker-deploy-ecs.ps1
+```
+
+脚本会在 ECS 上：安装 Docker（若无）→ 登录 ACR → `docker pull` → `docker run`（数据目录 `/data/plantops`）。
+
+访问：`http://ECS公网IP:8080/#/`  
+健康检查：`http://ECS公网IP:8080/q/health/ready`
+
+**或在 ECS 终端手动执行**
+
+```bash
+docker login crpi-hjfrj3sdmymxy3ub.cn-hangzhou.personal.cr.aliyuncs.com
+docker pull crpi-hjfrj3sdmymxy3ub.cn-hangzhou.personal.cr.aliyuncs.com/plantops/plant-operation-plan:1.0.0
+docker run -d --name plantops --restart unless-stopped \
+  -p 8080:8080 -v /data/plantops:/app/data \
+  -e QUARKUS_PROFILE=docker -e PLANTOPS_SAMPLE_DATA_ENABLED=false \
+  crpi-hjfrj3sdmymxy3ub.cn-hangzhou.personal.cr.aliyuncs.com/plantops/plant-operation-plan:1.0.0
+```
+
+### 其它仓库（Harbor / Docker Hub）
+
 以 Harbor / 阿里云 ACR / Docker Hub 为例：
 
 ```powershell

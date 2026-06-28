@@ -1,0 +1,48 @@
+# Plant Operation Plan — StandardKnowledgePack (baseline)
+# Spec: docs/sdd/volumes/knowledge/13-14-business-knowledge.md §14
+pack_id: plantops-standard-v1
+version: 1.0.0-SNAPSHOT
+sdd_version: BP-PlantOps-v1
+extends: null
+description: 产品内置标准业务知识；全行业基线；Industry/Custom 仅 overlay
+
+artifacts:
+  normative:
+    - docs/sdd/core/01-value-goals.md
+    - docs/sdd/core/02-glossary.md
+    - docs/sdd/core/03-scenarios.md
+    - docs/sdd/core/04-business-rules.md
+    - docs/sdd/core/08-acceptance.md
+    - docs/sdd/volumes/knowledge/15-16-planning-knowledge.md
+    - docs/sdd/volumes/platform/17-ui-ux.md
+    - docs/sdd/volumes/platform/18-19-workspace-platform.md
+  catalog: docs/sdd/volumes/knowledge/13-14-business-knowledge.md
+  registry: knowledge/standard/catalog.yaml
+  demand_supply: knowledge/standard/demand-supply/catalog.yaml
+  defaults: knowledge/standard/defaults/parameters.yaml
+  defaults_demand_supply: knowledge/standard/defaults/demand-supply-rules.yaml
+  planning_modules: knowledge/standard/modules/workspace-modules.yaml
+  integration_adapters: knowledge/standard/modules/integration-adapters.yaml
+
+knowledge_types:
+  - KN-TYPE-INV   # 不变量 hard
+  - KN-TYPE-OPT   # 优化目标 soft
+  - KN-TYPE-MOT   # 行为动机
+  - KN-TYPE-EXM   # 豁免
+  - KN-TYPE-PAR   # 参数默认
+  - KN-TYPE-INT   # 集成门禁
+  - KN-TYPE-STR   # 结构约束
+  - KN-TYPE-PLT   # 平台
+  - KN-TYPE-SCN   # 场景
+  - KN-TYPE-VAL   # 价值/KPI
+  - KN-TYPE-AC    # 验收
+
+domains:
+  - DOM-PLT
+  - DOM-FF
+  - DOM-MRP
+  - DOM-MP
+  - DOM-RT
+  - DOM-MD
+  - DOM-TX
+  - DOM-PER

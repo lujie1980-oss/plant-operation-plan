@@ -30,6 +30,7 @@ public final class RolEngine {
     public static RolEngine withMasterPlanRules(OntologyGraph graph) {
         List<Derivation> all = new ArrayList<>();
         all.addAll(PispPeriodDerivations.derivations(graph));
+        all.addAll(PispMrpDerivations.derivations(graph));
         all.addAll(SrpCapacityDerivations.derivations(graph));
         all.addAll(OperationTimeWindowDerivations.derivations(graph));
         return new RolEngine(graph, new DerivationRegistry(all));
@@ -38,6 +39,9 @@ public final class RolEngine {
     public void applyPropertyChange(ProductInStockingPointPeriod node, String property, double value) {
         setPisppProperty(node, property, value);
         propagateFrom(node.getId(), property);
+        if ("plannedSupplyTotalOptimized".equals(property)) {
+            propagateFrom(node.getId(), "plannedSupplyTotal");
+        }
     }
 
     public void applyPropertyChange(StandardResourcePeriod node, String property, double value) {
@@ -66,6 +70,11 @@ public final class RolEngine {
         switch (property) {
             case "onHand" -> node.setOnHand(value);
             case "plannedSupplyTotal" -> node.setPlannedSupplyTotal(value);
+            case "plannedSupplyTotalMrp" -> node.setPlannedSupplyTotalMrp(value);
+            case "plannedSupplyTotalOptimized" -> {
+                node.setPlannedSupplyTotalOptimized(value);
+                node.setPlannedSupplyTotal(value);
+            }
             case "plannedDemandQuantityTotal" -> node.setPlannedDemandQuantityTotal(value);
             case "inventoryTargetQuantity" -> node.setInventoryTargetQuantity(value);
             default -> throw new IllegalArgumentException("Unsupported PISPP property: " + property);

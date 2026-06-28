@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @QuarkusTest
 class OntologyLoaderOperationTest {
@@ -41,14 +42,18 @@ class OntologyLoaderOperationTest {
         Operation first = ops.get(0);
         assertEquals(0, first.getSequenceNr());
         assertEquals("OP-A", first.getOperationName());
-        // 10 setup + 60s/unit * 60 units / 60 = 70 minutes
-        assertEquals(70, first.getProductionTimeMinutes(), 1e-6);
+        assertEquals(600, first.getPreprocessingTime());
+        assertEquals(3600, first.getProductionDuration());
+        assertEquals(4200, first.totalElapsedSeconds());
 
         Operation second = ops.get(1);
         assertEquals(1, second.getSequenceNr());
         assertEquals("OP-B", second.getOperationName());
-        // 0 setup + 30s/unit * 60 units / 60 = 30 minutes
-        assertEquals(30, second.getProductionTimeMinutes(), 1e-6);
+        assertEquals(0, second.getPreprocessingTime());
+        assertEquals(1800, second.getProductionDuration());
+        assertEquals(0, second.getSegmentIndex());
+        assertFalse(second.isLastSegment());
+        assertFalse(second.isLocked());
     }
 
     private void ensureFixture(LocalDate planningStart) {

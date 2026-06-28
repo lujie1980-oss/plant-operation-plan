@@ -327,6 +327,8 @@ export function MasterPlanOntologyPage() {
                 disabled={!session}
               >
                 <option value="plannedSupplyTotal">plannedSupplyTotal</option>
+                <option value="plannedSupplyTotalMrp">plannedSupplyTotalMrp</option>
+                <option value="plannedSupplyTotalOptimized">plannedSupplyTotalOptimized</option>
                 <option value="plannedDemandQuantityTotal">plannedDemandQuantityTotal</option>
               </select>
             </label>

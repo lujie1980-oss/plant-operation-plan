@@ -7,7 +7,9 @@ import com.plantops.solver.masterplan.MasterPlanCapacityStrategy;
 import com.plantops.solver.masterplan.MasterPlanObjectiveSettings;
 import com.plantops.solver.masterplan.MaterialFeasibilityContext;
 import com.plantops.solver.masterplan.OperationPrecedenceEdge;
+import com.plantops.solver.masterplan.OperationPrecedenceFact;
 import com.plantops.solver.masterplan.OrderAllocation;
+import com.plantops.solver.masterplan.ResourceCapacityAssignment;
 import com.plantops.solver.masterplan.TimeSlot;
 import com.plantops.solver.masterplan.WorkOrderTimingBoundsContext;
 
@@ -29,6 +31,9 @@ public final class MasterPlanPlanningContext {
     private final MaterialFeasibilityContext materialFeasibility;
     private final List<BomDependencyEdge> bomDependencyEdges;
     private final List<OperationPrecedenceEdge> operationPrecedenceEdges;
+    private final List<ResourceCapacityAssignment> resourceCapacityAssignments;
+    private final List<OperationPrecedenceFact> operationPrecedenceFacts;
+    private final boolean multiResourceSplit;
     private final WorkOrderTimingBoundsContext workOrderTimingBounds;
     private final MasterPlanPlanningDiagnosticsDto diagnostics;
     private final MaterialPlanningContext materialPlanning;
@@ -57,6 +62,9 @@ public final class MasterPlanPlanningContext {
         this.operationPrecedenceEdges = operationPrecedenceEdges != null
                 ? List.copyOf(operationPrecedenceEdges)
                 : List.of();
+        this.resourceCapacityAssignments = List.of();
+        this.operationPrecedenceFacts = List.of();
+        this.multiResourceSplit = false;
         this.workOrderTimingBounds = workOrderTimingBounds != null
                 ? workOrderTimingBounds
                 : WorkOrderTimingBoundsContext.empty();
@@ -89,6 +97,47 @@ public final class MasterPlanPlanningContext {
                 workOrderTimingBounds,
                 diagnostics,
                 null);
+    }
+
+    public MasterPlanPlanningContext(
+            LocalDate planningStart,
+            MasterPlanCapacityStrategy capacityStrategy,
+            MasterPlanObjectiveSettings objectiveSettings,
+            MasterPlanCapacityOverlay capacityOverlay,
+            List<TimeSlot> timeSlots,
+            List<OrderAllocation> orderAllocations,
+            MaterialFeasibilityContext materialFeasibility,
+            List<BomDependencyEdge> bomDependencyEdges,
+            List<OperationPrecedenceEdge> operationPrecedenceEdges,
+            WorkOrderTimingBoundsContext workOrderTimingBounds,
+            MasterPlanPlanningDiagnosticsDto diagnostics,
+            MaterialPlanningContext materialPlanning,
+            List<ResourceCapacityAssignment> resourceCapacityAssignments,
+            List<OperationPrecedenceFact> operationPrecedenceFacts,
+            boolean multiResourceSplit) {
+        this.planningStart = planningStart;
+        this.capacityStrategy = capacityStrategy;
+        this.objectiveSettings = objectiveSettings;
+        this.capacityOverlay = capacityOverlay != null ? capacityOverlay : MasterPlanCapacityOverlay.empty();
+        this.timeSlots = timeSlots != null ? List.copyOf(timeSlots) : List.of();
+        this.orderAllocations = orderAllocations != null ? List.copyOf(orderAllocations) : List.of();
+        this.materialFeasibility = materialFeasibility;
+        this.bomDependencyEdges = bomDependencyEdges != null ? List.copyOf(bomDependencyEdges) : List.of();
+        this.operationPrecedenceEdges = operationPrecedenceEdges != null
+                ? List.copyOf(operationPrecedenceEdges)
+                : List.of();
+        this.resourceCapacityAssignments = resourceCapacityAssignments != null
+                ? List.copyOf(resourceCapacityAssignments)
+                : List.of();
+        this.operationPrecedenceFacts = operationPrecedenceFacts != null
+                ? List.copyOf(operationPrecedenceFacts)
+                : List.of();
+        this.multiResourceSplit = multiResourceSplit;
+        this.workOrderTimingBounds = workOrderTimingBounds != null
+                ? workOrderTimingBounds
+                : WorkOrderTimingBoundsContext.empty();
+        this.diagnostics = diagnostics;
+        this.materialPlanning = materialPlanning;
     }
 
     public LocalDate planningStart() {
@@ -125,6 +174,22 @@ public final class MasterPlanPlanningContext {
 
     public List<OperationPrecedenceEdge> operationPrecedenceEdges() {
         return operationPrecedenceEdges;
+    }
+
+    public List<ResourceCapacityAssignment> resourceCapacityAssignments() {
+        return resourceCapacityAssignments;
+    }
+
+    public List<OperationPrecedenceFact> operationPrecedenceFacts() {
+        return operationPrecedenceFacts;
+    }
+
+    public boolean multiResourceSplit() {
+        return multiResourceSplit;
+    }
+
+    public boolean hasResourceCapacityAssignments() {
+        return multiResourceSplit && !resourceCapacityAssignments.isEmpty();
     }
 
     public WorkOrderTimingBoundsContext workOrderTimingBounds() {

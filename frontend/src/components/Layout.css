@@ -3,8 +3,8 @@
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--shell-bg);
+  color: var(--text-primary);
 }
 
 .content-column {
@@ -24,14 +24,14 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.5rem 1.25rem;
-  background: #fff;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .content-topbar-link {
   font-size: 0.8125rem;
-  color: #3b82f6;
+  color: var(--accent-link);
   text-decoration: none;
   white-space: nowrap;
   flex-shrink: 0;
@@ -196,7 +196,7 @@
   background: #f1f5f9;
 }
 
-/* 需求满足 / 产能平衡 / 需求跟踪：主区域不整体滚动，由内部面板滚动 */
+/* 决策页：满高布局、内部分栏滚动、紧凑密度 token */
 .main:has(.production-plan-page),
 .main:has(.demand-page),
 .main:has(.capacity-page),
@@ -207,7 +207,29 @@
 .main:has(.plan-objectives-page),
 .main:has(.business-rules-page),
 .main:has(.plan-diagnostics-page),
-.main:has(.factory-calendar-page) {
+.main:has(.factory-calendar-page),
+.main:has(.dashboard-page),
+.main:has(.slitting-studio-page),
+.main:has(.slitting-workbench-page),
+.main:has(.scenario-page) {
   overflow: hidden;
   padding: 0.5rem 0.65rem;
+  --ui-gap-md: 0.45rem;
+  --ui-gap-lg: 0.55rem;
+  --ui-card-pad: 0.5rem;
+  --ui-page-title: 1.05rem;
+  --ui-row-h: 1.375rem;
+  --ui-toolbar-h: 2rem;
+}
+
+/* 上列页面根节点撑满 main，避免外层滚动 */
+.main:has(.dashboard-page) > .dashboard-page,
+.main:has(.slitting-studio-page) > .slitting-studio-page,
+.main:has(.slitting-workbench-page) > .slitting-workbench-page,
+.main:has(.scenario-page) > .scenario-page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }

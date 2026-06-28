@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { DemandOrderContextMenu } from '../components/DemandOrderContextMenu';
 import { HorizontalResizeSplit } from '../components/HorizontalResizeSplit';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
+import { PpToolbar, PpToolbarHint, PpToolbarRow } from '../components/PpToolbar';
 import { StatusBanner } from '../components/StatusBanner';
 import { FilterableTable } from '../components/table/FilterableTable';
 import { VerticalResizeSplit } from '../components/VerticalResizeSplit';
@@ -372,40 +373,45 @@ export function BatchPlanPage() {
   return (
     <div className="production-plan-page">
       <PageHeader
+        variant={DECISION_PAGE_HEADER}
         title="批次计划"
         showScheduleVersionSelector
         description="对已下发工单拆批；拆批后仅批次进入生产排程（S05）。与 MRP 无关。"
       />
       <StatusBanner loading={loading || actionLoading || routingLoading} error={error} success={success} />
 
-      <div className="pp-toolbar card">
-        <div className="pp-toolbar-actions">
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={loading || actionLoading || eligibleAutoSplitCount === 0}
-            onClick={() => void runAutoSplitAll()}
-          >
-            自动拆批{eligibleAutoSplitCount > 0 ? ` (${eligibleAutoSplitCount})` : ''}
-          </button>
-          <button type="button" className="btn" disabled={loading} onClick={() => void loadWorkOrders()}>
-            刷新
-          </button>
-          {activeWo && (
+      <PpToolbar>
+        <PpToolbarRow>
+          <div className="pp-toolbar-actions">
             <button
               type="button"
-              className="btn"
-              disabled={loading || actionLoading || activeWo.batchedQuantity <= 0}
-              onClick={() => void runRefreshKitting(activeWo)}
+              className="btn btn-primary"
+              disabled={loading || actionLoading || eligibleAutoSplitCount === 0}
+              onClick={() => void runAutoSplitAll()}
             >
-              刷新批次齐套
+              自动拆批{eligibleAutoSplitCount > 0 ? ` (${eligibleAutoSplitCount})` : ''}
             </button>
-          )}
-        </div>
-        <p className="pp-hint">
-          在 <Link to="/scheduling/parameters">计划参数 · 批次拆解</Link> 配置策略；「自动拆批」按当前策略批量处理所有可拆工单，也可右键单张工单操作。
-        </p>
-      </div>
+            <button type="button" className="btn" disabled={loading} onClick={() => void loadWorkOrders()}>
+              刷新
+            </button>
+            {activeWo && (
+              <button
+                type="button"
+                className="btn"
+                disabled={loading || actionLoading || activeWo.batchedQuantity <= 0}
+                onClick={() => void runRefreshKitting(activeWo)}
+              >
+                刷新批次齐套
+              </button>
+            )}
+          </div>
+        </PpToolbarRow>
+        <PpToolbarHint>
+          <p className="pp-hint">
+            在 <Link to="/scheduling/parameters">计划参数 · 批次拆解</Link> 配置策略；「自动拆批」按当前策略批量处理所有可拆工单，也可右键单张工单操作。
+          </p>
+        </PpToolbarHint>
+      </PpToolbar>
 
       {workOrders.length === 0 && !loading ? (
         <section className="card pp-chain-empty">

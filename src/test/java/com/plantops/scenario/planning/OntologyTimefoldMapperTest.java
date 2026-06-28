@@ -73,7 +73,7 @@ class OntologyTimefoldMapperTest {
         assertNotNull(p0);
         assertNotNull(p2);
         assertEquals(ChangeOperation.TARGET_PRODUCT_IN_STOCKING_POINT_PERIOD, p0.targetType());
-        assertEquals("plannedSupplyTotal", p0.property());
+        assertEquals("plannedSupplyTotalOptimized", p0.property());
         assertEquals(10.0, ((Number) p0.value()).doubleValue(), 1e-6);
         assertEquals(6.5, ((Number) p2.value()).doubleValue(), 1e-6);
         assertTrue(changeSet.description().contains("allocations"));

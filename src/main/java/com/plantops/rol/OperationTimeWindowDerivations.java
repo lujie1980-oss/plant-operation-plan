@@ -1,7 +1,7 @@
 package com.plantops.rol;
 
+import com.plantops.api.dto.WorkOrderTimingWindowDto;
 import com.plantops.ontology.OntologyGraph;
-import com.plantops.ontology.supply.Operation;
 import com.plantops.ontology.supply.SupplyOrder;
 
 import java.time.LocalDate;
@@ -14,25 +14,17 @@ public final class OperationTimeWindowDerivations {
     private OperationTimeWindowDerivations() {
     }
 
-    /** 整链重算：latest 自尾 JIT 倒推（D14），earliest 自首正排；窗口空 → infeasible。 */
     public static void recalculate(OntologyGraph graph, String supplyOrderId, LocalDate planningStart) {
-        SupplyOrder supplyOrder = graph.supplyOrder(supplyOrderId);
-        List<Operation> operations = graph.operationsForSupplyOrder(supplyOrderId);
-        if (supplyOrder == null || operations.isEmpty()) {
-            return;
-        }
-        LocalDate latest = supplyOrder.getNeedDate() != null ? supplyOrder.getNeedDate() : planningStart;
-        for (int i = operations.size() - 1; i >= 0; i--) {
-            Operation operation = operations.get(i);
-            operation.setLatestPossibleEnd(latest);
-            latest = latest.minusDays(minutesToDays(operation.getProductionTimeMinutes()));
-        }
-        LocalDate earliest = planningStart;
-        for (Operation operation : operations) {
-            operation.setEarliestPossibleStart(earliest);
-            operation.setInfeasible(earliest.isAfter(operation.getLatestPossibleEnd()));
-            earliest = earliest.plusDays(minutesToDays(operation.getProductionTimeMinutes()));
-        }
+        recalculate(graph, supplyOrderId, planningStart, null);
+    }
+
+    public static void recalculate(
+            OntologyGraph graph,
+            String supplyOrderId,
+            LocalDate planningStart,
+            WorkOrderTimingWindowDto window) {
+        com.plantops.ontology.supply.OperationTimeWindowDerivations.recalculate(
+                graph, supplyOrderId, planningStart, window);
     }
 
     public static List<Derivation> derivations(OntologyGraph graph) {
@@ -45,12 +37,9 @@ public final class OperationTimeWindowDerivations {
             derivations.add(new Derivation(
                     Derivation.propertyKey(supplyOrderId, "operationTimeWindows"),
                     Set.of(Derivation.propertyKey(supplyOrderId, "needDate")),
-                    (g, targetKey) -> recalculate(g, supplyOrderId, planningStart)));
+                    (g, targetKey) -> com.plantops.ontology.supply.OperationTimeWindowDerivations
+                            .recalculateLatestDesired(g, supplyOrderId, planningStart, null)));
         }
         return derivations;
-    }
-
-    private static long minutesToDays(double minutes) {
-        return Math.max(0, Math.round(Math.ceil(minutes / 1440.0)));
     }
 }

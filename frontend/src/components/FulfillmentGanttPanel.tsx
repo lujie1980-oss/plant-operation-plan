@@ -31,6 +31,7 @@ interface FulfillmentGanttPanelProps {
   hideToolbar?: boolean;
   viewMode?: ViewMode;
   onViewModeChange?: (mode: ViewMode) => void;
+  onSelectTask?: (task: Task, isSelected: boolean) => void;
 }
 
 export function FulfillmentGanttPanel({
@@ -49,6 +50,7 @@ export function FulfillmentGanttPanel({
   hideToolbar = false,
   viewMode: viewModeProp,
   onViewModeChange,
+  onSelectTask,
 }: FulfillmentGanttPanelProps) {
   const [viewModeInternal, setViewModeInternal] = useState(ViewMode.Day);
   const viewMode = viewModeProp ?? viewModeInternal;
@@ -131,6 +133,7 @@ export function FulfillmentGanttPanel({
           preStepsCount={1}
           todayColor="rgba(59, 130, 246, 0.15)"
           onExpanderClick={handleExpanderClick}
+          onSelect={onSelectTask}
         />
         <FulfillmentPegArrows
           tasks={validTasks}

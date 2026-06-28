@@ -1,9 +1,12 @@
 import type { SlittingRollNode } from '../../types/slitting';
+import { slittingNodeLabel, slittingNodeSubtitle, slittingNodeTypeLabel } from '../../utils/slitting/display';
 
 type Props = {
   nodes: SlittingRollNode[];
   activeParentNodeId: string | null;
+  hoveredNodeId: string | null;
   onSelect: (nodeId: string | null) => void;
+  onHover: (nodeId: string | null) => void;
 };
 
 function childrenOf(nodes: SlittingRollNode[], parentId: string | null): SlittingRollNode[] {
@@ -14,25 +17,37 @@ function TreeNode({
   node,
   nodes,
   activeParentNodeId,
+  hoveredNodeId,
   onSelect,
+  onHover,
   depth,
 }: {
   node: SlittingRollNode;
   nodes: SlittingRollNode[];
   activeParentNodeId: string | null;
+  hoveredNodeId: string | null;
   onSelect: (nodeId: string | null) => void;
+  onHover: (nodeId: string | null) => void;
   depth: number;
 }) {
   const kids = childrenOf(nodes, node.nodeId);
   const active = activeParentNodeId === node.nodeId;
+  const hovered = hoveredNodeId === node.nodeId;
+  const className = ['slitting-tree-btn', active && 'active', hovered && 'is-hovered'].filter(Boolean).join(' ');
+
   return (
-    <div className="slitting-tree-node" style={{ paddingLeft: depth * 12 }}>
+    <div className="slitting-tree-node" style={{ paddingLeft: depth * 10 }}>
       <button
         type="button"
-        className={active ? 'slitting-tree-btn active' : 'slitting-tree-btn'}
+        className={className}
         onClick={() => onSelect(node.nodeType === 'INTERMEDIATE' ? node.nodeId : null)}
+        onMouseEnter={() => onHover(node.nodeId)}
+        onMouseLeave={() => onHover(null)}
       >
-        {node.nodeType} · {node.nodeId}
+        <span className="slitting-tree-btn-label">
+          {slittingNodeTypeLabel(node.nodeType)} · {slittingNodeLabel(node)}
+        </span>
+        <span className="slitting-tree-btn-meta">{slittingNodeSubtitle(node)}</span>
       </button>
       {kids.map((k) => (
         <TreeNode
@@ -40,7 +55,9 @@ function TreeNode({
           node={k}
           nodes={nodes}
           activeParentNodeId={activeParentNodeId}
+          hoveredNodeId={hoveredNodeId}
           onSelect={onSelect}
+          onHover={onHover}
           depth={depth + 1}
         />
       ))}
@@ -48,13 +65,18 @@ function TreeNode({
   );
 }
 
-export function RollTreePanel({ nodes, activeParentNodeId, onSelect }: Props) {
+export function RollTreePanel({ nodes, activeParentNodeId, hoveredNodeId, onSelect, onHover }: Props) {
   const roots = childrenOf(nodes, null);
   return (
-    <div className="slitting-tree-panel">
-      <h3>分切树</h3>
-      <button type="button" className="slitting-tree-btn" onClick={() => onSelect(null)}>
-        MASTER 层
+    <div className="slitting-panel slitting-tree-panel">
+      <h3 className="slitting-panel-title">分切树</h3>
+      <button
+        type="button"
+        className={`slitting-tree-btn slitting-tree-master-link ${activeParentNodeId === null ? 'active' : ''}`}
+        onClick={() => onSelect(null)}
+      >
+        <span className="slitting-tree-btn-label">MASTER 层</span>
+        <span className="slitting-tree-btn-meta">查看母卷排样</span>
       </button>
       {roots.map((r) => (
         <TreeNode
@@ -62,8 +84,10 @@ export function RollTreePanel({ nodes, activeParentNodeId, onSelect }: Props) {
           node={r}
           nodes={nodes}
           activeParentNodeId={activeParentNodeId}
+          hoveredNodeId={hoveredNodeId}
           onSelect={onSelect}
-          depth={1}
+          onHover={onHover}
+          depth={0}
         />
       ))}
     </div>

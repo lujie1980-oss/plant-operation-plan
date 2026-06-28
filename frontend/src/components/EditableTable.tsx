@@ -1,7 +1,19 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { MasterDataRecord } from '../types/masterData';
+import { mergeViolations, warningToViolations } from '../utils/tableViolations';
 import { applyColumnFilters } from './table/filterRows';
+import { ConstraintViolationCell } from './table/ConstraintViolationCell';
 import { TableHead } from './table/TableHead';
+import { TableRowMenu } from './table/TableRowMenu';
+import type { RowRelationLink, RowViolation, TableSortState } from './table/types';
+import {
+  TABLE_COL_ROW_ACTIONS,
+  UNIFIED_COL_ACTIONS,
+  UNIFIED_COL_VIOLATIONS,
+  VIOLATION_HEADER_ARIA,
+} from './table/types';
+import { ViolationColumnHeader } from './table/ViolationColumnHeader';
+import { useConfigurableColumns } from './table/useConfigurableColumns';
 import { useTableLayout } from './table/useTableLayout';
 import './EditableTable.css';
 import './table/FilterableTable.css';
@@ -16,13 +28,11 @@ export interface EditableColumn<T> {
   options?: { value: string; label: string }[];
   width?: number;
   step?: number;
-  /** 从 row.extensions[fieldKey] 读写（用于动态 Custom 字段） */
   extensionKey?: string;
-  /** 用于格式化展示（非编辑时） */
   format?: (value: T[keyof T & string], row: T) => ReactNode;
-  /** 是否允许编辑（默认 true） */
   editable?: boolean;
   filterable?: boolean;
+  sortable?: boolean;
   resizable?: boolean;
   getFilterText?: (value: T[keyof T & string], row: T) => string;
 }
@@ -39,12 +49,13 @@ interface EditableTableProps<T extends MasterDataRecord> {
   saving?: boolean;
   search?: (row: T) => string;
   emptyText?: string;
-  /** 行级预警文案（如 BOM 缺失） */
   rowWarning?: (row: T) => string | null;
-  /** 外部注入的搜索词（如从数据健康跳转） */
+  validationEntityKey?: (row: T) => string;
+  validationIndex?: Map<string, RowViolation[]>;
+  getRowRelations?: (row: T) => RowRelationLink[];
   externalSearchQuery?: string;
-  /** 高亮并滚动到该行（rowKey 返回值） */
   highlightRowKey?: string | null;
+  getRowClassName?: (row: T) => string | undefined;
 }
 
 function inputValue(value: unknown, type: EditableFieldType): string {
@@ -82,6 +93,24 @@ function writeCellValue<T>(row: T, col: EditableColumn<T>, value: unknown): T {
   return { ...row, [col.key]: value } as T;
 }
 
+function filterTextForColumn<T>(row: T, col: EditableColumn<T>): string {
+  const value = readCellValue(row, col);
+  if (col.getFilterText) {
+    return col.getFilterText(value as T[keyof T & string], row);
+  }
+  if (col.format) {
+    const rendered = col.format(value as T[keyof T & string], row);
+    if (typeof rendered === 'string' || typeof rendered === 'number') {
+      return String(rendered);
+    }
+  }
+  if (col.type === 'boolean') {
+    return value ? '是 true' : '否 false';
+  }
+  if (value == null) return '';
+  return String(value);
+}
+
 export function EditableTable<T extends MasterDataRecord>({
   tableId = 'editable-table',
   rows,
@@ -95,28 +124,93 @@ export function EditableTable<T extends MasterDataRecord>({
   search,
   emptyText = '暂无数据',
   rowWarning,
+  validationEntityKey,
+  validationIndex,
+  getRowRelations,
   externalSearchQuery,
   highlightRowKey,
+  getRowClassName,
 }: EditableTableProps<T>) {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [draft, setDraft] = useState<T | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [query, setQuery] = useState('');
   const [pendingError, setPendingError] = useState<string | null>(null);
+  const [sort, setSort] = useState<TableSortState>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const columnOptions = useMemo(
+    () => columns.map((c) => ({ key: c.key, label: c.label })),
+    [columns],
+  );
+  const defaultVisibleKeys = useMemo(() => columns.map((c) => c.key), [columns]);
+  const { visibleSet, toggleColumn, resetColumns } = useConfigurableColumns(
+    `${tableId}-cols`,
+    columnOptions,
+    defaultVisibleKeys,
+  );
+
+  const visibleColumns = useMemo(
+    () => columns.filter((c) => visibleSet.has(c.key)),
+    [columns, visibleSet],
+  );
+
+  const resolveViolations = useCallback(
+    (row: T): RowViolation[] => {
+      const key = validationEntityKey?.(row) ?? rowKey(row);
+      const fromApi = validationIndex?.get(key) ?? [];
+      return mergeViolations(fromApi, warningToViolations(rowWarning?.(row) ?? null));
+    },
+    [validationEntityKey, validationIndex, rowKey, rowWarning],
+  );
+
   const headColumns = useMemo(
-    () =>
-      columns.map((col) => ({
+    () => [
+      {
+        key: UNIFIED_COL_ACTIONS,
+        header: '…',
+        width: 36,
+        defaultWidth: 36,
+        filterable: false,
+        sortable: false,
+        resizable: true,
+        className: 'ft-th-unified',
+      },
+      {
+        key: UNIFIED_COL_VIOLATIONS,
+        header: '',
+        headerNode: <ViolationColumnHeader />,
+        ariaLabel: VIOLATION_HEADER_ARIA,
+        defaultWidth: 52,
+        minWidth: 40,
+        maxWidth: 120,
+        filterable: false,
+        sortable: false,
+        resizable: true,
+        className: 'ft-th-unified',
+      },
+      ...visibleColumns.map((col) => ({
         key: col.key,
         header: col.label,
         width: col.width,
         defaultWidth: col.width ?? 120,
-        filterable: col.filterable,
-        resizable: col.resizable,
+        filterable: col.filterable !== false,
+        sortable: col.sortable !== false,
+        resizable: col.resizable !== false,
         required: col.required,
       })),
-    [columns],
+      {
+        key: TABLE_COL_ROW_ACTIONS,
+        header: '操作',
+        defaultWidth: 132,
+        minWidth: 88,
+        filterable: false,
+        sortable: false,
+        resizable: true,
+        className: 'md-actions-col ft-th',
+      },
+    ],
+    [visibleColumns],
   );
 
   const { filters, setFilter, getColumnWidth, onResizeStart, hasActiveFilters, clearFilters } =
@@ -126,6 +220,14 @@ export function EditableTable<T extends MasterDataRecord>({
     const headCol = headColumns.find((c) => c.key === key);
     return headCol ? getColumnWidth(headCol) : undefined;
   };
+
+  const onSortToggle = useCallback((key: string) => {
+    setSort((prev) => {
+      if (prev?.key !== key) return { key, dir: 'asc' };
+      if (prev.dir === 'asc') return { key, dir: 'desc' };
+      return null;
+    });
+  }, []);
 
   useEffect(() => {
     if (externalSearchQuery != null) {
@@ -150,28 +252,32 @@ export function EditableTable<T extends MasterDataRecord>({
     result = applyColumnFilters<T>(
       result,
       filters,
-      columns.map((c) => ({ key: c.key })),
+      visibleColumns.map((c) => ({ key: c.key })),
       (row, key) => {
-      const col = columns.find((c) => c.key === key);
-      if (!col) return '';
-      const value = readCellValue(row, col);
-      if (col.getFilterText) {
-        return col.getFilterText(value as T[keyof T & string], row);
+        const col = visibleColumns.find((c) => c.key === key);
+        return col ? filterTextForColumn(row, col) : '';
+      },
+    );
+    if (sort) {
+      const col = visibleColumns.find((c) => c.key === sort.key);
+      if (col) {
+        const copy = [...result];
+        copy.sort((a, b) => {
+          const sa = filterTextForColumn(a, col);
+          const sb = filterTextForColumn(b, col);
+          const na = Number(sa);
+          const nb = Number(sb);
+          if (!Number.isNaN(na) && !Number.isNaN(nb) && sa !== '' && sb !== '') {
+            return sort.dir === 'asc' ? na - nb : nb - na;
+          }
+          const cmp = sa.localeCompare(sb, 'zh-CN', { numeric: true });
+          return sort.dir === 'asc' ? cmp : -cmp;
+        });
+        result = copy;
       }
-      if (col.format) {
-        const rendered = col.format(value as T[keyof T & string], row);
-        if (typeof rendered === 'string' || typeof rendered === 'number') {
-          return String(rendered);
-        }
-      }
-      if (col.type === 'boolean') {
-        return value ? '是 true' : '否 false';
-      }
-      if (value == null) return '';
-      return String(value);
-    });
+    }
     return result;
-  }, [rows, query, search, filters, columns]);
+  }, [rows, query, search, filters, visibleColumns, sort]);
 
   const startEdit = (row: T) => {
     setEditingKey(rowKey(row));
@@ -195,9 +301,7 @@ export function EditableTable<T extends MasterDataRecord>({
   };
 
   const updateField = (col: EditableColumn<T>, type: EditableFieldType, raw: string) => {
-    setDraft((prev) =>
-      prev ? writeCellValue(prev, col, parseInput(raw, type)) : prev,
-    );
+    setDraft((prev) => (prev ? writeCellValue(prev, col, parseInput(raw, type)) : prev));
   };
 
   const validate = (row: T): string | null => {
@@ -267,7 +371,8 @@ export function EditableTable<T extends MasterDataRecord>({
         </select>
       );
     }
-    const inputType = col.type === 'date' ? 'date' : col.type === 'number' || col.type === 'integer' ? 'number' : 'text';
+    const inputType =
+      col.type === 'date' ? 'date' : col.type === 'number' || col.type === 'integer' ? 'number' : 'text';
     const step = col.step ?? (col.type === 'integer' ? 1 : col.type === 'number' ? 0.0001 : undefined);
     return (
       <input
@@ -300,6 +405,25 @@ export function EditableTable<T extends MasterDataRecord>({
     return String(value);
   };
 
+  const renderChromeCells = (row: T, editing: boolean) => (
+    <>
+      <td className="ft-td-unified" style={{ width: widthFor(UNIFIED_COL_ACTIONS) }}>
+        {!editing && (
+          <TableRowMenu
+            columnOptions={columnOptions}
+            visibleSet={visibleSet}
+            onToggleColumn={toggleColumn}
+            onResetColumns={resetColumns}
+            relations={getRowRelations?.(row) ?? []}
+          />
+        )}
+      </td>
+      <td className="ft-td-unified" style={{ width: widthFor(UNIFIED_COL_VIOLATIONS) }}>
+        <ConstraintViolationCell violations={resolveViolations(row)} />
+      </td>
+    </>
+  );
+
   return (
     <div className="editable-table">
       <div className="editable-table-toolbar">
@@ -330,7 +454,7 @@ export function EditableTable<T extends MasterDataRecord>({
       </div>
       {pendingError && <div className="editable-table-error">{pendingError}</div>}
       <div className="editable-table-scroll" ref={scrollRef}>
-        <table className="data-table md-table ft-table">
+        <table className="data-table md-table ft-table" data-table-id={tableId}>
           <thead>
             <TableHead
               columns={headColumns}
@@ -338,28 +462,26 @@ export function EditableTable<T extends MasterDataRecord>({
               setFilter={setFilter}
               getColumnWidth={getColumnWidth}
               onResizeStart={onResizeStart}
-              trailingLabelCells={
-                <>
-                  {rowWarning && <th className="md-warn-col ft-th">预警</th>}
-                  <th className="md-actions-col ft-th">操作</th>
-                </>
-              }
+              sort={sort}
+              onSortToggle={onSortToggle}
             />
           </thead>
           <tbody>
             {isCreating && draft && (
               <tr className="md-row-editing md-row-new">
-                {columns.map((col) => (
-                  <td key={col.key} style={{ width: widthFor(col.key), minWidth: widthFor(col.key) }}>
+                {renderChromeCells(draft, true)}
+                {visibleColumns.map((col) => (
+                  <td key={col.key} data-col-key={col.key} style={{ width: widthFor(col.key), minWidth: widthFor(col.key) }}>
                     {renderCellEdit(col, draft)}
                   </td>
                 ))}
-                {rowWarning && (
-                  <td className="md-warn-col">
-                    <span className="md-muted">—</span>
-                  </td>
-                )}
-                <td className="md-actions-col">
+                <td
+                  className="md-actions-col"
+                  style={{
+                    width: widthFor(TABLE_COL_ROW_ACTIONS),
+                    minWidth: widthFor(TABLE_COL_ROW_ACTIONS),
+                  }}
+                >
                   <button type="button" className="btn md-btn primary" onClick={() => void doSave()} disabled={saving}>
                     保存
                   </button>
@@ -373,37 +495,42 @@ export function EditableTable<T extends MasterDataRecord>({
               const key = rowKey(row);
               const editing = editingKey === key && !isCreating;
               const renderRow = editing && draft ? draft : row;
-              const warn = rowWarning?.(renderRow) ?? null;
+              const violations = resolveViolations(renderRow);
+              const hasViolation = violations.length > 0;
               const highlighted = highlightRowKey != null && highlightRowKey === key;
+              const extraRowClass = getRowClassName?.(row);
               return (
                 <tr
                   key={key}
                   data-row-key={key}
                   className={[
                     editing ? 'md-row-editing' : '',
-                    warn ? 'md-row-has-warn' : '',
+                    hasViolation ? 'md-row-has-warn' : '',
                     highlighted ? 'md-row-highlight' : '',
+                    extraRowClass ?? '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
                 >
-                {columns.map((col) =>
-                  editing ? (
-                    <td key={col.key} style={{ width: widthFor(col.key), minWidth: widthFor(col.key) }}>
-                      {renderCellEdit(col, renderRow)}
-                    </td>
-                  ) : (
-                    <td key={col.key} style={{ width: widthFor(col.key), minWidth: widthFor(col.key) }}>
-                      {renderCellRead(col, renderRow)}
-                    </td>
-                  ),
-                )}
-                  {rowWarning && (
-                    <td className="md-warn-col">
-                      {warn ? <span className="md-bom-warn">{warn}</span> : <span className="md-muted">—</span>}
-                    </td>
+                  {renderChromeCells(renderRow, editing)}
+                  {visibleColumns.map((col) =>
+                    editing ? (
+                      <td key={col.key} data-col-key={col.key} style={{ width: widthFor(col.key), minWidth: widthFor(col.key) }}>
+                        {renderCellEdit(col, renderRow)}
+                      </td>
+                    ) : (
+                      <td key={col.key} data-col-key={col.key} style={{ width: widthFor(col.key), minWidth: widthFor(col.key) }}>
+                        {renderCellRead(col, renderRow)}
+                      </td>
+                    ),
                   )}
-                  <td className="md-actions-col">
+                  <td
+                    className="md-actions-col"
+                    style={{
+                      width: widthFor(TABLE_COL_ROW_ACTIONS),
+                      minWidth: widthFor(TABLE_COL_ROW_ACTIONS),
+                    }}
+                  >
                     {editing ? (
                       <>
                         <button

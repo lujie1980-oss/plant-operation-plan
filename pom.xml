@@ -17,6 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <quarkus.platform.version>3.17.5</quarkus.platform.version>
         <timefold.version>2.0.0</timefold.version>
+        <ortools.version>9.10.4067</ortools.version>
         <surefire.version>3.5.2</surefire.version>
         <skip.frontend.build>false</skip.frontend.build>
     </properties>
@@ -81,6 +82,16 @@
         <dependency>
             <groupId>ai.timefold.solver</groupId>
             <artifactId>timefold-solver-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.ortools</groupId>
+            <artifactId>ortools-java</artifactId>
+            <version>${ortools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>4.28.3</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

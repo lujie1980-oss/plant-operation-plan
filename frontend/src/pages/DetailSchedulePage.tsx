@@ -9,8 +9,8 @@ import { MachineScheduleGantt } from '../components/MachineScheduleGantt';
 import { PendingScheduleBatchList } from '../components/PendingScheduleBatchList';
 import { ProductionTaskPanel } from '../components/ProductionTaskPanel';
 import { ScheduleViolationsPanel } from '../components/ScheduleViolationsPanel';
-import { PlanningDiagnosticsPanel } from '../components/PlanningDiagnosticsPanel';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
+import { PpToolbar, PpToolbarHint, PpToolbarRow } from '../components/PpToolbar';
 import { StatusBanner } from '../components/StatusBanner';
 import { VerticalResizeSplit } from '../components/VerticalResizeSplit';
 import { usePlan } from '../context/PlanContext';
@@ -71,7 +71,6 @@ export function DetailSchedulePage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [refreshMasterPlan, setRefreshMasterPlan] = useState(true);
   const [feedbackCutoff, setFeedbackCutoff] = useState(() => new Date().toISOString().slice(0, 10));
-  const [showDsDiagnostics, setShowDsDiagnostics] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<ProductionBatchKitting | null>(null);
   const [selectedOperationId, setSelectedOperationId] = useState<string | null>(null);
   const [assignDialog, setAssignDialog] = useState<AssignDialogState | null>(null);
@@ -395,7 +394,7 @@ export function DetailSchedulePage() {
 
   const solve = async () => {
     if (!activePlanVersionId) {
-      setError('请先在主计划模块运行主计划');
+      setError('请先在订单协同计划模块运行计划');
       return;
     }
     setError(null);
@@ -457,105 +456,92 @@ export function DetailSchedulePage() {
   return (
     <div className="production-plan-page detail-schedule-page detail-schedule-page-v2">
       <PageHeader
+        variant={DECISION_PAGE_HEADER}
         title="生产排程"
         showScheduleVersionSelector
         description="左侧 KPI；右上批次与工序；下方全量可拖拽推演甘特。"
       />
       <StatusBanner loading={busy} error={bannerError} success={success} />
 
-      <div className="pp-toolbar card ds-toolbar-compact">
-        <div className="pp-filters ds-toolbar-filters">
-          <label className="ds-check">
-            <input
-              type="checkbox"
-              checked={refreshMasterPlan}
-              onChange={(e) => setRefreshMasterPlan(e.target.checked)}
-              disabled={viewingHistorical}
-            />
-            排程后滚动主计划
-          </label>
-          <label className="ds-cutoff">
-            <span>反馈截止</span>
-            <input
-              type="date"
-              className="input"
-              value={feedbackCutoff}
-              onChange={(e) => setFeedbackCutoff(e.target.value)}
-              disabled={!refreshMasterPlan || viewingHistorical}
-            />
-          </label>
-        </div>
-        <div className="pp-toolbar-actions">
-          <button
-            type="button"
-            className="btn"
-            disabled={
-              busy || !hasSession || viewingHistorical || scheduledPreviewOps.length === 0
-            }
-            title={
-              scheduledPreviewOps.length === 0
-                ? '当前无已排产工序'
-                : `取消全部已排计划（${scheduledPreviewOps.length} 道工序）`
-            }
-            onClick={() => void handleCancelAllPlans()}
-          >
-            取消计划
-          </button>
-          <button
-            type="button"
-            className="btn"
-            disabled={busy || !hasSession}
-            title="对当前 Session 全部已排工序重新链式赋时"
-            onClick={() => void simulateFull()}
-          >
-            {simulating ? '推演中…' : '全量推演'}
-          </button>
-          <button
-            type="button"
-            className="btn"
-            disabled={busy || !hasSession}
-            onClick={() => void optimize()}
-          >
-            Timefold 优化
-          </button>
-          <button
-            type="button"
-            className="btn primary"
-            disabled={busy || !hasSession}
-            onClick={() => void handleConfirm()}
-          >
-            {confirming ? '发布中…' : '确认发布'}
-          </button>
-          <button
-            type="button"
-            className="btn"
-            onClick={() => setShowDsDiagnostics((v) => !v)}
-            disabled={!activePlanVersionId}
-          >
-            {showDsDiagnostics ? '收起诊断' : '推演诊断'}
-          </button>
-          <button type="button" className="btn" disabled={busy} onClick={() => void solve()}>
-            求解并排程
-          </button>
-        </div>
-        <p className="pp-hint">
-          <Link to="/scheduling/kitting">齐套</Link>
-          {' · '}
-          <Link to="/scheduling/pending-work-orders">待排工单</Link>
-          {session && <span> · Session {session.sessionId}</span>}
-          {selectedBatch && <span> · 已选批次 {selectedBatch.batchNo}</span>}
-        </p>
-      </div>
-
-      {showDsDiagnostics && (
-        <section className="card ds-diagnostics-panel">
-          <PlanningDiagnosticsPanel
-            layer="detail-schedule"
-            contextId={activePlanVersionId ?? undefined}
-            autoLoad
-          />
-        </section>
-      )}
+      <PpToolbar className="ds-toolbar-compact">
+        <PpToolbarRow>
+          <div className="pp-filters ds-toolbar-filters">
+            <label className="ds-check">
+              <input
+                type="checkbox"
+                checked={refreshMasterPlan}
+                onChange={(e) => setRefreshMasterPlan(e.target.checked)}
+                disabled={viewingHistorical}
+              />
+              排程后滚动主计划
+            </label>
+            <label className="ds-cutoff">
+              <span>反馈截止</span>
+              <input
+                type="date"
+                className="input"
+                value={feedbackCutoff}
+                onChange={(e) => setFeedbackCutoff(e.target.value)}
+                disabled={!refreshMasterPlan || viewingHistorical}
+              />
+            </label>
+          </div>
+          <div className="pp-toolbar-actions">
+            <button
+              type="button"
+              className="btn"
+              disabled={
+                busy || !hasSession || viewingHistorical || scheduledPreviewOps.length === 0
+              }
+              title={
+                scheduledPreviewOps.length === 0
+                  ? '当前无已排产工序'
+                  : `取消全部已排计划（${scheduledPreviewOps.length} 道工序）`
+              }
+              onClick={() => void handleCancelAllPlans()}
+            >
+              取消计划
+            </button>
+            <button
+              type="button"
+              className="btn"
+              disabled={busy || !hasSession}
+              title="对当前 Session 全部已排工序重新链式赋时"
+              onClick={() => void simulateFull()}
+            >
+              {simulating ? '推演中…' : '全量推演'}
+            </button>
+            <button
+              type="button"
+              className="btn"
+              disabled={busy || !hasSession}
+              onClick={() => void optimize()}
+            >
+              Timefold 优化
+            </button>
+            <button
+              type="button"
+              className="btn primary"
+              disabled={busy || !hasSession}
+              onClick={() => void handleConfirm()}
+            >
+              {confirming ? '发布中…' : '确认发布'}
+            </button>
+            <button type="button" className="btn" disabled={busy} onClick={() => void solve()}>
+              求解并排程
+            </button>
+          </div>
+        </PpToolbarRow>
+        <PpToolbarHint>
+          <p className="pp-hint">
+            <Link to="/scheduling/kitting">齐套</Link>
+            {' · '}
+            <Link to="/scheduling/pending-work-orders">待排工单</Link>
+            {session && <span> · Session {session.sessionId}</span>}
+            {selectedBatch && <span> · 已选批次 {selectedBatch.batchNo}</span>}
+          </p>
+        </PpToolbarHint>
+      </PpToolbar>
 
       <ScheduleViolationsPanel
         violations={preview?.violations}
@@ -570,6 +556,8 @@ export function DetailSchedulePage() {
         minLeftRatio={0.1}
         maxLeftRatio={0.2}
         defaultLeftRatio={0.14}
+        collapsibleLeft
+        collapseBarLabel="排程 KPI"
         left={
           <section className="card ds-left-kpi">
             <DetailScheduleKpiPanel

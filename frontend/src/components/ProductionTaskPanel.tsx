@@ -201,7 +201,7 @@ export function ProductionTaskPanel({
               },
             },
           ]}
-          emptyText="暂无生产任务；请在推演诊断中创建 Session 并确认发布。"
+          emptyText="暂无生产任务；请在需求满足链中完成有限能力计划并确认发布。"
         />
       </div>
     </div>

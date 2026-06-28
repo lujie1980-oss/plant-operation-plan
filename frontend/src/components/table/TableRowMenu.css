@@ -1,0 +1,115 @@
+.ft-row-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.ft-row-menu-trigger {
+  width: 1.65rem;
+  height: 1.45rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: #64748b;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ft-row-menu-trigger:hover {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.ft-row-menu-dropdown {
+  position: fixed;
+  z-index: 1200;
+  min-width: 11rem;
+  max-width: 16rem;
+  max-height: min(60vh, 320px);
+  overflow: auto;
+  padding: 0.4rem 0;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+}
+
+.ft-row-menu-section {
+  padding: 0.25rem 0.5rem 0.35rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ft-row-menu-section:last-child {
+  border-bottom: none;
+}
+
+.ft-row-menu-section-title {
+  margin: 0 0 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.ft-row-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ft-row-menu-check {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--ui-font-sm, 0.8125rem);
+  color: #334155;
+  cursor: pointer;
+  padding: 0.15rem 0;
+}
+
+.ft-row-menu-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.25rem 0.15rem;
+  border: none;
+  background: transparent;
+  font-size: var(--ui-font-sm, 0.8125rem);
+  color: #2563eb;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.ft-row-menu-link:hover {
+  text-decoration: underline;
+}
+
+.ft-row-menu-reset {
+  margin-top: 0.35rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.68rem;
+  color: #64748b;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.ft-row-menu-empty {
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  font-size: var(--ui-font-xs);
+  color: #94a3b8;
+}
+
+.ft-th-unified {
+  padding: 0.2rem 0.35rem !important;
+}
+
+.ft-td-unified {
+  padding: 0.15rem 0.35rem !important;
+  vertical-align: middle;
+}

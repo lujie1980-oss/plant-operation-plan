@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { OrderBusinessFlowGraph } from '../components/OrderBusinessFlowGraph';
 import { OrderProcessPathGraph } from '../components/OrderProcessPathGraph';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { VerticalResizeSplit } from '../components/VerticalResizeSplit';
 import { FilterableTable } from '../components/table/FilterableTable';
@@ -61,6 +61,7 @@ export function DemandTrackingPage() {
   return (
     <div className="demand-tracking-page">
       <PageHeader
+        variant={DECISION_PAGE_HEADER}
         title="需求跟踪"
         description="业务流程节点与工艺路径进度：原料 → 工序 → 订单"
         actions={

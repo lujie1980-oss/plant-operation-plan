@@ -1,6 +1,6 @@
-# OTD 本体 ↔ Plant Operation Plan 映射基线（M1–M3）
+# OTD 本体 ↔ Plant Operation Plan 映射基线（M1–M4）
 
-> **版本：** M1 设计基线 + M2/M3 实施同步（Epic 0 / Task 0.1；M3 见 [2026-06-10-otd-ontology-master-plan-m3.md](./superpowers/plans/2026-06-10-otd-ontology-master-plan-m3.md)）  
+> **版本：** M1 设计基线 + M2/M3 实施同步 + **M4** PISPP MRP / 直驱求解（见 [2026-06-10-otd-ontology-master-plan-m4.md](./superpowers/plans/2026-06-10-otd-ontology-master-plan-m4.md)）  
 > **关联计划：** [2026-06-07-otd-ontology-master-plan.md](./superpowers/plans/2026-06-07-otd-ontology-master-plan.md)  
 > **领域参考：** [scheduling-domain-model.md](./scheduling-domain-model.md)、[aps-planning-layer.md](./aps-planning-layer.md)  
 > **OTD 语义对照：** `d:\AILab\OTD\docs\current\04-technical-reference\OTD-Product-Design-v4.0.md`（只读，无运行时依赖）
@@ -41,14 +41,23 @@
 | **PeriodSequence** | `period.PeriodSequenceSpec` + `period.PeriodIndex` | `SystemParameterEntity`（`ontology_period_sequence`） | — | — | **M3 实现** |
 | **ProductInStockingPointPeriod** | `period.ProductInStockingPointPeriod` | —（内存 PoC） | — | `PispPeriodSnapshotDto`（M1 计划） | 实现 |
 | **Customer** | — | —（`SalesOrderLineEntity.customerCode` 字段） | — | `MasterDataDtos.SalesOrderDto.customerCode` | 映射 |
-| **DemandOrder** | — | `SalesOrderLineEntity` | — | `MasterDataDtos.SalesOrderDto` / `DemandPoolEntryDto` | 映射 |
-| **DemandOrderLine** | — | `SalesOrderLineEntity`（单行即一行需求） | — | `DemandPoolEntryDto` | 映射 |
+| **CustomerOrderLine** | `demand.CustomerOrderLine`（**M4 D33**） | `SalesOrderLineEntity` | — | `DemandPoolEntryDto`（行头） | **M4 计划** |
+| **CustomerOrderLineDelivery** | `demand.CustomerOrderLineDelivery`（**M4 D33**） | M4 合成 1:1 SO 行；后续交付批次表 | — | — | **M4 计划** |
+| **ForecastDemand** | `demand.ForecastDemand`（**M4 D34**） | 新建 `ForecastDemandEntity` 或导入 | — | — | **M4 计划** |
+| **Demand** | `demand.Demand`（**M4 D31** 统一锚点） | 来自 COLD / ForecastDemand / `BomComponentEntity`（经 OIM） | — | — | **M4 计划** |
+| **Supply** | `supply.Supply`（**M4**） | 工单产出、`InventoryEntity` | — | — | **M4 计划** |
+| **Fulfillment** | `fulfillment.Fulfillment`（**M4**） | `FulfillmentPeggingService` peg 边 | — | `FulfillmentPegEdgeDto` | **M4 计划** |
+| **PlanUnit** | `supply.PlanUnit`（**M4**） | 默认 1:1 `WorkOrderEntity` | — | — | **M4 计划** |
+| **OperationInputMaterial** | `supply.OperationInputMaterial`（**M4**） | `BomComponentEntity`（按工序父件） | — | — | **M4 计划** |
+| **OperationOutputMaterial** | `supply.OperationOutputMaterial`（**M4**） | 工序产出（末道=WO 成品） | — | — | **M4 计划** |
 | **SupplyOrder** | `supply.SupplyOrder` | `WorkOrderEntity` | `OrderAllocation`（M2 桥接） | `WorkOrderDto` | 实现 |
 | **WorkOrder**（执行投影） | —（D2：与 SupplyOrder 双对象） | `WorkOrderEntity` | `OrderAllocation` | `WorkOrderDto` | 映射 |
 | **SupplyOrderPegging** | — | `WorkOrderPeggingEntity` | — | — | 映射 |
-| **BillOfMaterial** | — | `BomComponentEntity` | `BomDependencyEdge`（求解边） | `MasterDataDtos.BomDto` | 映射 |
+| **BillOfMaterial** | —（静态物料清单） | `BomComponentEntity` | — | `MasterDataDtos.BomDto` | 映射 |
+| **BomDependency** | `supply.BomDependency`（**M4 派生**） | `WorkOrderBomDependencyEntity`（**迁移对照/缓存，非装载真相源**） | `BomDependencyEdge` | — | **M4 计划** |
 | **OperationDefinition** | — | `ProductResourceEntity` | — | `MasterDataDtos.ProductResourceDto` | 映射 |
-| **Operation**（工序实例） | `supply.Operation` | `ProductResourceEntity`（路由源） | `OrderAllocation`（S04）/ `OperationAssignment`（S05） | `OperationSnapshotDto`（**M3** Session API）/ `DetailScheduleOperationDto` | **M3 实现** |
+| **Operation**（工序实例） | `supply.Operation`（**M4** 挂 `planUnitId`） | `ProductResourceEntity`（路由源，工序头） | `OrderAllocation`（S04）/ `OperationAssignment`（S05） | `OperationSnapshotDto`（**M3** Session API）/ `DetailScheduleOperationDto` | **M3 实现** |
+| **OperationOnStandardResource** | `supply.OperationOnStandardResource`（**M4 D32**） | `ProductResourceEntity`（同工序多行：`resourceId`, `resourcePriority`, 工时） | `OrderAllocation.resourceId` / `allowedResourceIds`（**派生**） | — | **M4 计划** |
 | **ScheduledResource** | — | `ProductionResourceEntity` | `TimeSlot.resourceId` | `MasterDataDtos.ResourceDto` | 映射 |
 | **ProductionLine** | — | `ProductionLineEntity` | `ScheduleLine`（S05） | `MasterDataDtos.ProductionLineDto` | 映射 |
 | **StandardResourcePeriod** | `period.StandardResourcePeriod` | `ProductionLineEntity.resourceId` + `ResourceCalendarEntity`（按 period 聚合） | `TimeSlot`（产能对照） | `SrpSnapshotDto`（**M3** Session API） | **M3 实现** |
@@ -57,7 +66,7 @@
 | **InventoryBalance** | — | `InventoryEntity` | `MaterialFeasibilityContext` | `MasterDataDtos.InventoryDto` | 映射 |
 | **PlanVersion** | — | `PlanVersionEntity` | — | —（`MasterPlanResultDto.versionId` 等字段） | 映射 |
 | **Workspace** | — | `WorkspaceEntity` | — | — | 映射 |
-| **MaterialFeasibilitySnapshot** | — | — | `MaterialFeasibilityContext` | `MasterPlanPlanningDiagnosticsDto` | 映射 |
+| **MaterialFeasibilitySnapshot** | `scenario.planning.MaterialFeasibilitySnapshot`（**M4** 投影） | — | `MaterialFeasibilityContext` | `MasterPlanPlanningDiagnosticsDto` | **M4 实现** |
 | **KittingResult** | — | `KittingResultEntity` | —（S05 推演字段 `kittingEligible`） | `ProductionBatchKittingDto` | 映射 |
 | **MasterPlanPlanningContext** | — | — | `MasterPlanSchedule`（Problem 输入） | `MasterPlanPlanningPreviewDto` | 映射 |
 | **OntologyGraph** | `OntologyGraph` | —（内存） | — | `MasterPlanSessionDto`（M1 计划） | 实现 |
@@ -78,6 +87,55 @@
 | M1 状态 | **实现** |
 
 > M1 不引入多库存点；`InventoryEntity.stockingPointCode` 在装载期初 on-hand 时过滤或归并到 `DEFAULT-FG`。
+
+#### 需求侧语义链（canonical，**M4 D33–D34**）
+
+**锁定结构：**
+
+```
+CustomerOrderLine → CustomerOrderLineDelivery → Demand
+ForecastDemand ──────────────────────────────→ Demand
+```
+
+| 关系 | 语义 |
+|------|------|
+| COL → COLD | 订单行 **1:N** 交付批次（OTD 接单/断点主粒度）；当前代码无批次表 → M4 先 **1:1 合成** |
+| COLD → Demand | 每个交付批次生成一条计划 `Demand`（`sourceType=CUSTOMER_DELIVERY`） |
+| ForecastDemand → Demand | 每条预测生成一条 `Demand`（`sourceType=FORECAST`）；与 firm 订单同级进 Fulfillment |
+| Demand | **统一锚点**：独立需求（订单/预测）+ 依赖需求（BOM 组件，见下）均经 `Fulfillment` 连 `Supply` |
+
+**与现有代码：** `SalesOrderLineEntity` 现扁平承载 qty/dueDate → 映射为 `CustomerOrderLine` + 合成 `CustomerOrderLineDelivery`；`FulfillmentPeggingService.build` 根节点应对齐 **COLD 所指的 Demand**，而非直接 SO 行。
+
+#### 供应语义链（canonical，**M4 D27**）
+
+**锁定结构：**
+
+```
+SupplyOrder → PlanUnit → Operation → OperationInputMaterial → Demand（依赖需求）
+                              ├── OperationOnStandardResource → StandardResource（resourceId）
+                              └→ OperationOutputMaterial → Supply
+Demand ←—— Fulfillment ——→ Supply
+```
+
+| 关系 | 语义 |
+|------|------|
+| SO → PU | 计划单元（M4 默认每 SO 一个 PlanUnit，qty=工单量） |
+| PU → Operation | 工艺路线展开（`ProductResourceEntity` 工序头） |
+| Operation → OOSR | 工序可在哪些标准资源上加工；每行含 `resourcePriority`、setup/process 工时（**D32**） |
+| OOSR → OrderAllocation | 主资源 = 最小 priority；`allowedResourceIds` = 全部 OOSR 按 priority 排序 |
+| Operation → OIM → Demand | 工序投料需求（来自 `BomComponentEntity` 关键件） |
+| Operation → OOM → Supply | 工序产出（末道工序产出 = 工单成品供应） |
+| Fulfillment | 将 `Demand` 连接到满足它的 `Supply`（库存/子工单/缺口） |
+| BomDependency | **派生**：父 SO 的每个 `Demand` 沿 `Fulfillment` 找到 `Supply` → 子 SO；边表示「子 SO 须先完工」 |
+
+**BomDependency 派生规则（D29，非 JPA 直读）：**
+
+1. 遍历父 `SupplyOrder` 上可达的 `Demand`（经 `OperationInputMaterial` 或外销需求）
+2. 对每个 `Fulfillment(demandId, supplyId, …)`，追溯 `supplyId` → `OperationOutputMaterial` → `Operation` → `PlanUnit` → **子 `SupplyOrder`**
+3. 若子 SO 存在且 ≠ 父 SO，生成 `BomDependency(parentSupplyOrderId, childSupplyOrderId)`
+4. 投影至求解：`BomDependencyEdge(parentWorkOrderNo, childWorkOrderNo)`（SO.id = workOrderNo）
+
+**与现有代码对齐：** `FulfillmentPeggingService.pegDemand` / `expandWorkOrderNeeds` 已实现相同 peg 语义；M4 将其**固化进 `OntologyGraph`**，不再从 `WorkOrderBomDependencyEntity` 直接装载为 Session 真相源。
 
 #### SupplyOrder ↔ WorkOrderEntity（双对象 D2）
 
@@ -103,9 +161,10 @@
 | date→period | **M3** `PeriodIndex.of(periods).sequenceFor(date)`（区间查找；早于首桶→0，晚于末桶→last），替代 M1/M2 日差除法 |
 | 期初 | `PISPP[P-0].onHand` ← `InventoryEntity` 汇总 |
 | 供应输入 | **M2 实现** — `OntologyLoader` 按 `SupplyOrder.dueDate` 聚合至 `plannedSupplyTotal` |
-| 需求输入 | **M2 实现** — 销售需求按 `needDate` 聚合至 `plannedDemandQuantityTotal` |
+| 需求输入 | **M2** — 销售/预测 `Demand` 按 `needDate` 聚合；**M4** — `BOM_COMPONENT` Demand + `PispMrpDerivations`（simulate 改父件 supply 重算组件需求） |
+| MRP 求解投影 | **M4** — `PispDailyClosingProjection` → `MaterialFeasibilitySnapshotBuilder` → `MaterialFeasibilityContext`（非第二套物料模型） |
 | API | `POST .../sessions/{id}/simulate` → `PispPeriodSnapshotDto` |
-| M1 状态 | **实现** |
+| M1 状态 | **实现**（M4 扩展 MRP 闭合） |
 
 #### ResourceAssignment → MasterPlanAllocationEntity / OrderAllocation（M2）
 
@@ -140,7 +199,8 @@
 | OTD | `Operation`（SupplyOrder 上的工序实例） |
 | 本体 | `com.plantops.ontology.supply.Operation` |
 | JPA | **`ProductResourceEntity`**（按 `productCode` 匹配 SO；`operationName` 去重、`sequenceNo` 排序） |
-| 工时 | `productionTimeMinutes = setupTimeMinutes + processTimeSeconds × quantity / 60` |
+| 工时（M3） | `productionTimeMinutes = setupTimeMinutes + processTimeSeconds × quantity / 60`（取首行资源） |
+| 资源候选（**M4 D32**） | **`OperationOnStandardResource`**：同工序多行 → 1:N 绑定；`OrderAllocation.allowedResourceIds` 派生，不在 `Operation` 上存列表 |
 | derived | `OperationTimeWindowDerivations`：`latestPossibleEnd` 自 `needDate` JIT 倒推；`earliestPossibleStart` 自 planningStart 正排；`earliest > latest` → `infeasible` |
 | 传播 | `RolEngine.applySupplyOrderNeedDateChange` → needDate 变更重算整链 |
 | API | `GET .../sessions/{id}/supply-orders/{soId}/operations` → `OperationSnapshotDto` |
@@ -162,6 +222,18 @@
 | `on_hand`（Period ≥ 1） | **上一 Period** 的 `planned_inventory_level` | `PISPP[i].on_hand = PISPP[i-1].planned_inventory_level` | `PispRolling.rollChain()` / ROL 跨对象边 |
 
 **传播验收：** 修改任一 Period 的 `plannedSupplyTotal` → 下游 Period 链式重算；单线程 1000 次 P95 &lt; 10ms（见 M1 计划 Task 3.2）。
+
+### 2.1b M4 实现（PISPP MRP 传播）
+
+注册于 `PispMrpDerivations`，并入 `RolEngine.withMasterPlanRules`（与 §2.1 同引擎，禁止双注册）。
+
+| 目标属性 | 依赖 | 公式 / 规则 | 实现类 |
+|----------|------|-------------|--------|
+| `planned_demand_quantity_total`（组件） | 同 period 父件 `planned_supply_total` | `独立需求 + Σ(父件 supply × BOM 单位用量)` | `PispMrpDerivations` |
+| 按日末库存（求解用） | PISPP 链 | period 内供需均匀摊分 + 日滚动闭合 | `PispDailyClosingProjection` |
+| `MaterialFeasibilityContext` | 上图 + BOM 快照 | `MaterialFeasibilitySnapshotBuilder.fromGraph` | `OntologyToMasterPlanScheduleMapper` |
+
+> **注意：** 组件需求在 Loader 初载时由 `Demand(BOM_COMPONENT)` 聚合；Session simulate 改父件 PISPP supply 时由 `PispMrpDerivations` 重算。与实体路径 `MaterialFeasibilityService` 的日级 BOM 展开在 C.1 前仍有语义差，对等性见 `MaterialFeasibilitySnapshotBuilderTest` / `OntologyDirectSolveParityTest`。
 
 ### 2.2 M2/M3 实现 / 暂缓
 
@@ -213,9 +285,33 @@ M1 实现 **create → simulate**；M2 起 **optimize / confirm**；M3 扩展 op
 | 阶段 | M1 行为 | 持久化 |
 |------|---------|--------|
 | create | 装载本体图 + 初始 PISPP 链 | 无 |
-| simulate | 改 PISPP/SRP/Operation 属性 → ROL 传播（**M3** `RolEngine.withMasterPlanRules` = PISPP + SRP + Operation） | 无 |
-| optimize | **M2 实现** — Timefold → ChangeSet → PISPP `plannedSupplyTotal`；**M3** 另回写 SRP `reservedCapacity` | 无 |
-| confirm | **M2 实现** — `MasterPlanService.solve()` → 新 `planVersionId` + `MasterPlanAllocationEntity` | 是 |
+| simulate | 改 **PISPP** / **SRP** / **SUPPLY_ORDER.needDate** → ROL 传播（**M4 F.4** `OntologySimulateTargetType`；`withMasterPlanRules` = PISPP 滚动 + **PispMrpDerivations** + SRP + Operation 时间窗） | 无 |
+| optimize | **M2** — Timefold → ChangeSet；**M4** — `ontology_direct_solve_enabled=true` 时 `OntologyToMasterPlanScheduleMapper` 直驱内存求解 | 无 |
+| confirm | **M4** — 直驱 flag 下 `persistFromSchedule(lastSolution)`；否则 legacy `MasterPlanService.solve()` | 是 |
+| create（basePlanVersion） | **M4 E.3** — `PlanVersionAllocationHydrator` 反灌已发布 allocation → Operation `planned*` + `locked`、SRP `reservedCapacity` | 无 |
+
+### 3.1 S01 需求满足（本体只读视图）
+
+计划分析 → **需求满足** 页已切换为本体数据源（非 legacy `FulfillmentPeggingService` 列表）：
+
+| API | 说明 |
+|-----|------|
+| `GET /api/v1/ontology/fulfillment/deliveries` | `CustomerOrderLineDelivery` 列表 + 齐套/满足状态 |
+| `GET .../deliveries/summary` | 交付维度 KPI |
+| `GET .../deliveries/{deliveryId}/fulfillment-chain` | `OntologyFulfillmentChainProjector` → 甘特节点含 `SUPPLY_ORDER` / `INVENTORY` / `SHORTAGE` |
+| `POST .../deliveries/{deliveryId}/actions/{action}` | 右键操作（建链/推演/确认/取消） |
+
+**创建上游满足链**（`BUILD_UPSTREAM_CHAIN`）在本体内求解，新建 `SupplyOrder` **实时落库为 MRP 工单**（`WO-MRP-*`）：
+
+1. `CustomerOrderLineDelivery` → `Demand`
+2. 按产品查找可挂接 `Supply`（`InventorySupply` 或已有 `SupplyOrder` 产出），创建 `Fulfillment`
+3. 未满足量：分配 MRP 工单号作为 `SupplyOrder.id`，展开 `PlanUnit`/`Operation`/`Supply`；交期 = `Demand.needDate`；工序 JIT 倒排
+4. 对 `OperationInputMaterial` 子 `Demand` 递归至最顶层
+5. `OntologyUpstreamChainWorkOrderPersister` 写入 `work_order`、`work_order_pegging`、`work_order_bom_dependency`；重建前先 `removeExclusiveRegeneratableWorkOrders`
+
+**落库时机**：建链确认后立即落库（非确认交期时）。承诺交期（`CONFIRM_PROMISE_DATE`）仅写销售订单行 `promiseDate`。回滚用「取消计划」。
+
+实现：`OntologyUpstreamFulfillmentBuilder`、`OntologySupplyOrderMaterializer`、`OntologyUpstreamChainWorkOrderPersister`。
 
 ---
 
@@ -228,8 +324,14 @@ M1 实现 **create → simulate**；M2 起 **optimize / confirm**；M3 扩展 op
 | **D3** | 首批 derived | M1 **PISPP 滚动链**；M2 **SRP `free_capacity`**；**M3 Operation 时间窗** + SRP 装载/回写 | 见 §2 |
 | **D4** | confirm 持久化 | 仍写 **`MasterPlanAllocationEntity`** | M1 Session 不写库；与现有 S04 结果表兼容 |
 | **D9** | PeriodSequence 配置（**M3**） | 系统参数 `ontology_period_sequence`，格式 `"14x1d,4x1w,2x1m"`；缺省 `28×1d` | `PeriodSequenceSpec` + `PeriodIndex` |
-| **D16** | 本体直驱求解评估（2026-06-10） | **维持复用（D5）**；本体作结果投影层，直驱缺口过大暂不实施 | [otd-ontology-direct-solve-evaluation.md](./otd-ontology-direct-solve-evaluation.md) |
+| **D16** | 本体直驱求解（**M4**） | **已实现（feature flag）** — `ontology_direct_solve_enabled` 默认 `false`；`OntologyToMasterPlanScheduleMapper` + 对等性回归 | [otd-ontology-direct-solve-evaluation.md](./otd-ontology-direct-solve-evaluation.md) |
+| **D21** | PISPP 承载 MRP（**M4**） | 无 `MaterialPeriod`；`MaterialFeasibilitySnapshot` 为 PISPP 求解投影 | §2.1b |
+| **D24** | 直驱切换 | 系统参数 `ontology_direct_solve_enabled` | `OntologyDirectSolveFeature` |
 | **D17** | Sandbox 合并（**M3**） | `OntologySandbox` 接口 + `OntologySandboxStore<S>`；两 Session Store 继承；REST/DTO 不变 | 见 §3 |
+| **D27–D31** | 供应语义链（**M4**） | SO→PU→Op→OIM→Demand；Op→OOM→Supply；Fulfillment 关联；BomDependency 由 Fulfillment 派生 | 见 §1.1、[M4 计划](./superpowers/plans/2026-06-10-otd-ontology-master-plan-m4.md) Epic B0 |
+| **D32** | OperationOnStandardResource（**M4**） | `Operation` 1:N `OOSR`；装载自 `ProductResourceEntity` 多行；求解资源域派生至 `OrderAllocation` | 见 §1.1、[M4 计划](./superpowers/plans/2026-06-10-otd-ontology-master-plan-m4.md) Epic B.1 |
+| **D33** | 销售订单交付链（**M4**） | `CustomerOrderLine` → `CustomerOrderLineDelivery` → `Demand`；SO 行合成 1:1 COLD | 见 §1.1 需求侧语义链 |
+| **D34** | 预测需求链（**M4**） | `ForecastDemand` → `Demand`；并入 PISPP 与 Fulfillment | 见 §1.1 需求侧语义链 |
 | **隔离** | Session | **`workspaceId` 硬隔离** | `MasterPlanOntologySessionStore.require(id, ws)`；跨 workspace 返回 404；同 Session 内多 Customer 共存 |
 
 ---
@@ -239,9 +341,12 @@ M1 实现 **create → simulate**；M2 起 **optimize / confirm**；M3 扩展 op
 | 缺口 | 说明 | 计划 |
 |------|------|------|
 | Period vs TimeSlot | **M3** PISPP 支持可配置混合桶（`ontology_period_sequence`）；S04 `TimeSlot` 仍日/周粒度且绑 `resourceId` | 后续对齐或文档化转换 |
-| PISPP 供应/需求来源 | **M2 已实现** — `OntologyLoader` 聚合 WO/SO；未与 MRP `MaterialFeasibilityContext` 闭合 | 后续 |
-| DemandOrder 本体类 | 暂无 `ontology.demand.*` | M1 **映射**到 `SalesOrderLineEntity` 即可 |
-| Operation 本体类 | **M3 已实现** — `supply.Operation` + 时间窗 derived；S04/S05 求解类仍独立 | — |
+| PISPP MRP 闭合 | **M4 已实现** — BOM→组件 PISPP、`PispMrpDerivations`、按日投影；与 `MaterialFeasibilityService` 日级 BOM 偏移仍有差 | 深化对等 / jinghua 回归 |
+| 供应语义链 | **M4 B0 已实现** — PlanUnit / Demand / Supply / Fulfillment | — |
+| BomDependency 来源 | **M4 D29 已实现** — Fulfillment 派生；`WorkOrderBomDependencyEntity` 仅对照 | — |
+| Demand 本体类 | **M4 已实现** — COLD / Forecast / BOM_COMPONENT | — |
+| Operation / OOSR | **M4 已实现** — PlanUnit + OIM/OOM + `OperationOnStandardResource` | — |
+| 直驱默认开关 | 对等性已测；`ontology_direct_solve_enabled` 仍为 `false` | PO 签字后默认 `true` |
 | SRP 日历数据缺失 | **M3** 无 `ResourceCalendarEntity` 时 SRP 容量为 0（不报错） | 主数据前置 |
 | ResourceAssignment confirm | **M2 实现** — `POST .../confirm` → `MasterPlanService.solve()` | — |
 | 前端 PISPP 曲线 | **M2 实现** — `/master-plan/ontology` + `GET .../pisps/{id}/periods` | — |
@@ -261,10 +366,15 @@ M1 实现 **create → simulate**；M2 起 **optimize / confirm**；M3 扩展 op
 | API DTO | `src/main/java/com/plantops/api/dto/` |
 | M1 本体 | `src/main/java/com/plantops/ontology/` |
 | M1 ROL | `src/main/java/com/plantops/rol/` |
+| M4 MRP 投影 | `ontology/scheduling/PispDailyClosingProjection.java`, `scenario/planning/MaterialFeasibilitySnapshotBuilder.java` |
+| M4 直驱 Mapper | `scenario/planning/OntologyToMasterPlanScheduleMapper.java` |
+| M4 反灌 | `scenario/planning/PlanVersionAllocationHydrator.java` |
+| S01 本体满足 | `api/OntologyFulfillmentResource.java`, `scenario/OntologyFulfillmentService.java`, `ontology/fulfillment/OntologyFulfillmentChainProjector.java` |
 | M3 周期 | `ontology/period/PeriodSequenceSpec.java`, `PeriodIndex.java` |
 | M3 Sandbox | `scenario/planning/sandbox/OntologySandbox.java`, `OntologySandboxStore.java` |
 | 直驱评估 | `docs/otd-ontology-direct-solve-evaluation.md` |
+| **M5 求解器插件** | [ontology-optimizer-plugin.md](./ontology-optimizer-plugin.md)、`scenario/planning/optimizer/`、`scenario/planning/delivery/` |
 
 ---
 
-*文档随 M1–M3 实施更新；类名以 `src/main/java` 为准。M3 文档同步见 Epic F Task F.1。*
+*文档随 M1–M5 实施更新；类名以 `src/main/java` 为准。M4 见 [计划](./superpowers/plans/2026-06-10-otd-ontology-master-plan-m4.md)；M5 见 [求解器插件](./ontology-optimizer-plugin.md)。*

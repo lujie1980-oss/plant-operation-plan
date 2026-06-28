@@ -29,7 +29,9 @@ export function PispPeriodInventoryTable({ productCode, snapshots }: PispPeriodI
             <tr>
               <th>周期</th>
               <th className="num">期初库存</th>
-              <th className="num">计划供应</th>
+              <th className="num">计划供应(有效)</th>
+              <th className="num">MRP供应</th>
+              <th className="num">优化供应</th>
               <th className="num">计划需求</th>
               <th className="num">期末库存</th>
               <th className="num">缺货量</th>
@@ -43,6 +45,8 @@ export function PispPeriodInventoryTable({ productCode, snapshots }: PispPeriodI
                   <td className="period-cell">{row.periodId}</td>
                   <td className="num">{formatQty(row.onHand)}</td>
                   <td className="num">{formatQty(row.plannedSupplyTotal)}</td>
+                  <td className="num">{formatQty(row.plannedSupplyTotalMrp)}</td>
+                  <td className="num">{formatQty(row.plannedSupplyTotalOptimized)}</td>
                   <td className="num">{formatQty(row.plannedDemandQuantityTotal)}</td>
                   <td className="num">{formatQty(row.plannedInventoryLevel)}</td>
                   <td className={`num ${shortage ? 'shortage-qty' : ''}`}>

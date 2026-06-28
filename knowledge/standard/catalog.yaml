@@ -1,0 +1,448 @@
+# StandardKnowledge 规则注册表
+# type: KN-TYPE-*  |  domain: DOM-*  |  overridable: none | param | soft | exempt
+
+rules:
+  # --- DOM-PLT 平台 ---
+  - id: RULE-WS-01
+    types: [KN-TYPE-INV, KN-TYPE-PLT]
+    domain: DOM-PLT
+    overridable: none
+    scn: [SCN-T03]
+    ac: [AC-08]
+
+  - id: RULE-IAM-01
+    types: [KN-TYPE-INV, KN-TYPE-PLT]
+    domain: DOM-PLT
+    overridable: none
+    scn: [SCN-T03, SCN-T06]
+    adr: ADR-13
+
+  - id: RULE-IAM-02
+    types: [KN-TYPE-INV, KN-TYPE-PLT]
+    domain: DOM-PLT
+    overridable: none
+    scn: [SCN-T06]
+
+  - id: RULE-IAM-03
+    types: [KN-TYPE-INV, KN-TYPE-PLT]
+    domain: DOM-PLT
+    overridable: none
+    scn: [SCN-T06]
+
+  - id: RULE-IAM-04
+    types: [KN-TYPE-INV, KN-TYPE-PLT]
+    domain: DOM-PLT
+    overridable: none
+    scn: [SCN-T06]
+
+  - id: RULE-IAM-05
+    types: [KN-TYPE-INV, KN-TYPE-PLT]
+    domain: DOM-PLT
+    overridable: none
+    scn: [SCN-T06]
+
+  - id: RULE-IAM-06
+    types: [KN-TYPE-INV, KN-TYPE-PLT, KN-TYPE-STR]
+    domain: DOM-PLT
+    overridable: none
+    scn: [SCN-T06]
+
+  - id: RULE-SES-01
+    types: [KN-TYPE-INV, KN-TYPE-PLT]
+    domain: DOM-PLT
+    overridable: none
+    scn: [SCN-01a, SCN-03c, SCN-04c, SCN-T05]
+
+  - id: RULE-SES-02
+    types: [KN-TYPE-INV, KN-TYPE-PLT]
+    domain: DOM-PLT
+    overridable: none
+    scn: [SCN-T02]
+    ac: [AC-06, AC-07]
+
+  - id: RULE-SES-03
+    types: [KN-TYPE-INV, KN-TYPE-PLT]
+    domain: DOM-PLT
+    overridable: none
+    scn: [SCN-01b, SCN-T01, SCN-T02]
+
+  - id: RULE-SES-04
+    types: [KN-TYPE-INV, KN-TYPE-PLT]
+    domain: DOM-PLT
+    overridable: none
+    scn: [SCN-01b]
+    ac: [AC-13]
+
+  - id: RULE-PERS-01
+    types: [KN-TYPE-INV, KN-TYPE-PLT, KN-TYPE-INT]
+    domain: DOM-PER
+    overridable: none
+    adr: ADR-09
+
+  - id: RULE-PERS-02
+    types: [KN-TYPE-INV, KN-TYPE-PLT, KN-TYPE-INT]
+    domain: DOM-PER
+    overridable: none
+
+  - id: RULE-PERS-03
+    types: [KN-TYPE-INV, KN-TYPE-PLT, KN-TYPE-INT]
+    domain: DOM-PER
+    overridable: none
+
+  - id: RULE-PERS-04
+    types: [KN-TYPE-INV, KN-TYPE-PLT, KN-TYPE-INT]
+    domain: DOM-PER
+    overridable: param
+
+  - id: RULE-PERS-05
+    types: [KN-TYPE-INV, KN-TYPE-PLT]
+    domain: DOM-PER
+    overridable: none
+
+  # --- DOM-FF 满足链 ---
+  - id: RULE-FF-01
+    types: [KN-TYPE-INV]
+    domain: DOM-FF
+    overridable: none
+    scn: [SCN-01c]
+    ac: [AC-01]
+
+  - id: RULE-FF-02
+    types: [KN-TYPE-INV]
+    domain: DOM-FF
+    overridable: none
+    scn: [SCN-01c, SCN-01g, SCN-06]
+    ac: [AC-10]
+
+  - id: RULE-FF-03
+    types: [KN-TYPE-INV]
+    domain: DOM-FF
+    overridable: none
+    scn: [SCN-01e, SCN-01f]
+
+  - id: RULE-FF-04
+    types: [KN-TYPE-INV]
+    domain: DOM-FF
+    overridable: none
+    scn: [SCN-01g]
+
+  - id: RULE-FF-05
+    types: [KN-TYPE-INV]
+    domain: DOM-FF
+    overridable: none
+    scn: [SCN-07g]
+
+  - id: RULE-FF-06
+    types: [KN-TYPE-INV]
+    domain: DOM-FF
+    overridable: param
+    param_key: reservation_auto_policy
+    scn: [SCN-07h, SCN-07i]
+
+  - id: RULE-FF-07
+    types: [KN-TYPE-OPT]
+    domain: DOM-FF
+    overridable: soft
+    scn: [SCN-07j]
+
+  - id: RULE-FF-08
+    types: [KN-TYPE-INV]
+    domain: DOM-FF
+    overridable: none
+    scn: [SCN-07g, SCN-07j, SCN-01c]
+
+  - id: RULE-FF-09
+    types: [KN-TYPE-MOT, KN-TYPE-OPT]
+    domain: DOM-FF
+    overridable: param
+    scn: [SCN-01c, SCN-07e, SCN-07h, SCN-04a]
+
+  - id: RULE-FF-10
+    types: [KN-TYPE-MOT, KN-TYPE-OPT]
+    domain: DOM-FF
+    overridable: param
+    scn: [SCN-07e, SCN-07i, SCN-07a]
+
+  - id: RULE-DEM-01
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-FF
+    overridable: param
+    param_key: demand-priority-rules
+
+  - id: RULE-DEM-02
+    types: [KN-TYPE-INV]
+    domain: DOM-FF
+    overridable: none
+
+  - id: RULE-DEM-03
+    types: [KN-TYPE-OPT, KN-TYPE-PAR]
+    domain: DOM-FF
+    overridable: soft
+    param_key: delivery-date-strategy
+
+  - id: RULE-DEM-04
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-FF
+    overridable: param
+    param_key: ppq-rules
+
+  - id: RULE-DEM-05
+    types: [KN-TYPE-OPT]
+    domain: DOM-FF
+    overridable: soft
+
+  - id: RULE-PLAN-01
+    types: [KN-TYPE-OPT, KN-TYPE-EXM]
+    domain: DOM-FF
+    overridable: exempt
+    scn: [SCN-06, SCN-01c, SCN-02a]
+    exemptions: [E1_MASTER_DATA_GAP, E2_MATERIAL_SHORTAGE_BOUNDED]
+
+  # --- DOM-MRP 物料/供需平衡 ---
+  - id: RULE-MRP-01
+    types: [KN-TYPE-INV]
+    domain: DOM-MRP
+    overridable: none
+    scn: [SCN-07b, SCN-07c]
+
+  - id: RULE-MRP-02
+    types: [KN-TYPE-INV]
+    domain: DOM-MRP
+    overridable: none
+    scn: [SCN-07b, SCN-07c, SCN-07d]
+
+  - id: RULE-MRP-03
+    types: [KN-TYPE-INV]
+    domain: DOM-MRP
+    overridable: none
+    scn: [SCN-07d]
+
+  - id: RULE-MRP-04
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-MRP
+    overridable: param
+    param_key: material-lead-time
+    scn: [SCN-04a, SCN-07j, SCN-06]
+
+  - id: RULE-MRP-05
+    types: [KN-TYPE-INV, KN-TYPE-MOT, KN-TYPE-OPT]
+    domain: DOM-MRP
+    overridable: soft
+    scn: [SCN-07a, SCN-07b, SCN-07c, SCN-07d, SCN-04a]
+
+  # --- DOM-MP 主计划/产能 ---
+  - id: RULE-MP-01
+    types: [KN-TYPE-INV]
+    domain: DOM-MP
+    overridable: none
+    scn: [SCN-06, SCN-T01]
+
+  - id: RULE-MP-02
+    types: [KN-TYPE-OPT]
+    domain: DOM-MP
+    overridable: soft
+    scn: [SCN-06, SCN-03c, SCN-03a]
+
+  - id: RULE-MP-03
+    types: [KN-TYPE-INV]
+    domain: DOM-MP
+    overridable: none
+    scn: [SCN-06]
+
+  - id: RULE-MP-04
+    types: [KN-TYPE-INV]
+    domain: DOM-MP
+    overridable: none
+    scn: [SCN-T01, SCN-01b]
+
+  - id: RULE-MP-05
+    types: [KN-TYPE-OPT]
+    domain: DOM-MP
+    overridable: soft
+    scn: [SCN-06]
+
+  - id: RULE-MP-06
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-MP
+    overridable: param
+    param_key: operation-transfer-time
+    scn: [SCN-06, SCN-T04, SCN-T05]
+
+  - id: RULE-MP-07
+    types: [KN-TYPE-OPT, KN-TYPE-PAR]
+    domain: DOM-MP
+    overridable: soft
+    param_key: capacity_overload_threshold_pct
+    scn: [SCN-06, SCN-03a, SCN-T01]
+
+  - id: RULE-MP-08
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-MP
+    overridable: param
+    param_key: parallel-operations
+    scn: [SCN-06, SCN-T05]
+
+  # --- DOM-RT 工艺模板 ---
+  - id: RULE-RT-01
+    types: [KN-TYPE-INV]
+    domain: DOM-RT
+    overridable: none
+    scn: [SCN-T04, SCN-06, SCN-07b, SCN-07c, SCN-07d]
+
+  - id: RULE-RT-02
+    types: [KN-TYPE-INV, KN-TYPE-OPT]
+    domain: DOM-RT
+    overridable: soft
+    scn: [SCN-T04]
+
+  - id: RULE-SUP-01
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-MRP
+    overridable: param
+    param_key: supply-quantity-rules
+
+  - id: RULE-SUP-02
+    types: [KN-TYPE-INV, KN-TYPE-PAR, KN-TYPE-STR]
+    domain: DOM-RT
+    overridable: param
+    param_key: routing-step-timing
+
+  - id: RULE-SUP-03
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-RT
+    overridable: param
+    param_key: routing-step-resource
+
+  - id: RULE-SUP-04
+    types: [KN-TYPE-INV, KN-TYPE-STR]
+    domain: DOM-RT
+    overridable: none
+
+  - id: RULE-SUP-05
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-MP
+    overridable: param
+
+  # --- DOM-MD 主数据集成 ---
+  - id: RULE-MD-01
+    types: [KN-TYPE-INV, KN-TYPE-INT]
+    domain: DOM-MD
+    overridable: none
+    adr: ADR-10
+
+  - id: RULE-MD-02
+    types: [KN-TYPE-INV, KN-TYPE-INT]
+    domain: DOM-MD
+    overridable: none
+
+  - id: RULE-MD-03
+    types: [KN-TYPE-INV, KN-TYPE-INT]
+    domain: DOM-MD
+    overridable: none
+
+  - id: RULE-MD-04
+    types: [KN-TYPE-INV, KN-TYPE-INT]
+    domain: DOM-MD
+    overridable: none
+
+  - id: RULE-MD-05
+    types: [KN-TYPE-INV, KN-TYPE-INT]
+    domain: DOM-MD
+    overridable: none
+
+  - id: RULE-MD-06
+    types: [KN-TYPE-OPT, KN-TYPE-INT]
+    domain: DOM-MD
+    overridable: soft
+
+  - id: RULE-MD-07
+    types: [KN-TYPE-INV, KN-TYPE-STR]
+    domain: DOM-MD
+    overridable: none
+
+  - id: RULE-MD-08
+    types: [KN-TYPE-INV, KN-TYPE-STR]
+    domain: DOM-MD
+    overridable: none
+
+  - id: RULE-MD-09
+    types: [KN-TYPE-INV, KN-TYPE-STR]
+    domain: DOM-MD
+    overridable: none
+
+  - id: RULE-MD-10
+    types: [KN-TYPE-INV, KN-TYPE-STR]
+    domain: DOM-MD
+    overridable: none
+
+  - id: RULE-MD-11
+    types: [KN-TYPE-INV, KN-TYPE-STR]
+    domain: DOM-MD
+    overridable: none
+
+  - id: RULE-MD-12
+    types: [KN-TYPE-INV, KN-TYPE-STR]
+    domain: DOM-MD
+    overridable: none
+
+  - id: RULE-MD-13
+    types: [KN-TYPE-INV, KN-TYPE-STR]
+    domain: DOM-MD
+    overridable: none
+
+  # --- DOM-TX 交易数据集成 ---
+  - id: RULE-TX-01
+    types: [KN-TYPE-INV, KN-TYPE-INT]
+    domain: DOM-TX
+    overridable: none
+    adr: ADR-11
+
+  - id: RULE-TX-02
+    types: [KN-TYPE-INV, KN-TYPE-INT]
+    domain: DOM-TX
+    overridable: none
+
+  - id: RULE-TX-03
+    types: [KN-TYPE-INV, KN-TYPE-INT]
+    domain: DOM-TX
+    overridable: none
+
+  - id: RULE-TX-04
+    types: [KN-TYPE-INV]
+    domain: DOM-TX
+    overridable: none
+    scn: [SCN-05a, SCN-05b]
+
+  - id: RULE-TX-05
+    types: [KN-TYPE-INV, KN-TYPE-INT]
+    domain: DOM-TX
+    overridable: none
+
+  - id: RULE-TX-06
+    types: [KN-TYPE-INV]
+    domain: DOM-TX
+    overridable: none
+
+  - id: RULE-TX-07
+    types: [KN-TYPE-INV, KN-TYPE-STR]
+    domain: DOM-TX
+    overridable: none
+
+  - id: RULE-TX-08
+    types: [KN-TYPE-INV, KN-TYPE-STR]
+    domain: DOM-TX
+    overridable: none
+
+  - id: RULE-TX-09
+    types: [KN-TYPE-INV, KN-TYPE-STR]
+    domain: DOM-TX
+    overridable: none
+
+  - id: RULE-TX-10
+    types: [KN-TYPE-INV, KN-TYPE-INT]
+    domain: DOM-TX
+    overridable: none
+
+deprecated:
+  - id: RULE-DIAG-01
+    reason: ADR-03

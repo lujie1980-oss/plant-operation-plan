@@ -3,20 +3,27 @@ import { Navigate, useParams } from 'react-router-dom';
 import { consumeMasterDataTableFocus, type MasterDataTableFocus } from '../utils/masterDataFocus';
 import { api } from '../api/client';
 import { BusinessRulesExcelToolbar } from '../components/BusinessRulesExcelToolbar';
+import { MaterialLeadTimeRuleCallout } from '../components/MaterialLeadTimeRuleCallout';
 import { BusinessRuleDescriptionHeader } from '../components/BusinessRuleDescriptionHeader';
 import { BusinessRuleScopePanel, useBusinessRuleScopes } from '../components/BusinessRuleScopePanel';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { MasterDataTabBody, type TabConfig } from '../components/MasterDataTabBody';
 import type { MasterDataRecord } from '../types/masterData';
 import type { RuleSetVersion } from '../types/api';
 import {
-  BUSINESS_RULE_CATEGORIES,
-  defaultCategoryId,
+  categoriesForModule,
+  categoryBelongsToModule,
+  defaultCategoryIdForModule,
   isRuleCategoryId,
+  planningModuleRoutePrefix,
+  rulesFocusPageForModule,
   tabsForCategory,
+  type PlanningModuleId,
   type RuleCategoryDef,
+  type RuleCategoryId,
 } from './businessRuleCategories';
+import '../components/MaterialLeadTimeRuleCallout.css';
 import './BusinessRulesPage.css';
 import './MasterDataPage.css';
 
@@ -26,12 +33,18 @@ const TabBodyAny = MasterDataTabBody as ComponentType<{
   tableFocus?: MasterDataTableFocus | null;
 }>;
 
-export function BusinessRulesPage() {
+export function BusinessRulesPage({ moduleId }: { moduleId: PlanningModuleId }) {
   const { categoryId: categoryIdParam } = useParams<{ categoryId: string }>();
-  const categoryId = isRuleCategoryId(categoryIdParam ?? '') ? categoryIdParam : null;
+  const categoryId: RuleCategoryId | null =
+    isRuleCategoryId(categoryIdParam ?? '') && categoryBelongsToModule(categoryIdParam as RuleCategoryId, moduleId)
+      ? (categoryIdParam as RuleCategoryId)
+      : null;
 
-  const category: RuleCategoryDef | undefined = BUSINESS_RULE_CATEGORIES.find((c) => c.id === categoryId);
+  const category: RuleCategoryDef | undefined = categoriesForModule(moduleId).find(
+    (c) => c.id === categoryId,
+  );
   const categoryTabs = useMemo(() => (categoryId ? tabsForCategory(categoryId) : []), [categoryId]);
+  const rulesFocusPage = rulesFocusPageForModule(moduleId);
 
   const [activeTabId, setActiveTabId] = useState('');
   const [ruleVersions, setRuleVersions] = useState<RuleSetVersion[]>([]);
@@ -59,12 +72,14 @@ export function BusinessRulesPage() {
   );
 
   useEffect(() => {
-    const focus = consumeMasterDataTableFocus('business-rules');
+    const focus =
+      consumeMasterDataTableFocus(rulesFocusPage) ??
+      consumeMasterDataTableFocus('business-rules');
     if (focus && categoryTabs.some((t) => t.id === focus.tabId)) {
       setActiveTabId(focus.tabId);
       setTableFocus(focus);
     }
-  }, [categoryTabs]);
+  }, [categoryTabs, rulesFocusPage]);
 
   useEffect(() => {
     if (tableFocus && activeTabId !== tableFocus.tabId) {
@@ -128,7 +143,12 @@ export function BusinessRulesPage() {
   };
 
   if (!categoryId || !category) {
-    return <Navigate to={`/business-rules/${defaultCategoryId()}`} replace />;
+    return (
+      <Navigate
+        to={`${planningModuleRoutePrefix(moduleId)}/${defaultCategoryIdForModule(moduleId)}`}
+        replace
+      />
+    );
   }
 
   const selectedRule = ruleVersions.find((r) => r.ruleSetVersionId === selectedRuleVersionId);
@@ -136,7 +156,7 @@ export function BusinessRulesPage() {
 
   return (
     <div className="master-data-page business-rules-page">
-      <PageHeader title={category.label} description={category.description} />
+      <PageHeader variant={DECISION_PAGE_HEADER} title={category.label} description={category.description} />
       <StatusBanner loading={loading} error={error ?? scopeError} success={success} />
 
       <section className="card br-version-panel">
@@ -244,6 +264,9 @@ export function BusinessRulesPage() {
                 activeTabId={activeTabId}
                 onImported={() => setDataRevision((n) => n + 1)}
               />
+              {activeTabId === 'material-lead-time' && (
+                <MaterialLeadTimeRuleCallout dataRevision={dataRevision} />
+              )}
               <div className="md-tab-content">
                 <TabBodyAny
                   key={`${activeTab.id}-${dataRevision}`}

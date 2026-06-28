@@ -37,7 +37,14 @@ public class SlittingConstraintProvider implements ConstraintProvider {
 
     private Constraint noOverlap(ConstraintFactory factory) {
         return factory.forEachUniquePair(NestAssignment.class, Joiners.equal(NestAssignment::getParentNode))
-                .filter(SlittingGeometryUtil::overlaps)
+                .filter((a, b) -> {
+                    if (a.getParentNode() == null) {
+                        return false;
+                    }
+                    double kerfW = SlittingGeometryUtil.kerfWidthMm(a.getParentNode());
+                    double kerfL = SlittingGeometryUtil.kerfLengthMm(a.getParentNode());
+                    return SlittingGeometryUtil.violatesKerfClearance(a, b, kerfW, kerfL);
+                })
                 .penalize(HardSoftScore.ONE_HARD)
                 .asConstraint("No overlap");
     }

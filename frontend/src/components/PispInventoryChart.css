@@ -1,0 +1,79 @@
+.pisp-inventory-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  height: 100%;
+  min-height: 260px;
+}
+
+.pisp-inventory-chart svg {
+  width: 100%;
+  min-height: 260px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.pisp-inventory-chart-grid {
+  stroke: #e2e8f0;
+  stroke-width: 1;
+}
+
+.pisp-inventory-chart-zero {
+  stroke: #94a3b8;
+  stroke-width: 1.2;
+  stroke-dasharray: 4 4;
+}
+
+.pisp-inventory-chart-line {
+  stroke: #2563eb;
+  stroke-width: 2.2;
+}
+
+.pisp-inventory-chart-shortage {
+  fill: #ef4444;
+  stroke: #b91c1c;
+  stroke-width: 1;
+}
+
+.pisp-inventory-chart-axis-label {
+  fill: #64748b;
+  font-size: 11px;
+}
+
+.pisp-inventory-chart-caption {
+  fill: #334155;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pisp-inventory-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.pisp-inventory-chart-legend-line,
+.pisp-inventory-chart-legend-shortage {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pisp-inventory-chart-legend-line::before {
+  content: '';
+  width: 1rem;
+  height: 2px;
+  background: #2563eb;
+}
+
+.pisp-inventory-chart-legend-shortage::before {
+  content: '';
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: #ef4444;
+}

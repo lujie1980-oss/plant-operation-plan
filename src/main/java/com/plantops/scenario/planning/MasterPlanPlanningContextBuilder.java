@@ -22,7 +22,9 @@ import com.plantops.solver.masterplan.MasterPlanCapacityStrategy;
 import com.plantops.solver.masterplan.MasterPlanObjectiveSettings;
 import com.plantops.solver.masterplan.MaterialFeasibilityContext;
 import com.plantops.solver.masterplan.OperationPrecedenceEdge;
+import com.plantops.solver.masterplan.OperationPrecedenceFact;
 import com.plantops.solver.masterplan.OrderAllocation;
+import com.plantops.solver.masterplan.ResourceCapacityAssignment;
 import com.plantops.solver.masterplan.TimeSlot;
 import com.plantops.solver.masterplan.WorkOrderTimingBoundsContext;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -92,9 +94,11 @@ public class MasterPlanPlanningContextBuilder {
         MasterPlanCapacityStrategy effectiveStrategy = strategy != null
                 ? strategy
                 : MasterPlanCapacityStrategy.UNCONSTRAINED;
-        MasterPlanObjectiveSettings effectiveObjectives = objectiveSettings != null
+            MasterPlanObjectiveSettings effectiveObjectives = objectiveSettings != null
                 ? objectiveSettings
                 : new MasterPlanObjectiveSettings();
+        double demandScale = parameters.getDouble(
+                "master_plan_demand_scale", MasterPlanDemandScaler.DEFAULT_SCALE);
 
         List<TimeSlot> slots = timeslotHorizonService.buildSlots(
                 planningStart, ProductionResourceEntity.routingResourceIds());
@@ -109,6 +113,21 @@ public class MasterPlanPlanningContextBuilder {
         diag.set(PlanningDiagnosticCodes.MP_TIME_SLOT_COUNT, slots.size());
         diag.set(PlanningDiagnosticCodes.MP_BOM_DEPENDENCY_EDGE_COUNT, bomEdges.size());
         diag.set(PlanningDiagnosticCodes.MP_INVENTORY_PRODUCT_COUNT, effectiveMaterial.inventory().productCount());
+
+        if (parameters.getBoolean("master_plan_multi_resource_split", false)) {
+            return buildMultiResourceContext(
+                    planningStart,
+                    effectiveStrategy,
+                    effectiveObjectives,
+                    overlay,
+                    slots,
+                    materialFeasibility,
+                    bomEdges,
+                    timingBounds,
+                    diag,
+                    effectiveMaterial,
+                    demandScale);
+        }
 
         List<OrderAllocation> candidates = new ArrayList<>();
         for (WorkOrderEntity wo : WorkOrderEntity.listAllOrdered()) {
@@ -152,7 +171,8 @@ public class MasterPlanPlanningContextBuilder {
                     slots,
                     effectiveStrategy.isCapacityConstrained(),
                     locked,
-                    businessRuleScopeService);
+                    businessRuleScopeService,
+                    demandScale);
             if (woAllocations.isEmpty()) {
                 diag.recordSkip(
                         PlanningDiagnosticCodes.WO_NO_ALLOCATIONS,
@@ -192,6 +212,102 @@ public class MasterPlanPlanningContextBuilder {
                 timingBounds,
                 diag.toDto(effectiveStrategy, overlay.hasCutoff(), effectiveMaterial.inventorySnapshotId()),
                 effectiveMaterial);
+    }
+
+    private MasterPlanPlanningContext buildMultiResourceContext(
+            LocalDate planningStart,
+            MasterPlanCapacityStrategy effectiveStrategy,
+            MasterPlanObjectiveSettings effectiveObjectives,
+            MasterPlanCapacityOverlay overlay,
+            List<TimeSlot> slots,
+            MaterialFeasibilityContext materialFeasibility,
+            List<BomDependencyEdge> bomEdges,
+            WorkOrderTimingBoundsContext timingBounds,
+            MasterPlanPlanningDiagnosticsCollector diag,
+            MaterialPlanningContext effectiveMaterial,
+            double demandScale) {
+        int freezeDays = parameters.getInt("freeze_window_days", 2);
+        boolean demandRules = businessRuleScopeService.isMasterPlanEnabled(
+                BusinessRuleTypeIds.DEMAND_PRIORITY_RULES);
+
+        List<ResourceCapacityAssignment> candidates = new ArrayList<>();
+        List<OperationPrecedenceFact> precedenceFacts = new ArrayList<>();
+        for (WorkOrderEntity wo : WorkOrderEntity.listAllOrdered()) {
+            diag.increment(PlanningDiagnosticCodes.MP_WORK_ORDERS_SCANNED);
+            WorkOrderScheduleContext scheduleCtx = WorkOrderScheduleContext.resolve(wo);
+            if (!scheduleCtx.schedulable) {
+                diag.recordSkip(
+                        PlanningDiagnosticCodes.WO_NOT_SCHEDULABLE,
+                        wo.workOrderNo,
+                        null,
+                        "工单不可排程（订单取消或未解析到有效交期）");
+                continue;
+            }
+            if (overlay.hasCutoff()
+                    && scheduleFeedbackService.isWorkOrderFrozenThroughCutoff(
+                            wo.workOrderNo, overlay.feedbackCutoff())) {
+                diag.recordSkip(
+                        PlanningDiagnosticCodes.WO_FROZEN_THROUGH_CUTOFF,
+                        wo.workOrderNo,
+                        null,
+                        "反馈截止日 " + overlay.feedbackCutoff() + " 前已冻结");
+                continue;
+            }
+            List<ProductRoutingSteps.Operation> operations = ProductRoutingSteps.operationsForProduct(wo.productCode);
+            if (operations.isEmpty()) {
+                diag.recordSkip(
+                        PlanningDiagnosticCodes.WO_NO_ROUTING,
+                        wo.workOrderNo,
+                        null,
+                        "产品 " + wo.productCode + " 无 product_resource 工艺");
+                continue;
+            }
+            boolean locked = (demandRules && scheduleCtx.anyOrderLocked)
+                    || scheduleCtx.dueDate.isBefore(planningStart.plusDays(freezeDays));
+            int priority = demandRules ? scheduleCtx.priority : 5;
+            ResourceCapacityAssignmentBuilder.BuildResult woResult = ResourceCapacityAssignmentBuilder.buildForWorkOrder(
+                    wo,
+                    scheduleCtx,
+                    operations,
+                    slots,
+                    effectiveStrategy.isCapacityConstrained(),
+                    locked,
+                    priority,
+                    timingBounds,
+                    overlay,
+                    demandScale);
+            if (woResult.assignments().isEmpty()) {
+                diag.recordSkip(
+                        PlanningDiagnosticCodes.WO_NO_ALLOCATIONS,
+                        wo.workOrderNo,
+                        null,
+                        "工艺步骤均未解析到有效 resourceId");
+                continue;
+            }
+            diag.increment(PlanningDiagnosticCodes.MP_WORK_ORDERS_WITH_ALLOCATIONS);
+            candidates.addAll(woResult.assignments());
+            precedenceFacts.addAll(woResult.operationPrecedenceFacts());
+        }
+        diag.set(PlanningDiagnosticCodes.MP_ORDER_ALLOCATIONS_CANDIDATE, candidates.size());
+        diag.set(PlanningDiagnosticCodes.MP_ORDER_ALLOCATIONS_REPLANNABLE, candidates.size());
+        diag.set(PlanningDiagnosticCodes.MP_OPERATION_PRECEDENCE_EDGES, precedenceFacts.size());
+
+        return new MasterPlanPlanningContext(
+                planningStart,
+                effectiveStrategy,
+                effectiveObjectives,
+                overlay,
+                slots,
+                List.of(),
+                materialFeasibility,
+                bomEdges,
+                List.of(),
+                timingBounds,
+                diag.toDto(effectiveStrategy, overlay.hasCutoff(), effectiveMaterial.inventorySnapshotId()),
+                effectiveMaterial,
+                candidates,
+                precedenceFacts,
+                true);
     }
 
     private static List<OrderAllocation> applyEligibleTimeSlots(

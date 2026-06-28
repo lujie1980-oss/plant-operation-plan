@@ -38,6 +38,9 @@ public class SlittingAssignmentEntity extends WorkspaceScopedEntity {
     @Column(name = "sequence")
     public Integer sequence;
 
+    @Column(name = "pinned", nullable = false)
+    public boolean pinned;
+
     public static List<SlittingAssignmentEntity> listByPlanVersionId(String planVersionId) {
         return list("workspaceId = ?1 and planVersionId = ?2 order by sequence, assignmentId", ws(), planVersionId);
     }

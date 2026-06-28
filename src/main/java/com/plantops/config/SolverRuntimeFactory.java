@@ -48,6 +48,10 @@ public class SolverRuntimeFactory {
         return SolverManager.create(SolverFactory.create(slittingNestSolverConfig(true)));
     }
 
+    public SolverManager<SlittingNestSolution> createSlittingNestSessionSolver() {
+        return SolverManager.create(SolverFactory.create(slittingNestSessionSolverConfig()));
+    }
+
     public SolutionManager<SlittingNestSolution, HardSoftScore> createSlittingNestSolutionManager() {
         return SolutionManager.create(SolverFactory.create(slittingNestSolverConfig(false)));
     }
@@ -86,5 +90,14 @@ public class SolverRuntimeFactory {
             config.withTerminationConfig(new TerminationConfig().withSecondsSpentLimit(seconds));
         }
         return config;
+    }
+
+    private SolverConfig slittingNestSessionSolverConfig() {
+        long seconds = Math.max(1L, parameters.getInt("slitting_session_solver_seconds", 10));
+        return new SolverConfig()
+                .withSolutionClass(SlittingNestSolution.class)
+                .withEntityClasses(NestAssignment.class)
+                .withConstraintProviderClass(SlittingConstraintProvider.class)
+                .withTerminationConfig(new TerminationConfig().withSecondsSpentLimit(seconds));
     }
 }

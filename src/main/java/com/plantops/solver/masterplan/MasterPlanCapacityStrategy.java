@@ -4,7 +4,7 @@ package com.plantops.solver.masterplan;
  * 主计划产能策略：
  * <ul>
  *   <li>{@link #UNCONSTRAINED} — 不限制槽位总负荷，允许单日超负荷（与历史行为一致）</li>
- *   <li>{@link #FINITE_CAPACITY} — 槽位总负荷不得超过日历产能；超长工单拆成多段跨天分配</li>
+ *   <li>{@link #FINITE_CAPACITY} — 超长工单拆成多段跨天分配；槽位超负荷计软约束惩罚，不导致不可行</li>
  * </ul>
  */
 public enum MasterPlanCapacityStrategy {

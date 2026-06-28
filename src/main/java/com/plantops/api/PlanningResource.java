@@ -1,13 +1,11 @@
 package com.plantops.api;
 
 import com.plantops.api.dto.*;
-import com.plantops.api.dto.planning.DetailSchedulePlanningDiagnosticsDto;
 import com.plantops.api.dto.planning.DetailSchedulePlanningPreviewDto;
 import com.plantops.api.dto.planning.DetailSchedulePlanningPreviewRequest;
 import com.plantops.api.dto.planning.MasterPlanPlanningPreviewDto;
 import com.plantops.api.dto.planning.MasterPlanPlanningPreviewRequest;
 import com.plantops.api.dto.planning.DetailScheduleVersionSummaryDto;
-import com.plantops.api.dto.planning.MasterPlanPlanningDiagnosticsDto;
 import com.plantops.api.dto.planning.OrderPlanningChainDto;
 import com.plantops.api.dto.planning.OrderPlanningChainPreviewRequest;
 import com.plantops.api.dto.planning.PlanningScoreExplanationDto;
@@ -31,6 +29,9 @@ public class PlanningResource {
 
     @Inject
     CapacityService capacityService;
+
+    @Inject
+    StandardResourcePeriodGanttService srpCapacityGanttService;
 
     @Inject
     MasterPlanService masterPlanService;
@@ -96,6 +97,13 @@ public class PlanningResource {
         return capacityService.analyze();
     }
 
+    @GET
+    @Path("/capacity/srp-gantt")
+    public SrpCapacityGanttDto srpCapacityGantt(
+            @QueryParam("masterPlanVersionId") String masterPlanVersionId) {
+        return srpCapacityGanttService.buildForMasterPlan(masterPlanVersionId);
+    }
+
     @POST
     @Path("/planning/master-plan/solve")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
@@ -139,24 +147,6 @@ public class PlanningResource {
         return Response.ok(masterPlanService.previewPlanning(request)).build();
     }
 
-    @GET
-    @Path("/planning/master-plan/diagnostics/preview")
-    public MasterPlanPlanningDiagnosticsDto previewMasterPlanDiagnostics(
-            @QueryParam("strategyId") String strategyId,
-            @QueryParam("feedbackCutoff") String feedbackCutoff) {
-        java.time.LocalDate cutoff = feedbackCutoff != null && !feedbackCutoff.isBlank()
-                ? java.time.LocalDate.parse(feedbackCutoff)
-                : null;
-        return masterPlanService.previewPlanningDiagnostics(strategyId, cutoff);
-    }
-
-    @GET
-    @Path("/planning/detail-schedule/diagnostics/preview")
-    public DetailSchedulePlanningDiagnosticsDto previewDetailScheduleDiagnostics(
-            @QueryParam("masterPlanVersionId") String masterPlanVersionId) {
-        return detailScheduleService.previewPlanningDiagnostics(masterPlanVersionId);
-    }
-
     /**
      * 细排程推演层统一预览：默认仅 P0–P4；{@code solve} 可选内存/持久化选优，结果反写到工序快照。
      */
@@ -167,6 +157,8 @@ public class PlanningResource {
         return Response.ok(detailScheduleService.previewPlanning(request)).build();
     }
 
+    /** @deprecated 使用 {@code GET /api/v1/ontology/fulfillment/deliveries/{id}/promise-date-preview} 或 Sandbox optimize。 */
+    @Deprecated(since = "1.0", forRemoval = true)
     @POST
     @Path("/planning/order-chain/preview")
     @Consumes(MediaType.APPLICATION_JSON)

@@ -2,6 +2,7 @@ package com.plantops.scenario.slitting;
 
 import com.plantops.api.dto.slitting.CreateSlittingPlanRequest;
 import com.plantops.api.dto.slitting.SaveSlittingAssignmentsRequest;
+import com.plantops.api.dto.slitting.SaveSlittingTreeRequest;
 import com.plantops.api.dto.slitting.SlittingAssignmentDto;
 import com.plantops.api.dto.slitting.SlittingPlanSummaryDto;
 import com.plantops.api.dto.slitting.SlittingPlanTreeDto;
@@ -64,12 +65,11 @@ public class SlittingPlanService {
 
     @Transactional
     public SlittingPlanSummaryDto createPlan(CreateSlittingPlanRequest request) {
-        if (request == null || request.masterRollCodes() == null || request.masterRollCodes().isEmpty()) {
-            throw new BadRequestException("masterRollCodes required");
+        if (request == null) {
+            throw new BadRequestException("request required");
         }
-        if (request.childOrderCodes() == null || request.childOrderCodes().isEmpty()) {
-            throw new BadRequestException("childOrderCodes required");
-        }
+        List<String> masterCodes = request.masterRollCodes() != null ? request.masterRollCodes() : List.of();
+        List<String> childCodes = request.childOrderCodes() != null ? request.childOrderCodes() : List.of();
         String planVersionId = "SLIT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         SlittingPlanVersionEntity plan = new SlittingPlanVersionEntity();
         plan.stampWorkspace();
@@ -78,7 +78,7 @@ public class SlittingPlanService {
         plan.status = SlittingPlanVersionEntity.STATUS_DRAFT;
         plan.persist();
 
-        for (String rollCode : request.masterRollCodes()) {
+        for (String rollCode : masterCodes) {
             MasterRollEntity roll = masterRollService.requireEntity(rollCode);
             SlittingPlanMasterRollEntity link = new SlittingPlanMasterRollEntity();
             link.stampWorkspace();
@@ -86,7 +86,7 @@ public class SlittingPlanService {
             link.masterRollId = roll.id;
             link.persist();
         }
-        for (String orderCode : request.childOrderCodes()) {
+        for (String orderCode : childCodes) {
             ChildSlittingOrderEntity order = childSlittingOrderService.requireEntity(orderCode);
             SlittingPlanChildOrderEntity link = new SlittingPlanChildOrderEntity();
             link.stampWorkspace();
@@ -114,9 +114,49 @@ public class SlittingPlanService {
         if (request == null || request.assignments() == null) {
             throw new BadRequestException("assignments required");
         }
-        SlittingAssignmentValidator.validate(planVersionId, request.assignments());
+        return persistTree(planVersionId, null, request.assignments());
+    }
+
+    @Transactional
+    public SlittingPlanTreeDto saveTree(String planVersionId, SaveSlittingTreeRequest request) {
+        requirePlan(planVersionId);
+        if (request == null) {
+            throw new BadRequestException("request required");
+        }
+        List<SlittingRollNodeDto> nodes = request.nodes() != null ? request.nodes() : List.of();
+        List<SlittingAssignmentDto> assignments = request.assignments() != null ? request.assignments() : List.of();
+        return persistTree(planVersionId, nodes, assignments);
+    }
+
+    private SlittingPlanTreeDto persistTree(
+            String planVersionId, List<SlittingRollNodeDto> nodes, List<SlittingAssignmentDto> assignments) {
+        if (nodes != null) {
+            SlittingRollNodeEntity.deleteByPlanVersionId(planVersionId);
+            for (SlittingRollNodeDto dto : nodes) {
+                if (dto.nodeId() == null || dto.nodeId().isBlank()) {
+                    throw new BadRequestException("nodeId required");
+                }
+                if (dto.nodeType() == null || dto.nodeType().isBlank()) {
+                    throw new BadRequestException("nodeType required");
+                }
+                SlittingRollNodeEntity entity = new SlittingRollNodeEntity();
+                entity.stampWorkspace();
+                entity.planVersionId = planVersionId;
+                entity.nodeId = dto.nodeId();
+                entity.nodeType = dto.nodeType();
+                entity.parentNodeId = dto.parentNodeId();
+                entity.widthMm = dto.widthMm();
+                entity.lengthMm = dto.lengthMm();
+                entity.thicknessMm = dto.thicknessMm();
+                entity.cuttingMethod = dto.cuttingMethod();
+                entity.sourceSpecCode = dto.sourceSpecCode();
+                entity.persist();
+            }
+        }
+        SlittingAssignmentValidator.validateStudio(planVersionId, assignments);
         SlittingAssignmentEntity.deleteByPlanVersionId(planVersionId);
-        for (SlittingAssignmentDto dto : request.assignments()) {
+        int seq = 0;
+        for (SlittingAssignmentDto dto : assignments) {
             SlittingAssignmentEntity entity = new SlittingAssignmentEntity();
             entity.stampWorkspace();
             entity.planVersionId = planVersionId;
@@ -126,7 +166,8 @@ public class SlittingPlanService {
             entity.posXMm = dto.posXMm();
             entity.posYMm = dto.posYMm();
             entity.rotated = dto.rotated();
-            entity.sequence = dto.sequence();
+            entity.sequence = dto.sequence() != null ? dto.sequence() : seq++;
+            entity.pinned = Boolean.TRUE.equals(dto.pinned());
             entity.persist();
         }
         return getTree(planVersionId);
@@ -171,6 +212,7 @@ public class SlittingPlanService {
                 entity.posXMm,
                 entity.posYMm,
                 entity.rotated,
-                entity.sequence);
+                entity.sequence,
+                entity.pinned);
     }
 }

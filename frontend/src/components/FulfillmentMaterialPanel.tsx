@@ -43,15 +43,15 @@ export function FulfillmentMaterialPanel({
             {fulfillmentTreeNodeTypeLabel(demander.nodeType)} · {demander.label}
           </p>
         ) : (
-          <p className="fulfillment-material-meta muted">请在左侧选择销售订单或工单</p>
+          <p className="fulfillment-material-meta muted">请在上方满足链中选择供应订单，或展开右侧抽屉查看物料</p>
         )}
       </div>
       <div className="fulfillment-material-scroll panel-scroll">
         {demander && materials.length === 0 && (
           <p className="empty-hint">
             {demander.nodeType === 'SALES_ORDER'
-              ? '销售订单通过子工单满足，无直接原料需求'
-              : '该工单无直接原料需求（原料在子工单层）'}
+              ? '客户交付通过子供应订单满足，无直接原料需求'
+              : '该供应订单无直接原料缺口（组件需求在子级供应订单）'}
           </p>
         )}
         {materials.length > 0 && (

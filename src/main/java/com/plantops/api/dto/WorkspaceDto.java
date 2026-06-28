@@ -7,5 +7,7 @@ public record WorkspaceDto(
         String name,
         String description,
         LocalDateTime createdAt,
-        boolean isDefault) {
+        boolean isDefault,
+        String ownerUserId,
+        String workspaceType) {
 }

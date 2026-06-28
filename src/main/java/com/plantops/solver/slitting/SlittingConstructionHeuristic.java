@@ -19,35 +19,47 @@ public final class SlittingConstructionHeuristic {
                         ? -a.getPlacedNode().getDimensions().area()
                         : 0));
         int seq = 0;
+        List<NestAssignment> placedSoFar = new ArrayList<>();
         for (NestAssignment assignment : sorted) {
-            placeFirstFit(solution.getContainers(), assignment);
+            if (assignment.isPinned() && assignment.getParentNode() != null && assignment.getPositionX() != null) {
+                assignment.setSequence(seq++);
+                placedSoFar.add(assignment);
+                continue;
+            }
+            if (!placeFirstFit(solution.getContainers(), assignment, placedSoFar)) {
+                assignment.setParentNode(null);
+                assignment.setPositionX(null);
+                assignment.setPositionY(null);
+                assignment.setRotated(null);
+            } else {
+                placedSoFar.add(assignment);
+            }
             assignment.setSequence(seq++);
         }
     }
 
-    private static void placeFirstFit(List<RollNode> containers, NestAssignment assignment) {
+    private static boolean placeFirstFit(
+            List<RollNode> containers, NestAssignment assignment, List<NestAssignment> existing) {
         RollNode placed = assignment.getPlacedNode();
         if (placed == null || containers == null || containers.isEmpty()) {
-            return;
+            return false;
         }
         List<RollNode> ordered = new ArrayList<>(containers);
         ordered.sort(Comparator.comparingDouble(c -> c.getDimensions() != null ? c.getDimensions().area() : 0));
 
         for (RollNode container : ordered) {
-            if (tryPlace(container, assignment, false)) {
-                return;
+            if (tryPlace(container, assignment, existing, false)) {
+                return true;
             }
-            if (tryPlace(container, assignment, true)) {
-                return;
+            if (tryPlace(container, assignment, existing, true)) {
+                return true;
             }
         }
-        assignment.setParentNode(ordered.get(0));
-        assignment.setPositionX(0);
-        assignment.setPositionY(0);
-        assignment.setRotated(Boolean.FALSE);
+        return false;
     }
 
-    private static boolean tryPlace(RollNode container, NestAssignment assignment, boolean rotated) {
+    private static boolean tryPlace(
+            RollNode container, NestAssignment assignment, List<NestAssignment> existing, boolean rotated) {
         if (container.getDimensions() == null || assignment.getPlacedNode() == null) {
             return false;
         }
@@ -64,9 +76,33 @@ public final class SlittingConstructionHeuristic {
                 assignment.setPositionX(x);
                 assignment.setPositionY(y);
                 assignment.setRotated(Boolean.valueOf(rotated));
-                if (fits(container, assignment)) {
+                if (fits(container, assignment) && !violatesExisting(container, assignment, existing)) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    private static boolean violatesExisting(
+            RollNode container, NestAssignment candidate, List<NestAssignment> existing) {
+        if (existing == null || existing.isEmpty()) {
+            return false;
+        }
+        double kerfW = SlittingGeometryUtil.kerfWidthMm(container);
+        double kerfL = SlittingGeometryUtil.kerfLengthMm(container);
+        for (NestAssignment other : existing) {
+            if (other == candidate) {
+                continue;
+            }
+            if (other.getParentNode() == null || other.getPositionX() == null) {
+                continue;
+            }
+            if (!container.getNodeId().equals(other.getParentNode().getNodeId())) {
+                continue;
+            }
+            if (SlittingGeometryUtil.violatesKerfClearance(other, candidate, kerfW, kerfL)) {
+                return true;
             }
         }
         return false;

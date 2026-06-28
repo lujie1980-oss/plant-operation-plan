@@ -2,6 +2,7 @@
 target/
 frontend/node_modules/
 frontend/dist/
+.frontend/
 
 # Local database & imports
 data/
@@ -19,7 +20,8 @@ Thumbs.db
 
 # Env / secrets
 .env
-.env.*
+tools/acr.local.env
+tools/ecs.local.env
 
 # Large local extract outputs (regenerate via tools/)
 tools/dunan_extracted.json

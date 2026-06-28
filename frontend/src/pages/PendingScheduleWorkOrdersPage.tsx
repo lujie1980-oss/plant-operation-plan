@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { HorizontalResizeSplit } from '../components/HorizontalResizeSplit';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
+import { PpToolbar, PpToolbarHint, PpToolbarRow } from '../components/PpToolbar';
 import { PendingWorkOrderTable } from '../components/PendingWorkOrderTable';
 import { StatusBanner } from '../components/StatusBanner';
 import { FilterableTable } from '../components/table/FilterableTable';
@@ -229,37 +230,42 @@ export function PendingScheduleWorkOrdersPage() {
   return (
     <div className="production-plan-page">
       <PageHeader
+        variant={DECISION_PAGE_HEADER}
         title="待排工单"
         showScheduleVersionSelector
         description="已下发工单待细排；可标记可排/不可排，并查看工艺路径与批次排程。已排产状态随顶部排程版本变化。"
       />
       <StatusBanner loading={loading || bottomBusy} error={error} />
 
-      <div className="pp-toolbar card">
-        <div className="pp-filters">
-          <span className="pp-stat">
-            已下发 <strong>{rows.length}</strong>
-          </span>
-          <span className="pp-filter-sep" aria-hidden />
-          <span className="pp-stat">
-            已排产 <strong>{scheduledCount}</strong>
-          </span>
-          <span className="pp-filter-sep" aria-hidden />
-          <span className="pp-stat">
-            可排产 <strong>{eligibleCount}</strong>
-          </span>
-        </div>
-        <div className="pp-toolbar-actions">
-          <button type="button" className="btn" disabled={loading} onClick={() => void load(activeVersionId)}>
-            刷新
-          </button>
-        </div>
-        <p className="pp-hint">
-          在 <Link to="/master-plan/analysis/work-orders">生产工单</Link> 下发后进入本页；标记「不可排产」的工单不会进入{' '}
-          <Link to="/scheduling/detail-schedule">生产排程</Link> 求解。批次拆分见{' '}
-          <Link to="/scheduling/batch-plan">批次计划</Link>。
-        </p>
-      </div>
+      <PpToolbar>
+        <PpToolbarRow>
+          <div className="pp-filters">
+            <span className="pp-stat">
+              已下发 <strong>{rows.length}</strong>
+            </span>
+            <span className="pp-filter-sep" aria-hidden />
+            <span className="pp-stat">
+              已排产 <strong>{scheduledCount}</strong>
+            </span>
+            <span className="pp-filter-sep" aria-hidden />
+            <span className="pp-stat">
+              可排产 <strong>{eligibleCount}</strong>
+            </span>
+          </div>
+          <div className="pp-toolbar-actions">
+            <button type="button" className="btn" disabled={loading} onClick={() => void load(activeVersionId)}>
+              刷新
+            </button>
+          </div>
+        </PpToolbarRow>
+        <PpToolbarHint>
+          <p className="pp-hint">
+            在 <Link to="/master-plan/analysis/work-orders">生产工单</Link> 下发后进入本页；标记「不可排产」的工单不会进入{' '}
+            <Link to="/scheduling/detail-schedule">生产排程</Link> 求解。批次拆分见{' '}
+            <Link to="/scheduling/batch-plan">批次计划</Link>。
+          </p>
+        </PpToolbarHint>
+      </PpToolbar>
 
       {rows.length === 0 && !loading ? (
         <section className="card pp-chain-empty">

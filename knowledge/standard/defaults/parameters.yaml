@@ -1,0 +1,14 @@
+# StandardKnowledge — CFG 默认值（KN-TYPE-PAR）
+# Custom/Industry overlay 同 KEY 覆盖
+parameters:
+  planning_optimizer_engine: ortools
+  ontology_period_sequence: "14x1d,4x1w,2x1m"
+  master_plan_demand_scale: 0.01
+  master_plan_multi_resource_split: false
+  capacity_overload_threshold_pct: 110
+  default_procurement_lead_time_days: 7
+
+business_rules_tabs:
+  material-lead-time:
+    default_row_product_code: "*"
+    default_lead_time_days: 7

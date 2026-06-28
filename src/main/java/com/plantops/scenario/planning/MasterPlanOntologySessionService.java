@@ -8,26 +8,40 @@ import com.plantops.api.dto.planning.MasterPlanSessionConfirmResultDto;
 import com.plantops.api.dto.planning.MasterPlanSessionOptimizeResultDto;
 import com.plantops.api.dto.planning.MasterPlanSessionSimulateResultDto;
 import com.plantops.api.dto.planning.OperationSnapshotDto;
-import com.plantops.persistence.entity.MasterPlanAllocationEntity;
 import com.plantops.api.dto.planning.PispPeriodSnapshotDto;
 import com.plantops.api.dto.planning.PispSummaryDto;
+import com.plantops.api.dto.planning.OntologySimulateTargetType;
 import com.plantops.api.dto.planning.SimulateMasterPlanSessionRequest;
 import com.plantops.api.dto.planning.SrpSnapshotDto;
+import com.plantops.config.MasterPlanStrategyConfigService;
+import com.plantops.config.OntologyDirectSolveFeature;
 import com.plantops.ontology.OntologyGraph;
-import com.plantops.ontology.OntologyLoader;
+import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
 import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
+import com.plantops.ontology.planning.MasterPlanSolveProfile;
+import com.plantops.persistence.entity.PlanVersionEntity;
 import com.plantops.ontology.period.StandardResourcePeriod;
+import com.plantops.ontology.supply.Operation;
+import com.plantops.ontology.supply.SupplyOrder;
+import com.plantops.solver.masterplan.MasterPlanSchedule;
 import com.plantops.rol.ChangeOperation;
 import com.plantops.rol.ChangeSet;
 import com.plantops.rol.RolEngine;
 import com.plantops.rol.RolTransaction;
 import com.plantops.scenario.MasterPlanService;
+import com.plantops.scenario.planning.optimizer.OptimizerResult;
+import com.plantops.scenario.planning.optimizer.OrderAllocationConverter;
+import com.plantops.scenario.planning.optimizer.PlanningOptimizerException;
+import com.plantops.scenario.planning.optimizer.PlanningOptimizerRegistry;
+import com.plantops.scenario.planning.optimizer.PlanningProblem;
+import com.plantops.scenario.planning.persist.OntologyStatePersister;
 import com.plantops.workspace.WorkspaceResolver;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -42,7 +56,7 @@ import java.util.concurrent.ExecutionException;
 public class MasterPlanOntologySessionService {
 
     @Inject
-    OntologyLoader ontologyLoader;
+    WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
 
     @Inject
     MasterPlanOntologySessionStore sessionStore;
@@ -54,7 +68,22 @@ public class MasterPlanOntologySessionService {
     OntologyTimefoldMapper ontologyTimefoldMapper;
 
     @Inject
+    OntologyToMasterPlanScheduleMapper ontologyToMasterPlanScheduleMapper;
+
+    @Inject
+    OntologyDirectSolveFeature directSolveFeature;
+
+    @Inject
+    MasterPlanStrategyConfigService strategyConfigService;
+
+    @Inject
     RolTransaction rolTransaction;
+
+    @Inject
+    PlanningOptimizerRegistry optimizerRegistry;
+
+    @Inject
+    OntologyStatePersister ontologyStatePersister;
 
     public MasterPlanSessionDto create(CreateMasterPlanSessionRequest request) {
         if (request == null) {
@@ -64,10 +93,12 @@ public class MasterPlanOntologySessionService {
             throw new BadRequestException("planVersionId required");
         }
 
-        OntologyGraph graph = ontologyLoader.loadForPlanVersion(request.planVersionId());
-        RolEngine rolEngine = RolEngine.withMasterPlanRules(graph);
+        String workspaceId = WorkspaceResolver.currentWorkspaceId();
+        OntologyGraph graph = authoritativeOntologyGraph.getOrLoad(workspaceId, request.planVersionId());
+        RolEngine rolEngine = authoritativeOntologyGraph.newRolEngine(graph);
         LocalDateTime createdAt = LocalDateTime.now();
         String sessionId = "MOS-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        MasterPlanSolveProfile solveProfile = resolveSolveProfile(request.planVersionId(), graph);
 
         MasterPlanOntologySession session = new MasterPlanOntologySession(
                 sessionId,
@@ -76,7 +107,10 @@ public class MasterPlanOntologySessionService {
                 graph,
                 rolEngine,
                 createdAt,
-                sessionStore.defaultExpiresAt(createdAt));
+                sessionStore.defaultExpiresAt(createdAt),
+                solveProfile,
+                null,
+                null);
         sessionStore.put(session);
         return toSessionDto(session);
     }
@@ -127,9 +161,7 @@ public class MasterPlanOntologySessionService {
         return graph.srpById().values().stream()
                 .sorted(Comparator.comparing(StandardResourcePeriod::getStandardResourceId)
                         .thenComparingInt(srp -> periodSeqById.getOrDefault(srp.getPeriodId(), Integer.MAX_VALUE)))
-                .map(srp -> new SrpSnapshotDto(srp.getId(), srp.getStandardResourceId(), srp.getPeriodId(),
-                        srp.getTotalCapacity(), srp.getCalendarDowntime(), srp.getReservedCapacity(),
-                        srp.getAvailableCapacity(), srp.getFreeCapacity(), srp.getOverloadCapacity()))
+                .map(MasterPlanOntologySessionService::toSrpSnapshot)
                 .toList();
     }
 
@@ -139,33 +171,53 @@ public class MasterPlanOntologySessionService {
             throw new NotFoundException("Supply order not found: " + supplyOrderId);
         }
         return session.graph().operationsForSupplyOrder(supplyOrderId).stream()
-                .map(op -> new OperationSnapshotDto(op.getId(), op.getSupplyOrderId(), op.getSequenceNr(),
-                        op.getOperationName(), op.getProductionTimeMinutes(),
-                        op.getEarliestPossibleStart(), op.getLatestPossibleEnd(), op.isInfeasible()))
+                .map(MasterPlanOntologySessionService::toOperationSnapshot)
                 .toList();
     }
 
     public MasterPlanSessionSimulateResultDto simulate(
             String sessionId,
             SimulateMasterPlanSessionRequest request) {
+        validateSimulateRequest(request);
+        MasterPlanOntologySession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
+        return switch (request.effectiveTargetType()) {
+            case PISPP -> simulatePispp(session, request);
+            case SRP -> simulateSrp(session, request);
+            case SUPPLY_ORDER -> simulateSupplyOrder(session, request);
+        };
+    }
+
+    private static void validateSimulateRequest(SimulateMasterPlanSessionRequest request) {
         if (request == null) {
             throw new BadRequestException("request body required");
         }
-        if (request.pispPeriodId() == null || request.pispPeriodId().isBlank()) {
-            throw new BadRequestException("pispPeriodId required");
+        if (request.effectiveTargetId() == null || request.effectiveTargetId().isBlank()) {
+            throw new BadRequestException("targetId or pispPeriodId required");
         }
         if (request.property() == null || request.property().isBlank()) {
             throw new BadRequestException("property required");
         }
+        if (request.effectiveTargetType() == OntologySimulateTargetType.SUPPLY_ORDER) {
+            if (!"needDate".equals(request.property())) {
+                throw new BadRequestException("SUPPLY_ORDER simulate supports property needDate only");
+            }
+            if (request.dateValue() == null || request.dateValue().isBlank()) {
+                throw new BadRequestException("dateValue required (ISO date) for needDate");
+            }
+            return;
+        }
         if (request.value() == null) {
             throw new BadRequestException("value required");
         }
+    }
 
-        MasterPlanOntologySession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
+    private MasterPlanSessionSimulateResultDto simulatePispp(
+            MasterPlanOntologySession session,
+            SimulateMasterPlanSessionRequest request) {
         OntologyGraph graph = session.graph();
-        ProductInStockingPointPeriod target = graph.pispPeriod(request.pispPeriodId());
+        ProductInStockingPointPeriod target = graph.pispPeriod(request.effectiveTargetId());
         if (target == null) {
-            throw new NotFoundException("PISPP not found: " + request.pispPeriodId());
+            throw new NotFoundException("PISPP not found: " + request.effectiveTargetId());
         }
 
         List<ProductInStockingPointPeriod> candidates = collectAffectedCandidates(graph, target);
@@ -190,21 +242,150 @@ public class MasterPlanOntologySessionService {
             recalculatedPeriodIds.add(target.getId());
             snapshots.add(toSnapshot(target));
         }
-        return new MasterPlanSessionSimulateResultDto(recalculatedPeriodIds, snapshots);
+        return new MasterPlanSessionSimulateResultDto(recalculatedPeriodIds, snapshots, List.of(), List.of());
+    }
+
+    private MasterPlanSessionSimulateResultDto simulateSrp(
+            MasterPlanOntologySession session,
+            SimulateMasterPlanSessionRequest request) {
+        OntologyGraph graph = session.graph();
+        StandardResourcePeriod target = graph.srp(request.effectiveTargetId());
+        if (target == null) {
+            throw new NotFoundException("SRP not found: " + request.effectiveTargetId());
+        }
+
+        try {
+            session.rolEngine().applyPropertyChange(target, request.property(), request.value());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(ex.getMessage());
+        }
+
+        SrpSnapshotDto after = toSrpSnapshot(target);
+        return new MasterPlanSessionSimulateResultDto(
+                List.of(), List.of(), List.of(after), List.of());
+    }
+
+    private MasterPlanSessionSimulateResultDto simulateSupplyOrder(
+            MasterPlanOntologySession session,
+            SimulateMasterPlanSessionRequest request) {
+        OntologyGraph graph = session.graph();
+        SupplyOrder supplyOrder = graph.supplyOrder(request.effectiveTargetId());
+        if (supplyOrder == null) {
+            throw new NotFoundException("Supply order not found: " + request.effectiveTargetId());
+        }
+
+        LocalDate needDate;
+        try {
+            needDate = LocalDate.parse(request.dateValue().trim());
+        } catch (java.time.format.DateTimeParseException ex) {
+            throw new BadRequestException("dateValue must be ISO date (yyyy-MM-dd)");
+        }
+
+        List<Operation> operations = graph.operationsForSupplyOrder(supplyOrder.getId());
+        Map<String, OperationSnapshotDto> before = new LinkedHashMap<>();
+        for (Operation operation : operations) {
+            before.put(operation.getId(), toOperationSnapshot(operation));
+        }
+
+        session.rolEngine().applySupplyOrderNeedDateChange(supplyOrder, needDate);
+
+        List<OperationSnapshotDto> operationSnapshots = new ArrayList<>();
+        for (Operation operation : operations) {
+            OperationSnapshotDto now = toOperationSnapshot(operation);
+            if (hasOperationChanged(before.get(operation.getId()), now)) {
+                operationSnapshots.add(now);
+            }
+        }
+        if (operationSnapshots.isEmpty()) {
+            for (Operation operation : operations) {
+                operationSnapshots.add(toOperationSnapshot(operation));
+            }
+        }
+        return new MasterPlanSessionSimulateResultDto(List.of(), List.of(), List.of(), operationSnapshots);
     }
 
     public MasterPlanSessionOptimizeResultDto optimize(String sessionId)
             throws ExecutionException, InterruptedException {
         MasterPlanOntologySession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
+        if (directSolveFeature.enabled()) {
+            return optimizeDirect(session);
+        }
+        return optimizeLegacy(session);
+    }
 
+    public MasterPlanSessionConfirmResultDto confirm(String sessionId)
+            throws ExecutionException, InterruptedException {
+        MasterPlanOntologySession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
+        OptimizerResult optimizerResult = session.lastOptimizerResult();
+        if (optimizerResult == null) {
+            throw new BadRequestException("Call optimize before confirm");
+        }
+        OntologyStatePersister.PersistOutcome outcome = ontologyStatePersister.persistSession(
+                new OntologyStatePersister.SessionPersistRequest(
+                        session.sessionId(),
+                        session.basePlanVersionId(),
+                        session.solveProfile(),
+                        optimizerResult));
+        authoritativeOntologyGraph.invalidate(session.workspaceId(), session.basePlanVersionId());
+        return new MasterPlanSessionConfirmResultDto(
+                session.sessionId(),
+                outcome.planVersionId(),
+                outcome.allocationCount());
+    }
+
+    private MasterPlanSessionOptimizeResultDto optimizeDirect(MasterPlanOntologySession session)
+            throws ExecutionException, InterruptedException {
+        MasterPlanSchedule problem = ontologyToMasterPlanScheduleMapper.toSchedule(
+                session.graph(), session.solveProfile());
+        OptimizerResult optimizerResult;
+        try {
+            optimizerResult = optimizerRegistry.requireDefault().optimize(
+                    PlanningProblem.forOntologySchedule(problem, session.sessionId()));
+        } catch (PlanningOptimizerException ex) {
+            throw new BadRequestException("Optimize failed: " + ex.getMessage());
+        }
+        MasterPlanSessionOptimizeResultDto response = applyAllocationsToGraph(
+                session,
+                optimizerResult.persistAllocations(),
+                optimizerResult.scoreSummary(),
+                optimizerResult.solveDurationMs());
+        sessionStore.put(session.withLastOptimizerResult(optimizerResult));
+        return response;
+    }
+
+    private MasterPlanSessionOptimizeResultDto optimizeLegacy(MasterPlanOntologySession session)
+            throws ExecutionException, InterruptedException {
         MasterPlanResultDto solveResult = masterPlanService.getResult(session.basePlanVersionId());
         if (solveResult == null) {
-            solveResult = masterPlanService.solve();
+            throw new BadRequestException(
+                    "Base plan version has no published result: " + session.basePlanVersionId());
         }
 
-        List<MasterPlanAllocationDto> allocations = solveResult != null && solveResult.allocations() != null
+        List<MasterPlanAllocationDto> allocations = solveResult.allocations() != null
                 ? solveResult.allocations()
                 : List.of();
+        OptimizerResult optimizerResult = new OptimizerResult(
+                "baseline",
+                OrderAllocationConverter.toPlanningAssignmentsFromDtos(allocations),
+                solveResult.score(),
+                solveResult.solveDurationMs() != null ? solveResult.solveDurationMs() : 0L,
+                List.of(),
+                allocations);
+        MasterPlanSessionOptimizeResultDto response = applyAllocationsToGraph(
+                session,
+                allocations,
+                solveResult.score(),
+                solveResult.solveDurationMs() != null ? solveResult.solveDurationMs() : 0L);
+        sessionStore.put(session.withLastOptimizerResult(optimizerResult));
+        return response;
+    }
+
+    private MasterPlanSessionOptimizeResultDto applyAllocationsToGraph(
+            MasterPlanOntologySession session,
+            List<MasterPlanAllocationDto> allocations,
+            String score,
+            long solveDurationMs) {
+        OperationPlannedTimeProjection.apply(session.graph(), allocations);
         PeriodIndex periodIndex = PeriodIndex.of(session.graph().periodsOrdered());
         ChangeSet changeSet = ontologyTimefoldMapper.toChangeSet(allocations, session.graph(), periodIndex);
 
@@ -222,19 +403,25 @@ public class MasterPlanOntologySessionService {
 
         return new MasterPlanSessionOptimizeResultDto(
                 session.sessionId(),
-                solveResult != null ? solveResult.score() : null,
+                score,
                 allocations.size(),
-                solveResult != null && solveResult.solveDurationMs() != null ? solveResult.solveDurationMs() : 0L,
+                solveDurationMs,
                 affectedSnapshots);
     }
 
-    public MasterPlanSessionConfirmResultDto confirm(String sessionId)
-            throws ExecutionException, InterruptedException {
-        MasterPlanOntologySession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
-        MasterPlanResultDto solveResult = masterPlanService.solve();
-        String planVersionId = solveResult.planVersionId();
-        int allocationCount = (int) MasterPlanAllocationEntity.count("planVersionId = ?1", planVersionId);
-        return new MasterPlanSessionConfirmResultDto(session.sessionId(), planVersionId, allocationCount);
+    private MasterPlanSolveProfile resolveSolveProfile(String planVersionId, OntologyGraph graph) {
+        PlanVersionEntity planVersion = PlanVersionEntity.findByVersionId(planVersionId);
+        MasterPlanStrategyConfigService.ResolvedStrategy resolved = strategyConfigService.resolve(
+                planVersion != null ? planVersion.strategyId : null);
+        LocalDate planningStart = graph.periodsOrdered().isEmpty()
+                ? LocalDate.now()
+                : graph.periodsOrdered().get(0).getStartDate();
+        return new MasterPlanSolveProfile(
+                planningStart,
+                resolved.capacityStrategy(),
+                resolved.objectiveSettings(),
+                com.plantops.solver.masterplan.MasterPlanCapacityOverlay.empty(),
+                resolved.id());
     }
 
     private static MasterPlanSessionDto toSessionDto(MasterPlanOntologySession session) {
@@ -309,6 +496,8 @@ public class MasterPlanOntologySessionService {
         }
         return Double.compare(before.onHand(), after.onHand()) != 0
                 || Double.compare(before.plannedSupplyTotal(), after.plannedSupplyTotal()) != 0
+                || Double.compare(before.plannedSupplyTotalMrp(), after.plannedSupplyTotalMrp()) != 0
+                || Double.compare(before.plannedSupplyTotalOptimized(), after.plannedSupplyTotalOptimized()) != 0
                 || Double.compare(before.plannedDemandQuantityTotal(), after.plannedDemandQuantityTotal()) != 0
                 || Double.compare(before.plannedInventoryLevel(), after.plannedInventoryLevel()) != 0
                 || Double.compare(before.stockShortageQuantity(), after.stockShortageQuantity()) != 0;
@@ -321,8 +510,59 @@ public class MasterPlanOntologySessionService {
                 period.getPeriodId(),
                 period.getOnHand(),
                 period.getPlannedSupplyTotal(),
+                period.getPlannedSupplyTotalMrp(),
+                period.getPlannedSupplyTotalOptimized(),
                 period.getPlannedDemandQuantityTotal(),
                 period.getPlannedInventoryLevel(),
                 period.getStockShortageQuantity());
+    }
+
+    private static SrpSnapshotDto toSrpSnapshot(StandardResourcePeriod srp) {
+        return new SrpSnapshotDto(
+                srp.getId(),
+                srp.getStandardResourceId(),
+                srp.getPeriodId(),
+                srp.getTotalCapacity(),
+                srp.getCalendarDowntime(),
+                srp.getReservedCapacity(),
+                srp.getAvailableCapacity(),
+                srp.getFreeCapacity(),
+                srp.getOverloadCapacity());
+    }
+
+    private static OperationSnapshotDto toOperationSnapshot(Operation op) {
+        return new OperationSnapshotDto(
+                op.getId(),
+                op.getSupplyOrderId(),
+                op.getSequenceNr(),
+                op.getRoutingSequenceNo(),
+                op.getOperationName(),
+                op.getProductionDuration(),
+                op.getPreprocessingTime(),
+                op.getPostprocessingTime(),
+                op.getSegmentIndex(),
+                op.isLastSegment(),
+                op.getParallelGroupId(),
+                op.isLocked(),
+                op.getEarliestPossibleStartOwn(),
+                op.getEarliestPossibleEndOwn(),
+                op.getEarliestPossibleStartTotal(),
+                op.getEarliestPossibleEndTotal(),
+                op.getLatestDesiredStart(),
+                op.getLatestDesiredEnd(),
+                op.getPlannedStartTotal(),
+                op.getPlannedEndTotal(),
+                op.isInfeasible());
+    }
+
+    private static boolean hasOperationChanged(OperationSnapshotDto before, OperationSnapshotDto after) {
+        if (before == null) {
+            return true;
+        }
+        return !java.util.Objects.equals(before.latestDesiredEnd(), after.latestDesiredEnd())
+                || !java.util.Objects.equals(before.latestDesiredStart(), after.latestDesiredStart())
+                || !java.util.Objects.equals(before.earliestPossibleStartTotal(), after.earliestPossibleStartTotal())
+                || !java.util.Objects.equals(before.earliestPossibleEndTotal(), after.earliestPossibleEndTotal())
+                || before.infeasible() != after.infeasible();
     }
 }

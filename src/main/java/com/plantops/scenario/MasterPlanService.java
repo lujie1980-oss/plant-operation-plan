@@ -1,6 +1,6 @@
 package com.plantops.scenario;
 
-import ai.timefold.solver.core.api.solver.SolverManager;
+import ai.timefold.solver.core.api.score.HardSoftScore;
 import com.plantops.api.dto.CapacityAnalysisDto;
 import com.plantops.api.dto.DemandPoolKpiDto;
 import com.plantops.api.dto.LineOpeningDecisionDto;
@@ -17,7 +17,7 @@ import com.plantops.api.dto.WorkOrderCapacityBucketDto;
 import com.plantops.api.dto.WorkOrderCapacityGanttDto;
 import com.plantops.api.dto.WorkOrderCapacityOperationDto;
 import com.plantops.config.MasterPlanStrategyConfigService;
-import com.plantops.config.SolverRuntimeFactory;
+import com.plantops.config.ParameterRegistry;
 import com.plantops.masterdata.BusinessRuleScopeService;
 import com.plantops.persistence.entity.LineOpeningDecisionEntity;
 import com.plantops.persistence.entity.MasterPlanAllocationEntity;
@@ -36,7 +36,18 @@ import com.plantops.solver.masterplan.MasterPlanCapacityStrategy;
 import com.plantops.solver.masterplan.MasterPlanObjectiveSettings;
 import com.plantops.solver.masterplan.MasterPlanCapacityOverlay;
 import com.plantops.solver.masterplan.MasterPlanSchedule;
+import com.plantops.scenario.planning.JitResourceCapacitySeeder;
+import com.plantops.scenario.planning.ResourceCapacityResultProjector;
+import com.plantops.scenario.planning.optimizer.MasterPlanScheduleOptimizerApplicator;
+import com.plantops.scenario.planning.optimizer.OptimizerResult;
+import com.plantops.scenario.planning.optimizer.PlanningOptimizerException;
+import com.plantops.scenario.planning.optimizer.PlanningOptimizerRegistry;
+import com.plantops.scenario.planning.optimizer.PlanningProblem;
+import com.plantops.scenario.planning.optimizer.timefold.MasterPlanTimefoldSolver;
+import com.plantops.scenario.planning.optimizer.timefold.TimefoldPlanningOptimizer;
+import com.plantops.scenario.planning.optimizer.ortools.OrtoolsResourceCapacityCpSolver;
 import com.plantops.solver.masterplan.OrderAllocation;
+import com.plantops.solver.masterplan.ResourceCapacityAssignment;
 import com.plantops.solver.masterplan.SlotFixedLoad;
 import com.plantops.solver.masterplan.TimeSlot;
 import com.plantops.sample.SampleDataLoader;
@@ -123,7 +134,13 @@ public class MasterPlanService {
     }
 
     @Inject
-    SolverRuntimeFactory solverRuntimeFactory;
+    ParameterRegistry parameters;
+
+    @Inject
+    PlanningOptimizerRegistry optimizerRegistry;
+
+    @Inject
+    MasterPlanTimefoldSolver timefoldSolver;
 
     @Inject
     CapacityService capacityService;
@@ -154,6 +171,9 @@ public class MasterPlanService {
 
     @Inject
     MasterPlanProblemMapper problemMapper;
+
+    @Inject
+    JitResourceCapacitySeeder jitResourceCapacitySeeder;
 
     public MasterPlanResultDto solve() throws ExecutionException, InterruptedException {
         return solveWithStrategy(null);
@@ -236,12 +256,102 @@ public class MasterPlanService {
         return MasterPlanCapacityOverlay.fromFixedLoads(fixedLoads, cutoff);
     }
 
+    /**
+     * 将基线主计划中「非本交付链」工单的 allocation 固定到产能槽，供单交付有限能力求解占用剩余产能。
+     */
+    public MasterPlanCapacityOverlay buildBaselineOverlayExcludingWorkOrders(
+            String baselinePlanVersionId,
+            Set<String> replannableWorkOrderNos,
+            List<TimeSlot> slots) {
+        if (baselinePlanVersionId == null || baselinePlanVersionId.isBlank() || slots == null || slots.isEmpty()) {
+            return MasterPlanCapacityOverlay.empty();
+        }
+        Set<String> scope = replannableWorkOrderNos != null ? replannableWorkOrderNos : Set.of();
+        Map<String, Integer> minutesBySlotId = new LinkedHashMap<>();
+        for (MasterPlanAllocationEntity alloc : MasterPlanAllocationEntity
+                .find("planVersionId", baselinePlanVersionId)
+                .<MasterPlanAllocationEntity>list()) {
+            if (alloc.workOrderNo != null && scope.contains(alloc.workOrderNo)) {
+                continue;
+            }
+            if (alloc.resourceId == null || alloc.slotDate == null || alloc.durationMinutes == null) {
+                continue;
+            }
+            TimeSlot slot = scheduleFeedbackService.resolveSlot(slots, alloc.resourceId, alloc.slotDate);
+            if (slot == null) {
+                continue;
+            }
+            minutesBySlotId.merge(slot.getId(), alloc.durationMinutes, Integer::sum);
+        }
+        List<SlotFixedLoad> loads = new ArrayList<>();
+        minutesBySlotId.forEach((slotId, minutes) -> loads.add(new SlotFixedLoad(slotId, minutes)));
+        return MasterPlanCapacityOverlay.fromFixedLoads(loads, null);
+    }
+
+    public record InMemorySolveResult(
+            MasterPlanSchedule solution,
+            String score,
+            long solveDurationMs) {
+    }
+
+    /**
+     * 内存求解（不持久化），与 {@link #previewPlanning} 中 solve=true、persist=false 一致。
+     */
+    public InMemorySolveResult solveInMemory(MasterPlanPlanningContext context)
+            throws ExecutionException, InterruptedException {
+        long start = System.currentTimeMillis();
+        MasterPlanSchedule problem = problemMapper.toSchedule(context);
+        MasterPlanSchedule solution = solveProblem(problem);
+        long duration = System.currentTimeMillis() - start;
+        String score = solution.score() != null ? solution.score().toString() : null;
+        return new InMemorySolveResult(solution, score, duration);
+    }
+
+    /** 直驱路径：对已投影的 {@link MasterPlanSchedule} 内存求解（不持久化）。 */
+    public InMemorySolveResult solveInMemory(MasterPlanSchedule problem)
+            throws ExecutionException, InterruptedException {
+        long start = System.currentTimeMillis();
+        MasterPlanSchedule solution = solveProblem(problem);
+        long duration = System.currentTimeMillis() - start;
+        String score = solution.score() != null ? solution.score().toString() : null;
+        return new InMemorySolveResult(solution, score, duration);
+    }
+
     private MasterPlanSchedule solveProblem(MasterPlanSchedule problem)
             throws ExecutionException, InterruptedException {
-        String jobId = "MP-SOLVE-" + UUID.randomUUID();
-        try (SolverManager<MasterPlanSchedule> solver = solverRuntimeFactory.createMasterPlanSolver()) {
-            return solver.solve(jobId, problem).getFinalBestSolution();
+        if (problem.hasResourceCapacityAssignments()) {
+            return solveResourceCapacityProblem(problem);
         }
+        String engineId = parameters.get(PlanningOptimizerRegistry.PARAM_ENGINE);
+        if (engineId != null && TimefoldPlanningOptimizer.ENGINE_ID.equalsIgnoreCase(engineId.trim())) {
+            return timefoldSolver.solve(problem);
+        }
+        try {
+            OptimizerResult result = optimizerRegistry.requireDefault().optimize(
+                    PlanningProblem.forOntologySchedule(problem, "MP-SOLVE-" + UUID.randomUUID()));
+            return MasterPlanScheduleOptimizerApplicator.apply(problem, result);
+        } catch (PlanningOptimizerException ex) {
+            throw new ExecutionException(ex.getMessage(), ex);
+        }
+    }
+
+    private MasterPlanSchedule solveResourceCapacityProblem(MasterPlanSchedule problem)
+            throws ExecutionException {
+        jitResourceCapacitySeeder.seedIfEnabled(problem);
+        OrtoolsResourceCapacityCpSolver.SolveOutcome outcome =
+                OrtoolsResourceCapacityCpSolver.solve(problem, null);
+        if (!outcome.feasible()) {
+            throw new ExecutionException(
+                    "OR-Tools multi-resource master plan infeasible: " + outcome.scoreSummary(),
+                    null);
+        }
+        problem.setResourceCapacityAssignments(outcome.assigned());
+        int softPenalty = -outcome.capacityOverloadMinutes();
+        if (outcome.scoreSummary().contains("(relaxed:")) {
+            softPenalty -= 1;
+        }
+        problem.setScore(HardSoftScore.of(0, softPenalty));
+        return problem;
     }
 
     /**
@@ -302,15 +412,22 @@ public class MasterPlanService {
                 Math.max(0, replannedRows));
     }
 
+    public List<MasterPlanAllocationDto> allocationsForPlanVersion(String planVersionId) {
+        if (planVersionId == null || planVersionId.isBlank()) {
+            return List.of();
+        }
+        return MasterPlanAllocationEntity
+                .find("planVersionId", planVersionId).<MasterPlanAllocationEntity>list().stream()
+                .map(this::toAllocationDto)
+                .toList();
+    }
+
     public MasterPlanResultDto getResult(String versionId) {
         PlanVersionEntity v = PlanVersionEntity.findByVersionId(versionId);
         if (v == null) {
             return null;
         }
-        List<MasterPlanAllocationDto> allocations = MasterPlanAllocationEntity
-                .find("planVersionId", versionId).<MasterPlanAllocationEntity>list().stream()
-                .map(this::toAllocationDto)
-                .toList();
+        List<MasterPlanAllocationDto> allocations = allocationsForPlanVersion(versionId);
         List<LineOpeningDecisionDto> openings = LineOpeningDecisionEntity
                 .find("planVersionId", versionId).<LineOpeningDecisionEntity>list().stream()
                 .map(o -> new LineOpeningDecisionDto(
@@ -608,26 +725,6 @@ public class MasterPlanService {
                 List.of());
     }
 
-    /**
-     * 仅执行 S04 推演层（P0–P4），不调用 Timefold；返回诊断快照，用于解释候选分配与 eligible 槽位过滤结果。
-     */
-    public MasterPlanPlanningDiagnosticsDto previewPlanningDiagnostics(String strategyId) {
-        return previewPlanningDiagnostics(strategyId, null);
-    }
-
-    /**
-     * @param feedbackCutoff 非空时启用反馈 overlay（与滚动刷新主计划一致）
-     */
-    public MasterPlanPlanningDiagnosticsDto previewPlanningDiagnostics(String strategyId, LocalDate feedbackCutoff) {
-        MasterPlanStrategyConfigService.ResolvedStrategy resolved = strategyConfigService.resolve(
-                strategyId != null && !strategyId.isBlank() ? strategyId : null);
-        sampleDataLoader.extendCalendarsToHorizon();
-        MasterPlanCapacityOverlay overlay = feedbackCutoff != null
-                ? buildFeedbackOverlay(feedbackCutoff)
-                : MasterPlanCapacityOverlay.empty();
-        return buildPlanningContext(resolved, overlay).diagnostics();
-    }
-
     private MasterPlanSchedule buildProblem(
             MasterPlanCapacityStrategy strategy,
             MasterPlanObjectiveSettings objectiveSettings,
@@ -665,10 +762,69 @@ public class MasterPlanService {
         return count;
     }
 
+    /**
+     * 持久化内存求解结果（本体 Session confirm / 直驱路径）。
+     *
+     * @return 新主计划版本 ID
+     */
     @Transactional(Transactional.TxType.REQUIRES_NEW)
-    void persistResult(
-            String versionId,
+    public String persistFromSchedule(
             MasterPlanSchedule solution,
+            long solveDurationMs,
+            MasterPlanStrategyConfigService.ResolvedStrategy resolved,
+            String parentPlanVersionId) {
+        String versionId = "MP-" + UUID.randomUUID().toString().substring(0, 8);
+        persistResult(versionId, solution, solveDurationMs, resolved, parentPlanVersionId, null);
+        persistLineOpenings(versionId);
+        return versionId;
+    }
+
+    /**
+     * 持久化求解器无关 allocation DTO（Session confirm / OntologyStatePersister）。
+     */
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public String persistFromAllocations(
+            List<MasterPlanAllocationDto> allocations,
+            String score,
+            long solveDurationMs,
+            MasterPlanStrategyConfigService.ResolvedStrategy resolved,
+            String parentPlanVersionId) {
+        String versionId = "MP-" + UUID.randomUUID().toString().substring(0, 8);
+        persistPlanVersionHeader(versionId, score, solveDurationMs, resolved, parentPlanVersionId, null);
+        persistAllocationRows(versionId, allocations);
+        persistLineOpenings(versionId);
+        return versionId;
+    }
+
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    void persistAllocationRows(String versionId, List<MasterPlanAllocationDto> allocations) {
+        if (allocations == null) {
+            return;
+        }
+        for (MasterPlanAllocationDto allocation : allocations) {
+            if (allocation == null || allocation.workOrderNo() == null || allocation.workOrderNo().isBlank()) {
+                continue;
+            }
+            MasterPlanAllocationEntity row = new MasterPlanAllocationEntity();
+            row.planVersionId = versionId;
+            row.allocationId = allocation.allocationId();
+            row.workOrderNo = allocation.workOrderNo();
+            row.productCode = allocation.productCode();
+            row.salesOrderNo = allocation.salesOrderNo();
+            row.salesOrderLineNo = allocation.salesOrderLineNo();
+            row.resourceId = allocation.resourceId();
+            row.slotIndex = allocation.slotIndex();
+            row.slotDate = allocation.slotDate();
+            row.shiftId = allocation.shiftId();
+            row.durationMinutes = allocation.durationMinutes();
+            row.stampWorkspace();
+            row.persist();
+        }
+    }
+
+    private void persistPlanVersionHeader(
+            String versionId,
+            String score,
             long durationMs,
             MasterPlanStrategyConfigService.ResolvedStrategy resolved,
             String parentPlanVersionId,
@@ -679,7 +835,7 @@ public class MasterPlanService {
         version.planGeneratedTs = LocalDateTime.now();
         version.changeSource = parentPlanVersionId != null ? "APS_FEEDBACK" : "APS";
         version.solveDurationMs = durationMs;
-        version.score = solution.score() != null ? solution.score().toString() : null;
+        version.score = score;
         version.capacityStrategy = resolved.capacityStrategy().name();
         version.strategyId = resolved.id();
         version.strategyName = resolved.name();
@@ -687,6 +843,30 @@ public class MasterPlanService {
         version.sourceDetailScheduleVersionId = sourceDetailScheduleVersionId;
         version.stampWorkspace();
         version.persist();
+    }
+
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    void persistResult(
+            String versionId,
+            MasterPlanSchedule solution,
+            long durationMs,
+            MasterPlanStrategyConfigService.ResolvedStrategy resolved,
+            String parentPlanVersionId,
+            String sourceDetailScheduleVersionId) {
+        persistPlanVersionHeader(
+                versionId,
+                solution.score() != null ? solution.score().toString() : null,
+                durationMs,
+                resolved,
+                parentPlanVersionId,
+                sourceDetailScheduleVersionId);
+
+        if (solution.hasResourceCapacityAssignments()) {
+            persistAllocationRows(
+                    versionId,
+                    ResourceCapacityResultProjector.toAllocationDtos(solution.getResourceCapacityAssignments()));
+            return;
+        }
 
         for (OrderAllocation a : solution.getOrderAllocations()) {
             if (a.getTimeSlot() == null) {
@@ -1025,8 +1205,14 @@ public class MasterPlanService {
         return LocalDate.parse(feedbackCutoff);
     }
 
-    List<MasterPlanAllocationDto> allocationsFromSolution(MasterPlanSchedule solution) {
-        if (solution == null || solution.getOrderAllocations() == null) {
+    public List<MasterPlanAllocationDto> allocationsFromSolution(MasterPlanSchedule solution) {
+        if (solution == null) {
+            return List.of();
+        }
+        if (solution.hasResourceCapacityAssignments()) {
+            return ResourceCapacityResultProjector.toAllocationDtos(solution.getResourceCapacityAssignments());
+        }
+        if (solution.getOrderAllocations() == null) {
             return List.of();
         }
         return solution.getOrderAllocations().stream()
@@ -1046,8 +1232,10 @@ public class MasterPlanService {
             String score,
             Long solveDurationMs,
             List<MasterPlanAllocationDto> scheduledAllocations) {
-        List<MasterPlanPlanningPreviewAllocationDto> allocations =
-                buildPreviewAllocations(context.orderAllocations(), scheduledAllocations);
+        List<MasterPlanPlanningPreviewAllocationDto> allocations = context.multiResourceSplit()
+                ? buildPreviewAllocationsFromResourceCapacity(
+                        context.resourceCapacityAssignments(), scheduledAllocations)
+                : buildPreviewAllocations(context.orderAllocations(), scheduledAllocations);
         int scheduledCount = (int) allocations.stream()
                 .filter(MasterPlanPlanningPreviewAllocationDto::scheduled)
                 .count();
@@ -1137,6 +1325,64 @@ public class MasterPlanService {
                         a.getOperationName(),
                         a.getDueDate(),
                         a.getDurationMinutes(),
+                        false,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null));
+            }
+        }
+        out.sort(Comparator
+                .comparing(MasterPlanPlanningPreviewAllocationDto::workOrderNo, Comparator.nullsLast(String::compareTo))
+                .thenComparingInt(MasterPlanPlanningPreviewAllocationDto::operationSeq)
+                .thenComparing(MasterPlanPlanningPreviewAllocationDto::allocationId));
+        return out;
+    }
+
+    private List<MasterPlanPlanningPreviewAllocationDto> buildPreviewAllocationsFromResourceCapacity(
+            List<ResourceCapacityAssignment> candidates,
+            List<MasterPlanAllocationDto> scheduledAllocations) {
+        java.util.Map<String, MasterPlanAllocationDto> scheduledById = new java.util.HashMap<>();
+        if (scheduledAllocations != null) {
+            for (MasterPlanAllocationDto row : scheduledAllocations) {
+                scheduledById.put(row.allocationId(), row);
+            }
+        }
+        if (candidates == null) {
+            return List.of();
+        }
+        List<MasterPlanPlanningPreviewAllocationDto> out = new ArrayList<>(candidates.size());
+        for (ResourceCapacityAssignment a : candidates) {
+            MasterPlanAllocationDto scheduled = scheduledById.get(a.getId());
+            if (scheduled != null) {
+                out.add(new MasterPlanPlanningPreviewAllocationDto(
+                        scheduled.allocationId(),
+                        scheduled.segmentIndex(),
+                        scheduled.workOrderNo(),
+                        scheduled.productCode(),
+                        scheduled.resourceId(),
+                        a.getOperationSeq(),
+                        a.getOperationName(),
+                        a.getDueDate(),
+                        scheduled.durationMinutes(),
+                        true,
+                        scheduled.slotIndex(),
+                        scheduled.slotDate(),
+                        scheduled.shiftId(),
+                        scheduled.plannedStartTs(),
+                        scheduled.plannedEndTs()));
+            } else {
+                out.add(new MasterPlanPlanningPreviewAllocationDto(
+                        a.getId(),
+                        a.getDaySegmentIndex(),
+                        a.getWorkOrderNo(),
+                        a.getProductCode(),
+                        a.getResourceId(),
+                        a.getOperationSeq(),
+                        a.getOperationName(),
+                        a.getDueDate(),
+                        a.getSlotCapacityMinutes(),
                         false,
                         null,
                         null,

@@ -10,6 +10,10 @@ public class RollNode {
     private Dimensions dimensions;
     private CuttingMethod cuttingMethod;
     private double kerfMm;
+    /** 沿父节点宽度轴（API posX）的切边余量 */
+    private double kerfTransverseMm;
+    /** 沿父节点长度轴（API posY）的切边余量 */
+    private double kerfLongitudinalMm;
     private String sourceSpecCode;
     private Long sourceChildOrderId;
     private Long sourceMasterRollId;
@@ -63,6 +67,22 @@ public class RollNode {
 
     public void setKerfMm(double kerfMm) {
         this.kerfMm = kerfMm;
+    }
+
+    public double getKerfTransverseMm() {
+        return kerfTransverseMm;
+    }
+
+    public void setKerfTransverseMm(double kerfTransverseMm) {
+        this.kerfTransverseMm = kerfTransverseMm;
+    }
+
+    public double getKerfLongitudinalMm() {
+        return kerfLongitudinalMm;
+    }
+
+    public void setKerfLongitudinalMm(double kerfLongitudinalMm) {
+        this.kerfLongitudinalMm = kerfLongitudinalMm;
     }
 
     public String getSourceSpecCode() {

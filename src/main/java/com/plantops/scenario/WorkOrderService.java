@@ -59,6 +59,9 @@ public class WorkOrderService {
     FulfillmentPeggingService fulfillmentPeggingService;
 
     @Inject
+    OntologyFulfillmentService ontologyFulfillmentService;
+
+    @Inject
     MasterPlanService masterPlanService;
 
     @Inject
@@ -347,30 +350,11 @@ public class WorkOrderService {
     }
 
     public OrderFulfillmentChainDto fulfillmentChain(String workOrderNo, String masterPlanVersionId) {
-        WorkOrderEntity wo = WorkOrderEntity.findByNo(workOrderNo);
-        if (wo == null) {
-            throw new NotFoundException("?????: " + workOrderNo);
-        }
-        SalesOrderLineEntity order = resolvePrimaryOrder(wo);
-        if (order == null) {
-            throw new NotFoundException("工单无有效 pegging 或销售订单: " + workOrderNo);
-        }
-        WorkOrderKittingCheck check = computeKittingCheck(wo);
-        return fulfillmentPeggingService.buildForWorkOrder(wo, order, check.status(), masterPlanVersionId);
+        return ontologyFulfillmentService.supplyOrderUpstreamChain(workOrderNo, masterPlanVersionId);
     }
 
     public OrderFulfillmentChainDto downstreamFulfillmentChain(String workOrderNo, String masterPlanVersionId) {
-        WorkOrderEntity wo = WorkOrderEntity.findByNo(workOrderNo);
-        if (wo == null) {
-            throw new NotFoundException("?????: " + workOrderNo);
-        }
-        SalesOrderLineEntity order = resolvePrimaryOrder(wo);
-        if (order == null) {
-            throw new NotFoundException("工单无有效 pegging 或销售订单: " + workOrderNo);
-        }
-        WorkOrderKittingCheck check = computeKittingCheck(wo);
-        return fulfillmentPeggingService.buildDownstreamForWorkOrder(
-                wo, order, check.status(), masterPlanVersionId);
+        return ontologyFulfillmentService.supplyOrderDownstreamChain(workOrderNo, masterPlanVersionId);
     }
 
     public List<WorkOrderPeggingDto> listPegging(String workOrderNo) {

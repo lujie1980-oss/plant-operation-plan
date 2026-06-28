@@ -324,14 +324,7 @@ public class DetailScheduleService {
 
 
     /**
-     * 仅执行 S05 推演层（P0–P4），不调用 Timefold；返回诊断快照。
-     */
-    public DetailSchedulePlanningDiagnosticsDto previewPlanningDiagnostics(String masterPlanVersionId) {
-        return buildPlanningContext(masterPlanVersionId).diagnostics();
-    }
-
-    /**
-     * 推演层统一入口：诊断 + 工序/产线快照；可选内存求解或持久化（结果反写到同一批 {@link OperationAssignment}）。
+     * 推演层统一入口：工序/产线快照；可选内存求解或持久化（结果反写到同一批 {@link OperationAssignment}）。
      */
     public DetailSchedulePlanningPreviewDto previewPlanning(DetailSchedulePlanningPreviewRequest request)
             throws ExecutionException, InterruptedException {

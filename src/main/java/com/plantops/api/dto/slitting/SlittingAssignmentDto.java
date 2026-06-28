@@ -9,5 +9,6 @@ public record SlittingAssignmentDto(
         BigDecimal posXMm,
         BigDecimal posYMm,
         boolean rotated,
-        Integer sequence) {
+        Integer sequence,
+        Boolean pinned) {
 }

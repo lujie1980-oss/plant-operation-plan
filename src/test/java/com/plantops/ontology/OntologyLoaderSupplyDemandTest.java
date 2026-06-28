@@ -35,10 +35,13 @@ class OntologyLoaderSupplyDemandTest {
 
         boolean anySupply = graph.pispPeriodsById().values().stream()
                 .anyMatch(p -> p.getPlannedSupplyTotal() > 0);
+        boolean anyMrpSupply = graph.pispPeriodsById().values().stream()
+                .anyMatch(p -> p.getPlannedSupplyTotalMrp() > 0);
         boolean anyDemand = graph.pispPeriodsById().values().stream()
                 .anyMatch(p -> p.getPlannedDemandQuantityTotal() > 0);
 
         assertTrue(anySupply, "expected some PISPP supply from work orders");
+        assertTrue(anyMrpSupply, "expected MRP supply aligned with work orders");
         assertTrue(anyDemand, "expected some PISPP demand from sales orders");
     }
 

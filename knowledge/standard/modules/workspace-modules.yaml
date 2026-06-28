@@ -1,0 +1,107 @@
+# Workspace 模块注册表（MOD-*）
+# 分类：CAT-INTEGRATION · CAT-PLANNING
+# 规范：docs/sdd/volumes/platform/18-19-workspace-platform.md §19
+
+categories:
+  - id: CAT-INTEGRATION
+    name: 数据集成
+    nav_order: 10
+  - id: CAT-PLANNING
+    name: 计划模块
+    nav_order: 20
+
+modules:
+  # --- 1. 数据集成 ---
+  - id: MOD-DI
+    name: 数据集成
+    category: CAT-INTEGRATION
+    description: 展示 external_* staging、适配器对接、质检与 sync 入口
+    nav_group_id: integration
+    route_prefixes:
+      - /integration
+    api_path_prefixes:
+      - /api/v1/integration
+      - /api/v1/external
+      - /api/v1/master-data/quality
+      - /api/v1/transactional-data/quality
+    default_enabled: true
+    adapters:
+      - ADP-ERP-SAP
+      - ADP-MES
+      - ADP-EXCEL
+    external_tables:
+      master: external_*   # §11
+      transactional: external_*  # §12
+
+  - id: MOD-CAL
+    name: 工厂日历
+    category: CAT-INTEGRATION
+    nav_group_id: factory-calendar
+    route_prefixes:
+      - /factory-calendar
+    api_path_prefixes:
+      - /api/v1/factory-calendar
+    default_enabled: true
+  - id: MOD-OCP
+    name: 订单协同计划
+    category: CAT-PLANNING
+    nav_group_id: master-plan
+    legacy_ids:
+      - MOD-MP
+    route_prefixes:
+      - /master-plan
+    api_path_prefixes:
+      - /api/v1/master-plan
+      - /api/v1/planning
+      - /api/v1/ontology
+      - /api/v1/business-rules
+    default_enabled: true
+    menu_ref: Layout.MASTER_PLAN_GROUP
+    rule_routes:
+      - /master-plan/rules
+    rule_categories:
+      - demand
+      - capacity
+      - material
+
+  - id: MOD-SCH
+    name: 作业排程
+    category: CAT-PLANNING
+    nav_group_id: scheduling
+    route_prefixes:
+      - /scheduling
+    api_path_prefixes:
+      - /api/v1/detail-schedule
+      - /api/v1/scheduling
+      - /api/v1/business-rules
+    default_enabled: true
+    menu_ref: Layout.SCHEDULING_GROUP
+    rule_routes:
+      - /scheduling/rules
+    rule_categories:
+      - production
+      - labor
+
+  - id: MOD-SLT
+    name: 分切排样
+    category: CAT-PLANNING
+    nav_group_id: slitting
+    route_prefixes:
+      - /slitting
+    api_path_prefixes:
+      - /api/v1/slitting
+    default_enabled: false
+    menu_ref: Layout.SLITTING_GROUP
+
+# 过渡期：legacy 路由仍映射 MOD-DI（internal 主数据/业务数据页）
+legacy_route_mapping:
+  - route: /master-data
+    module: MOD-DI
+    tab: internal-master
+  - route: /business-data
+    module: MOD-DI
+    tab: internal-transactional
+  - route: /business-rules
+    module: MOD-OCP
+    redirect: /master-plan/rules/demand
+    note: 旧全局业务规则入口；按分类 redirect 至模块内 canonical 路由

@@ -41,7 +41,6 @@ export function PendingWorkOrderTable({
         key: 'scheduleStatus',
         header: '排产',
         filterable: false,
-        resizable: false,
         className: 'pwo-icon-col',
         render: (row: WorkOrder) => (
           <span

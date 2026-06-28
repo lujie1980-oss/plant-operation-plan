@@ -1,0 +1,581 @@
+{
+  "_meta": {
+    "source": "MRP测试用例.xlsx（晶华新材）",
+    "source_path": "jinghua-mrp-source.xlsx",
+    "generated_at": "2026-06-05",
+    "sales_order_count": 5,
+    "bom_count": 11,
+    "resource_count": 7,
+    "product_resource_count": 22,
+    "work_centers": [
+      {
+        "ws_id": "美纹车间",
+        "ws_name": "JH"
+      }
+    ]
+  },
+  "salesOrderLines": [
+    {
+      "salesOrderNo": "SO01",
+      "salesOrderLineNo": 10,
+      "customerCode": "JINGHUA",
+      "productCode": "M69/730mm/深黄/3M",
+      "orderQty": 126.0,
+      "promiseDate": "2026-06-08",
+      "dueDate": "2026-06-08",
+      "priority": 10,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "SO02",
+      "salesOrderLineNo": 10,
+      "customerCode": "JINGHUA",
+      "productCode": "M69/730mm/浅黄/3M",
+      "orderQty": 128.0,
+      "promiseDate": "2026-06-12",
+      "dueDate": "2026-06-12",
+      "priority": 9,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "SO03",
+      "salesOrderLineNo": 10,
+      "customerCode": "JINGHUA",
+      "productCode": "M69/800mm/深黄/3M",
+      "orderQty": 300.0,
+      "promiseDate": "2026-06-13",
+      "dueDate": "2026-06-13",
+      "priority": 8,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "SO04",
+      "salesOrderLineNo": 10,
+      "customerCode": "JINGHUA",
+      "productCode": "L80H/1515mm/深黄/3M",
+      "orderQty": 500.0,
+      "promiseDate": "2026-06-19",
+      "dueDate": "2026-06-19",
+      "priority": 7,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "SO05",
+      "salesOrderLineNo": 10,
+      "customerCode": "JINGHUA",
+      "productCode": "GL60D/1520mm/深黄/3M",
+      "orderQty": 98.0,
+      "promiseDate": "2026-06-21",
+      "dueDate": "2026-06-21",
+      "priority": 6,
+      "expediteLevel": 0,
+      "status": "OPEN"
+    }
+  ],
+  "materials": [
+    {
+      "materialCode": "M69/305*600M/1R/深黄",
+      "materialName": "PE管美纹",
+      "materialType": "成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "M69/730mm/深黄/3M",
+      "materialName": "美纹半成品",
+      "materialType": "半成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "空白箱",
+      "materialName": "空白箱",
+      "materialType": "包材",
+      "uomCode": "个"
+    },
+    {
+      "materialCode": "3寸PE管芯",
+      "materialName": "3寸PE管芯",
+      "materialType": "包材",
+      "uomCode": "个"
+    },
+    {
+      "materialCode": "塞头",
+      "materialName": "塞头",
+      "materialType": "包材",
+      "uomCode": "个"
+    },
+    {
+      "materialCode": "普通木托盘",
+      "materialName": "普通木托盘",
+      "materialType": "包材",
+      "uomCode": "个"
+    },
+    {
+      "materialCode": "缠绕膜",
+      "materialName": "缠绕膜",
+      "materialType": "包材",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "materialName": "N离型纸（预处理）",
+      "materialType": "半成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "N83/1500mm/深黄/反面淋硅",
+      "materialName": "N离型纸",
+      "materialType": "原材料",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "自产胶水",
+      "materialName": "自产胶水",
+      "materialType": "原材料",
+      "uomCode": "KG"
+    },
+    {
+      "materialCode": "含浸液",
+      "materialName": "含浸液",
+      "materialType": "原材料",
+      "uomCode": "KG"
+    },
+    {
+      "materialCode": "针叶浆",
+      "materialName": "针叶浆",
+      "materialType": "原材料",
+      "uomCode": "KG"
+    }
+  ],
+  "bomComponents": [
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "M69/730mm/深黄/3M",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "空白箱",
+      "componentQty": 1.0,
+      "isCriticalComponent": false
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "3寸PE管芯",
+      "componentQty": 1.0,
+      "isCriticalComponent": false
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "塞头",
+      "componentQty": 1.0,
+      "isCriticalComponent": false
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "普通木托盘",
+      "componentQty": 1.0,
+      "isCriticalComponent": false
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "缠绕膜",
+      "componentQty": 1.0,
+      "isCriticalComponent": false
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/730mm/深黄/3M",
+      "componentProductCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/730mm/深黄/3M",
+      "componentProductCode": "自产胶水",
+      "componentQty": 1.0,
+      "isCriticalComponent": false
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "componentProductCode": "N83/1500mm/深黄/反面淋硅",
+      "componentQty": 1.0,
+      "isCriticalComponent": true
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "componentProductCode": "含浸液",
+      "componentQty": 1.0,
+      "isCriticalComponent": false
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "N83/1500mm/深黄/反面淋硅",
+      "componentProductCode": "针叶浆",
+      "componentQty": 1.0,
+      "isCriticalComponent": false
+    }
+  ],
+  "inventory": [
+    {
+      "stockingPointCode": "WH-JINGHUA",
+      "productCode": "M69/730mm/深黄/3M",
+      "onhandQty": 50.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-JINGHUA",
+      "productCode": "M69/730mm/浅黄/3M",
+      "onhandQty": 150.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-JINGHUA",
+      "productCode": "M69/800mm/深黄/3M",
+      "onhandQty": 80.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-JINGHUA",
+      "productCode": "L80H/1515mm/深黄/3M",
+      "onhandQty": 1000.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-JINGHUA",
+      "productCode": "GL60D/1520mm/深黄/3M",
+      "onhandQty": 1000.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-JINGHUA",
+      "productCode": "E48/1555mm/深黄/3M",
+      "onhandQty": 3000.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-JINGHUA",
+      "productCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "onhandQty": 80.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-JINGHUA",
+      "productCode": "N83/1520mm/深黄/反面淋硅/已处理",
+      "onhandQty": 1000.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-JINGHUA",
+      "productCode": "N83/1555mm/深黄/反面淋硅/已处理",
+      "onhandQty": 3000.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-JINGHUA",
+      "productCode": "12H50卷",
+      "onhandQty": 3.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-JINGHUA",
+      "productCode": "12H80卷",
+      "onhandQty": 4.0,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-JINGHUA",
+      "productCode": "12H100卷",
+      "onhandQty": 3.0,
+      "reservedQty": 0
+    }
+  ],
+  "resources": [
+    {
+      "resourceId": "美纹半成品",
+      "areaId": "美纹车间",
+      "bottleneck": false,
+      "runRatePerHour": 30000
+    },
+    {
+      "resourceId": "开平",
+      "areaId": "美纹车间",
+      "bottleneck": false,
+      "runRatePerHour": 90
+    },
+    {
+      "resourceId": "分条-开平",
+      "areaId": "美纹车间",
+      "bottleneck": false,
+      "runRatePerHour": 60
+    },
+    {
+      "resourceId": "涂布",
+      "areaId": "美纹车间",
+      "bottleneck": true,
+      "runRatePerHour": 90
+    },
+    {
+      "resourceId": "含浸",
+      "areaId": "美纹车间",
+      "bottleneck": true,
+      "runRatePerHour": 90
+    },
+    {
+      "resourceId": "离型",
+      "areaId": "美纹车间",
+      "bottleneck": false,
+      "runRatePerHour": 60
+    },
+    {
+      "resourceId": "含浸-离型",
+      "areaId": "美纹车间",
+      "bottleneck": false,
+      "runRatePerHour": 120
+    }
+  ],
+  "productResources": [
+    {
+      "productCode": "12H100卷",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "12H50卷",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "12H80卷",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "3寸PE管芯",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "E48/1555mm/深黄/3M",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "GL60D/1520mm/深黄/3M",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "L80H/1515mm/深黄/3M",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "M69/305*600M/1R/深黄",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "M69/730mm/浅黄/3M",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "M69/730mm/深黄/3M",
+      "resourceId": "涂布",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "涂布",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "M69/800mm/深黄/3M",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "N83/1500mm/深黄/反面淋硅",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "resourceId": "含浸",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "含浸离型",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "N83/1520mm/深黄/反面淋硅/已处理",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "N83/1555mm/深黄/反面淋硅/已处理",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "含浸液",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "塞头",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "普通木托盘",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "空白箱",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "缠绕膜",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "自产胶水",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "针叶浆",
+      "resourceId": "美纹半成品",
+      "setupTimeMinutes": 15,
+      "sequenceNo": 1,
+      "operationName": "生产",
+      "processTimeSeconds": 60
+    }
+  ],
+  "lines": [
+    {
+      "lineId": "LINE-美纹半成品",
+      "areaId": "美纹车间",
+      "resourceId": "美纹半成品",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-开平",
+      "areaId": "美纹车间",
+      "resourceId": "开平",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-分条-开平",
+      "areaId": "美纹车间",
+      "resourceId": "分条-开平",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-涂布",
+      "areaId": "美纹车间",
+      "resourceId": "涂布",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-含浸",
+      "areaId": "美纹车间",
+      "resourceId": "含浸",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-离型",
+      "areaId": "美纹车间",
+      "resourceId": "离型",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    },
+    {
+      "lineId": "LINE-含浸-离型",
+      "areaId": "美纹车间",
+      "resourceId": "含浸-离型",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    }
+  ],
+  "changeoverMatrix": [],
+  "workOrders": []
+}

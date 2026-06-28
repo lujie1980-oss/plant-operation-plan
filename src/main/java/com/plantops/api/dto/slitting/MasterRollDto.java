@@ -8,6 +8,8 @@ public record MasterRollDto(
         BigDecimal lengthMm,
         BigDecimal thicknessMm,
         String materialCode,
+        String productCode,
+        String finishedProductCode,
         BigDecimal kerfLongitudinalMm,
         BigDecimal kerfTransverseMm,
         String status) {

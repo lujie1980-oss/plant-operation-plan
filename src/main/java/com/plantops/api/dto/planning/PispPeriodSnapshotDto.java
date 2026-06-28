@@ -6,6 +6,8 @@ public record PispPeriodSnapshotDto(
         String periodId,
         double onHand,
         double plannedSupplyTotal,
+        double plannedSupplyTotalMrp,
+        double plannedSupplyTotalOptimized,
         double plannedDemandQuantityTotal,
         double plannedInventoryLevel,
         double stockShortageQuantity) {

@@ -172,6 +172,10 @@ public class DemandService {
         return new DemandPoolKpiDto(id, label, value, unit, severity);
     }
 
+    public String resolveKittingStatusPublic(String salesOrderNo, int lineNo) {
+        return resolveKittingStatus(salesOrderNo, lineNo);
+    }
+
     private String resolveKittingStatus(String salesOrderNo, int lineNo) {
         KittingResultEntity r = KittingResultEntity
                 .find("salesOrderNo = ?1 and salesOrderLineNo = ?2 order by computedTs desc",

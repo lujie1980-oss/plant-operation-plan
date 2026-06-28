@@ -74,6 +74,10 @@ public class MasterRollService {
         entity.lengthMm = dto.lengthMm();
         entity.thicknessMm = dto.thicknessMm();
         entity.materialCode = dto.materialCode();
+        entity.productCode = dto.productCode();
+        entity.finishedProductCode = dto.finishedProductCode() != null
+                ? dto.finishedProductCode()
+                : dto.productCode();
         entity.kerfLongitudinalMm = dto.kerfLongitudinalMm() != null ? dto.kerfLongitudinalMm() : BigDecimal.ZERO;
         entity.kerfTransverseMm = dto.kerfTransverseMm() != null ? dto.kerfTransverseMm() : BigDecimal.ZERO;
         entity.status = dto.status() != null ? dto.status() : MasterRollEntity.STATUS_AVAILABLE;
@@ -86,6 +90,8 @@ public class MasterRollService {
                 entity.lengthMm,
                 entity.thicknessMm,
                 entity.materialCode,
+                entity.productCode,
+                entity.finishedProductCode,
                 entity.kerfLongitudinalMm,
                 entity.kerfTransverseMm,
                 entity.status);

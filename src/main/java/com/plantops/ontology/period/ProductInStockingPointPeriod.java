@@ -6,7 +6,12 @@ public class ProductInStockingPointPeriod {
     private String pispId;
     private String periodId;
     private double onHand;
+    /** 有效计划供应：驱动期末库存/滚动；通常与 MRP 或优化结果对齐。 */
     private double plannedSupplyTotal;
+    /** MRP / 工单聚合推算的计划供应（可与优化结果对照）。 */
+    private double plannedSupplyTotalMrp;
+    /** 优化器（Timefold）输出的计划供应（可与 MRP 对照）。 */
+    private double plannedSupplyTotalOptimized;
     private double plannedDemandQuantityTotal;
     private double inventoryTargetQuantity;
     private double plannedInventoryLevel;
@@ -68,6 +73,22 @@ public class ProductInStockingPointPeriod {
 
     public void setPlannedSupplyTotal(double plannedSupplyTotal) {
         this.plannedSupplyTotal = plannedSupplyTotal;
+    }
+
+    public double getPlannedSupplyTotalMrp() {
+        return plannedSupplyTotalMrp;
+    }
+
+    public void setPlannedSupplyTotalMrp(double plannedSupplyTotalMrp) {
+        this.plannedSupplyTotalMrp = plannedSupplyTotalMrp;
+    }
+
+    public double getPlannedSupplyTotalOptimized() {
+        return plannedSupplyTotalOptimized;
+    }
+
+    public void setPlannedSupplyTotalOptimized(double plannedSupplyTotalOptimized) {
+        this.plannedSupplyTotalOptimized = plannedSupplyTotalOptimized;
     }
 
     public double getPlannedDemandQuantityTotal() {

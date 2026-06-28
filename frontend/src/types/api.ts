@@ -1,5 +1,4 @@
 import type { PlanningPipelineRunDiagnostics } from './planningDiagnostics';
-
 export interface DemandPoolEntry {
   salesOrderNo: string;
   salesOrderLineNo: number;
@@ -11,6 +10,22 @@ export interface DemandPoolEntry {
   expediteLevel: number;
   status: string;
   scheduleLockFlag: boolean;
+  kittingStatus: string;
+  fulfillmentStatus: string;
+}
+
+export interface CustomerOrderLineDeliveryListItem {
+  deliveryId: string;
+  customerOrderLineId: string;
+  salesOrderNo: string;
+  salesOrderLineNo: number;
+  productCode: string;
+  deliveryQty: number;
+  requestedDate: string | null;
+  latestDesiredDate: string | null;
+  promiseDate: string | null;
+  priority: number;
+  status: string;
   kittingStatus: string;
   fulfillmentStatus: string;
 }
@@ -36,6 +51,10 @@ export interface FulfillmentOperation {
   endTs: string;
   durationMinutes: number;
   utilizationPct: number;
+  planUnitId?: string | null;
+  planUnitSequenceNr?: number | null;
+  earliestPossibleStartTotal?: string | null;
+  latestDesiredEnd?: string | null;
 }
 
 export interface UtilizationBucket {
@@ -58,8 +77,25 @@ export interface FulfillmentChainNode {
   quantity: number;
   startTs: string;
   endTs: string;
-  attributes: Record<string, unknown>;
+  /** 含 trialRevision、solverEngine、planningSignals、plannedStartTs/plannedEndTs 等 */
+  attributes: FulfillmentChainNodeAttributes;
   operations: FulfillmentOperation[];
+}
+
+export interface PlanningSignal {
+  severity: string;
+  reasonCode: string;
+  message: string;
+  entityId: string | null;
+}
+
+export interface FulfillmentChainNodeAttributes extends Record<string, unknown> {
+  trialRevision?: number;
+  solverEngine?: string;
+  planningLayer?: string;
+  planningSignals?: PlanningSignal[];
+  plannedStartTs?: string;
+  plannedEndTs?: string;
 }
 
 export interface FulfillmentPegEdge {
@@ -80,6 +116,7 @@ export interface OrderFulfillmentChain {
   nodes: FulfillmentChainNode[];
   edges: FulfillmentPegEdge[];
   utilizationBuckets: UtilizationBucket[];
+  deliveryId?: string | null;
 }
 
 export interface KittingResult {
@@ -192,6 +229,26 @@ export interface CapacityAnalysis {
   kpis: DemandPoolKpi[];
   loadBuckets: LoadBucket[];
   lineOpeningSuggestions: LineOpeningSuggestion[];
+  /** 计划期首日（与产能分析时栅一致） */
+  horizonStart: string;
+  /** 计划期末日（含） */
+  horizonEnd: string;
+}
+
+/** 本体 StandardResourcePeriod 展开的日粒度产能格 */
+export interface SrpCapacityCell {
+  resourceId: string;
+  date: string;
+  availableMinutes: number;
+  reservedMinutes: number;
+  utilizationPct: number;
+  overloaded: boolean;
+}
+
+export interface SrpCapacityGantt {
+  horizonStart: string;
+  horizonEnd: string;
+  cells: SrpCapacityCell[];
 }
 
 /** EXTERNAL=成品工单（订单层根工单）；REPLENISH=组件工单（BOM 子件） */

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { usePlan } from '../context/PlanContext';
 import { CapacityUtilizationGantt } from '../components/CapacityUtilizationGantt';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { VerticalResizeSplit } from '../components/VerticalResizeSplit';
 import { FilterableTable } from '../components/table/FilterableTable';
@@ -23,7 +23,7 @@ export function CapacityPage({ embedded = false }: { embedded?: boolean }) {
     setLoading(true);
     setError(null);
     try {
-      const result = await api.analyzeCapacity(versionId ?? undefined);
+      const result = await api.ontologyAnalyzeCapacity(versionId ?? undefined);
       setData(result);
       if (result.loadBuckets.length > 0) {
         setSelectedBucket((prev) => {
@@ -66,6 +66,7 @@ export function CapacityPage({ embedded = false }: { embedded?: boolean }) {
     <div className={`capacity-page ${embedded ? 'capacity-page--embedded' : ''}`.trim()}>
       {!embedded && (
         <PageHeader
+          variant={DECISION_PAGE_HEADER}
           title="产能平衡"
           showScenarioSelector
           description={`机台×班次产能利用率热力甘特；紫色斜纹为排程反馈已锁定产能。${scenarioHint}`}

@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ontology 领域模型 · Plant Operation Plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #0c0f14;
+      --bg-elevated: #141a22;
+      --bg-card: #1a222d;
+      --border: #2a3544;
+      --text: #e8edf4;
+      --text-muted: #8b9cb3;
+      --accent: #3d9cf5;
+      --accent-dim: #2563a8;
+      --demand: #f59e42;
+      --supply: #34d399;
+      --fulfill: #a78bfa;
+      --period: #f472b6;
+      --master: #38bdf8;
+      --radius: 10px;
+      --shadow: 0 4px 24px rgba(0,0,0,.35);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 1.5rem 1rem;
+      border-right: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+
+    .sidebar h2 {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      padding-left: .5rem;
+    }
+
+    .sidebar nav a {
+      display: block;
+      padding: .45rem .75rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: .875rem;
+      border-radius: 6px;
+      transition: background .15s, color .15s;
+    }
+
+    .sidebar nav a:hover,
+    .sidebar nav a.active {
+      background: rgba(61, 156, 245, .12);
+      color: var(--accent);
+    }
+
+    .main {
+      max-width: 960px;
+      padding: 2.5rem 2.5rem 4rem;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero .badge {
+      display: inline-block;
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(61, 156, 245, .12);
+      padding: .25rem .65rem;
+      border-radius: 4px;
+      margin-bottom: .75rem;
+    }
+
+    .hero h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      margin-bottom: .5rem;
+    }
+
+    .hero .subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 42rem;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+
+    .meta-chip {
+      font-size: .8rem;
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: .35rem .7rem;
+      border-radius: 6px;
+      color: var(--text-muted);
+    }
+
+    .meta-chip strong { color: var(--text); font-weight: 500; }
+
+    /* ── Sections ── */
+    section {
+      margin-bottom: 3rem;
+      scroll-margin-top: 1.5rem;
+    }
+
+    section h2 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      padding-bottom: .5rem;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    section h2 .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    section h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 1.5rem 0 .75rem;
+      color: var(--text-muted);
+    }
+
+    p { margin-bottom: 1rem; color: var(--text-muted); }
+    p strong { color: var(--text); }
+
+    /* ── Legend pills ── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .legend span {
+      font-size: .75rem;
+      padding: .25rem .6rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .legend .demand { border-color: var(--demand); color: var(--demand); }
+    .legend .supply { border-color: var(--supply); color: var(--supply); }
+    .legend .fulfill { border-color: var(--fulfill); color: var(--fulfill); }
+    .legend .period { border-color: var(--period); color: var(--period); }
+    .legend .master { border-color: var(--master); color: var(--master); }
+
+    /* ── Cards & tables ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: .75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-grid .mini-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .85rem 1rem;
+    }
+
+    .mini-card .label {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-muted);
+      margin-bottom: .25rem;
+    }
+
+    .mini-card .value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .8rem;
+      color: var(--accent);
+      word-break: break-all;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .875rem;
+      margin-bottom: 1rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: .6rem .85rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    td code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .8rem;
+      color: var(--accent);
+      background: rgba(61, 156, 245, .08);
+      padding: .1rem .35rem;
+      border-radius: 4px;
+    }
+
+    tr:hover td { background: rgba(255,255,255,.02); }
+
+    /* ── Diagrams ── */
+    .diagram-wrap {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin: 1rem 0 1.5rem;
+      overflow-x: auto;
+    }
+
+    .diagram-wrap .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+
+    pre.chain {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .8rem;
+      line-height: 1.5;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      color: var(--supply);
+      margin-bottom: 1rem;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h2>目录</h2>
+      <nav>
+        <a href="#overview">总览</a>
+        <a href="#packages">包结构</a>
+        <a href="#demand">需求侧</a>
+        <a href="#supply">供应制造</a>
+        <a href="#fulfillment">满足链</a>
+        <a href="#routing">工艺模板</a>
+        <a href="#period">时间产能</a>
+        <a href="#ids">ID 约定</a>
+        <a href="#loader">装载路径</a>
+        <a href="#boundary">持久化边界</a>
+        <a href="#cardinality">基数速查</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="hero" id="top">
+        <span class="badge">OTD Ontology · M4</span>
+        <h1>Ontology 领域模型</h1>
+        <p class="subtitle">
+          以 <strong>OntologyGraph</strong> 为聚合根的内存对象关系图，支撑需求满足链、有限能力求解与物料/产能推演。
+        </p>
+        <div class="meta-row">
+          <span class="meta-chip"><strong>聚合根</strong> OntologyGraph</span>
+          <span class="meta-chip"><strong>装载</strong> OntologyLoader</span>
+          <span class="meta-chip"><strong>前端粒度</strong> CustomerOrderLineDelivery</span>
+        </div>
+        <div class="legend" style="margin-top:1.5rem">
+          <span class="demand">需求 demand</span>
+          <span class="supply">供应 supply</span>
+          <span class="fulfill">满足 fulfillment</span>
+          <span class="period">期间 period</span>
+          <span class="master">主数据 master</span>
+        </div>
+      </header>
+
+      <!-- §1 Overview -->
+      <section id="overview">
+        <h2><span class="dot" style="background:var(--accent)"></span>总览 · OntologyGraph</h2>
+        <p>
+          <code>OntologyGraph</code> 由 <code>Builder</code> 装载后 <code>build()</code> 固化为只读图，不落库。
+          Session / Sandbox 内存 TTL 约 8 小时。
+        </p>
+        <div class="card-grid">
+          <div class="mini-card"><div class="label">需求</div><div class="value">COL, COLD, Demand</div></div>
+          <div class="mini-card"><div class="label">供应</div><div class="value">SupplyOrder, Operation</div></div>
+          <div class="mini-card"><div class="label">满足</div><div class="value">Fulfillment, BomDependency</div></div>
+          <div class="mini-card"><div class="label">主数据</div><div class="value">PISP → Routing → RoutingStep</div></div>
+          <div class="mini-card"><div class="label">工艺子件</div><div class="value">RSOSR, RSIM, RSOM</div></div>
+          <div class="mini-card"><div class="label">期间</div><div class="value">PISPP, SRP, Period</div></div>
+        </div>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+erDiagram
+    Product ||--o{ ProductInStockingPoint : "产品×库存点"
+    ProductInStockingPoint ||--o| Routing : "工艺头"
+    Routing ||--o{ RoutingStep : "工序模板"
+    RoutingStep ||--o{ RoutingStepOnStandardResource : RSOSR
+    RoutingStep ||--o{ RoutingStepInputMaterial : RSIM
+    RoutingStep ||--o{ RoutingStepOutputMaterial : RSOM
+    CustomerOrderLine ||--o{ CustomerOrderLineDelivery : "1:N"
+    CustomerOrderLineDelivery ||--|| Demand : CUSTOMER_DELIVERY
+    ForecastDemand ||--|| Demand : FORECAST
+    SupplyOrder ||--|| PlanUnit : "1:1"
+    PlanUnit ||--o{ Operation : "工艺"
+    Operation ||--o{ OperationOnStandardResource : OOSR
+    Operation ||--o{ OperationInputMaterial : OIM
+    Operation ||--o{ OperationOutputMaterial : OOM
+    OperationInputMaterial }o--|| Demand : BOM
+    OperationOutputMaterial }o--|| Supply : 产出
+    Demand ||--o{ Fulfillment : peg
+    Supply ||--o{ Fulfillment : peg
+    BomDependency }o--|| SupplyOrder : parent
+    BomDependency }o--|| SupplyOrder : child
+    Period ||--o{ ProductInStockingPointPeriod : PISPP
+    Period ||--o{ StandardResourcePeriod : SRP
+          </pre>
+        </div>
+      </section>
+
+      <!-- §2 Packages -->
+      <section id="packages">
+        <h2><span class="dot" style="background:var(--master)"></span>包结构</h2>
+        <div class="card">
+          <table>
+            <thead><tr><th>包</th><th>职责</th><th>代表类型</th></tr></thead>
+            <tbody>
+              <tr><td><code>ontology.master</code></td><td>主数据 / 工艺模板</td><td>Routing, RoutingStep, RSOSR, RSIM, RSOM</td></tr>
+              <tr><td><code>ontology.demand</code></td><td>需求侧</td><td>CustomerOrderLine, CustomerOrderLineDelivery, Demand</td></tr>
+              <tr><td><code>ontology.supply</code></td><td>供应 / 制造</td><td>SupplyOrder, Operation, Supply</td></tr>
+              <tr><td><code>ontology.fulfillment</code></td><td>供需挂接</td><td>Fulfillment, SupplyChainLoader</td></tr>
+              <tr><td><code>ontology.period</code></td><td>时间桶 / MRP / 产能</td><td>Period, PISPP, SRP</td></tr>
+              <tr><td><code>ontology.scheduling</code></td><td>规划槽位</td><td>SchedulingSlot</td></tr>
+              <tr><td><code>ontology</code>（根）</td><td>图 / ID / 装载</td><td>OntologyGraph, OntologyIds, OntologyLoader</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- §3 Demand -->
+      <section id="demand">
+        <h2><span class="dot" style="background:var(--demand)"></span>需求侧</h2>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+classDiagram
+    class CustomerOrderLine {
+        +String id
+        +String productCode
+        +double orderQty
+    }
+    class CustomerOrderLineDelivery {
+        +String id
+        +double deliveryQty
+        +LocalDate latestDesiredDate
+    }
+    class ForecastDemand {
+        +String productCode
+        +double quantity
+    }
+    class Demand {
+        +DemandSourceType sourceType
+        +String sourceId
+    }
+    class DemandSourceType {
+        <<enumeration>>
+        CUSTOMER_DELIVERY
+        FORECAST
+        BOM_COMPONENT
+    }
+    CustomerOrderLine "1" --> "0..*" CustomerOrderLineDelivery
+    CustomerOrderLineDelivery "1" --> "1" Demand
+    ForecastDemand "1" --> "1" Demand
+    Demand --> DemandSourceType
+          </pre>
+        </div>
+        <pre class="chain">CustomerOrderLine ──1:N──► CustomerOrderLineDelivery ──1:1──► Demand (CUSTOMER_DELIVERY)
+ForecastDemand ──────────────────────────────────────────────► Demand (FORECAST)</pre>
+        <p><strong>前端主粒度：</strong><code>CustomerOrderLineDelivery</code>（<code>COLD-{so}-{line}-{seq}</code>）= 满足链根。</p>
+      </section>
+
+      <!-- §4 Supply -->
+      <section id="supply">
+        <h2><span class="dot" style="background:var(--supply)"></span>供应 / 制造</h2>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+classDiagram
+    class SupplyOrder {
+        +String id = workOrderNo
+        +double quantity
+        +LocalDate needDate
+    }
+    class PlanUnit
+    class Operation {
+        +long productionDuration
+        +LocalDateTime plannedStartTotal
+    }
+    class OperationOnStandardResource {
+        +int resourcePriority
+    }
+    class OperationInputMaterial
+    class OperationOutputMaterial
+    class Supply
+    SupplyOrder "1" --> "1" PlanUnit
+    PlanUnit "1" --> "1..*" Operation
+    Operation "1" --> "0..*" OperationOnStandardResource
+    Operation "1" --> "0..*" OperationInputMaterial
+    Operation "1" --> "0..*" OperationOutputMaterial
+    OperationInputMaterial --> Demand
+    OperationOutputMaterial --> Supply
+          </pre>
+        </div>
+        <pre class="chain">SupplyOrder → PlanUnit → Operation
+                              ├→ OperationOnStandardResource
+                              ├→ OperationInputMaterial → Demand
+                              └→ OperationOutputMaterial → Supply</pre>
+        <div class="card">
+          <table>
+            <thead><tr><th>Supply ID</th><th>含义</th></tr></thead>
+            <tbody>
+              <tr><td><code>SUP-{so}-{seq}</code></td><td>工单产出</td></tr>
+              <tr><td><code>SUP-INV-{product}</code></td><td>库存 peg</td></tr>
+              <tr><td><code>SUP-SHORT-{product}</code></td><td>缺口 peg</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- §5 Fulfillment -->
+      <section id="fulfillment">
+        <h2><span class="dot" style="background:var(--fulfill)"></span>满足链</h2>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+flowchart LR
+    DEM[Demand]
+    FF[Fulfillment]
+    SUP[Supply]
+    DEM -->|quantity| FF --> SUP
+    subgraph types [FulfillmentType]
+        INV[INVENTORY_PEG]
+        WO[WORK_ORDER_PEG]
+        SHORT[SHORTAGE_PEG]
+    end
+          </pre>
+        </div>
+        <p>挂接顺序：<strong>库存 → 工单 → 缺口</strong>。<code>BomDependency</code> 由 Fulfillment 追溯派生，非 JPA 直读。</p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+flowchart TB
+    SO_P[SupplyOrder 父] --> OP[Operation] --> OIM[OIM] --> DEM[Demand BOM]
+    DEM --> FF[Fulfillment] --> SUP[Supply] --> SO_C[SupplyOrder 子]
+    SO_P -.->|BomDependency| SO_C
+          </pre>
+        </div>
+      </section>
+
+      <!-- §6 Routing -->
+      <section id="routing">
+        <h2><span class="dot" style="background:var(--master)"></span>主数据工艺模板</h2>
+        <p>工艺链挂在 <code>ProductInStockingPoint</code> 上，由 <code>MasterPlanRoutingProjector</code> 从 JPA 主数据投影；工单展开时物化为运行时 <code>Operation</code> 族。</p>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+classDiagram
+    class ProductInStockingPoint
+    class Routing
+    class RoutingStep
+    class RoutingStepOnStandardResource
+    class RoutingStepInputMaterial
+    class RoutingStepOutputMaterial
+    ProductInStockingPoint "1" --> "0..1" Routing
+    Routing "1" --> "1..*" RoutingStep
+    RoutingStep "1" --> "0..*" RoutingStepOnStandardResource
+    RoutingStep "1" --> "0..*" RoutingStepInputMaterial
+    RoutingStep "1" --> "0..*" RoutingStepOutputMaterial
+          </pre>
+        </div>
+        <pre class="chain">ProductInStockingPoint → Routing → RoutingStep
+                                      ├→ RoutingStepOnStandardResource
+                                      ├→ RoutingStepInputMaterial   （首道工序）
+                                      └→ RoutingStepOutputMaterial  （末道工序）</pre>
+        <div class="card">
+          <table>
+            <thead><tr><th>主数据模板</th><th>运行时实例</th></tr></thead>
+            <tbody>
+              <tr><td><code>RoutingStep</code></td><td><code>Operation</code></td></tr>
+              <tr><td><code>RoutingStepOnStandardResource</code></td><td><code>OperationOnStandardResource</code></td></tr>
+              <tr><td><code>RoutingStepInputMaterial</code></td><td><code>OperationInputMaterial</code> → <code>Demand</code></td></tr>
+              <tr><td><code>RoutingStepOutputMaterial</code></td><td><code>OperationOutputMaterial</code> → <code>Supply</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- §7 Period -->
+      <section id="period">
+        <h2><span class="dot" style="background:var(--period)"></span>时间 / 物料 / 产能</h2>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+classDiagram
+    class Period
+    class ProductInStockingPointPeriod {
+        +double onHand
+        +double stockShortageQuantity
+    }
+    class StandardResourcePeriod {
+        +double totalCapacity
+        +double reservedCapacity
+        +double freeCapacity
+    }
+    class SchedulingSlot {
+        +int capacityMinutes
+    }
+    Period "1" --> "0..*" ProductInStockingPointPeriod
+    Period "1" --> "0..*" StandardResourcePeriod
+    SchedulingSlot ..> StandardResourcePeriod : optimize回写
+          </pre>
+        </div>
+      </section>
+
+      <!-- §8 IDs -->
+      <section id="ids">
+        <h2><span class="dot" style="background:var(--accent)"></span>ID 命名约定</h2>
+        <div class="card">
+          <table>
+            <thead><tr><th>前缀</th><th>实体</th></tr></thead>
+            <tbody>
+              <tr><td><code>COL-</code></td><td>CustomerOrderLine</td></tr>
+              <tr><td><code>COLD-</code></td><td>CustomerOrderLineDelivery</td></tr>
+              <tr><td><code>DEM-COLD-</code> / <code>DEM-FC-</code> / <code>DEM-BOM-</code></td><td>Demand</td></tr>
+              <tr><td><code>PU-</code> / <code>OP-</code> / <code>OOSR-</code></td><td>PlanUnit / Operation / OOSR</td></tr>
+              <tr><td><code>RT-</code> / <code>RS-</code> / <code>RSOSR-</code></td><td>Routing / RoutingStep / RSOSR</td></tr>
+              <tr><td><code>RSIN-</code> / <code>RSOUT-</code></td><td>RoutingStep 投料 / 产出</td></tr>
+              <tr><td><code>SUP-</code> / <code>SUP-INV-</code> / <code>SUP-SHORT-</code></td><td>Supply</td></tr>
+              <tr><td><code>FF-</code></td><td>Fulfillment</td></tr>
+              <tr><td><code>BOM-DEP-</code></td><td>BomDependency</td></tr>
+              <tr><td><code>PISP-</code> / <code>PISPP-</code> / <code>SRP-</code></td><td>物料点 / 物料期间 / 资源期间</td></tr>
+              <tr><td><code>{resource}-D{n}</code></td><td>SchedulingSlot</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- §9 Loader -->
+      <section id="loader">
+        <h2><span class="dot" style="background:var(--accent)"></span>装载与前端路径</h2>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+flowchart TB
+    OL[OntologyLoader] --> SCL[SupplyChainLoader]
+    SCL --> FL[FulfillmentLoader]
+    FL --> BDD[BomDependencyDerivation]
+    BDD --> OG[OntologyGraph]
+    UI[需求满足页] --> COLD[CustomerOrderLineDelivery]
+    COLD --> CHAIN[OrderFulfillmentChainDto]
+    CHAIN --> SANDBOX[DeliveryPlanningSandbox]
+    SANDBOX --> OPT[OR-Tools / Timefold]
+          </pre>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>模式</th><th>方法</th><th>范围</th></tr></thead>
+            <tbody>
+              <tr><td>全场景</td><td><code>loadForWorkspace</code></td><td>全部开放工单 + 需求</td></tr>
+              <tr><td>单交付</td><td><code>buildDeliveryFulfillmentProjectionGraph</code></td><td>指定 COLD 链</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- §10 Boundary -->
+      <section id="boundary">
+        <h2><span class="dot" style="background:var(--text-muted)"></span>持久化 / 求解器边界</h2>
+        <div class="diagram-wrap">
+          <pre class="mermaid">
+flowchart LR
+    subgraph ontology [本体 内存]
+        SO[SupplyOrder]
+        OP[Operation]
+    end
+    subgraph jpa [JPA]
+        WO[WorkOrderEntity]
+        PR[ProductResourceEntity]
+    end
+    subgraph solver [求解器]
+        RCA[ResourceCapacityAssignment]
+        TS[TimeSlot]
+    end
+    WO -.-> SO
+    PR -.-> OP
+    OP --> RCA
+    SS[SchedulingSlot] --> TS
+          </pre>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>本体</th><th>持久化</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>SupplyOrder</td><td>WorkOrderEntity</td><td>id = workOrderNo</td></tr>
+              <tr><td>Routing / RoutingStep</td><td>Material + ProductResource</td><td>MasterPlanRoutingProjector 投影</td></tr>
+              <tr><td>Operation</td><td>ProductResourceEntity</td><td>由 RoutingStep 物化</td></tr>
+              <tr><td>Fulfillment</td><td>内存 peg</td><td>WorkOrderPegging 为对照</td></tr>
+              <tr><td>BomDependency</td><td>派生</td><td>非 JPA 直读</td></tr>
+              <tr><td>SchedulingSlot</td><td>TimeSlot</td><td>1:1 对齐</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- §11 Cardinality -->
+      <section id="cardinality">
+        <h2><span class="dot" style="background:var(--accent)"></span>关系基数速查</h2>
+        <div class="card">
+          <table>
+            <thead><tr><th>关系</th><th>基数</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>COL → COLD</td><td>1 : N</td><td>设计多批次；现 1 : 1</td></tr>
+              <tr><td>COLD → Demand</td><td>1 : 1</td><td>CUSTOMER_DELIVERY</td></tr>
+              <tr><td>SupplyOrder → PlanUnit</td><td>1 : 1</td><td>默认</td></tr>
+              <tr><td>PISP → Routing → RoutingStep</td><td>1 : 1 : N</td><td>工艺模板链</td></tr>
+              <tr><td>RoutingStep → RSOSR / RSIM / RSOUT</td><td>1 : N</td><td>资源 / 投料 / 产出</td></tr>
+              <tr><td>RoutingStep → Operation</td><td>1 : 1</td><td>装载投影（每工单）</td></tr>
+              <tr><td>PlanUnit → Operation</td><td>1 : N</td><td>工艺展开</td></tr>
+              <tr><td>Operation → OOSR</td><td>1 : N</td><td>多机台</td></tr>
+              <tr><td>Demand ↔ Supply</td><td>N : M</td><td>经 Fulfillment</td></tr>
+              <tr><td>BomDependency</td><td>N : M</td><td>父子工单 DAG</td></tr>
+              <tr><td>PISP → PISPP</td><td>1 : N</td><td>每 period</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin-top:2rem;font-size:.8rem;color:var(--text-muted)">
+          Plant Operation Plan · Ontology M4 ·
+          <a href="sdd/core/05-domain-model.md" style="color:var(--accent)">SDD §5 Markdown</a> ·
+          <a href="ontology-domain-model.drawio" style="color:var(--accent)">Draw.io 版</a> ·
+          <a href="otd-ontology-mapping.md" style="color:var(--accent)">OTD 映射表</a>
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#1a222d',
+        primaryTextColor: '#e8edf4',
+        primaryBorderColor: '#2a3544',
+        lineColor: '#3d9cf5',
+        secondaryColor: '#141a22',
+        tertiaryColor: '#0c0f14',
+        fontFamily: 'DM Sans, system-ui, sans-serif',
+      },
+      er: { useMaxWidth: true },
+      flowchart: { curve: 'basis', htmlLabels: true },
+      classDiagram: { useMaxWidth: true },
+    });
+
+    // Sidebar active link on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.sidebar nav a');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          navLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach((s) => observer.observe(s));
+  </script>
+</body>
+</html>

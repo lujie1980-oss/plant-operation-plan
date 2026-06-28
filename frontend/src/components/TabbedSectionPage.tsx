@@ -9,6 +9,7 @@ import '../pages/MasterDataPage.css';
 const TabBodyAny = MasterDataTabBody as ComponentType<{
   config: TabConfig<MasterDataRecord>;
   tableFocus?: MasterDataTableFocus | null;
+  onDataChange?: () => void;
 }>;
 
 export interface SectionTabItem {
@@ -29,6 +30,7 @@ export function TabbedSectionPage({
   activeTabId: controlledTabId,
   onActiveTabChange,
   tableFocus,
+  onDataChange,
 }: {
   title: string;
   description?: string;
@@ -44,6 +46,7 @@ export function TabbedSectionPage({
   activeTabId?: string;
   onActiveTabChange?: (tabId: string) => void;
   tableFocus?: MasterDataTableFocus | null;
+  onDataChange?: () => void;
 }) {
   const allTabItems = useMemo(
     () => [...leadingTabs, ...tabs.map((t) => ({ id: t.id, label: t.label }))],
@@ -96,6 +99,7 @@ export function TabbedSectionPage({
               key={`${activeTableTab.id}-${dataRevision}`}
               config={activeTableTab}
               tableFocus={tableFocus}
+              onDataChange={onDataChange}
             />
           )
         )}

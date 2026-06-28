@@ -1,10 +1,10 @@
 package com.plantops.scenario.planning;
 
+import com.plantops.config.MasterPlanPlanningSettingsFactory;
 import com.plantops.masterdata.BusinessRuleScopeService;
 import com.plantops.scenario.ChangeoverRuleIndex;
 import com.plantops.solver.masterplan.AdjacentSlotPairFactory;
 import com.plantops.solver.masterplan.MasterPlanSchedule;
-import com.plantops.solver.masterplan.MasterPlanSettings;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -17,16 +17,19 @@ public class MasterPlanProblemMapper {
     @Inject
     BusinessRuleScopeService businessRuleScopeService;
 
+    @Inject
+    MasterPlanPlanningSettingsFactory planningSettingsFactory;
+
     public MasterPlanSchedule toSchedule(MasterPlanPlanningContext context) {
         if (context == null) {
             return MasterPlanSchedule.empty();
         }
         ChangeoverRuleIndex changeoverRules = businessRuleScopeService.loadMasterPlanChangeoverIndex();
-        return new MasterPlanSchedule(
+        MasterPlanSchedule schedule = new MasterPlanSchedule(
                 context.timeSlots(),
                 context.orderAllocations(),
                 context.planningStart(),
-                new MasterPlanSettings(context.capacityStrategy()),
+                planningSettingsFactory.create(context.capacityStrategy()),
                 context.materialFeasibility(),
                 context.objectiveSettings(),
                 AdjacentSlotPairFactory.fromSlots(context.timeSlots()),
@@ -35,5 +38,10 @@ public class MasterPlanProblemMapper {
                 context.operationPrecedenceEdges(),
                 context.workOrderTimingBounds(),
                 changeoverRules);
+        if (context.hasResourceCapacityAssignments()) {
+            schedule.setResourceCapacityAssignments(context.resourceCapacityAssignments());
+            schedule.setOperationPrecedenceFacts(context.operationPrecedenceFacts());
+        }
+        return schedule;
     }
 }

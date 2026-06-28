@@ -10,6 +10,33 @@ public record FulfillmentOperationDto(
         LocalDateTime startTs,
         LocalDateTime endTs,
         int durationMinutes,
-        int utilizationPct
+        int utilizationPct,
+        String planUnitId,
+        Integer planUnitSequenceNr,
+        LocalDateTime earliestPossibleStartTotal,
+        LocalDateTime latestDesiredEnd
 ) {
+    public FulfillmentOperationDto(
+            String operationId,
+            String operationName,
+            int sequenceNo,
+            String resourceId,
+            LocalDateTime startTs,
+            LocalDateTime endTs,
+            int durationMinutes,
+            int utilizationPct) {
+        this(
+                operationId,
+                operationName,
+                sequenceNo,
+                resourceId,
+                startTs,
+                endTs,
+                durationMinutes,
+                utilizationPct,
+                null,
+                null,
+                null,
+                null);
+    }
 }

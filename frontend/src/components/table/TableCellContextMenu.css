@@ -1,0 +1,31 @@
+.ft-cell-ctx-menu {
+  position: fixed;
+  z-index: 12050;
+  min-width: 10.5rem;
+  padding: 0.35rem 0;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.ft-cell-ctx-menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.45rem 0.85rem;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 0.875rem;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.ft-cell-ctx-menu-item:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.ft-cell-ctx-menu-item:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+}

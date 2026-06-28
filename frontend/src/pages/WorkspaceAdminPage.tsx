@@ -128,7 +128,6 @@ export function WorkspaceAdminPage() {
               key: 'actions',
               header: '',
               filterable: false,
-              resizable: false,
               render: (w) =>
                 !w.isDefault ? (
                   <button

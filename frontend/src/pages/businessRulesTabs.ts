@@ -7,6 +7,8 @@ import type {
   OperationPostProcessingMd,
   OperationTransferTimeMd,
   ParallelOperationMd,
+  RoutingStepTimingMd,
+  RoutingStepResourceMd,
   SystemParameterMd,
 } from '../types/masterData';
 
@@ -159,6 +161,70 @@ export const continuousProductionTab: TabConfig<ContinuousProductionMd> = {
   ],
 };
 
+const RESOURCE_USAGE_TYPE_OPTIONS = [
+  { value: 'SINGLE', label: '单件' },
+  { value: 'BATCH', label: '批次炉/罐' },
+];
+
+const routingStepTimingTab: TabConfig<RoutingStepTimingMd> = {
+  id: 'routing-step-timing',
+  label: '工序时间规则',
+  description: '前处理/调度缓冲/基准生产/后处理时间（RULE-SUP-02），影响工序 lead time 与甘特',
+  api: api.masterData.routingStepTiming,
+  rowKey: (r) => `${r.routingCode}|${r.sequenceNo}`,
+  search: (r) => `${r.routingCode} ${r.sequenceNo}`,
+  emptyRow: () => ({
+    id: null,
+    routingCode: '',
+    sequenceNo: 1,
+    preProcessingMinutes: 0,
+    schedulingSpaceMinutes: 0,
+    productionMinutes: 60,
+    postProcessingMinutes: 0,
+  }),
+  columns: [
+    { key: 'routingCode', label: '工艺路线', type: 'text', required: true, width: 160 },
+    { key: 'sequenceNo', label: '工序序号', type: 'integer', required: true, width: 90 },
+    { key: 'preProcessingMinutes', label: '前处理(分)', type: 'integer', required: true, width: 110 },
+    { key: 'schedulingSpaceMinutes', label: '调度缓冲(分)', type: 'integer', required: true, width: 110 },
+    { key: 'productionMinutes', label: '基准生产(分)', type: 'integer', required: true, width: 110 },
+    { key: 'postProcessingMinutes', label: '后处理(分)', type: 'integer', required: true, width: 110 },
+  ],
+};
+
+const routingStepResourceTab: TabConfig<RoutingStepResourceMd> = {
+  id: 'routing-step-resource',
+  label: '工序资源规则',
+  description: '工序×资源优先级、生产速度、单件/批次与包络（RULE-SUP-03），驱动 OOSR 候选',
+  api: api.masterData.routingStepResource,
+  rowKey: (r) => `${r.standardResourceCode}`,
+  search: (r) => r.standardResourceCode,
+  emptyRow: () => ({
+    id: null,
+    standardResourceCode: '',
+    resourcePriority: 1,
+    productionRate: 1.0,
+    resourceUsageType: 'SINGLE',
+    batchSize: 1,
+    batchDurationMinutes: 0,
+  }),
+  columns: [
+    { key: 'standardResourceCode', label: '标准资源', type: 'text', required: true, width: 140 },
+    { key: 'resourcePriority', label: '优先级', type: 'integer', required: true, width: 80 },
+    { key: 'productionRate', label: '生产速度(qty/分)', type: 'number', required: true, width: 140 },
+    {
+      key: 'resourceUsageType',
+      label: '资源类型',
+      type: 'select',
+      options: RESOURCE_USAGE_TYPE_OPTIONS,
+      required: true,
+      width: 100,
+    },
+    { key: 'batchSize', label: '批次最大量', type: 'integer', width: 110 },
+    { key: 'batchDurationMinutes', label: '批次时间(分)', type: 'integer', width: 110 },
+  ],
+};
+
 /** 生产规则：工序 lead time、换型、流转、后处理等 */
 export const PRODUCTION_RULE_TABS: TabConfig<MasterDataRecord>[] = [
   changeoverTab as unknown as TabConfig<MasterDataRecord>,
@@ -166,6 +232,8 @@ export const PRODUCTION_RULE_TABS: TabConfig<MasterDataRecord>[] = [
   operationTransferTimeTab as unknown as TabConfig<MasterDataRecord>,
   operationPostProcessingTab as unknown as TabConfig<MasterDataRecord>,
   continuousProductionTab as unknown as TabConfig<MasterDataRecord>,
+  routingStepTimingTab as unknown as TabConfig<MasterDataRecord>,
+  routingStepResourceTab as unknown as TabConfig<MasterDataRecord>,
 ];
 
 /** @deprecated 使用 PRODUCTION_RULE_TABS；保留别名兼容旧引用 */

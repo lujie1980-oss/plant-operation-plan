@@ -32,6 +32,19 @@ class ProductInStockingPointPeriodTest {
     }
 
     @Test
+    void mrpAndOptimizedSupplyTrackedSeparately() {
+        var p = new ProductInStockingPointPeriod("PISPP-1", "PISP-FG-100", "P-0");
+        p.setPlannedSupplyTotalMrp(100);
+        p.setPlannedSupplyTotalOptimized(80);
+        p.setPlannedSupplyTotal(80);
+        p.setPlannedDemandQuantityTotal(50);
+        p.recalculatePlanningFields();
+        assertEquals(100, p.getPlannedSupplyTotalMrp(), 1e-6);
+        assertEquals(80, p.getPlannedSupplyTotalOptimized(), 1e-6);
+        assertEquals(30, p.getPlannedInventoryLevel(), 1e-6);
+    }
+
+    @Test
     void rollOnHandFromPreviousPlannedLevel() {
         var p0 = new ProductInStockingPointPeriod("PP-0", "PISP-1", "P-0");
         p0.setOnHand(100);

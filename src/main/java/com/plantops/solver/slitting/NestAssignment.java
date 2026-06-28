@@ -2,6 +2,7 @@ package com.plantops.solver.slitting;
 
 import ai.timefold.solver.core.api.domain.common.PlanningId;
 import ai.timefold.solver.core.api.domain.entity.PlanningEntity;
+import ai.timefold.solver.core.api.domain.entity.PlanningPin;
 import ai.timefold.solver.core.api.domain.variable.PlanningVariable;
 
 @PlanningEntity
@@ -24,6 +25,8 @@ public class NestAssignment {
     private Boolean rotated;
 
     private int sequence;
+
+    private boolean pinned;
 
     public NestAssignment() {
     }
@@ -91,5 +94,14 @@ public class NestAssignment {
 
     public void setSequence(int sequence) {
         this.sequence = sequence;
+    }
+
+    @PlanningPin
+    public boolean isPinned() {
+        return pinned;
+    }
+
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
     }
 }
