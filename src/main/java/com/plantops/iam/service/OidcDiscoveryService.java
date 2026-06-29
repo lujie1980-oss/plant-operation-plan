@@ -38,7 +38,14 @@ public class OidcDiscoveryService {
     private volatile String jwksUri;
 
     void onStart(@Observes StartupEvent event) {
-        if (!securityConfig.oidc().enabled()) {
+        ensureReady();
+    }
+
+    /**
+     * Lazy-load discovery (retries when Keycloak starts after the app).
+     */
+    public synchronized void ensureReady() {
+        if (ready() || !securityConfig.oidc().enabled()) {
             return;
         }
         String base = normalizeAuthServerUrl(securityConfig.oidc().authServerUrl());
@@ -49,28 +56,32 @@ public class OidcDiscoveryService {
         try {
             loadDiscovery(base);
         } catch (Exception e) {
-            LOG.errorf(e, "Failed to load OIDC discovery from %s", base);
+            LOG.warnf(e, "OIDC discovery not available yet: %s", base);
         }
     }
 
-    public boolean ready() {
-        return issuer != null && jwksUri != null && tokenEndpoint != null;
-    }
-
-    public Optional<String> issuer() {
-        return Optional.ofNullable(issuer);
-    }
-
     public Optional<String> authorizationEndpoint() {
+        ensureReady();
         return Optional.ofNullable(authorizationEndpoint);
     }
 
     public Optional<String> tokenEndpoint() {
+        ensureReady();
         return Optional.ofNullable(tokenEndpoint);
     }
 
     public Optional<String> jwksUri() {
+        ensureReady();
         return Optional.ofNullable(jwksUri);
+    }
+
+    public Optional<String> issuer() {
+        ensureReady();
+        return Optional.ofNullable(issuer);
+    }
+
+    public boolean ready() {
+        return issuer != null && jwksUri != null && tokenEndpoint != null;
     }
 
     public String buildAuthorizationUrl(String redirectUri, String state) {

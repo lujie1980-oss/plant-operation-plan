@@ -1,0 +1,17 @@
+# OIDC 联调：Keycloak + Quarkus oidc profile
+# 用法见 docs/oidc-keycloak-dev.md
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    container_name: plantops-keycloak
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_PORT: "8080"
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./tools/keycloak/plantops-realm.json:/opt/keycloak/data/import/plantops-realm.json:ro
