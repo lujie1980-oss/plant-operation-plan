@@ -5,8 +5,8 @@
 ## 技术栈
 
 - Java 21
-- Quarkus 3.17
-- Timefold Solver 1.15 (Community)
+- Quarkus 3.17.5
+- Timefold Solver 2.0 (Community)
 - H2 + Flyway
 
 ## 启动
@@ -49,7 +49,7 @@ cd d:\AILab\PlantOperationPlan\plant-operation-plan\frontend
 .\dev.cmd
 ```
 
-浏览器打开 http://localhost:5173 ，侧栏可进入 S01–S07 各页面。
+浏览器打开 http://localhost:5173 ，侧栏可进入数据管理、主计划、生产排程等页面。
 
 **PowerShell 报「禁止运行脚本」时**：不要用 `npm`，改用 `npm.cmd` 或上面的 `.cmd` 脚本，例如：
 
@@ -89,14 +89,28 @@ docker compose up -d --build
 | 路由 | 场景 |
 |------|------|
 | `/#/` | 工作台 |
-| `/#/demand` | S01 需求满足（KPI + 订单列表 + 满足链甘特图） |
-| `/#/kitting` | S02 齐套 |
-| `/#/capacity` | S03 产能平衡 |
-| `/#/master-plan` | S04 主计划 + 甘特图 |
-| `/#/detail-schedule` | S05 详细排程 + 甘特图 |
-| `/#/execution` | S06 执行闭环 |
-| `/#/kpi` | S07 KPI |
-| `/#/pipeline` | 全链路编排 |
+| `/#/master-data` | 主数据 |
+| `/#/business-data` | 业务数据 |
+| `/#/workspaces` | 数据集 / 工作区管理 |
+| `/#/factory-calendar` | 工厂日历 |
+| `/#/business-rules/{categoryId}` | 生产、产能、物料、人力、需求规则 |
+| `/#/master-plan/parameters` | 主计划参数 |
+| `/#/master-plan/objectives` | 主计划优化目标 |
+| `/#/master-plan/plan-run` | 全链路编排 / 计划运行 |
+| `/#/master-plan/analysis/demand` | S01 需求满足 |
+| `/#/master-plan/analysis/capacity` | S03 产能平衡 |
+| `/#/master-plan/analysis/material` | S02 / MRP 物料需求 |
+| `/#/master-plan/analysis/work-orders` | 生产工单 / 下发 |
+| `/#/master-plan/analysis/diagnostics` | 推演诊断 |
+| `/#/master-plan/analysis/order-chain` | 订单推演 |
+| `/#/master-plan/scenario-comparison` | 主计划场景对比 |
+| `/#/scheduling/parameters` | 生产排程参数 |
+| `/#/scheduling/pending-work-orders` | S05 待排工单 / 批次 |
+| `/#/scheduling/batch-plan` | 批次计划 |
+| `/#/scheduling/kitting` | 排程齐套 |
+| `/#/scheduling/detail-schedule` | S05 详细排程 |
+| `/#/scheduling/version-comparison` | 排程版本对比 |
+| `/#/demand-tracking` | 需求跟踪 / KPI |
 
 ## 示例调用
 
@@ -112,6 +126,14 @@ curl -X POST http://localhost:8080/api/v1/planning/master-plan/solve
 
 # 详细排程（可带 masterPlanVersionId）
 curl -X POST "http://localhost:8080/api/v1/planning/detail-schedule/solve"
+
+# 批次计划：查看可拆批工单
+curl http://localhost:8080/api/v1/scheduling/batches/work-orders
+
+# 批次计划：按当前策略自动拆批（需先将 batch_split_mode 设为 FIXED_QTY / KITTING / AUTO）
+curl -X POST http://localhost:8080/api/v1/scheduling/batches/split/auto \
+  -H "Content-Type: application/json" \
+  -d '{"workOrderNo":"WO-001","quantity":null}'
 
 # 全链路 S01→S07
 curl -X POST http://localhost:8080/api/v1/planning/run-full-pipeline
@@ -155,4 +177,10 @@ python -X utf8 tools/parse_demo_excel.py
 |------|------|
 | **[docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md)** | **完整项目文档**（业务蓝图、功能设计、技术方案、部署） |
 | [docs/architecture.md](docs/architecture.md) | 架构摘要 |
+| [docs/aps-planning-layer.md](docs/aps-planning-layer.md) | S04/S05 推演层与 Timefold 选优边界 |
+| [docs/detail-schedule-simulation-layer.md](docs/detail-schedule-simulation-layer.md) | 详细排程 Session、仿真、校验与 Timefold 边界 |
+| [docs/batch-scheduling.md](docs/batch-scheduling.md) | 批次计划、拆批策略、S05 候选与排程 API |
+| [docs/master-plan-bom-routing.md](docs/master-plan-bom-routing.md) | 主计划、BOM、工艺路线与工单生成 |
+| [docs/timefold-2-upgrade.md](docs/timefold-2-upgrade.md) | Timefold Solver 2.0 升级说明 |
+| [docs/docker-deploy.md](docs/docker-deploy.md) | Docker 部署说明 |
 | 工作区根目录 `工厂计划*.md` | 业务方法论文档（场景卡片） |

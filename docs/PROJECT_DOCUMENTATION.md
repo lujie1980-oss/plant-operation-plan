@@ -5,8 +5,8 @@
 | 名称 | Plant Operation Plan |
 | 版本 | 1.0.0-SNAPSHOT |
 | 代码路径 | `plant-operation-plan/` |
-| 文档日期 | 2026-05-27 |
-| 最近更新 | 主计划策略体系、场景选择器、产能均衡目标、导航与结果页重构 |
+| 文档日期 | 2026-06-29 |
+| 最近更新 | Timefold 2.0、批次计划、详细排程仿真、导航与文档索引同步 |
 
 ---
 
@@ -42,7 +42,7 @@
 | 层级 | 技术 |
 |------|------|
 | 后端运行时 | Java 21、Quarkus 3.17.5 |
-| 优化引擎 | Timefold Solver 1.15（Community） |
+| 优化引擎 | Timefold Solver 2.0（Community） |
 | 持久化 | Hibernate ORM Panache、Flyway、H2 |
 | API | REST + JSON、SmallRye OpenAPI |
 | 前端 | React 18、TypeScript、Vite 6、React Router 7、gantt-task-react |
@@ -177,7 +177,7 @@ flowchart LR
 | 物料需求 | `/master-plan/material` | S02 物料滚算与缺料 |
 | 生产工单 | `/master-plan/work-orders` | 工单生成、下发与满足链 |
 | 场景对比 | `/master-plan/scenario-comparison` | 多场景 KPI 柱状对比 |
-| **生产排程** | `/scheduling/*` | 排程参数、齐套、详细排程、场景对比 |
+| **生产排程** | `/scheduling/*` | 排程参数、待排工单、批次计划、齐套、详细排程、版本对比 |
 | 需求跟踪 | `/demand-tracking` | 订单交付跟踪 |
 
 | 角色 | 主要界面 |
@@ -193,6 +193,7 @@ flowchart LR
 |------|------|
 | 销售订单行 | 需求最小单元 |
 | 工单 | 生产任务；`parent_work_order_no` 表示上游工单满足本工单 |
+| 生产批次 | 工单下发后在排程域创建的 S05 候选单位；详见 `docs/batch-scheduling.md` |
 | BOM | 父件 → 子件用量 |
 | 库存 | 库位×物料，可用量 = 在手 − 预留 − 质检冻结 |
 | 计划版本 | 主计划 / 详细排程每次求解生成独立版本号；主计划版本关联 **strategyId / strategyName** |
@@ -224,6 +225,7 @@ flowchart LR
 | F13 | **主计划策略 CRUD** | `GET/POST/PUT/DELETE .../master-plan/strategies` | `/#/master-plan/objectives` |
 | F14 | **场景列表与对比** | `GET /planning/scenarios`、`/scenarios/compare` | `/#/master-plan/scenario-comparison` |
 | F15 | **场景选择器** | 复用 F06/F14 场景 API | 四个结果页 `PageHeader` |
+| F16 | **批次计划与排程候选** | `GET/POST/PUT/PATCH .../scheduling/batches/*` | `/#/scheduling/batch-plan`、`/#/scheduling/kitting` |
 
 > 旧路由（如 `/#/demand`、`/#/pipeline`）保留重定向至新路径，见 `App.tsx`。
 
@@ -697,6 +699,20 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 | POST | `/api/v1/planning/scenarios/compare` | 多场景 KPI 对比 |
 | GET | `/api/v1/planning/compare?from=&to=` | 两版本对比（legacy） |
 
+**批次计划（SchedulingBatchResource）**
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/scheduling/batches/work-orders` | 已下发工单与剩余可拆量 |
+| GET | `/api/v1/scheduling/batches/by-work-order/{workOrderNo}` | 工单下活动批次 |
+| POST | `/api/v1/scheduling/batches/split/auto` | 按当前策略自动拆单张工单 |
+| POST | `/api/v1/scheduling/batches/split/auto-all` | 对所有可拆工单批量自动拆批 |
+| POST | `/api/v1/scheduling/batches/split/manual` | 手工创建批次 |
+| POST | `/api/v1/scheduling/batches/cancel` | 取消单批或整单批次 |
+| GET/POST | `/api/v1/scheduling/batches/kitting`、`/kitting/compute` | 查看/重算批次齐套 |
+| PUT/PATCH | `/api/v1/scheduling/batches/{batchNo}/pending-schedule-eligible` | 设置批次是否进入 S05 候选 |
+| GET | `/api/v1/scheduling/batches/{batchNo}/routing` | 按批次数量查看工艺与可用产线 |
+
 **主计划策略（MasterPlanStrategyResource）**
 
 | 方法 | 路径 | 说明 |
@@ -730,6 +746,10 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 |------|------|
 | 快速启动 | `README.md` |
 | 架构摘要 | `docs/architecture.md` |
+| S04/S05 推演层 | `docs/aps-planning-layer.md` |
+| 详细排程仿真层 | `docs/detail-schedule-simulation-layer.md` |
+| 批次计划与排程候选 | `docs/batch-scheduling.md` |
+| Timefold 2.0 升级 | `docs/timefold-2-upgrade.md` |
 | 设计摘要 | `docs/superpowers/specs/2026-05-25-plant-operation-plan-design.md` |
 | **帕累托扫描模式（v1 设计）** | `docs/pareto-scan-design.md` |
 | 业务方法论 | 工作区根目录 `工厂计划*.md` |
@@ -741,6 +761,7 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 | 2026-05-25 | 初版：S01–S07 场景、Timefold 双求解器、满足链、React 前端 |
 | 2026-05-27 | 主计划策略体系（产能模式 + 目标权重 CRUD）；产能均衡软目标；计划运行选策略；场景列表/对比展示策略名；`PlanContext` 场景选择器；产能页按场景分析；导航重命名与结果页分组；场景选择器仅保留于四个计划结果页；四结果页绑定 `masterPlanVersionId` |
 | 2026-05-28 | 帕累托扫描模式产品设计 v1（`docs/pareto-scan-design.md`）：权重网格批量求解、分目标 KPI、非支配前沿、帕累托探索页 |
+| 2026-06-29 | 文档同步：Timefold 2.0、批次计划 API / UI、S05 批次候选边界、新增批次排程说明 |
 
 ---
 
