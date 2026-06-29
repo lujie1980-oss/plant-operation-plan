@@ -1,4 +1,4 @@
-import { getStoredWorkspaceId } from '../context/WorkspaceContext';
+import { apiFetch, apiHeaders } from './http';
 
 export type IntegrationBatch = {
   importBatchId: string;
@@ -30,22 +30,12 @@ export type ExternalTableInfo = {
 
 const BASE = '/api/v1/integration';
 
-function workspaceHeaders(extra?: HeadersInit): HeadersInit {
-  return {
-    Accept: 'application/json',
-    'X-Workspace-Id': getStoredWorkspaceId(),
-    ...extra,
-  };
-}
-
 async function integrationRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers = new Headers(init?.headers);
-  headers.set('Accept', 'application/json');
-  headers.set('X-Workspace-Id', getStoredWorkspaceId());
-  if (init?.body != null && !headers.has('Content-Type')) {
+  const headers = new Headers(apiHeaders(init?.headers));
+  if (init?.body != null && !headers.has('Content-Type') && !(init.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
-  const res = await fetch(path, { ...init, headers });
+  const res = await apiFetch(path, { ...init, headers });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || `HTTP ${res.status}`);
@@ -76,7 +66,7 @@ export const integrationApi = {
     form.append('validateOnly', String(validateOnly));
     return integrationRequest<{ importBatchId: string; rowCount: number }>(
       `${BASE}/adapters/excel/upload`,
-      { method: 'POST', body: form, headers: workspaceHeaders() },
+      { method: 'POST', body: form, headers: apiHeaders() },
     );
   },
 };

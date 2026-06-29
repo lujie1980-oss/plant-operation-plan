@@ -1,0 +1,139 @@
+.workspace-settings-page {
+  padding: 1rem 1.25rem 2rem;
+}
+
+.workspace-settings-back {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+
+.workspace-settings-back a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.workspace-settings-hint {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.workspace-settings-readonly {
+  margin: 0 0 1rem;
+  color: #b45309;
+  font-size: 0.9rem;
+}
+
+.workspace-settings-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.workspace-settings-card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.workspace-settings-group h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.workspace-settings-group:first-of-type h3 {
+  margin-top: 0;
+}
+
+.workspace-settings-note {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.workspace-settings-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.workspace-settings-checklist li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.workspace-settings-checklist label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.workspace-settings-label {
+  flex: 1;
+}
+
+.workspace-settings-id {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-family: ui-monospace, monospace;
+}
+
+.workspace-settings-actions {
+  margin-top: 0.5rem;
+}
+
+.workspace-member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.workspace-member-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.workspace-member-add input,
+.workspace-member-add select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}
+
+.workspace-permissions-matrix {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.workspace-permissions-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.workspace-permissions-table th,
+.workspace-permissions-table td {
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.btn.linkish {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: inherit;
+}

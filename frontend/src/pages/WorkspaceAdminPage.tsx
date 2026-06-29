@@ -1,13 +1,16 @@
 import { FormEvent, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { FilterableTable } from '../components/table/FilterableTable';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useAuth } from '../providers/AuthContext';
 import './WorkspaceAdminPage.css';
 
 export function WorkspaceAdminPage() {
   const { workspaces, loading, error, createWorkspace, deleteWorkspace, refreshWorkspaces } =
     useWorkspace();
+  const { currentUser, workspaces: authWorkspaces } = useAuth();
   const [id, setId] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -128,17 +131,32 @@ export function WorkspaceAdminPage() {
               key: 'actions',
               header: '',
               filterable: false,
-              render: (w) =>
-                !w.isDefault ? (
-                  <button
-                    type="button"
-                    className="btn danger"
-                    disabled={busy}
-                    onClick={() => void onDelete(w.workspaceId, w.name)}
-                  >
-                    删除
-                  </button>
-                ) : null,
+              render: (w) => {
+                const membership = authWorkspaces.find((m) => m.workspaceId === w.workspaceId);
+                const canManage =
+                  currentUser?.isSuperAdmin ||
+                  membership?.role === 'OWNER' ||
+                  membership?.role === 'WS_ADMIN';
+                return (
+                  <span className="workspace-admin-actions">
+                    {canManage && (
+                      <Link to={`/workspaces/${w.workspaceId}/settings`} className="btn">
+                        模块设置
+                      </Link>
+                    )}
+                    {!w.isDefault ? (
+                      <button
+                        type="button"
+                        className="btn danger"
+                        disabled={busy}
+                        onClick={() => void onDelete(w.workspaceId, w.name)}
+                      >
+                        删除
+                      </button>
+                    ) : null}
+                  </span>
+                );
+              },
             },
           ]}
         />

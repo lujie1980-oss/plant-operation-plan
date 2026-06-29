@@ -7,6 +7,7 @@ import com.plantops.iam.context.SecurityContext;
 import com.plantops.iam.entity.WorkspaceEnabledAdapterEntity;
 import com.plantops.iam.entity.WorkspaceEnabledModuleEntity;
 import com.plantops.iam.entity.WorkspaceMemberEntity;
+import com.plantops.iam.entity.WorkspaceMemberModuleEntity;
 import com.plantops.masterdata.MasterFieldDefinitionService;
 import com.plantops.persistence.entity.*;
 import com.plantops.scenario.PlanningScenarioService;
@@ -115,6 +116,7 @@ public class WorkspaceService {
         WorkspaceEnabledModuleEntity.delete("workspaceId", workspaceId);
         WorkspaceEnabledAdapterEntity.delete("workspaceId", workspaceId);
         WorkspaceMemberEntity.delete("workspaceId", workspaceId);
+        WorkspaceMemberModuleEntity.delete("workspaceId", workspaceId);
         // 业务表
         DetailScheduleOperationEntity.delete("workspaceId", workspaceId);
         ProductionBatchEntity.delete("workspaceId", workspaceId);

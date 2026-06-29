@@ -7,6 +7,7 @@ import { WorkspaceProvider } from './context/WorkspaceContext';
 import { TableRowHoverTipDelegate } from './components/table/TableRowHoverTipDelegate';
 import { TableCellContextMenuDelegate } from './components/table/TableCellContextMenuDelegate';
 import { WorkspaceAdminPage } from './pages/WorkspaceAdminPage';
+import { WorkspaceSettingsPage } from './pages/WorkspaceSettingsPage';
 import { BusinessDataPage } from './pages/BusinessDataPage';
 import { BusinessRulesPage } from './pages/BusinessRulesPage';
 import { BusinessRulesLegacyRedirect } from './pages/BusinessRulesLegacyRedirect';
@@ -43,15 +44,29 @@ import { IntegrationQualityPage } from './pages/integration/IntegrationQualityPa
 import { AppProviders } from './providers/AppProviders';
 import { AuthProvider, useAuth } from './providers/AuthContext';
 import { CreateWorkspacePage } from './pages/CreateWorkspacePage';
+import { LoginPage } from './pages/LoginPage';
+import { AdminUsersPage } from './pages/AdminUsersPage';
+import { AdminWorkspacesPage } from './pages/AdminWorkspacesPage';
 
 function AppContent() {
-  const { isLoading, hasWorkspaces } = useAuth();
+  const { isLoading, needsLogin, hasWorkspaces } = useAuth();
 
   if (isLoading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
         <span style={{ color: '#64748b', fontSize: 14 }}>加载中…</span>
       </div>
+    );
+  }
+
+  if (needsLogin) {
+    return (
+      <HashRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </HashRouter>
     );
   }
 
@@ -87,6 +102,9 @@ function AppContent() {
             <Route path="master-data" element={<MasterDataPage />} />
             <Route path="business-data" element={<BusinessDataPage />} />
             <Route path="workspaces" element={<WorkspaceAdminPage />} />
+            <Route path="workspaces/:workspaceId/settings" element={<WorkspaceSettingsPage />} />
+            <Route path="admin/users" element={<AdminUsersPage />} />
+            <Route path="admin/workspaces" element={<AdminWorkspacesPage />} />
 
             <Route path="master-plan/rules" element={<Navigate to="/master-plan/rules/demand" replace />} />
             <Route path="master-plan/rules/:categoryId" element={<BusinessRulesPage moduleId="MOD-OCP" />} />

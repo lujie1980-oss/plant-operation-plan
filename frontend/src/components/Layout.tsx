@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../providers/AuthContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 import {
   expandForPath,
   filterNavGroups,
@@ -15,6 +17,13 @@ import './Layout.css';
 
 export function Layout() {
   const { pathname } = useLocation();
+  const { workspaceId } = useWorkspace();
+  const { currentUser, workspaces, logout, devMode } = useAuth();
+  const membership = workspaces.find((w) => w.workspaceId === workspaceId);
+  const canManageWorkspace =
+    currentUser?.isSuperAdmin ||
+    membership?.role === 'OWNER' ||
+    membership?.role === 'WS_ADMIN';
   const enabledModules = useEnabledModules();
   const navGroups = useMemo(() => filterNavGroups(enabledModules), [enabledModules]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() =>
@@ -62,9 +71,24 @@ export function Layout() {
       <div className="content-column">
         <header className="content-topbar">
           <WorkspaceSelector />
+          {canManageWorkspace && workspaceId && (
+            <Link to={`/workspaces/${workspaceId}/settings`} className="content-topbar-link">
+              模块设置
+            </Link>
+          )}
           <Link to="/workspaces" className="content-topbar-link">
             管理数据集
           </Link>
+          {currentUser?.isSuperAdmin && (
+            <Link to="/admin/users" className="content-topbar-link">
+              平台管理
+            </Link>
+          )}
+          {!devMode && (
+            <button type="button" className="content-topbar-link content-topbar-btn" onClick={logout}>
+              退出
+            </button>
+          )}
         </header>
         <main className="main">
           <Outlet />

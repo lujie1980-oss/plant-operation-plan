@@ -1,7 +1,7 @@
-/**
- * Sidebar navigation — mirrors knowledge/standard/modules/workspace-modules.yaml
- * and docs/sdd/volumes/platform/18-19-workspace-platform.md §19.2.2 / §19.4
- */
+import {
+  ALL_MODULE_IDS,
+  WORKSPACE_MODULE_CATALOG,
+} from './workspaceModules';
 
 export type NavLinkItem = { to: string; label: string; end?: boolean; moduleId?: string };
 
@@ -130,18 +130,16 @@ export const ALL_NAV_GROUPS: NavGroup[] = [
   SLITTING_GROUP,
 ];
 
-/** Default module enablement — replaced by IAM `enabledModules` (TODO-18). */
-export const DEFAULT_ENABLED_MODULES: Record<string, boolean> = {
-  'MOD-DI': true,
-  'MOD-OCP': true,
-  'MOD-SCH': true,
-  'MOD-SLT': false,
-  'MOD-CAL': true,
-};
+/** Default module enablement when IAM data is unavailable. */
+export const DEFAULT_ENABLED_MODULES: Record<string, boolean> = Object.fromEntries(
+  WORKSPACE_MODULE_CATALOG.map((m) => [m.id, m.defaultEnabled]),
+);
+
+export { ALL_MODULE_IDS };
 
 export function isModuleEnabled(moduleId: string, enabledModules?: Record<string, boolean>): boolean {
   const map = enabledModules ?? DEFAULT_ENABLED_MODULES;
-  return map[moduleId] !== false;
+  return map[moduleId] === true;
 }
 
 export function filterNavGroups(enabledModules?: Record<string, boolean>): NavGroup[] {

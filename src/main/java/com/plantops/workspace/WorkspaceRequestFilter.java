@@ -12,6 +12,7 @@ import jakarta.ws.rs.ext.Provider;
 import java.io.IOException;
 
 @Provider
+@jakarta.annotation.Priority(200)
 public class WorkspaceRequestFilter implements ContainerRequestFilter {
 
     @Inject

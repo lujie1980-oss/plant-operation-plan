@@ -109,6 +109,7 @@ import type {
   SrpSnapshotDto,
 } from '../types/ontology';
 import { getStoredWorkspaceId } from '../context/WorkspaceContext';
+import { apiHeaders as sharedApiHeaders } from './http';
 import type { Workspace, WorkspaceCreatePayload } from '../types/workspace';
 
 export type MasterDataImportResult = {
@@ -123,11 +124,7 @@ function filenameFromDisposition(header: string | null, fallback: string): strin
 }
 
 function workspaceHeaders(extra?: HeadersInit): HeadersInit {
-  return {
-    Accept: 'application/json',
-    'X-Workspace-Id': getStoredWorkspaceId(),
-    ...extra,
-  };
+  return sharedApiHeaders(extra);
 }
 
 async function downloadBlob(path: string, fallbackName: string): Promise<void> {

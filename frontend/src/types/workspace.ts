@@ -28,3 +28,17 @@ export type WorkspaceMembership = {
   role: string;
   enabledModules: string[];
 };
+
+export type ModuleToggle = {
+  moduleId: string;
+  name: string;
+  categoryId: string;
+  enabled: boolean;
+};
+
+export type AdapterToggle = {
+  adapterId: string;
+  name: string;
+  type: string;
+  enabled: boolean;
+};

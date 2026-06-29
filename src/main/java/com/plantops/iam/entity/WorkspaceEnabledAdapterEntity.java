@@ -18,4 +18,8 @@ public class WorkspaceEnabledAdapterEntity extends PanacheEntityBase {
 
     @Column(nullable = false)
     public boolean enabled;
+
+    public static java.util.List<WorkspaceEnabledAdapterEntity> findByWorkspace(String workspaceId) {
+        return list("workspaceId", workspaceId);
+    }
 }
