@@ -8,6 +8,8 @@ S01 Demand → S02 Kitting → S03 Capacity → S04 Master Plan (Timefold) → S
 
 **Planning layer (推演 vs 选优):** see [aps-planning-layer.md](./aps-planning-layer.md) — `com.plantops.scenario.planning` builds `*PlanningContext` (deterministic P0–P4), then `*ProblemMapper` projects to Timefold only for S04/S05 optimization.
 
+**Batch scheduling:** see [batch-scheduling.md](./batch-scheduling.md) — after dispatch, `production_batch` splits work orders into S05 scheduling units without changing MRP or S04 master-plan logic.
+
 ## Solvers
 
 - `MasterPlanSchedule` / `OrderAllocation` — **operation-level** slot assignment on `resourceId` (from `product_resource` routing); MRP material feasibility + BOM upstream order; soft timing/due-date objectives
