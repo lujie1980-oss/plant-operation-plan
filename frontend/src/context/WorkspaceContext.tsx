@@ -127,5 +127,5 @@ export function useWorkspace() {
 }
 
 export function getStoredWorkspaceId(): string {
-  return localStorage.getItem(STORAGE_KEY) ?? 'jinghua';
+  return localStorage.getItem(STORAGE_KEY) ?? '';
 }

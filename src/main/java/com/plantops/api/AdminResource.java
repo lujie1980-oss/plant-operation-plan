@@ -1,10 +1,12 @@
 package com.plantops.api;
 
 import com.plantops.api.dto.SalesOrderDemandRescaleResultDto;
+import com.plantops.iam.context.SecurityContext;
 import com.plantops.sample.SampleDataLoader;
 import com.plantops.scenario.SalesOrderDemandRescaleService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -26,11 +28,15 @@ public class AdminResource {
     @Inject
     SalesOrderDemandRescaleService salesOrderDemandRescaleService;
 
+    @Inject
+    SecurityContext securityContext;
+
     @POST
     @Path("/scale-sales-order-demand")
     public SalesOrderDemandRescaleResultDto scaleSalesOrderDemand(
             @QueryParam("divisor") @DefaultValue("100") BigDecimal divisor,
             @QueryParam("replaceWorkOrders") @DefaultValue("true") boolean replaceWorkOrders) {
+        requireSuperAdmin();
         return salesOrderDemandRescaleService.rescaleAndRegenerate(divisor, replaceWorkOrders);
     }
 
@@ -38,6 +44,7 @@ public class AdminResource {
     @Path("/reload-sample-data")
     public Response reloadSampleData(@QueryParam("dataset") String dataset,
                                      @QueryParam("resource") String resource) {
+        requireSuperAdmin();
         String resolved = resolveResource(dataset, resource);
         sampleDataLoader.reloadDemo(resolved);
 
@@ -46,6 +53,12 @@ public class AdminResource {
         body.put("resource", resolved);
         body.put("message", "演示数据已重新加载");
         return Response.ok(body).build();
+    }
+
+    private void requireSuperAdmin() {
+        if (!securityContext.isSuperAdmin()) {
+            throw new ForbiddenException("IAM_FORBIDDEN");
+        }
     }
 
     private static String resolveResource(String dataset, String resource) {

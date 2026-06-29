@@ -25,6 +25,9 @@ public final class WorkspaceModuleCatalog {
     public record AdapterDef(String id, String name, String type) {}
 
     private static final List<PathRule> RULES = List.of(
+            new PathRule("api/v1/work-orders", List.of("MOD-OCP"), MatchMode.ALL),
+            new PathRule("api/v1/production-tasks", List.of("MOD-SCH"), MatchMode.ALL),
+            new PathRule("api/v1/planning/schedule-sessions", List.of("MOD-SCH"), MatchMode.ALL),
             new PathRule("api/v1/slitting", List.of("MOD-SLT"), MatchMode.ALL),
             new PathRule("api/v1/planning/detail-schedule", List.of("MOD-SCH"), MatchMode.ALL),
             new PathRule("api/v1/planning/schedule-feedback", List.of("MOD-SCH"), MatchMode.ALL),

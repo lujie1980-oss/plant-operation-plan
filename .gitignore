@@ -20,8 +20,14 @@ Thumbs.db
 
 # Env / secrets
 .env
+.env.*
+!.env.example
 tools/acr.local.env
 tools/ecs.local.env
+
+# Local build / debug artifacts
+cp.txt
+boms_*.json
 
 # Large local extract outputs (regenerate via tools/)
 tools/dunan_extracted.json

@@ -46,7 +46,7 @@ public class MemberPermissionService {
     }
 
     public Optional<String> permissionDeniedReason(String workspaceId, String userId, String path, String httpMethod) {
-        if (securityContext.isDevMode() || securityContext.isSuperAdmin()) {
+        if (securityContext.isSuperAdmin()) {
             return Optional.empty();
         }
         Optional<PathRule> rule = WorkspaceModuleCatalog.matchRule(path);
