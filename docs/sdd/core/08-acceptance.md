@@ -392,7 +392,7 @@
 
 | ID | 陈述 | RULE / SCN |
 |----|------|------------|
-| AC-IAM-01 | 新用户注册后存在且仅存在一个 PERSONAL WS，且 ownerUserId 正确 | RULE-IAM-02 · SCN-T06a |
+| AC-IAM-01 | 新用户首登后 **无** 自动 WS；手动创建后 `workspace_member` 含 OWNER 且 `ownerUserId` 正确 | RULE-IAM-02 · SCN-T06a · §18.3.1 |
 | AC-IAM-02 | 非成员 X-Workspace-Id → 403，无业务体 | RULE-IAM-01 · SCN-T06-E1 |
 | AC-IAM-03 | 关闭 MOD-SLT 后侧栏无分切入口且 slitting API 403 | RULE-IAM-03 |
 | AC-IAM-04 | MOD-OCP=VIEW 用户 optimize → 403 MODULE_FORBIDDEN | RULE-IAM-04 · SCN-T06b |

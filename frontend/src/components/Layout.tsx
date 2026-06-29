@@ -12,13 +12,14 @@ import {
   type NavSubGroup,
 } from '../config/workspaceNav';
 import { useEnabledModules } from '../hooks/useEnabledModules';
+import { getAuthToken } from '../api/http';
 import { WorkspaceSelector } from './WorkspaceSelector';
 import './Layout.css';
 
 export function Layout() {
   const { pathname } = useLocation();
   const { workspaceId } = useWorkspace();
-  const { currentUser, workspaces, logout, devMode } = useAuth();
+  const { currentUser, workspaces, switchUser, logout, devMode } = useAuth();
   const membership = workspaces.find((w) => w.workspaceId === workspaceId);
   const canManageWorkspace =
     currentUser?.isSuperAdmin ||
@@ -71,24 +72,43 @@ export function Layout() {
       <div className="content-column">
         <header className="content-topbar">
           <WorkspaceSelector />
-          {canManageWorkspace && workspaceId && (
-            <Link to={`/workspaces/${workspaceId}/settings`} className="content-topbar-link">
-              模块设置
+          <nav className="content-topbar-nav" aria-label="工作区操作">
+            {canManageWorkspace && workspaceId && (
+              <Link to={`/workspaces/${workspaceId}/settings`} className="content-topbar-link">
+                模块设置
+              </Link>
+            )}
+            <Link to="/workspaces" className="content-topbar-link">
+              管理数据集
             </Link>
-          )}
-          <Link to="/workspaces" className="content-topbar-link">
-            管理数据集
-          </Link>
-          {currentUser?.isSuperAdmin && (
-            <Link to="/admin/users" className="content-topbar-link">
-              平台管理
-            </Link>
-          )}
-          {!devMode && (
-            <button type="button" className="content-topbar-link content-topbar-btn" onClick={logout}>
-              退出
+            {currentUser?.isSuperAdmin && (
+              <Link to="/admin/users" className="content-topbar-link">
+                平台管理
+              </Link>
+            )}
+          </nav>
+          <div className="content-topbar-user">
+            <span className="content-topbar-user-name" title={currentUser?.userId}>
+              {currentUser?.displayName ?? '—'}
+              {devMode && !getAuthToken() && (
+                <span className="content-topbar-user-badge">dev</span>
+              )}
+            </span>
+            <button
+              type="button"
+              className="content-topbar-link content-topbar-btn"
+              onClick={switchUser}
+            >
+              切换用户
             </button>
-          )}
+            <button
+              type="button"
+              className="content-topbar-link content-topbar-btn content-topbar-btn--muted"
+              onClick={logout}
+            >
+              登出
+            </button>
+          </div>
         </header>
         <main className="main">
           <Outlet />

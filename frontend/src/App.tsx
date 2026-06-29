@@ -43,13 +43,16 @@ import { IntegrationAdapterDetailPage } from './pages/integration/IntegrationAda
 import { IntegrationQualityPage } from './pages/integration/IntegrationQualityPage';
 import { AppProviders } from './providers/AppProviders';
 import { AuthProvider, useAuth } from './providers/AuthContext';
+import { getAuthToken } from './api/http';
 import { CreateWorkspacePage } from './pages/CreateWorkspacePage';
 import { LoginPage } from './pages/LoginPage';
 import { AdminUsersPage } from './pages/AdminUsersPage';
 import { AdminWorkspacesPage } from './pages/AdminWorkspacesPage';
 
 function AppContent() {
-  const { isLoading, needsLogin, hasWorkspaces } = useAuth();
+  const { isLoading, showLoginPage, hasWorkspaces, devMode, currentUser } = useAuth();
+  const skipWorkspaceSetup =
+    devMode && (currentUser?.userId === 'dev' || !getAuthToken());
 
   if (isLoading) {
     return (
@@ -59,7 +62,7 @@ function AppContent() {
     );
   }
 
-  if (needsLogin) {
+  if (showLoginPage) {
     return (
       <HashRouter>
         <Routes>
@@ -70,7 +73,7 @@ function AppContent() {
     );
   }
 
-  if (!hasWorkspaces) {
+  if (!hasWorkspaces && !skipWorkspaceSetup) {
     return (
       <HashRouter>
         <Routes>

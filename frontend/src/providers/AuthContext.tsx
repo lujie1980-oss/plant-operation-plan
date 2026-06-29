@@ -12,6 +12,21 @@ import type { AuthConfigDto, OidcConfigDto } from '../types/auth';
 import type { CurrentUser, WorkspaceCreatePayload, WorkspaceMembership } from '../types/workspace';
 
 const STORAGE_KEY = 'plantops.workspaceId';
+const AUTH_INTENT_KEY = 'plantops.authIntent';
+
+function getAuthIntent(): 'switch' | 'logout' | null {
+  const value = sessionStorage.getItem(AUTH_INTENT_KEY);
+  if (value === 'switch' || value === 'logout') return value;
+  return null;
+}
+
+function setAuthIntent(intent: 'switch' | 'logout' | null) {
+  if (intent) {
+    sessionStorage.setItem(AUTH_INTENT_KEY, intent);
+  } else {
+    sessionStorage.removeItem(AUTH_INTENT_KEY);
+  }
+}
 
 type AuthState = {
   isLoading: boolean;
@@ -31,7 +46,10 @@ type AuthState = {
 type AuthContextValue = AuthState & {
   refresh: () => Promise<void>;
   login: (loginName: string, password: string) => Promise<void>;
+  switchUser: () => void;
   logout: () => void;
+  clearAuthIntent: () => void;
+  showLoginPage: boolean;
   createWorkspaceAndSelect: (payload: WorkspaceCreatePayload) => Promise<string>;
 };
 
@@ -83,6 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const localLoginEnabled = authConfig?.localLoginEnabled ?? true;
   const oidc = authConfig?.oidc ?? null;
   const needsLogin = authConfig != null && !authConfig.devMode && !getAuthToken() && !isLoading;
+  const authIntent = getAuthIntent();
+  const showLoginPage = (needsLogin && !isLoading) || authIntent != null;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -97,6 +117,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const user = await fetchCurrentUser();
       setCurrentUser(user);
+      if (!user.hasWorkspaces) {
+        localStorage.removeItem(STORAGE_KEY);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setCurrentUser(null);
@@ -122,17 +145,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (loginName: string, password: string) => {
     const token = await apiLogin(loginName, password);
     setAuthToken(token.accessToken);
+    setAuthIntent(null);
     await load();
   }, [load]);
 
-  const logout = useCallback(() => {
+  const clearAuthIntent = useCallback(() => {
+    setAuthIntent(null);
+  }, []);
+
+  const goToLogin = useCallback((intent: 'switch' | 'logout') => {
     setAuthToken(null);
     setCurrentUser(null);
-    if (!devMode) {
-      window.location.hash = '#/login';
-      window.location.reload();
-    }
-  }, [devMode]);
+    setAuthIntent(intent);
+    window.location.hash = '#/login';
+    window.location.reload();
+  }, []);
+
+  const switchUser = useCallback(() => {
+    goToLogin('switch');
+  }, [goToLogin]);
+
+  const logout = useCallback(() => {
+    goToLogin('logout');
+  }, [goToLogin]);
 
   const createWorkspaceAndSelect = useCallback(async (payload: WorkspaceCreatePayload): Promise<string> => {
     const res = await fetch('/api/v1/workspaces', {
@@ -156,6 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     isAuthenticated: currentUser != null && !error,
     needsLogin: needsLogin && !isLoading,
+    showLoginPage,
     devMode,
     localLoginEnabled,
     registrationEnabled: authConfig?.registrationEnabled ?? false,
@@ -167,7 +203,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     enabledModules,
     refresh: load,
     login,
+    switchUser,
     logout,
+    clearAuthIntent,
     createWorkspaceAndSelect,
   };
 

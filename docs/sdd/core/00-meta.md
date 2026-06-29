@@ -22,7 +22,7 @@
 |------|------|----------|
 | **聚合根** | ENT-OG：每个 ENT-WS **一张权威图**（ADR-07）；COLD 为视图/scope，非并行真相源 | §2 · §5 · ADR-01 · ADR-07 |
 | **前端主粒度** | ENT-COLD（交付批次）为满足链与 ATP/CTP 的根 | §2 · SCN-01a~h · ADR-06 |
-| **IAM** | 用户↔WS 成员 · MOD 开关 · VIEW/EDIT · Super Admin | §18 · ADR-13 · TODO-18 |
+| **IAM** | 用户↔WS 成员 · MOD 开关 · VIEW/EDIT · Super Admin · OIDC 联调 | §18 · ADR-13 · **已落地** |
 | **需求语义链** | ENT-COL → ENT-COLD → ENT-DEM | §5.1 |
 | **供应语义链** | ENT-SO → ENT-PU → ENT-OP → OIM/OOM/OOSR → ENT-SUP | §5.1 |
 | **满足与派生** | ENT-FF（PEG-INV / PEG-WO / PEG-SH）；ENT-BD 由 Fulfillment **派生** | §4 · ADR-04 |
@@ -94,6 +94,7 @@
 | 2026-06-21 | 1.0.0-SNAPSHOT | **ADR-16 / §5.8.1 Shift-Period**：班次纳入 ENT-PER；废止 ENT-SS 本体地位；**TODO-23** S0~S5 |
 | 2026-06-21 | 1.0.0-SNAPSHOT | **ADR-17 / §5.8.2 PRP→SRP**：日历挂 PR；SRP=Σ PRP；**TODO-24** P0~P5 |
 | 2026-06-21 | 1.0.0-SNAPSHOT | **SDD 一致性修复**：§11 资源日历 · §4 RULE-MP 迁 SRP/RCA · 链接/锚点 · `05-ont-schema` 占位 |
+| 2026-06-29 | 1.0.0-SNAPSHOT | **TODO-18 完成**：§18 IAM M0–M4 落地；手动建 WS · dev 不强制首登；OIDC 联调文档 |
 
 ## 治理约定
 

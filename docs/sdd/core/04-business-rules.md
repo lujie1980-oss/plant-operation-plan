@@ -64,7 +64,9 @@
 ### RULE-IAM-02 每用户至少一个自有 Workspace（hard）
 
 **场景：** SCN-T06  
-**陈述：** 创建 ENT-USR 时 **必须** 同事务创建 `workspaceType=PERSONAL` 的 ENT-WS，且 `ownerUserId=userId`；禁止删除用户 **最后一个** PERSONAL WS。
+**陈述（目标态）：** 创建 ENT-USR 时 **应** 同事务创建 `workspaceType=PERSONAL` 的 ENT-WS，且 `ownerUserId=userId`；禁止删除用户 **最后一个** PERSONAL WS。
+
+**v1 实现（2026-06）：** 注册/登录 **不** 自动创建 WS；用户经 **CreateWorkspacePage** 或 **数据集管理** 手动 `POST /api/v1/workspaces`；`dev` 用户在 dev-mode 下 **不强制** 首登建 WS。与目标态差异见 §18.3.1。
 
 ---
 

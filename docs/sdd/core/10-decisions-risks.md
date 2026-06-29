@@ -159,11 +159,11 @@
 |----|------|
 | **状态** | 已采纳（2026-06-20） |
 | **背景** | v1 仅 `X-Workspace-Id` 头隔离，任何人知 id 即可访问；多用户/多项目需要成员与模块级授权 |
-| **决策** | **ENT-USR** ↔ **ENT-WS** 多对多成员；每用户 **至少 1 个 PERSONAL WS**；WS 级 **MOD-*** 开关 + 成员 **VIEW/EDIT** 矩阵；**ROLE-SUPER-ADMIN** 管理平台用户与全部 WS IAM |
+| **决策** | **ENT-USR** ↔ **ENT-WS** 多对多成员；WS 级 **MOD-*** 开关 + 成员 **VIEW/EDIT** 矩阵；**ROLE-SUPER-ADMIN** 管理平台用户与全部 WS IAM；**v1** 工作区 **手动创建**（不随登录自动 PERSONAL WS） |
 | **模块模型** | 计划/集成模块注册于 **`workspace-modules.yaml`** + **`integration-adapters.yaml`**；新模块须 MOD-EXT / ADP-EXT 契约 |
 | **与 RULE-WS-01** | IAM 在 WS 行级隔离 **之前** 校验；二者叠加 |
 | **备选** | 外置网关独占授权（部分采纳：生产 IdP）；纯 WS 头无用户（否决：生产） |
-| **后果** | §18 · RULE-IAM-01~06 · API-IAM-* · SCN-T06 · TODO-18 · AC-IAM-* |
+| **后果** | §18 · RULE-IAM-01~06 · API-IAM-* · SCN-T06 · ~~TODO-18~~ **已完成 2026-06** · AC-IAM-* |
 
 ---
 
@@ -241,7 +241,7 @@
 | RSK-04 | Session 内存压力 | TTL；并发 Session 上限；NFR 堆/集合计数；**不**以裁切并行 SoT 图缓解（ADR-07） |
 | RSK-05 | 全量持久化写放大 / 表膨胀 | revision 归档策略；PISPP 按 horizon 裁剪；可选 snapshot 加速读 |
 | RSK-06 | legacy 与 `ont_*` 双写期不一致 | TODO-12 分阶段；对等测试 revision ↔ OG |
-| RSK-07 | IAM 未落地前 WS id 泄露即越权 | TODO-18 优先 M1 Filter；生产禁 dev-mode |
+| RSK-07 | ~~IAM 未落地前 WS id 泄露即越权~~ | **已缓解**：Filter 链 + 成员校验；生产禁 dev-mode · 见 §18 |
 
 ---
 
@@ -266,7 +266,7 @@
 | TODO-15 | **ADR-12 业务知识三层**：KnowledgeContext、Industry pack、overlay 表、引擎接 Effective | 架构+产品 |
 | TODO-16 | **§15 主计划 KPI 结构化**：`kpiBreakdown` API、求解器域分、B01~B10 面板 | 开发+产品 |
 | TODO-17 | **§16 供需知识 UI**：BusinessRules 六 tab、SchedulerFeedback→SRP（RULE-SUP-05）、md/txn 字段 | 产品+前后端 |
-| TODO-18 | **ADR-13 IAM**：app_user、成员/模块/权限表、Filter、侧栏 MOD 过滤、Super Admin UI、IdP | 架构+前后端 |
+| TODO-18 | ~~ADR-13 IAM~~：**已完成 2026-06** — M0–M4（Filter、JWT、OIDC 联调、Super Admin UI、侧栏 MOD） | 架构+前后端 |
 | TODO-19 | **ADR-14 数据集成**：MOD-DI UI、ADP-ERP-SAP/MES/Excel SPI、external 浏览 API | 架构+前后端 |
 | TODO-20 | **§5 Ontology 范围扩展**：现行 ENT-OG **仅覆盖订单协同计划**（原主计划 · **MOD-OCP** / PROC-S04）；**MOD-SCH 作业排程**、**MOD-SLT 分切排样** 的领域实体、装载路径与 `ont_*` 表族 **后续完善**（与 TODO-07 求解插件化协同，不阻塞当前 OCP 基线） | 架构+产品 |
 | TODO-21 | **§5 领域模型细化**：§5.0 阅读指引 · §5.19 Session · §5.20 字段目录 · `05-ont-schema` 列级规范 | 架构+产品 |

@@ -1,7 +1,7 @@
 # §6 接口与集成契约
 
 > **约定：** Base `/api/v1`；Header `X-Workspace-Id` 必填（业务 API）。  
-> **IAM（ADR-13）：** 生产环境须 **认证**；业务 API 另校验 WS 成员与模块权限（§18 · RULE-IAM-*）。  
+> **IAM（ADR-13）：** 生产环境须 **认证**；业务 API 另校验 WS 成员与模块权限（§18 · RULE-IAM-*）。**v1 已落地** Filter + JWT/OIDC。
 > 响应 JSON；错误时 HTTP 4xx/5xx + 消息体。
 
 ---
@@ -276,9 +276,31 @@
 
 ---
 
-## API-IAM：用户与权限（§18 · TODO-18）
+## API-IAM：用户与权限（§18 · ADR-13）
 
-> 管理类 API **不** 携带业务 `X-Workspace-Id` 时走平台 scope；Workspace 设置 API 须 WS_ADMIN+。
+> 管理类 API **不** 携带业务 `X-Workspace-Id` 时走平台 scope；Workspace 设置 API 须 WS_ADMIN+。  
+> **认证 API** 见下表 **API-AUTH-***（与 IAM Filter 配合）。
+
+### API-AUTH-01 认证配置与登录
+
+| 项 | 值 |
+|----|-----|
+| **方法** | `GET` |
+| **路径** | `/api/v1/auth/config` |
+| **响应** | `{ devMode, registrationEnabled, localLoginEnabled, oidc: { enabled, authorizationEndpoint, clientId } }` |
+
+| 项 | 值 |
+|----|-----|
+| **方法** | `POST` |
+| **路径** | `/api/v1/auth/login` · `/api/v1/auth/register` |
+| **Body** | `{ loginName, password }` 或注册字段 |
+| **响应** | `AuthTokenDto`（accessToken, userId, …） |
+
+| 项 | 值 |
+|----|-----|
+| **方法** | `GET` / `POST` |
+| **路径** | `/api/v1/auth/oidc/authorize` · `/api/v1/auth/oidc/exchange` |
+| **说明** | Authorization code 换 IdP access token；`preferred_username` 须匹配 `app_user.login_name` |
 
 ### API-IAM-01 当前用户
 
@@ -286,7 +308,8 @@
 |----|-----|
 | **方法** | `GET` |
 | **路径** | `/api/v1/iam/me` |
-| **响应** | `CurrentUserDto`（userId, displayName, isSuperAdmin, workspaces[]） |
+| **响应** | `CurrentUserDto`（userId, displayName, isSuperAdmin, **hasWorkspaces**, workspaces[]） |
+| **workspaces** | **仅** `workspace_member` 行；不含未加入的种子 WS |
 
 ### API-IAM-02 用户可访问 Workspace 列表
 

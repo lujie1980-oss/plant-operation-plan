@@ -21,7 +21,7 @@
 | **平台** | OR-Tools 主计划 | CFG COMMON | SCN-01b, SCN-T01 | `planning_optimizer_engine` | 升 main |
 | **平台** | Workspace 隔离 | STD COMMON | SCN-T03 | RULE-WS-01 | — |
 | **平台** | 数据集成 MOD-DI | STD COMMON | SCN-T07 | ADP-* · §19 | TODO-19 |
-| **平台** | 用户与 IAM | STD COMMON | SCN-T06 | RULE-IAM-* · §18 | TODO-18 |
+| **平台** | 用户与 IAM | STD COMMON | SCN-T06 | RULE-IAM-* · §18 | **已落地 2026-06** |
 | **平台** | 工艺主数据 | STD COMMON | SCN-T04 | PISP→RT→RS；**§11 External→md** | 升 main |
 | **平台** | 详细排程 | STD COMMON | SCN-T05 | S05 Timefold | — |
 | **扩展** | 分切 Studio | CFG SPECIFIC | — | TODO-07 | 分支 |

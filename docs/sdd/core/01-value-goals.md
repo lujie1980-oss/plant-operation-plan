@@ -112,12 +112,12 @@
 - 单工厂 APS：S01–S07
 - Plant Operation Ontology、COLD 满足链、Session 沙盘
 - 订单协同计划（**MOD-OCP** / PROC-S04）`PlanningOptimizer` 插件；S05/分切配置见 TODO-07
-- Workspace 模块（§19）、数据集成（MOD-DI · TODO-19）、IAM 规范（§18 · TODO-18）
+- Workspace 模块（§19）、数据集成（MOD-DI · TODO-19）、**IAM 运行时**（§18 · ADR-13 · **已落地 2026-06**）
 
 ### 非范围（v1 实现 · 规范已纳入）
 
 - 多工厂、**生产级** ERP/MES 连接器（规范与 ADP 契约见 §19；实现 TODO-19）
-- **IAM 运行时**（§18 · ADR-13 · TODO-18）— 规范已定义，代码过渡态同 §9 NFR-04
+- **自动 PERSONAL WS**（RULE-IAM-02 目标态）— v1 改为登录后 **手动** 创建工作区；dev 用户不强制首登建 WS
 
 ### 非范围（产品）
 

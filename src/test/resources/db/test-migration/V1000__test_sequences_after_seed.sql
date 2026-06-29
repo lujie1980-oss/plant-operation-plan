@@ -1,0 +1,28 @@
+-- Test-only: Flyway seed scripts insert rows with implicit H2 identity ids while Hibernate
+-- uses *_SEQ sequences starting at 1 — restart high to avoid PK collisions in @QuarkusTest fixtures.
+ALTER TABLE sales_order_line ALTER COLUMN id RESTART WITH 1000000;
+ALTER SEQUENCE sales_order_line_SEQ RESTART WITH 1000000;
+
+ALTER TABLE work_order ALTER COLUMN id RESTART WITH 1000000;
+ALTER SEQUENCE work_order_SEQ RESTART WITH 1000000;
+
+ALTER TABLE bom_component ALTER COLUMN id RESTART WITH 1000000;
+ALTER SEQUENCE bom_component_SEQ RESTART WITH 1000000;
+
+ALTER TABLE inventory ALTER COLUMN id RESTART WITH 1000000;
+ALTER SEQUENCE inventory_SEQ RESTART WITH 1000000;
+
+ALTER TABLE product_resource ALTER COLUMN id RESTART WITH 1000000;
+ALTER SEQUENCE product_resource_SEQ RESTART WITH 1000000;
+
+ALTER TABLE production_resource ALTER COLUMN id RESTART WITH 1000000;
+ALTER SEQUENCE production_resource_SEQ RESTART WITH 1000000;
+
+ALTER TABLE resource_calendar ALTER COLUMN id RESTART WITH 1000000;
+ALTER SEQUENCE resource_calendar_SEQ RESTART WITH 1000000;
+
+ALTER TABLE plan_version ALTER COLUMN id RESTART WITH 1000000;
+ALTER SEQUENCE plan_version_SEQ RESTART WITH 1000000;
+
+ALTER TABLE master_plan_allocation ALTER COLUMN id RESTART WITH 1000000;
+ALTER SEQUENCE master_plan_allocation_SEQ RESTART WITH 1000000;

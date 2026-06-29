@@ -4,7 +4,7 @@ import { useAuth } from '../providers/AuthContext';
 import './LoginPage.css';
 
 export function LoginPage() {
-  const { login, registrationEnabled, localLoginEnabled, oidc } = useAuth();
+  const { login, registrationEnabled, localLoginEnabled, oidc, devMode, clearAuthIntent } = useAuth();
   const [loginName, setLoginName] = useState('dev');
   const [password, setPassword] = useState('dev');
   const [busy, setBusy] = useState(false);
@@ -35,6 +35,12 @@ export function LoginPage() {
       setError(err instanceof Error ? err.message : String(err));
       setBusy(false);
     }
+  };
+
+  const onSkipDevLogin = () => {
+    clearAuthIntent();
+    window.location.hash = '#/';
+    window.location.reload();
   };
 
   const showOidc = oidc?.enabled && oidc.authorizationEndpoint && oidc.clientId;
@@ -97,6 +103,11 @@ export function LoginPage() {
             ? '开发环境默认 dev / dev（关闭 dev-mode 后须使用已创建账号）。'
             : '本环境仅支持企业 SSO 登录；账号须由管理员预先创建。'}
         </p>
+        {devMode && (
+          <button type="button" className="btn login-skip" onClick={onSkipDevLogin}>
+            继续使用 dev 用户
+          </button>
+        )}
       </div>
     </div>
   );

@@ -42,13 +42,13 @@
 
 ## NFR-04 安全
 
-| 项 | v1 过渡 | 目标态（ADR-13 · §18） |
-|----|---------|------------------------|
-| 认证 | 开发环境可关闭（`dev-mode`） | 生产 OIDC / 本地账号 + JWT |
-| 授权 | 仅 `X-Workspace-Id` 存在性校验 | WS 成员 + MOD 开关 + VIEW/EDIT |
-| Workspace | 知 id 即可访问（**风险 RSK-07**） | 非成员 **403** |
-| Super Admin | 无 | `/admin/*` + 审计日志 |
-| Admin API | 须限制网络或外置鉴权 | SUPER_ADMIN + IAM Filter |
+| 项 | v1 实现（2026-06） | 生产目标（ADR-13 · §18） |
+|----|---------------------|---------------------------|
+| 认证 | `dev-mode` 可注入 `dev`；本地 JWT 登录；OIDC profile 联调 | `%prod`：OIDC / 本地账号 + JWT |
+| 授权 | Filter：WS 成员 + MOD 开关 + VIEW/EDIT（dev-mode 跳过成员矩阵） | 同左；生产禁 dev-mode |
+| Workspace | 非成员 **403** `WORKSPACE_FORBIDDEN`（dev-mode 跳过成员校验） | 同左 |
+| Super Admin | `/admin/*` + `iam_audit_log` | 同左 |
+| Admin API | `/api/v1/admin/*` 须 Super Admin | 同左 |
 
 ---
 

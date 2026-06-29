@@ -25,7 +25,7 @@
 
 ### 17.2.1 导航树（规范目标 · 对齐 §19）
 
-> **现状：** 侧栏由 `workspaceNav.ts` 驱动（对齐 `workspace-modules.yaml`）；**MOD-DI** 已落地 `/integration/*` Ant Design 骨架；IAM 模块过滤待 TODO-18。
+> **现状：** 侧栏由 `workspaceNav.ts` 驱动（对齐 `workspace-modules.yaml`）；**MOD-DI** 已落地 `/integration/*`；**IAM** 侧栏 MOD 过滤与顶栏用户操作 **已落地**。
 
 ```
 首页                          /
@@ -302,13 +302,14 @@ BusinessRules 页 **内嵌于计划模块**；**不得** 再使用全局 `/busin
 
 ## 17.12 用户与权限管理 UI
 
-> **规范正文：** [§18 IAM](./18-19-workspace-platform.md) · **实现：** TODO-18
+> **规范正文：** [§18 IAM](./18-19-workspace-platform.md) · **实现：** **已落地 2026-06**
 
 ### 17.12.1 路由
 
 | 路由 | 页面 | 权限 |
 |------|------|------|
-| `/login` | 登录 | 匿名 |
+| `/login` | 登录 | 匿名；OIDC / 本地 / dev 跳过 |
+| CreateWorkspacePage | 无 Layout 全屏 | 已登录且 `hasWorkspaces=false`（dev 用户除外） |
 | `/account` | 个人设置 | 已登录 |
 | `/workspaces` | Workspace 列表（现有，扩展） | 已登录 |
 | `/workspaces/{id}/settings` | 成员 · 模块 · 权限矩阵 | WS_ADMIN+ |
@@ -322,6 +323,7 @@ BusinessRules 页 **内嵌于计划模块**；**不得** 再使用全局 `/busin
 | **侧栏** | `Layout` 读取 `GET /api/v1/iam/me` 或 membership；**仅渲染** `enabledModules` 对应 nav-group |
 | **WorkspaceSelector** | 仅成员 WS；切换时校验 localStorage 选中 id 仍合法 |
 | **403 页** | `MODULE_DISABLED` / `WORKSPACE_FORBIDDEN` 友好提示 + 返回首页 |
+| **顶栏用户** | 显示 `displayName` · **切换用户** · **登出** |
 
 ### 17.12.3 Workspace 设置页（SCN-T06b）
 
@@ -363,7 +365,7 @@ BusinessRules 页 **内嵌于计划模块**；**不得** 再使用全局 `/busin
 | 供需平衡专页 | SCN-07 · §3 | 物料计划页过渡 | TODO-11 |
 | SCN-02c/03b 跳转 | §17.8 | 未自动筛选 | TODO-09 |
 | §16 六 tab | BusinessRules | 未建 tab | TODO-17 |
-| **IAM** | §18 · SCN-T06 | 无登录/RBAC | **TODO-18** |
+| **IAM** | §18 · SCN-T06 | 登录/RBAC/MOD 过滤/Super Admin **已落地** | — |
 | **数据集成 MOD-DI** | §19 · SCN-T07 | `/integration` 骨架已建；API/ADP 待建 | **TODO-19** |
 | VAL-06 场景对比 | SCN | 页面已有 | 深度 KPI 待 §15 TODO-16 |
 
@@ -380,7 +382,7 @@ BusinessRules 页 **内嵌于计划模块**；**不得** 再使用全局 `/busin
 | **运行时** | React 18 · Vite · TypeScript | `frontend/` |
 | **路由** | react-router-dom · HashRouter | `App.tsx` |
 | **L1 Shell** | **Ant Design 5** · `@ant-design/icons` | `providers/AppProviders.tsx` · `pages/integration/*` |
-| **服务端状态** | **TanStack Query** | 新模块 API（integration · 未来 IAM） |
+| **服务端状态** | **TanStack Query** | 新模块 API（integration）；IAM 经 `AuthContext` + `/iam/me` |
 | **客户端状态** | zustand · React Context | `PlanContext` · `WorkspaceContext` |
 | **L2 模式** | 自研 CSS + 组件 | `PageHeader` · `FilterableTable` · `PlanningSignalBadge` |
 | **L3 领域** | 自研 + 专用库 | `gantt-task-react` · `react-konva`（分切 Studio） |
@@ -392,7 +394,7 @@ flowchart TB
   subgraph L1 [L1 Shell — Ant Design]
     NAV[workspaceNav 侧栏]
     INT[/integration MOD-DI]
-    IAM[/admin IAM 待建]
+    IAM[/admin IAM 已建]
   end
   subgraph L2 [L2 Patterns — 自研]
     PH[PageHeader / StatusBanner]
@@ -424,7 +426,7 @@ flowchart TB
 |------|------|
 | `knowledge/standard/modules/workspace-modules.yaml` | 规范源（MOD-* · 路由前缀） |
 | `frontend/src/config/workspaceNav.ts` | 侧栏渲染；**须与 yaml 同步** |
-| `frontend/src/hooks/useEnabledModules.ts` | 模块开关；IAM 就绪后接 `GET /api/v1/iam/me` |
+| `frontend/src/hooks/useEnabledModules.ts` | 模块开关；接 `AuthContext.enabledModules`（来自 `/iam/me`） |
 
 ### 17.15.5 MOD-DI 集成模块（已实现骨架）
 
@@ -442,7 +444,7 @@ flowchart TB
 ### 17.15.6 渐进迁移顺序
 
 1. ✅ MOD-DI `/integration/*`（Ant + Query）
-2. IAM `/login` · `/admin/*` · WS 设置（TODO-18）
+2. ~~IAM `/login` · `/admin/*` · WS 设置~~ **已完成**
 3. `WorkspaceAdminPage` · 工厂日历（可选 Ant 化）
 4. **不迁移** 需求满足 / 产能 / 细排决策页 Shell
 

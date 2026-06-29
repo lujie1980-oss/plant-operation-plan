@@ -861,11 +861,20 @@ Then 拒绝或警告
 #### SCN-T06a 用户登录与 Workspace 列表
 
 ```gherkin
-Given 用户 u1 已注册且拥有 PERSONAL workspace "u1-private"
-  And u1 被邀请为 SHARED workspace "project-a" 的 MEMBER
+Given 用户 u1 已注册且 **尚未** 加入任何 workspace
 When u1 登录
-Then WorkspaceSelector 仅展示 "u1-private" 与 "project-a"
-  And 默认选中最近使用的 workspace
+Then 显示 CreateWorkspacePage，须 **手动** 创建工作区
+  And GET /api/v1/iam/me 返回 hasWorkspaces=false
+
+Given u1 已创建 workspace "my-project" 且 workspace_member 角色 OWNER
+When u1 登录
+Then WorkspaceSelector 仅展示 "my-project"
+  And 默认选中 localStorage 中合法 workspaceId
+
+Given dev 用户在 dev-mode 下登录且无 workspace_member
+When 进入应用
+Then **不强制** CreateWorkspacePage
+  And 可通过顶栏「管理数据集」手动创建
 ```
 
 #### SCN-T06b Workspace 成员与模块权限

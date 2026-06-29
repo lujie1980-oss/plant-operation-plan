@@ -9,7 +9,7 @@
 # §18 用户与权限管理（IAM）
 
 > **目标：** 在 **RULE-WS-01** 数据隔离之上，增加 **用户身份、Workspace 成员、模块开关、操作权限** 四层控制（ADR-13）  
-> **现状：** 实现为 **规范目标**；当前仅 `X-Workspace-Id` 头隔离，无登录与 RBAC（§9 NFR-04 过渡态）  
+> **现状（2026-06）：** **M0–M4 已落地** — Filter 链、JWT/本地登录、OIDC 联调 profile、Super Admin UI、侧栏 MOD 过滤；详见 §18.11 · [OIDC 联调](../../../oidc-keycloak-dev.md)  
 > **关联：** [§4 RULE-IAM-*](../../core/04-business-rules.md#rule-iam-01-用户-workspace-成员资格hard) · [§6 API-IAM-* / API-INT-*](../../core/06-api-contracts.md#api-iam-01-当前用户) · [§17 管理 UI](./17-ui-ux.md#1712-用户与权限管理-ui)
 
 ---
@@ -63,7 +63,7 @@ flowchart TB
 
 | workspaceType | 说明 |
 |---------------|------|
-| **PERSONAL** | 用户自有 Workspace；注册时自动创建 |
+| **PERSONAL** | 用户自有 Workspace；**v1 实现：** 用户 **手动创建**，注册/登录 **不** 自动创建 |
 | **SHARED** | 团队/项目共享；由 Owner 或 Super Admin 创建 |
 
 ---
@@ -74,10 +74,13 @@ flowchart TB
 
 | 规则 | 陈述 |
 |------|------|
-| **至少一个自有 WS** | 每个 **ENT-USR** 创建时 **必须** 自动创建 **1 个** `workspaceType=PERSONAL` 的 ENT-WS，且 `ownerUserId=userId` |
+| **至少一个自有 WS（目标态）** | **RULE-IAM-02**：创建 ENT-USR 时 **应** 同事务创建 `workspaceType=PERSONAL` 的 ENT-WS（目标态）；**v1 运行时** 改为 **登录后不自动创建**，由用户在 **CreateWorkspacePage** 或 **数据集管理** 手动创建 |
+| **成员列表来源** | `GET /api/v1/iam/me` **仅返回** `workspace_member` 中该用户的 WS；**不** 因 Super Admin / dev-mode 注入全部种子 WS |
 | **多 WS 归属** | 用户可加入 **多个** SHARED Workspace（`workspace_member`） |
 | **可见列表** | 顶栏 `WorkspaceSelector` **仅展示** 当前用户有成员资格的 WS |
-| **默认 WS** | 登录后默认选中 **最近使用** 或 **PERSONAL** WS |
+| **默认 WS** | localStorage `plantops.workspaceId`；无合法选中时 **不** 默认 `jinghua` 等种子 id |
+| **首登无 WS** | 非 dev 用户：`hasWorkspaces=false` → **CreateWorkspacePage**（须手动创建后才能用业务 API） |
+| **dev 用户** | `plantops.security.dev-mode=true` 且 `userId=dev`（或无 JWT 注入 dev）：**不强制** CreateWorkspacePage，可经顶栏 **管理数据集** 按需创建 |
 
 ### 18.3.2 Workspace 成员角色
 
@@ -170,26 +173,31 @@ flowchart TB
 
 | 项 | 规范 |
 |----|------|
-| **生产** | 外置 IdP（OIDC）或本地账号；JWT / Session Cookie |
-| **开发** | `plantops.security.dev-mode=true` 可注入固定用户（须显式配置） |
-| **请求上下文** | 解析后注入 `CurrentUser` + 校验 `X-Workspace-Id` 成员资格 |
+| **生产** | `%prod` profile：`dev-mode=false`；OIDC 或本地账号 + JWT；`JWT_SECRET` / `OIDC_*` 环境变量 |
+| **开发** | 默认 `plantops.security.dev-mode=true`：无 Bearer 时注入 `dev` Super Admin |
+| **OIDC 联调** | `QUARKUS_PROFILE=oidc` + Keycloak realm `plantops`；见 [oidc-keycloak-dev.md](../../../oidc-keycloak-dev.md) |
+| **Filter 顺序** | Authentication(100) → WorkspaceRequest(200) → Authorization(300) |
+| **请求上下文** | 解析后注入 `SecurityContext` + 校验 `X-Workspace-Id` 成员资格（dev-mode 跳过成员校验） |
 | **与 RULE-WS-01** | 先 **认证** → 再 **WS 成员** → 再 **模块+权限** → 最后 **行级 WS 隔离** |
+
+**认证 API（`/api/v1/auth/*`）：** `config` · `login` · `register`（可选）· `oidc/authorize` · `oidc/exchange`
 
 ---
 
 ## 18.8 数据模型（持久化）
 
 ```sql
--- 概念 DDL（Flyway TODO-18）
-app_user (user_id PK, login_name UK, display_name, is_super_admin, status, created_at)
+-- Flyway V63__iam_m1.sql · V64__iam_oidc_planner_seed.sql
+app_user (user_id PK, login_name UK, display_name, password_hash, is_super_admin, status, created_at)
 workspace (+ owner_user_id, workspace_type)  -- 扩展既有 workspace 表
 workspace_member (workspace_id, user_id, role, PK(workspace_id,user_id))
 workspace_enabled_module (workspace_id, module_id, enabled)
 workspace_enabled_adapter (workspace_id, adapter_id, enabled)
-workspace_adapter_config (workspace_id, adapter_id, config_json)
 workspace_member_module (workspace_id, user_id, module_id, access_level)
-iam_audit_log (id, actor_user_id, action, target, payload_json, created_at)
+iam_audit_log (id, actor_user_id, action, target_type, target_id, payload_json, created_at)
 ```
+
+**创建工作区（三合一）：** `POST /api/v1/workspaces` 同事务写入 `workspace` + `workspace_member(OWNER)` + 默认 `workspace_enabled_module` / `ADP-EXCEL`。
 
 **Ontology：** IAM 表 **不** 进入 ENT-OG；仅网关/Filter 层 enforcement。
 
@@ -199,12 +207,17 @@ iam_audit_log (id, actor_user_id, action, target, payload_json, created_at)
 
 | 页面 | 路由 | 权限 |
 |------|------|------|
-| 用户个人设置 | `/account` | 已登录 |
+| 登录 | `/login` | 匿名；支持本地密码 / OIDC / dev 跳过 |
+| 首次创建工作区 | CreateWorkspacePage（无 Layout） | 已登录且 `hasWorkspaces=false`（**dev 用户除外**） |
+| 用户个人设置 | `/account` | 已登录（待建） |
+| 数据集管理 | `/workspaces` | 已登录；含 **新建数据集** 表单 |
 | Workspace 成员与模块 | `/workspaces/{id}/settings` | WS_ADMIN+ |
 | 平台用户管理 | `/admin/users` | SUPER_ADMIN |
 | 平台 Workspace 管理 | `/admin/workspaces` | SUPER_ADMIN |
 
-**WorkspaceSelector：** 仅列出成员 WS；无权限 WS id 深链 → 403 页。
+**顶栏：** 当前用户名 · **切换用户** · **登出**（dev-mode 下亦可见；切换/登出进入 `/login`）。
+
+**WorkspaceSelector：** 仅列出成员 WS；无成员 WS 时禁用下拉，业务 API 可无 `X-Workspace-Id`（创建页或 dev 浏览）。
 
 详见 [§17.12](./17-ui-ux.md#1712-用户与权限管理-ui)。
 
@@ -221,15 +234,15 @@ iam_audit_log (id, actor_user_id, action, target, payload_json, created_at)
 
 ## 18.11 迁移（从 v1 无 RBAC）
 
-| 阶段 | 行为 |
-|------|------|
-| **M0** | 单用户 `dev` + 全权限；与现网一致 |
-| **M1** | 表结构 + Filter；默认全员 WS `default` 成员 |
-| **M2** | 模块开关 + 侧栏过滤 |
-| **M3** | 成员矩阵 + Super Admin UI |
-| **M4** | 生产 IdP；关闭 dev-mode |
+| 阶段 | 行为 | 状态 |
+|------|------|------|
+| **M0** | 单用户 `dev` + dev-mode 注入；Flyway 种子 `app_user` | **已落地** |
+| **M1** | 表结构 + Filter 链；**无** default workspace 全员成员；首登手动建 WS | **已落地** |
+| **M2** | 模块开关 API + 侧栏 `filterNavGroups` | **已落地** |
+| **M3** | JWT 登录、成员矩阵 VIEW/EDIT、Super Admin UI | **已落地** |
+| **M4** | OIDC discovery/exchange、`%prod` profile、CI OWASP 扫描 | **已落地** |
 
-**跟踪：** [§10 TODO-18](../../core/10-decisions-risks.md)
+**跟踪：** ~~TODO-18~~ **已完成（2026-06）** · 联调文档 [oidc-keycloak-dev.md](../../../oidc-keycloak-dev.md)
 
 ---
 

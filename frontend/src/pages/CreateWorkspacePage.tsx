@@ -42,9 +42,9 @@ export function CreateWorkspacePage() {
         <p className="cw-subtitle">工厂运营计划系统</p>
         {currentUser && (
           <p className="cw-welcome">
-            欢迎，{currentUser.displayName}！你还没有创建任何工作区（Workspace）。
+            欢迎，{currentUser.displayName}！你尚未加入任何工作区。
             <br />
-            创建一个数据集来开始计划。
+            请手动创建一个数据集后再开始计划（不会自动创建）。
           </p>
         )}
         <form onSubmit={handleSubmit} className="cw-form">

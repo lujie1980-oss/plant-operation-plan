@@ -17,8 +17,10 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @ApplicationScoped
 public class IamService {
@@ -37,30 +39,33 @@ public class IamService {
         if (userId == null) {
             throw new IllegalStateException("Not authenticated");
         }
-        List<WorkspaceEntity> allWs = WorkspaceEntity.listAllOrdered();
-        List<WorkspaceMembershipDto> memberships = allWs.stream()
-                .filter(ws -> {
-                    if (securityContext.isSuperAdmin() || securityContext.isDevMode()) return true;
-                    return WorkspaceMemberEntity.count(
-                            "workspaceId = ?1 and userId = ?2", ws.workspaceId, userId) > 0;
-                })
-                .map(ws -> {
-                    WorkspaceMemberEntity member = WorkspaceMemberEntity.find(
-                            "workspaceId = ?1 and userId = ?2", ws.workspaceId, userId).firstResult();
-                    String role = member != null ? member.role : (securityContext.isDevMode() ? "OWNER" : null);
+        List<WorkspaceMembershipDto> memberships = listMembershipsForUser(userId);
+        boolean hasWorkspaces = !memberships.isEmpty();
+
+        return new CurrentUser(userId, securityContext.getDisplayName(),
+                securityContext.isSuperAdmin(), hasWorkspaces, memberships);
+    }
+
+    /** 仅返回 workspace_member 中明确加入的数据集（登录后不自动拥有种子 WS）。 */
+    private List<WorkspaceMembershipDto> listMembershipsForUser(String userId) {
+        @SuppressWarnings("unchecked")
+        List<WorkspaceMemberEntity> members = WorkspaceMemberEntity.find("userId", userId).list();
+        return members.stream()
+                .map(member -> {
+                    WorkspaceEntity ws = WorkspaceEntity.findByWorkspaceId(member.workspaceId);
+                    if (ws == null) {
+                        return null;
+                    }
                     List<String> enabledModules = moduleAuthorizationService.enabledModuleMap(ws.workspaceId)
                             .entrySet().stream()
                             .filter(Map.Entry::getValue)
                             .map(Map.Entry::getKey)
                             .toList();
-                    return new WorkspaceMembershipDto(ws.workspaceId, ws.name, role, enabledModules);
+                    return new WorkspaceMembershipDto(ws.workspaceId, ws.name, member.role, enabledModules);
                 })
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(WorkspaceMembershipDto::name, String.CASE_INSENSITIVE_ORDER))
                 .toList();
-
-        boolean hasWorkspaces = !memberships.isEmpty();
-
-        return new CurrentUser(userId, securityContext.getDisplayName(),
-                securityContext.isSuperAdmin(), hasWorkspaces, memberships);
     }
 
     public List<WorkspaceMembershipDto> workspaceMemberships() {
