@@ -53,6 +53,17 @@
   width: 100%;
 }
 
+.login-oidc {
+  margin-bottom: 0;
+}
+
+.login-divider {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  margin: 16px 0;
+}
+
 .login-error {
   margin: 0;
   color: #b91c1c;

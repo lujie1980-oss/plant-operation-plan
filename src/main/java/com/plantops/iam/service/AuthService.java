@@ -29,12 +29,26 @@ public class AuthService {
     @Inject
     JwtTokenService jwtTokenService;
 
+    @Inject
+    OidcDiscoveryService oidcDiscoveryService;
+
     public AuthConfigDto config() {
-        return new AuthConfigDto(securityConfig.devMode(), securityConfig.registrationEnabled());
+        AuthConfigDto.OidcConfigDto oidc = new AuthConfigDto.OidcConfigDto(
+                securityConfig.oidc().enabled(),
+                oidcDiscoveryService.authorizationEndpoint().orElse(null),
+                blankToNull(securityConfig.oidc().clientId()));
+        return new AuthConfigDto(
+                securityConfig.devMode(),
+                securityConfig.registrationEnabled(),
+                securityConfig.localLoginEnabled(),
+                oidc);
     }
 
     @Transactional
     public AuthTokenDto login(LoginRequest request) {
+        if (!securityConfig.localLoginEnabled()) {
+            throw new BadRequestException("LOCAL_LOGIN_DISABLED");
+        }
         if (request == null || request.loginName() == null || request.password() == null) {
             throw new BadRequestException("loginName and password required");
         }
@@ -98,5 +112,9 @@ public class AuthService {
         if (request.password().length() < 4) {
             throw new BadRequestException("password too short");
         }
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

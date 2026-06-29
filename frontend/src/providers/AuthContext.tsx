@@ -1,9 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { fetchAuthConfig, login as apiLogin } from '../api/authClient';
+import {
+  exchangeOidcCode,
+  fetchAuthConfig,
+  login as apiLogin,
+  oidcRedirectUri,
+} from '../api/authClient';
 import { fetchCurrentUser } from '../api/iamClient';
 import { setAuthToken, setRedirectOn401, getAuthToken } from '../api/http';
 import { buildEnabledModuleMap } from '../config/workspaceModules';
-import type { AuthConfigDto } from '../types/auth';
+import type { AuthConfigDto, OidcConfigDto } from '../types/auth';
 import type { CurrentUser, WorkspaceCreatePayload, WorkspaceMembership } from '../types/workspace';
 
 const STORAGE_KEY = 'plantops.workspaceId';
@@ -13,7 +18,9 @@ type AuthState = {
   isAuthenticated: boolean;
   needsLogin: boolean;
   devMode: boolean;
+  localLoginEnabled: boolean;
   registrationEnabled: boolean;
+  oidc: OidcConfigDto | null;
   error: string | null;
   currentUser: CurrentUser | null;
   workspaces: WorkspaceMembership[];
@@ -36,6 +43,34 @@ export function useAuth(): AuthContextValue {
   return ctx;
 }
 
+function useOidcCallback(onComplete: () => Promise<void>) {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (!code) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const token = await exchangeOidcCode(code, oidcRedirectUri());
+        if (cancelled) return;
+        setAuthToken(token.accessToken);
+        const clean = window.location.pathname + (window.location.hash || '#/');
+        window.history.replaceState({}, '', clean);
+        await onComplete();
+      } catch (e) {
+        if (!cancelled) {
+          console.error('OIDC callback failed', e);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [onComplete]);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const workspaces = currentUser?.workspaces ?? [];
   const hasWorkspaces = currentUser?.hasWorkspaces ?? false;
   const devMode = authConfig?.devMode ?? true;
+  const localLoginEnabled = authConfig?.localLoginEnabled ?? true;
+  const oidc = authConfig?.oidc ?? null;
   const needsLogin = authConfig != null && !authConfig.devMode && !getAuthToken() && !isLoading;
 
   const load = useCallback(async () => {
@@ -67,6 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   }, []);
+
+  useOidcCallback(load);
 
   useEffect(() => {
     void load();
@@ -118,7 +157,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: currentUser != null && !error,
     needsLogin: needsLogin && !isLoading,
     devMode,
+    localLoginEnabled,
     registrationEnabled: authConfig?.registrationEnabled ?? false,
+    oidc,
     error,
     currentUser,
     workspaces,

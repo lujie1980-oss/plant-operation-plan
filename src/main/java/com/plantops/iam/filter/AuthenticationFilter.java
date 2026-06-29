@@ -4,6 +4,7 @@ import com.plantops.iam.config.IamSecurityConfig;
 import com.plantops.iam.context.SecurityContext;
 import com.plantops.iam.entity.AppUserEntity;
 import com.plantops.iam.service.JwtTokenService;
+import com.plantops.iam.service.OidcTokenService;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.inject.Inject;
@@ -15,10 +16,11 @@ import jakarta.ws.rs.ext.Provider;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * 认证过滤器 — priority=100。
- * dev-mode 且无 Bearer token 时注入 dev；否则解析 JWT。
+ * dev-mode 且无 Bearer token 时注入 dev；否则解析本地 JWT 或 OIDC JWT。
  */
 @Provider
 @jakarta.annotation.Priority(100)
@@ -34,6 +36,9 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     @Inject
     JwtTokenService jwtTokenService;
+
+    @Inject
+    OidcTokenService oidcTokenService;
 
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {
@@ -53,22 +58,56 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             return;
         }
 
+        if (authenticateLocalJwt(bearer)) {
+            return;
+        }
+        if (authenticateOidcJwt(bearer)) {
+            return;
+        }
+        abort(ctx, Response.Status.UNAUTHORIZED, "INVALID_TOKEN");
+    }
+
+    private boolean authenticateLocalJwt(String bearer) {
         try {
             DecodedJWT jwt = jwtTokenService.verify(bearer);
-            String userId = jwt.getSubject();
-            AppUserEntity user = AppUserEntity.findById(userId);
-            if (user == null || !"ACTIVE".equals(user.status)) {
-                abort(ctx, Response.Status.UNAUTHORIZED, "UNAUTHENTICATED");
-                return;
-            }
-            securityContext.setCurrentUserId(user.userId);
-            securityContext.setDisplayName(user.displayName);
-            securityContext.setSuperAdmin(user.superAdmin);
-            securityContext.setDevMode(false);
+            return bindUser(jwt.getSubject());
         } catch (JWTVerificationException e) {
-            LOG.debugf(e, "JWT verify failed");
-            abort(ctx, Response.Status.UNAUTHORIZED, "INVALID_TOKEN");
+            LOG.debugf(e, "Local JWT verify failed");
+            return false;
         }
+    }
+
+    private boolean authenticateOidcJwt(String bearer) {
+        Optional<DecodedJWT> jwt = oidcTokenService.verify(bearer);
+        if (jwt.isEmpty()) {
+            return false;
+        }
+        Optional<String> loginName = oidcTokenService.username(jwt.get());
+        if (loginName.isEmpty()) {
+            return false;
+        }
+        AppUserEntity user = AppUserEntity.find("loginName", loginName.get()).firstResult();
+        if (user == null || !"ACTIVE".equals(user.status)) {
+            LOG.debugf("OIDC user not provisioned: %s", loginName.get());
+            return false;
+        }
+        securityContext.setCurrentUserId(user.userId);
+        securityContext.setDisplayName(user.displayName);
+        securityContext.setSuperAdmin(user.superAdmin);
+        securityContext.setDevMode(false);
+        return true;
+    }
+
+    private boolean bindUser(String userId) {
+        AppUserEntity user = AppUserEntity.findById(userId);
+        if (user == null || !"ACTIVE".equals(user.status)) {
+            return false;
+        }
+        securityContext.setCurrentUserId(user.userId);
+        securityContext.setDisplayName(user.displayName);
+        securityContext.setSuperAdmin(user.superAdmin);
+        securityContext.setDevMode(false);
+        return true;
     }
 
     static boolean isPublicPath(String path) {

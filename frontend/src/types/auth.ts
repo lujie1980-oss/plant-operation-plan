@@ -1,6 +1,14 @@
+export type OidcConfigDto = {
+  enabled: boolean;
+  authorizationEndpoint: string | null;
+  clientId: string | null;
+};
+
 export type AuthConfigDto = {
   devMode: boolean;
   registrationEnabled: boolean;
+  localLoginEnabled: boolean;
+  oidc: OidcConfigDto;
 };
 
 export type AuthTokenDto = {
