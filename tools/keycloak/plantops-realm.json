@@ -40,9 +40,11 @@
     {
       "username": "dev",
       "enabled": true,
+      "email": "dev@plantops.local",
       "emailVerified": true,
       "firstName": "Dev",
       "lastName": "Admin",
+      "requiredActions": [],
       "credentials": [
         {
           "type": "password",
@@ -55,9 +57,11 @@
     {
       "username": "planner",
       "enabled": true,
+      "email": "planner@plantops.local",
       "emailVerified": true,
-      "firstName": "计划员",
-      "lastName": "Planner",
+      "firstName": "Planner",
+      "lastName": "User",
+      "requiredActions": [],
       "credentials": [
         {
           "type": "password",

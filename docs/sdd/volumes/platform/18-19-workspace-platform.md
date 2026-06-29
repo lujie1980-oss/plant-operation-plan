@@ -228,7 +228,7 @@ iam_audit_log (id, actor_user_id, action, target_type, target_id, payload_json, 
 | SCN | 说明 |
 |-----|------|
 | **SCN-T06** | IAM：登录、成员、模块、Super Admin（§3） |
-| **AC-IAM-*** | §8 |
+| **AC-IAM-*** | §8 · **P1** 自动化 `IamAcTest`（AC-IAM-01~05）+ [iam-p1-runbook.md](../../../iam-p1-runbook.md) |
 
 ---
 

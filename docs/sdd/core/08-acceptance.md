@@ -390,14 +390,16 @@
 
 ## AC-IAM：用户与权限（§18 · ADR-13）
 
-| ID | 陈述 | RULE / SCN |
-|----|------|------------|
-| AC-IAM-01 | 新用户首登后 **无** 自动 WS；手动创建后 `workspace_member` 含 OWNER 且 `ownerUserId` 正确 | RULE-IAM-02 · SCN-T06a · §18.3.1 |
-| AC-IAM-02 | 非成员 X-Workspace-Id → 403，无业务体 | RULE-IAM-01 · SCN-T06-E1 |
-| AC-IAM-03 | 关闭 MOD-SLT 后侧栏无分切入口且 slitting API 403 | RULE-IAM-03 |
-| AC-IAM-04 | MOD-OCP=VIEW 用户 optimize → 403 MODULE_FORBIDDEN | RULE-IAM-04 · SCN-T06b |
-| AC-IAM-05 | SUPER_ADMIN 可管理任意用户；操作有 audit | RULE-IAM-05 · SCN-T06c |
-| AC-IAM-06 | 新增计划能力未注册 MOD-* 不得单独上线模块开关 | RULE-IAM-06 |
+| ID | 陈述 | RULE / SCN | 自动化 |
+|----|------|------------|--------|
+| AC-IAM-01 | 新用户首登后 **无** 自动 WS；手动创建后 `workspace_member` 含 OWNER 且 `ownerUserId` 正确 | RULE-IAM-02 · SCN-T06a · §18.3.1 | `IamAcTest#acIam01_*` |
+| AC-IAM-02 | 非成员 X-Workspace-Id → 403，无业务体 | RULE-IAM-01 · SCN-T06-E1 | `IamAcTest#acIam02_*` |
+| AC-IAM-03 | 关闭 MOD-SLT 后侧栏无分切入口且 slitting API 403 | RULE-IAM-03 | `IamAcTest#acIam03_*` · 侧栏手工 |
+| AC-IAM-04 | MOD-OCP=VIEW 用户 optimize → 403 MODULE_FORBIDDEN | RULE-IAM-04 · SCN-T06b | `IamAcTest#acIam04_*` |
+| AC-IAM-05 | SUPER_ADMIN 可管理任意用户；操作有 audit | RULE-IAM-05 · SCN-T06c | `IamAcTest#acIam05_*` |
+| AC-IAM-06 | 新增计划能力未注册 MOD-* 不得单独上线模块开关 | RULE-IAM-06 | — |
+
+**P1 联调：** [iam-p1-runbook.md](../../iam-p1-runbook.md) · OIDC 可选 `OidcLiveIntegrationTest`（Keycloak :8081）
 
 ---
 

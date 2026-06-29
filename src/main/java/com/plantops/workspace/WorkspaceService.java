@@ -75,9 +75,12 @@ public class WorkspaceService {
         e.description = req.description() != null ? req.description().trim() : null;
         e.createdAt = LocalDateTime.now();
         e.isDefault = false;
+        String userId = securityContext.getCurrentUserId();
+        if (userId != null) {
+            e.ownerUserId = userId;
+        }
         e.persist();
         // IAM M1: 三合一创建 — member OWNER + 默认模块 + 默认适配器
-        String userId = securityContext.getCurrentUserId();
         if (userId != null) {
             WorkspaceMemberEntity member = new WorkspaceMemberEntity();
             member.workspaceId = id;
