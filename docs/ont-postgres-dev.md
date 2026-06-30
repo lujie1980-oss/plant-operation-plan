@@ -30,7 +30,7 @@ $env:QUARKUS_PROFILE='postgres'
 
 | 目录 | 方言 | 内容 |
 |------|------|------|
-| `db/migration/` | H2（历史） | V1–V64 legacy 表 |
+| `db/migration/` | H2（历史） | V1–V64 legacy 表 + **V66** `ont_*` P0 |
 | `db/migration-postgresql/` | PostgreSQL | V0 bootstrap + **V65** `ont_*` P0 |
 
 **验收：** `OntP0SchemaMigrationTest`（PG :5432 运行时执行；无 PG 时 `@EnabledIf` 跳过）
@@ -52,8 +52,17 @@ $env:QUARKUS_PROFILE='postgres'
 | `OntologyRestorerIntegrationTest` | PostgreSQL（AC-PERS-01 P0 子集） |
 | `OntologyDraftPersistenceIntegrationTest` | PostgreSQL（AC-PERS-02 DRAFT + WAL 恢复） |
 | `OntologyConfirmIntegrationTest` | PostgreSQL（AC-PERS-03 promote + HEAD） |
+| `OntologyLegacyDualWriteIntegrationTest` | H2（AC-PERS-04 work_order 双写） |
+| `OntologyLoaderRestorerParityIntegrationTest` | H2（AC-PERS-01 loader↔restorer P0） |
 
 **Session API 持久化：** `plantops.ontology.persistence.session-enabled=true`（`postgres` profile 默认开启）时，`MasterPlanOntologySessionService` 的 create/simulate/optimize/confirm 同步写 `ont_*`；默认 H2 dev 仍为内存 `OntologySandboxStore`。
+
+**P4 迁移开关（postgres profile）：**
+
+| 配置项 | 作用 |
+|--------|------|
+| `plantops.ontology.persistence.dual-write-enabled` | confirm promote 时将 `work_order` 同步到 `ont_supply_order`（需 `legacy-schema.enabled=true`） |
+| `plantops.ontology.persistence.restorer-read-enabled` | 权威图装载时叠加 committed `ont_*` P0（`OntologyP0Overlay`） |
 
 ## 5. 生产环境变量
 

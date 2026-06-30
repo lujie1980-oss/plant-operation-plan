@@ -39,7 +39,7 @@ public class OntChangeLogEntity extends PanacheEntityBase {
     public String entityId;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "payload_json", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "payload_json", nullable = false)
     public Map<String, Object> payloadJson = Map.of();
 
     @Column(name = "created_at", nullable = false)

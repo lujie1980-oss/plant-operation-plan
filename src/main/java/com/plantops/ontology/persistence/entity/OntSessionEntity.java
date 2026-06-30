@@ -38,11 +38,11 @@ public class OntSessionEntity extends PanacheEntityBase {
     public int trialRevision;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "solve_profile_json", columnDefinition = "jsonb")
+    @Column(name = "solve_profile_json")
     public Map<String, Object> solveProfileJson;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "optimizer_result_json", columnDefinition = "jsonb")
+    @Column(name = "optimizer_result_json")
     public Map<String, Object> optimizerResultJson;
 
     @Column(name = "expires_at", nullable = false)

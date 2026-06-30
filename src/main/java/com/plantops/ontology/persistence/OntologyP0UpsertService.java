@@ -78,7 +78,7 @@ public class OntologyP0UpsertService {
         row.updatedAt = LocalDateTime.now();
     }
 
-    private void upsertSupplyOrder(SupplyOrder so, String workspaceId, String revisionId) {
+    public void upsertSupplyOrder(SupplyOrder so, String workspaceId, String revisionId) {
         OntSupplyOrderEntity row = OntSupplyOrderEntity.findById(
                 new OntEntityKey(workspaceId, revisionId, so.getId()));
         if (row == null) {

@@ -1,6 +1,7 @@
 package com.plantops.ontology.persistence;
 
 import com.plantops.ontology.OntologyGraph;
+import com.plantops.config.OntologyLegacyDualWriteFeature;
 import com.plantops.ontology.persistence.entity.OntSessionEntity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -34,6 +35,12 @@ public class OntologySessionPersistenceService {
 
     @Inject
     OntologyChangeLogService changeLogService;
+
+    @Inject
+    OntologyLegacyDualWriteFeature dualWriteFeature;
+
+    @Inject
+    OntologyLegacyDualWriteService dualWriteService;
 
     @Transactional
     public DraftSessionHandle createDraftSession(
@@ -180,6 +187,9 @@ public class OntologySessionPersistenceService {
                     workspaceId, "PLAN:" + planVersionId, rev.revisionId);
         }
         session.updatedAt = now;
+        if (dualWriteFeature.enabled()) {
+            dualWriteService.syncSupplyOrdersFromWorkOrders(workspaceId, rev.revisionId);
+        }
         return new ConfirmOutcome(rev.revisionId, planVersionId);
     }
 

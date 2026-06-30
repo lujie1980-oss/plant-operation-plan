@@ -1,10 +1,16 @@
 package com.plantops.ontology;
 
+import com.plantops.config.OntologyRestorerReadFeature;
+import com.plantops.ontology.persistence.OntologyP0Overlay;
+import com.plantops.ontology.persistence.OntologyPersistencePort;
+import com.plantops.ontology.persistence.OntologyRevisionService;
+import com.plantops.ontology.persistence.entity.OntRevisionHeadEntity;
 import com.plantops.rol.RolEngine;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -17,11 +23,17 @@ public class WorkspaceAuthoritativeOntologyGraphService {
     @Inject
     OntologyLoader ontologyLoader;
 
+    @Inject
+    OntologyRestorerReadFeature restorerReadFeature;
+
+    @Inject
+    OntologyPersistencePort ontologyPersistence;
+
     private final ConcurrentHashMap<String, OntologyGraph> graphsByKey = new ConcurrentHashMap<>();
 
     public OntologyGraph getOrLoad(String workspaceId, String planVersionId) {
         String key = graphKey(workspaceId, planVersionId);
-        return graphsByKey.computeIfAbsent(key, ignored -> loadFresh(planVersionId));
+        return graphsByKey.computeIfAbsent(key, ignored -> loadFresh(workspaceId, planVersionId));
     }
 
     public RolEngine newRolEngine(OntologyGraph graph) {
@@ -46,10 +58,35 @@ public class WorkspaceAuthoritativeOntologyGraphService {
         return normalizedWorkspace + "|" + normalizedPlan;
     }
 
-    private OntologyGraph loadFresh(String planVersionId) {
-        if (planVersionId != null && !planVersionId.isBlank()) {
-            return ontologyLoader.loadForPlanVersion(planVersionId);
+    private OntologyGraph loadFresh(String workspaceId, String planVersionId) {
+        OntologyGraph loaderGraph = planVersionId != null && !planVersionId.isBlank()
+                ? ontologyLoader.loadForPlanVersion(planVersionId)
+                : ontologyLoader.loadForWorkspace(LocalDate.now());
+
+        if (!restorerReadFeature.enabled()) {
+            return loaderGraph;
         }
-        return ontologyLoader.loadForWorkspace(LocalDate.now());
+
+        String revisionId = resolveCommittedRevisionId(workspaceId, planVersionId);
+        if (revisionId == null) {
+            return loaderGraph;
+        }
+
+        OntologyGraph restoredP0 = ontologyPersistence.loadRevision(workspaceId, revisionId);
+        return OntologyP0Overlay.apply(loaderGraph, restoredP0);
+    }
+
+    private String resolveCommittedRevisionId(String workspaceId, String planVersionId) {
+        if (planVersionId != null && !planVersionId.isBlank()) {
+            String planScope = "PLAN:" + planVersionId.trim();
+            Optional<String> planHead = OntRevisionHeadEntity.findHead(workspaceId, planScope)
+                    .map(h -> h.revisionId);
+            if (planHead.isPresent()) {
+                return planHead.get();
+            }
+        }
+        return OntRevisionHeadEntity.findHead(workspaceId, OntologyRevisionService.WORKSPACE_SCOPE)
+                .map(h -> h.revisionId)
+                .orElse(null);
     }
 }
