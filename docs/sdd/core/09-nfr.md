@@ -33,6 +33,7 @@
 |----|------|
 | 默认数据库 | H2 文件 `./data/plantops`（日常开发） |
 | **Ontology / 生产** | PostgreSQL · profile `postgres` / `prod` · [ont-postgres-dev.md](../../ont-postgres-dev.md) |
+| **Ontology Flyway** | `db/migration-postgresql/`（V0 bootstrap + **V65 P0 `ont_*`**）；legacy H2 仍用 `db/migration/V1–V64` |
 | 迁移 | Flyway 版本化；启动自动迁移 |
 | 生产 | `QUARKUS_PROFILE=prod` + `DB_JDBC_URL` 等环境变量 |
 | 备份 | H2：文件级；PG：`pg_dump` / 运维 PITR |

@@ -97,7 +97,7 @@
 
 | 项 | 内容 |
 |----|------|
-| **状态** | 已采纳（2026-06-20） |
+| **状态** | 已采纳（2026-06-20）· **P0 DDL 已落地（2026-06-30 · V65 · PostgreSQL）** |
 | **背景** | 现行 JPA 与 ENT-OG 不同构；Session 纯内存；宕机丢失沙盘；PISPP/FF/BD 难以 SQL 查询 |
 | **决策** | **以 Ontology 为基准**，引入 **`ont_revision` + `ont_*` 实体表**，与 ENT-* 1:1；`OntologyGraph` 由 **`OntologyRestorer`** 从 DB 组装；simulate/optimize/confirm **同事务**写 revision。Partial 持久化为 FULL 的 **存储策略子集**（§5.16），非第二套 schema |
 | **备选** | 继续 Loader 重算 + 仅 confirm allocation（否决：与「表=Ontology」目标不符）；整图 JSON blob（否决：SQL 不可查，作可选 snapshot 加速） |
@@ -105,7 +105,7 @@
 | **与 ADR-07** | 仍 **每 Workspace 一张权威 OG**；权威 = `ont_revision_head(WORKSPACE)` 的 COMMITTED revision |
 | **与 ADR-04** | ADR-04 约束 **legacy** `WorkOrderBomDependencyEntity`；ADR-09 以 **`ont_bom_dependency`** 取代其规范地位 |
 | **迁移** | 双写 → 切读 `ont_*` → 退役 legacy 写路径（TODO-12）；`OntologyLoader` → `OntologyLegacyImporter` |
-| **后果** | Flyway 大迁移；所有 Session/沙盘写路径重构；§8 新增 AC-PERS-*；存储与写放大 ↑ |
+| **后果** | Flyway 大迁移（**P0 已完成**）；Session/沙盘写路径重构（P1~P3）；§8 AC-PERS-*；存储与写放大 ↑ |
 
 ---
 
@@ -260,7 +260,7 @@
 | TODO-09 | SCN-02c/03b/04 跳转与试算页 UI 对齐 **[§17.8](../volumes/platform/17-ui-ux.md#178-跨页导航契约ui-nav-)** | 产品+前端 |
 | TODO-10 | SCN-01f：新增 `CANCEL_PROMISE`；SCN-01e 与取消承诺解耦（RULE-FF-03） | 开发 |
 | TODO-11 | SCN-07：供需平衡专页、PISPP period 表、建供应 API-MAT-02/03、物料预留 API-MAT-04~08、多路径 ENT-RT | 产品+前端+开发 |
-| TODO-12 | **ADR-09 全量 Ontology 持久化**：Flyway `ont_*`、OntologyPersistencePort/Restorer、Session WAL、legacy 双写迁移、AC-PERS | 架构+开发 |
+| TODO-12 | **ADR-09 全量 Ontology 持久化**：**P0 Flyway 已完成**；P1~P5 OntologyPersistencePort/Restorer、Session WAL、legacy 双写迁移、AC-PERS | 架构+开发 |
 | TODO-13 | **ADR-10 External_* 主数据**：staging、质检、sync、md_*、Projector 切读 | 架构+开发 |
 | TODO-14 | **ADR-11 外部交易数据**：external_* / txn_*、Firm WO 同步、质检、OG 装载切读 | 架构+开发 |
 | TODO-15 | **ADR-12 业务知识三层**：KnowledgeContext、Industry pack、overlay 表、引擎接 Effective | 架构+产品 |
@@ -269,13 +269,13 @@
 | TODO-18 | ~~ADR-13 IAM~~：**已完成 2026-06** — M0–M4（Filter、JWT、OIDC 联调、Super Admin UI、侧栏 MOD） | 架构+前后端 |
 | TODO-19 | **ADR-14 数据集成**：MOD-DI UI、ADP-ERP-SAP/MES/Excel SPI、external 浏览 API | 架构+前后端 |
 | TODO-20 | **§5 Ontology 范围扩展**：现行 ENT-OG **仅覆盖订单协同计划**（原主计划 · **MOD-OCP** / PROC-S04）；**MOD-SCH 作业排程**、**MOD-SLT 分切排样** 的领域实体、装载路径与 `ont_*` 表族 **后续完善**（与 TODO-07 求解插件化协同，不阻塞当前 OCP 基线） | 架构+产品 |
-| TODO-21 | **§5 领域模型细化**：§5.0 阅读指引 · §5.19 Session · §5.20 字段目录 · `05-ont-schema` 列级规范 | 架构+产品 |
+| TODO-21 | **§5 领域模型细化**：§5.0 阅读指引 · §5.19 Session · §5.20 字段目录 · **`05-ont-schema` P0 列级规范已落地（V65）** | 架构+产品 |
 | TODO-22 | **ADR-15 ENT-RCA 本体化**（**§5.5.1**）：`ontology.supply.ResourceCapacityAssignment` 纳入 ENT-OG；一条 RCA = OP×OOSR×**ENT-SRP** 的 `assignedMinutes`；optimize→ENT-RCA + ROL→`SRP.reservedCapacity`；solver RCA/`TimeSlot` 降为 DERIVE；`ont_resource_capacity_assignment` | 架构+开发 |
 | TODO-23 | **ADR-16 Shift 级 Period**（**§5.8.1**）：扩展 ENT-PER（`granularity`/`shiftId`）与 `ontology_period_sequence`（如 `14x3shift,4x1d`）；班次占用 = shift-Period 上 ENT-RCA；rollup 日/周 SRP；**废止 ENT-SS** 本体地位；RULE-MP-07/08 迁 SRP | 架构+开发 |
 | TODO-24 | **ADR-17 PR/PRP 产能聚合**（**§5.8.2**）：ENT-PRP · 日历挂 ENT-PR · SRP=Σ PRP；`OntologyLoader`/`PeriodExpander` 收敛；`ont_physical_resource_period` | 架构+开发 |
 | TODO-25 | ~~IAM 规范残余~~ **已决策 2026-06**：v1 **首登手动建 WS**（改规范 · §18.3.1 / RULE-IAM-02）；`%prod` `dev-mode=false` 验收 | — |
 | TODO-26 | **模块注册表一致性（§19 · AC-IAM-06）**：`workspace-modules.yaml` ↔ `WorkspaceModuleCatalog` 同步/校验（含 API 前缀漂移）；MOD-EXT / ADP-EXT 扩展契约机械化 | 架构+开发 |
-| TODO-27 | **SDD 文档债同步（RSK-02）**：§8 AC-17 路径 · §17 UI-NAV-02 `[GAP]` · `aps-planning-layer.md` 废止 diagnostics · §18 OIDC/`local-login-enabled` 与实现一致 | 全员 |
+| TODO-27 | **SDD 文档债同步（RSK-02）**：§8 AC-17 路径 · §17 UI-NAV-02 `[GAP]` · `aps-planning-layer.md` 废止 diagnostics · §18 OIDC/`local-login-enabled` 与实现一致 · ~~`05-ont-schema` 占位~~ **P0 已同步 2026-06-30** | 全员 |
 | TODO-28 | **CI 与 AC 测试基建**：Flyway demo 种子 vs Hibernate `*_SEQ` 基线（`db/test-migration`）；`@QuarkusTest` IAM 配置清单；补 AC-IAM-06 / AC-UI-* 自动化（配合 TODO-01 `@SpecRef`） | 开发 |
 
 ### 偏差 → TODO 映射（2026-06-29 审查）
@@ -285,7 +285,7 @@
 | 偏差 ID | 摘要 | 已有 TODO | 新增/备注 |
 |---------|------|-----------|-----------|
 | D-08 | 默认仍 PATH-ENT / `optimizeLegacy` | **TODO-08** | 已扩写子项（见上表） |
-| D-09 | confirm 写 legacy allocation，无 `ont_*` | **TODO-12** P2/P3 | — |
+| D-09 | confirm 写 legacy allocation，无 `ont_*` | **TODO-12** P2/P3 | **P0 DDL 已完成**（V65）；读写路径仍待 P1~P3 |
 | D-10 | 无 `CANCEL_PROMISE` | **TODO-10** | — |
 | D-11 | API-MAT-02~08 / SCN-07e~j | **TODO-11** | — |
 | D-12 | 无 external/md/txn | **TODO-13/14** | — |
@@ -341,7 +341,7 @@
 | **R1 本体类型** | `ontology.supply.ResourceCapacityAssignment` + `OntologyGraph.resourceCapacityAssignmentsById` | 单元测试：OP×OOSR×SRP 键与守恒 |
 | **R2 写回路径** | `PlanningResultApplicator` / ROL：optimize 写 ENT-RCA → rollup SRP | AC：Σ RCA = OP 总分钟；SRP.reserved 一致 |
 | **R3 求解投影** | `OntologyRcaProjector`：ENT-RCA ↔ solver RCA/`TimeSlot`（由 **leaf Period DERIVE**，ADR-16） | `OrtoolsResourceCapacityCpSolverTest` 绿 |
-| **R4 持久化** | Flyway `ont_resource_capacity_assignment`（并入 TODO-12 P0/P2） | AC-PERS：restore 含 RCA |
+| **R4 持久化** | Flyway `ont_resource_capacity_assignment`（**P0 DDL 已完成 2026-06-30**；JPA/Restorer 待 TODO-12 P1） | AC-PERS：restore 含 RCA |
 | **R5 退役** | 停止以 `MasterPlanAllocationEntity` 为占用 SoT；solver 包 RCA 仅内部 | confirm reload ≡ Session 图 |
 
 **依赖：** TODO-12（`ont_*`）· TODO-21 Phase 3（列级 DDL）· **TODO-23 S4**（Period→TimeSlot）· 与 TODO-08 无阻塞。
@@ -350,7 +350,7 @@
 
 | 阶段 | 交付 | 验收 |
 |------|------|------|
-| **P0 Schema** | Flyway：`ont_revision`、HEAD、需求/供应/FF 核心表；**含 `ont_resource_capacity_assignment`（TODO-22 R4）**；列级规范见 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md) | 可 import 单 WS 样本 revision |
+| **P0 Schema** | Flyway：`ont_revision`、HEAD、需求/供应/FF 核心表；**含 `ont_resource_capacity_assignment`（TODO-22 R4）**；列级规范见 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md) | **已完成 2026-06-30** · `V65__ont_p0.sql` · `OntP0SchemaMigrationTest` |
 | **P1 Read path** | `OntologyRestorer` 替代生产读；SQL 视图 `v_ont_*` | AC-PERS-01：DB restore ≡ 内存 OG |
 | **P2 Write path** | Session fork + simulate/optimize 同事务写 `ont_*` + WAL | AC-PERS-02：宕机恢复 DRAFT |
 | **P3 Confirm** | promote DRAFT→COMMITTED；HEAD 更新；planVersion 绑定 | AC-PERS-03 |

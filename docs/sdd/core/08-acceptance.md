@@ -338,13 +338,16 @@
 
 ## AC-PERS：Ontology 全量持久化（ADR-09 · TODO-12）
 
-| ID | 陈述 | RULE |
-|----|------|------|
-| AC-PERS-01 | 给定 COMMITTED `revision_id`，`OntologyRestorer.load` 与迁移前 `OntologyLoader.build` 在 FF/SO/Operation/PISPP 关键字段 **对等** | PERS-01 |
-| AC-PERS-02 | simulate 后 **模拟进程 kill**，重启 load 同一 `session_id` DRAFT revision，图状态与 kill 前最后一次 **成功 API** 一致 | PERS-04 |
-| AC-PERS-03 | confirm 成功后 `ont_revision_head(WORKSPACE)` 指向新 revision；`plan_version_id` 可追溯到 allocation 等价数据 | PERS-03 |
-| AC-PERS-04 | legacy 双写期：`ont_supply_order` 与 `work_order` 在 confirm 后 1:1 对齐 | PERS-02 |
-| AC-PERS-05 | Partial policy 下 DERIVE 实体不落库，reload 后与 FULL 重算结果一致 | PERS-05 |
+| ID | 陈述 | RULE | 自动化 |
+|----|------|------|--------|
+| AC-PERS-S0 | PostgreSQL Flyway `V65__ont_p0.sql` 迁移成功；P0 表（revision/WAL/session + 7 张核心实体）与索引存在 | — | `OntP0SchemaMigrationTest`（需 PG :5432） |
+| AC-PERS-01 | 给定 COMMITTED `revision_id`，`OntologyRestorer.load` 与迁移前 `OntologyLoader.build` 在 FF/SO/Operation/PISPP 关键字段 **对等** | PERS-01 | 待 P1 |
+| AC-PERS-02 | simulate 后 **模拟进程 kill**，重启 load 同一 `session_id` DRAFT revision，图状态与 kill 前最后一次 **成功 API** 一致 | PERS-04 | 待 P2 |
+| AC-PERS-03 | confirm 成功后 `ont_revision_head(WORKSPACE)` 指向新 revision；`plan_version_id` 可追溯到 allocation 等价数据 | PERS-03 | 待 P3 |
+| AC-PERS-04 | legacy 双写期：`ont_supply_order` 与 `work_order` 在 confirm 后 1:1 对齐 | PERS-02 | 待 P4 |
+| AC-PERS-05 | Partial policy 下 DERIVE 实体不落库，reload 后与 FULL 重算结果一致 | PERS-05 | 待 P5 |
+
+**P0 联调：** [ont-postgres-dev.md](../../ont-postgres-dev.md) · `tools/start-postgres-dev.ps1`
 
 ---
 

@@ -3,7 +3,7 @@
 > **蓝图标识：** `BP-PlantOps-v1`  
 > **规范驱动开发（SDD）** — 本文档集同时是业务蓝图、AI 提示词、验收契约与回归预言。  
 > **产品版本：** 1.0.0-SNAPSHOT · **基线：** Plant Operation Ontology  
-> **更新日期：** 2026-06-21
+> **更新日期：** 2026-06-30
 
 ---
 
@@ -23,7 +23,7 @@
 | **核心** | §9 | [core/09-nfr.md](./core/09-nfr.md) | 开发 | 性能、安全、运维 |
 | **核心** | §10 | [core/10-decisions-risks.md](./core/10-decisions-risks.md) | 全员 | ADR、假设、风险、待办 |
 | **核心** | §5 附录 | [core/05-domain-model-appendix-fields.md](./core/05-domain-model-appendix-fields.md) | 开发 | §5.20 实体字段目录（TODO-21 Phase 2） |
-| **数据卷** | ont schema | [volumes/data/05-ont-schema.md](./volumes/data/05-ont-schema.md) | 开发 | `ont_*` 列级 DDL（TODO-12 P0 · 占位） |
+| **数据卷** | ont schema | [volumes/data/05-ont-schema.md](./volumes/data/05-ont-schema.md) | 开发 | `ont_*` 列级 DDL（**V65 P0 已落地** · PostgreSQL） |
 | **数据卷** | §11·§12 | [volumes/data/11-12-external-data.md](./volumes/data/11-12-external-data.md) | 开发+顾问 | External → `md_*` / `txn_*` |
 | **知识卷** | §13·§14 | [volumes/knowledge/13-14-business-knowledge.md](./volumes/knowledge/13-14-business-knowledge.md) | 产品+顾问 | 知识三层 + Standard 目录 |
 | **知识卷** | §15·§16 | [volumes/knowledge/15-16-planning-knowledge.md](./volumes/knowledge/15-16-planning-knowledge.md) | 产品+顾问 | PROC-S04 KPI + 供需知识 |

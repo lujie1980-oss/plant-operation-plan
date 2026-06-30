@@ -8,7 +8,7 @@
 | **版本** | 1.0.0-SNAPSHOT |
 | **架构基线** | Plant Operation Ontology（本体直驱主计划） |
 | **状态** | 开发中（合同后精化版） |
-| **文档日期** | 2026-06-21 |
+| **文档日期** | 2026-06-30 |
 | **主笔** | 产品 + 架构 + 业务顾问 |
 | **评审闸** | ① 蓝图评审 ② 客户场景确认 ③ 技术契约评审 |
 
@@ -29,6 +29,7 @@
 | **工艺模板** | ENT-PISP → Routing 族；物化为 Operation 族（API 投影，非 ENT-OG 常驻集合） | §5.1 · SCN-T04 |
 | **期间与 MRP** | ENT-PER → ENT-PISPP / ENT-SRP；ROL 传播 simulate 变更 | §4 · SCN-01a/b · SCN-07a |
 | **Session 生命周期** | create → simulate（ROL）→ optimize → confirm；TTL ~8h | §3 SCN-T02 · SCN-01d · ADR-01 |
+| **Ontology 持久化（P0）** | PostgreSQL `ont_*` Flyway V65（revision/WAL/核心实体）；H2 legacy 仍 V1–V64 | §5.14 · ADR-09 · [05-ont-schema](../volumes/data/05-ont-schema.md) · **P0 已落地 2026-06-30** |
 | **主计划路径** | **PATH-ONT** 唯一规范路径（ADR-08 废止 PATH-ENT）；JPA 仅装载/confirm 边界 | §2 · SCN-T01 · SCN-06 · ADR-01 · ADR-08 |
 | **求解器边界** | 主计划经 `PlanningOptimizer` + `planning_optimizer_engine`（默认 SOL-ORT）；S05 细排与分切仍直连 SOL-TF，配置化见 §10 TODO-07 | §10 ADR-05 · [ontology-optimizer-plugin.md](../../ontology-optimizer-plugin.md) |
 | **Ontology 范围（现行）** | ENT-OG **仅覆盖 MOD-OCP**；**shift-Period / ENT-PRP** 为 **ADR-16/17 规范目标**（代码见 TODO-23/24）；MOD-SCH/SLT 见 TODO-20 | §5 · **TODO-20** · **TODO-23/24** |
@@ -96,6 +97,8 @@
 | 2026-06-21 | 1.0.0-SNAPSHOT | **SDD 一致性修复**：§11 资源日历 · §4 RULE-MP 迁 SRP/RCA · 链接/锚点 · `05-ont-schema` 占位 |
 | 2026-06-29 | 1.0.0-SNAPSHOT | **TODO-18 完成**：§18 IAM M0–M4 落地；手动建 WS · dev 不强制首登；OIDC 联调文档 |
 | 2026-06-29 | 1.0.0-SNAPSHOT | **实现偏差审查**：§10 增 **TODO-25~28**（IAM 残余 · 模块注册表 · SDD 文档债 · CI/AC 基建）及偏差→TODO 映射表 |
+| 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 P0**：PostgreSQL profile + Flyway `V65__ont_p0.sql`（11 张 P0 表）；[`05-ont-schema`](../volumes/data/05-ont-schema.md) 列级规范；`OntP0SchemaMigrationTest` |
+| 2026-06-30 | 1.0.0-SNAPSHOT | **IAM P1**：AC-IAM-01~05 自动化（`IamAcTest`）+ OIDC live 联调测试 · [iam-p1-runbook](../../iam-p1-runbook.md) |
 
 ## 治理约定
 

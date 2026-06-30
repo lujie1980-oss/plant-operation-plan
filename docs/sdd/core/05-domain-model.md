@@ -20,7 +20,7 @@
 | 设计 **Flyway / Restorer** | §5.14~§5.18 | 目标态；实现以 TODO-12 为准 |
 | Session / Sandbox API | §5.19 | 已规范 |
 | 实体字段全集 | §5.20 + [appendix](./05-domain-model-appendix-fields.md) | Phase 2 进行中（日历链 + P0 部分） |
-| SQL 列级 DDL | [05-ont-schema.md](../volumes/data/05-ont-schema.md) 或 §5.14.2 扩展 | TODO-12 P0 |
+| SQL 列级 DDL | [05-ont-schema.md](../volumes/data/05-ont-schema.md) 或 §5.14.2 扩展 | **P0 已落地（V65 · PostgreSQL）**；Master/period/BOM 等 P1/P2 待 Flyway |
 
 ```mermaid
 flowchart TD
@@ -37,7 +37,7 @@ flowchart TD
 | §5.1~§5.9 | **规范（结构）** | ENT-OG 内实体与关系；与 ADR-07/08 一致 |
 | §5.10 | **过渡（现行实现）** | legacy JPA 装载边界；TODO-12 P4 后收缩 |
 | §5.14~§5.18 | **规范（目标态）** | ADR-09 全量 `ont_*` 持久化 |
-| §5.19~§5.20 | **规范（补全中）** | §5.19 Session 已规范；§5.20 日历链 + P0 部分已落地（TODO-21 Phase 2 进行中） |
+| §5.19~§5.20 | **规范（补全中）** | §5.19 Session 已规范；§5.20 日历链 + P0 部分已落地；**P0 SQL 列级规范已落地（V65 · TODO-21 Phase 3 部分）** |
 
 ---
 
@@ -701,7 +701,8 @@ src/main/java/com/plantops/ontology/
 ## 5.14 全量 Ontology 持久化（目标态 · ADR-09）
 
 > **决策：** 以 **Ontology 为语义基准**，数据库表与 ENT-* **同构、可 SQL 查询**；内存 `OntologyGraph` 由 DB **恢复/组装**，而非仅从 legacy JPA 重算派生。  
-> **Partial 模式：** 从全量 schema **分化**——部分 ENT 标记 `DERIVE`，不落库、装载时重算（§5.17）。
+> **Partial 模式：** 从全量 schema **分化**——部分 ENT 标记 `DERIVE`，不落库、装载时重算（§5.17）。  
+> **实现（2026-06-30）：** PostgreSQL profile · Flyway **`V65__ont_p0.sql`**（11 张 P0 表）· 列级规范 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md) · 验收 `OntP0SchemaMigrationTest`。JPA 实体 / `OntologyRestorer` 待 **TODO-12 P1**。
 
 ### 5.14.1 核心概念：Revision（图版本）
 
@@ -748,6 +749,8 @@ stateDiagram-v2
 | `PLAN:{planVersionId}` | 已发布计划版本绑定的 COMMITTED revision |
 
 ### 5.14.2 表与 Ontology 1:1 映射
+
+> **V65 范围（P0 · 已落地）：** 容器四表 + `ont_demand` · `ont_supply_order` · `ont_operation` · `ont_fulfillment` · `ont_pispp` · `ont_srp` · `ont_resource_capacity_assignment`。下表其余表为 **P1/P2 扩展**（规范完整 · Flyway 待建）。
 
 所有实体表 **必须** 含：`workspace_id`, `revision_id`, `entity_id`（= `OntologyIds` 前缀 ID）。  
 表名前缀 **`ont_`**，列名 snake_case，与 Java 本体字段可 1:1 映射。
@@ -954,7 +957,7 @@ com.plantops.ontology.persistence/
 
 ## 5.18 源码索引（补充）
 
-见 §5.13；持久化实现目录 **`ontology.persistence`**（TODO-12）。
+见 §5.13；持久化实现目录 **`ontology.persistence`**（**P0 Flyway 已落地** · P1 JPA/`OntologyRestorer` 待建 · TODO-12）。
 
 ---
 
@@ -1074,8 +1077,8 @@ stateDiagram-v2
 ## 5.20 实体属性目录（TODO-21 Phase 2）
 
 > **列约定：** `属性` · `类型` · `必填` · `来源`（`memory`/`md_*`/`txn_*`/`derived`/`solver`/`rol`）· `RULE/SCN` · `现状`（`implemented`/`spec-only`/`legacy-only`）  
-> **SQL 类型：** Phase 3 见 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md)（TODO-12 P0）。  
-> **P0 核心实体**（ENT-OP · ENT-COLD 等）见 [`05-domain-model-appendix-fields.md`](./05-domain-model-appendix-fields.md)（进行中）。
+> **SQL 类型：** P0 列级 DDL 见 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md)（**V65 已落地**）；P1/P2 扩展表待后续 Flyway。  
+> **P0 核心实体**（ENT-OP · ENT-COLD 等）见 [`05-domain-model-appendix-fields.md`](./05-domain-model-appendix-fields.md)（Phase 2 进行中）。
 
 ### 5.20.0 索引
 
@@ -1083,8 +1086,8 @@ stateDiagram-v2
 |------|------|-----------|------|
 | ENT-PER | §5.20.1 | `Period` · `ont_period` | `implemented`（缺 shift 字段 · TODO-23 S1） |
 | ENT-PRP | §5.20.2 | **spec-only** · `ont_physical_resource_period` | `spec-only`（TODO-24 P1） |
-| ENT-SRP | §5.20.3 | `StandardResourcePeriod` · `ont_srp` | `implemented`（直写日历 · 待 PRP rollup） |
-| ENT-RCA | §5.20.4 | solver 包 · `ont_resource_capacity_assignment` | `legacy-only`（TODO-22 R1） |
+| ENT-SRP | §5.20.3 | `StandardResourcePeriod` · `ont_srp` | `implemented`（**P0 DDL 已落地** · 直写日历 · 待 PRP rollup） |
+| ENT-RCA | §5.20.4 | solver 包 · `ont_resource_capacity_assignment` | `legacy-only`（**P0 DDL 已落地** · TODO-22 R1~R3 本体/写回） |
 | ENT-SS | §5.20.5 | `SchedulingSlot` · `ont_scheduling_slot` | **legacy-only / transition**（TODO-23 S5 退役） |
 | 资源日历 | §5.20.6 | `ResourceCalendarEntity` · `resource_calendar` | `legacy-only`（键为 resourceId） |
 | 工厂日历 | §5.20.7 | `FactoryCalendarPolicyEntity` · MOD-CAL | `implemented` |

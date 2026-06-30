@@ -1,6 +1,6 @@
 # §5.20 附录 — 实体属性目录（P0 核心）
 
-> **状态：** TODO-21 Phase 2 进行中。列级 SQL 见 Phase 3 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md)。  
+> **状态：** TODO-21 Phase 2 进行中。P0 列级 SQL 已落地（V65 · [05-ont-schema.md](../volumes/data/05-ont-schema.md)）；P1/P2 扩展表待 Flyway。  
 > **日历链实体**（ENT-PER · ENT-PRP · ENT-SRP · MOD-CAL）已写入 [05-domain-model.md §5.20.0~5.20.7](./05-domain-model.md#520-实体属性目录todo-21-phase-2)。
 
 ## 目录模板
