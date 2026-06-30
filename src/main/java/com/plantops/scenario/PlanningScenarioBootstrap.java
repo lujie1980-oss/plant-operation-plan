@@ -1,5 +1,6 @@
 package com.plantops.scenario;
 
+import com.plantops.config.LegacySchemaSupport;
 import com.plantops.persistence.entity.WorkspaceEntity;
 import com.plantops.workspace.WorkspaceContext;
 import io.quarkus.runtime.StartupEvent;
@@ -19,7 +20,13 @@ public class PlanningScenarioBootstrap {
     @Inject
     WorkspaceContext workspaceContext;
 
+    @Inject
+    LegacySchemaSupport legacySchemaSupport;
+
     void onStart(@Observes StartupEvent event) {
+        if (!legacySchemaSupport.isLegacySchemaEnabled()) {
+            return;
+        }
         String previous = workspaceContext.getWorkspaceId();
         try {
             for (WorkspaceEntity ws : WorkspaceEntity.listAllOrdered()) {

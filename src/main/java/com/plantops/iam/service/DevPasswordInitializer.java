@@ -1,5 +1,6 @@
 package com.plantops.iam.service;
 
+import com.plantops.config.LegacySchemaSupport;
 import com.plantops.iam.config.IamSecurityConfig;
 import com.plantops.iam.entity.AppUserEntity;
 import io.quarkus.runtime.StartupEvent;
@@ -17,9 +18,12 @@ public class DevPasswordInitializer {
     @Inject
     PasswordService passwordService;
 
+    @Inject
+    LegacySchemaSupport legacySchemaSupport;
+
     @Transactional
     void onStart(@Observes StartupEvent event) {
-        if (!securityConfig.devMode()) {
+        if (!legacySchemaSupport.isLegacySchemaEnabled() || !securityConfig.devMode()) {
             return;
         }
         AppUserEntity dev = AppUserEntity.findById("dev");

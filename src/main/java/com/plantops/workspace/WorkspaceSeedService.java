@@ -1,5 +1,6 @@
 package com.plantops.workspace;
 
+import com.plantops.config.LegacySchemaSupport;
 import com.plantops.iam.entity.WorkspaceEnabledModuleEntity;
 import com.plantops.iam.entity.WorkspaceEnabledAdapterEntity;
 import com.plantops.iam.entity.WorkspaceMemberEntity;
@@ -44,7 +45,13 @@ public class WorkspaceSeedService {
     @Inject
     WorkspaceRegistry workspaceRegistry;
 
+    @Inject
+    LegacySchemaSupport legacySchemaSupport;
+
     void onStart(@Observes StartupEvent event) {
+        if (!legacySchemaSupport.isLegacySchemaEnabled()) {
+            return;
+        }
         try {
             self.get().seedDemoWorkspaces();
         } catch (Exception e) {

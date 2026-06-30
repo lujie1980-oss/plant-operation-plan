@@ -35,10 +35,10 @@ $env:QUARKUS_PROFILE='postgres'
 
 **验收：** `OntP0SchemaMigrationTest`（PG :5432 运行时执行；无 PG 时 `@EnabledIf` 跳过）
 
-**已知限制：** 在空 PG 上跑 **完整应用** 会因 V1 的 `AUTO_INCREMENT` / `CLOB` 失败。当前阶段：
+**已知限制：** 在空 PG 上跑 **完整应用** 会因 legacy 表缺失失败。`postgres` profile 已设 `plantops.legacy-schema.enabled=false`，跳过 workspace/样例数据等启动钩子；仅适合 `ont_*` 持久化开发与集成测试。
 
 - **H2** — 全应用 + legacy 计划链路  
-- **PG** — 新增 `ont_*` migration + 专用集成测试（不依赖 legacy V1 在 PG 重放）
+- **PG** — `ont_*` migration + `OntologyRestorer` 集成测试
 
 后续可选：将 legacy migration 移植为 PG 方言，或从 H2 导出 baseline 初始化 PG（单独待办）。
 
@@ -49,7 +49,8 @@ $env:QUARKUS_PROFILE='postgres'
 | 大部分 `@QuarkusTest` | H2 内存（`%test`） |
 | `IamAcTest` 等 | H2 |
 | `OntP0SchemaMigrationTest` | PostgreSQL（compose） |
-| `OntologyRestorer*Test`（待建） | PostgreSQL |
+| `OntologyRestorerIntegrationTest` | PostgreSQL（AC-PERS-01 P0 子集） |
+| `OntologyDraftPersistenceIntegrationTest` | PostgreSQL（AC-PERS-02 DRAFT + WAL 恢复） |
 
 ## 5. 生产环境变量
 

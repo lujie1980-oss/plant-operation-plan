@@ -1,5 +1,6 @@
 package com.plantops.masterdata;
 
+import com.plantops.config.LegacySchemaSupport;
 import com.plantops.persistence.entity.ProductResourceEntity;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,7 +19,13 @@ public class MasterFieldCatalogStartup {
     @Inject
     MasterFieldDefinitionService fieldDefinitionService;
 
+    @Inject
+    LegacySchemaSupport legacySchemaSupport;
+
     void onStart(@Observes StartupEvent event) {
+        if (!legacySchemaSupport.isLegacySchemaEnabled()) {
+            return;
+        }
         fieldDefinitionService.ensureDefaultsForAllWorkspaces();
         backfillProductResourceExtensions();
     }
