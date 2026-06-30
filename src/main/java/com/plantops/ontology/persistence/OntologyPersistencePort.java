@@ -44,4 +44,8 @@ public interface OntologyPersistencePort {
 
     /** Load DRAFT revision for a persisted session (AC-PERS-02 recovery path). */
     OntologyGraph loadDraftSession(String workspaceId, String sessionId);
+
+    /** P3: promote Session DRAFT → COMMITTED and bind plan_version_id (AC-PERS-03). */
+    OntologySessionPersistenceService.ConfirmOutcome promoteDraftToCommitted(
+            String workspaceId, String sessionId, String planVersionId);
 }

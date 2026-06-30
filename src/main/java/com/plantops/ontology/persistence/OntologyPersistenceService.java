@@ -74,4 +74,11 @@ public class OntologyPersistenceService implements OntologyPersistencePort {
     public OntologyGraph loadDraftSession(String workspaceId, String sessionId) {
         return sessionPersistence.loadDraftSession(workspaceId, sessionId);
     }
+
+    @Override
+    @Transactional
+    public OntologySessionPersistenceService.ConfirmOutcome promoteDraftToCommitted(
+            String workspaceId, String sessionId, String planVersionId) {
+        return sessionPersistence.promoteDraftToCommitted(workspaceId, sessionId, planVersionId);
+    }
 }

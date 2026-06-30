@@ -17,6 +17,7 @@ public class PostgresOntologyTestProfile implements QuarkusTestProfile {
                 "quarkus.flyway.locations", "classpath:db/migration-postgresql",
                 "quarkus.flyway.migrate-at-start", "true",
                 "plantops.sample-data.enabled", "false",
-                "plantops.legacy-schema.enabled", "false");
+                "plantops.legacy-schema.enabled", "false",
+                "plantops.ontology.persistence.session-enabled", "true");
     }
 }

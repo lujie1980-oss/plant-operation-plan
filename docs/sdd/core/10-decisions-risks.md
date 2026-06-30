@@ -351,9 +351,9 @@
 | 阶段 | 交付 | 验收 |
 |------|------|------|
 | **P0 Schema** | Flyway：`ont_revision`、HEAD、需求/供应/FF 核心表；**含 `ont_resource_capacity_assignment`（TODO-22 R4）**；列级规范见 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md) | **已完成 2026-06-30** · `V65__ont_p0.sql` · `OntP0SchemaMigrationTest` |
-| **P1 Read path** | `OntologyRestorer` 替代生产读；SQL 视图 `v_ont_*` | AC-PERS-01：DB restore ≡ 内存 OG |
-| **P2 Write path** | Session fork + simulate/optimize 同事务写 `ont_*` + WAL | AC-PERS-02：宕机恢复 DRAFT |
-| **P3 Confirm** | promote DRAFT→COMMITTED；HEAD 更新；planVersion 绑定 | AC-PERS-03 |
+| **P1 Read path** | `OntologyRestorer` + JPA 实体 + `OntologyEntityMapper`；**骨架已落地**；生产读仍 `OntologyLoader` | AC-PERS-01：`OntologyRestorerIntegrationTest`（P0 子集）；生产切读待收口 |
+| **P2 Write path** | `OntologySessionPersistenceService` + WAL；**库层已落地**；`MasterPlanOntologySessionService` 在 `session-enabled=true` 时写 `ont_*` | AC-PERS-02：`OntologyDraftPersistenceIntegrationTest` + Session API 接线 |
+| **P3 Confirm** | `promoteDraftToCommitted` + WORKSPACE/`PLAN:{id}` HEAD；confirm 与 legacy `OntologyStatePersister` 并行 | AC-PERS-03：`OntologyConfirmIntegrationTest`；allocation 1:1 追溯待 P4 |
 | **P4 Migration** | legacy → `ont_*` 双写；切读；退役 `OntologyLoader.build` 主路径 | AC-PERS-04 |
 | **P5 Partial policy** | `ont_entity_policy` + DERIVE 装载 | AC-PERS-05（可选） |
 

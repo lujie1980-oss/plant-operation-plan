@@ -157,6 +157,34 @@ public class OntologySessionPersistenceService {
         return revisionService.requireRevision(workspaceId, session.draftRevisionId).changeSeq;
     }
 
+    /**
+     * P3: promote Session DRAFT revision → COMMITTED and update WORKSPACE / PLAN HEAD pointers.
+     */
+    @Transactional
+    public ConfirmOutcome promoteDraftToCommitted(
+            String workspaceId, String sessionId, String planVersionId) {
+        OntSessionEntity session = requireSession(workspaceId, sessionId);
+        var rev = revisionService.requireRevision(workspaceId, session.draftRevisionId);
+        if (!"DRAFT".equals(rev.status)) {
+            throw new IllegalStateException("revision not DRAFT: " + rev.revisionId);
+        }
+        LocalDateTime now = LocalDateTime.now();
+        rev.status = "COMMITTED";
+        rev.committedAt = now;
+        rev.planVersionId = planVersionId;
+        rev.updatedAt = now;
+
+        revisionService.setHead(workspaceId, OntologyRevisionService.WORKSPACE_SCOPE, rev.revisionId);
+        if (planVersionId != null && !planVersionId.isBlank()) {
+            revisionService.setHead(
+                    workspaceId, "PLAN:" + planVersionId, rev.revisionId);
+        }
+        session.updatedAt = now;
+        return new ConfirmOutcome(rev.revisionId, planVersionId);
+    }
+
+    public record ConfirmOutcome(String revisionId, String planVersionId) {}
+
     private OntSessionEntity requireSession(String workspaceId, String sessionId) {
         return OntSessionEntity.findSession(workspaceId, sessionId)
                 .orElseThrow(() -> new NotFoundException(

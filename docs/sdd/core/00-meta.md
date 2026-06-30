@@ -99,6 +99,7 @@
 | 2026-06-29 | 1.0.0-SNAPSHOT | **实现偏差审查**：§10 增 **TODO-25~28**（IAM 残余 · 模块注册表 · SDD 文档债 · CI/AC 基建）及偏差→TODO 映射表 |
 | 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 P0**：PostgreSQL profile + Flyway `V65__ont_p0.sql`（11 张 P0 表）；[`05-ont-schema`](../volumes/data/05-ont-schema.md) 列级规范；`OntP0SchemaMigrationTest` |
 | 2026-06-30 | 1.0.0-SNAPSHOT | **IAM P1**：AC-IAM-01~05 自动化（`IamAcTest`）+ OIDC live 联调测试 · [iam-p1-runbook](../../iam-p1-runbook.md) |
+| 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 P1~P3（骨架）**：`OntologyRestorer`/Session WAL/`promoteDraftToCommitted`；`MasterPlanOntologySessionService` 可选 `session-enabled` 写路径；AC-PERS-01/02/03 集成测试 |
 
 ## 治理约定
 

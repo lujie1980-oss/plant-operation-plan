@@ -15,8 +15,10 @@ import com.plantops.api.dto.planning.SimulateMasterPlanSessionRequest;
 import com.plantops.api.dto.planning.SrpSnapshotDto;
 import com.plantops.config.MasterPlanStrategyConfigService;
 import com.plantops.config.OntologyDirectSolveFeature;
+import com.plantops.config.OntologySessionPersistenceFeature;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
+import com.plantops.ontology.persistence.OntologyPersistencePort;
 import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.planning.MasterPlanSolveProfile;
@@ -85,6 +87,12 @@ public class MasterPlanOntologySessionService {
     @Inject
     OntologyStatePersister ontologyStatePersister;
 
+    @Inject
+    OntologySessionPersistenceFeature sessionPersistenceFeature;
+
+    @Inject
+    OntologyPersistencePort ontologyPersistence;
+
     public MasterPlanSessionDto create(CreateMasterPlanSessionRequest request) {
         if (request == null) {
             throw new BadRequestException("request body required");
@@ -112,6 +120,15 @@ public class MasterPlanOntologySessionService {
                 null,
                 null);
         sessionStore.put(session);
+        if (sessionPersistenceFeature.enabled()) {
+            ontologyPersistence.createDraftSession(
+                    workspaceId,
+                    sessionId,
+                    null,
+                    graph,
+                    sessionStore.defaultExpiresAt(createdAt),
+                    null);
+        }
         return toSessionDto(session);
     }
 
@@ -242,6 +259,7 @@ public class MasterPlanOntologySessionService {
             recalculatedPeriodIds.add(target.getId());
             snapshots.add(toSnapshot(target));
         }
+        persistSimulateIfEnabled(session, request);
         return new MasterPlanSessionSimulateResultDto(recalculatedPeriodIds, snapshots, List.of(), List.of());
     }
 
@@ -261,6 +279,7 @@ public class MasterPlanOntologySessionService {
         }
 
         SrpSnapshotDto after = toSrpSnapshot(target);
+        persistSimulateIfEnabled(session, request);
         return new MasterPlanSessionSimulateResultDto(
                 List.of(), List.of(), List.of(after), List.of());
     }
@@ -301,6 +320,7 @@ public class MasterPlanOntologySessionService {
                 operationSnapshots.add(toOperationSnapshot(operation));
             }
         }
+        persistSimulateIfEnabled(session, request);
         return new MasterPlanSessionSimulateResultDto(List.of(), List.of(), List.of(), operationSnapshots);
     }
 
@@ -326,6 +346,10 @@ public class MasterPlanOntologySessionService {
                         session.basePlanVersionId(),
                         session.solveProfile(),
                         optimizerResult));
+        if (sessionPersistenceFeature.enabled()) {
+            ontologyPersistence.promoteDraftToCommitted(
+                    session.workspaceId(), session.sessionId(), outcome.planVersionId());
+        }
         authoritativeOntologyGraph.invalidate(session.workspaceId(), session.basePlanVersionId());
         return new MasterPlanSessionConfirmResultDto(
                 session.sessionId(),
@@ -350,6 +374,7 @@ public class MasterPlanOntologySessionService {
                 optimizerResult.scoreSummary(),
                 optimizerResult.solveDurationMs());
         sessionStore.put(session.withLastOptimizerResult(optimizerResult));
+        persistOptimizeIfEnabled(session, optimizerResult);
         return response;
     }
 
@@ -377,6 +402,7 @@ public class MasterPlanOntologySessionService {
                 solveResult.score(),
                 solveResult.solveDurationMs() != null ? solveResult.solveDurationMs() : 0L);
         sessionStore.put(session.withLastOptimizerResult(optimizerResult));
+        persistOptimizeIfEnabled(session, optimizerResult);
         return response;
     }
 
@@ -407,6 +433,40 @@ public class MasterPlanOntologySessionService {
                 allocations.size(),
                 solveDurationMs,
                 affectedSnapshots);
+    }
+
+    private void persistSimulateIfEnabled(
+            MasterPlanOntologySession session,
+            SimulateMasterPlanSessionRequest request) {
+        if (!sessionPersistenceFeature.enabled()) {
+            return;
+        }
+        Object value = request.effectiveTargetType() == OntologySimulateTargetType.SUPPLY_ORDER
+                ? request.dateValue()
+                : request.value();
+        ontologyPersistence.persistSimulateChange(
+                session.workspaceId(),
+                session.sessionId(),
+                session.graph(),
+                request.effectiveTargetType().name(),
+                request.effectiveTargetId(),
+                request.property(),
+                value);
+    }
+
+    private void persistOptimizeIfEnabled(MasterPlanOntologySession session, OptimizerResult optimizerResult) {
+        if (!sessionPersistenceFeature.enabled()) {
+            return;
+        }
+        ontologyPersistence.persistOptimizeResult(
+                session.workspaceId(),
+                session.sessionId(),
+                session.graph(),
+                Map.of(
+                        "engine", optimizerResult.engineId() != null ? optimizerResult.engineId() : "",
+                        "score", optimizerResult.scoreSummary() != null ? optimizerResult.scoreSummary() : "",
+                        "allocationCount", optimizerResult.persistAllocations().size(),
+                        "solveDurationMs", optimizerResult.solveDurationMs()));
     }
 
     private MasterPlanSolveProfile resolveSolveProfile(String planVersionId, OntologyGraph graph) {

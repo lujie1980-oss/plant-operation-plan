@@ -51,6 +51,9 @@ $env:QUARKUS_PROFILE='postgres'
 | `OntP0SchemaMigrationTest` | PostgreSQL（compose） |
 | `OntologyRestorerIntegrationTest` | PostgreSQL（AC-PERS-01 P0 子集） |
 | `OntologyDraftPersistenceIntegrationTest` | PostgreSQL（AC-PERS-02 DRAFT + WAL 恢复） |
+| `OntologyConfirmIntegrationTest` | PostgreSQL（AC-PERS-03 promote + HEAD） |
+
+**Session API 持久化：** `plantops.ontology.persistence.session-enabled=true`（`postgres` profile 默认开启）时，`MasterPlanOntologySessionService` 的 create/simulate/optimize/confirm 同步写 `ont_*`；默认 H2 dev 仍为内存 `OntologySandboxStore`。
 
 ## 5. 生产环境变量
 
