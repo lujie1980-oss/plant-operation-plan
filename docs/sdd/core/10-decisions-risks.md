@@ -256,7 +256,7 @@
 | TODO-05 | 重生成演练：仅凭规范盲重建模块 | 架构 |
 | TODO-06 | ~~对齐 ADR-07~~（2026-06-20 已实现） | 开发 |
 | TODO-07 | S05/分切求解配置纳入统一配置或插件体系 | 架构+开发 |
-| TODO-08 | PATH-ENT 代码退役（ADR-08） | 开发 |
+| TODO-08 | **PATH-ENT 代码退役（ADR-08）**：删 `ontology_direct_solve_enabled` · 默认 PATH-ONT · 删 `optimizeLegacy` / `MasterPlanPlanningContextBuilder` · PATH-ENT 不再读 `WorkOrderBomDependencyEntity` · 废止 AC-05 | 开发 |
 | TODO-09 | SCN-02c/03b/04 跳转与试算页 UI 对齐 **[§17.8](../volumes/platform/17-ui-ux.md#178-跨页导航契约ui-nav-)** | 产品+前端 |
 | TODO-10 | SCN-01f：新增 `CANCEL_PROMISE`；SCN-01e 与取消承诺解耦（RULE-FF-03） | 开发 |
 | TODO-11 | SCN-07：供需平衡专页、PISPP period 表、建供应 API-MAT-02/03、物料预留 API-MAT-04~08、多路径 ENT-RT | 产品+前端+开发 |
@@ -273,6 +273,39 @@
 | TODO-22 | **ADR-15 ENT-RCA 本体化**（**§5.5.1**）：`ontology.supply.ResourceCapacityAssignment` 纳入 ENT-OG；一条 RCA = OP×OOSR×**ENT-SRP** 的 `assignedMinutes`；optimize→ENT-RCA + ROL→`SRP.reservedCapacity`；solver RCA/`TimeSlot` 降为 DERIVE；`ont_resource_capacity_assignment` | 架构+开发 |
 | TODO-23 | **ADR-16 Shift 级 Period**（**§5.8.1**）：扩展 ENT-PER（`granularity`/`shiftId`）与 `ontology_period_sequence`（如 `14x3shift,4x1d`）；班次占用 = shift-Period 上 ENT-RCA；rollup 日/周 SRP；**废止 ENT-SS** 本体地位；RULE-MP-07/08 迁 SRP | 架构+开发 |
 | TODO-24 | **ADR-17 PR/PRP 产能聚合**（**§5.8.2**）：ENT-PRP · 日历挂 ENT-PR · SRP=Σ PRP；`OntologyLoader`/`PeriodExpander` 收敛；`ont_physical_resource_period` | 架构+开发 |
+| TODO-25 | ~~IAM 规范残余~~ **已决策 2026-06**：v1 **首登手动建 WS**（改规范 · §18.3.1 / RULE-IAM-02）；`%prod` `dev-mode=false` 验收 | — |
+| TODO-26 | **模块注册表一致性（§19 · AC-IAM-06）**：`workspace-modules.yaml` ↔ `WorkspaceModuleCatalog` 同步/校验（含 API 前缀漂移）；MOD-EXT / ADP-EXT 扩展契约机械化 | 架构+开发 |
+| TODO-27 | **SDD 文档债同步（RSK-02）**：§8 AC-17 路径 · §17 UI-NAV-02 `[GAP]` · `aps-planning-layer.md` 废止 diagnostics · §18 OIDC/`local-login-enabled` 与实现一致 | 全员 |
+| TODO-28 | **CI 与 AC 测试基建**：Flyway demo 种子 vs Hibernate `*_SEQ` 基线（`db/test-migration`）；`@QuarkusTest` IAM 配置清单；补 AC-IAM-06 / AC-UI-* 自动化（配合 TODO-01 `@SpecRef`） | 开发 |
+
+### 偏差 → TODO 映射（2026-06-29 审查）
+
+> **来源：** 实现 vs SDD 持续验证 + AC 套件（37/37 已覆盖项通过）。**已有 TODO 不重复开项**；下表仅跟踪缺口与显式子项。
+
+| 偏差 ID | 摘要 | 已有 TODO | 新增/备注 |
+|---------|------|-----------|-----------|
+| D-08 | 默认仍 PATH-ENT / `optimizeLegacy` | **TODO-08** | 已扩写子项（见上表） |
+| D-09 | confirm 写 legacy allocation，无 `ont_*` | **TODO-12** P2/P3 | — |
+| D-10 | 无 `CANCEL_PROMISE` | **TODO-10** | — |
+| D-11 | API-MAT-02~08 / SCN-07e~j | **TODO-11** | — |
+| D-12 | 无 external/md/txn | **TODO-13/14** | — |
+| D-15 | 无 KnowledgeResolver | **TODO-15** | — |
+| D-19 | MOD-DI mock，无 staging | **TODO-19** | — |
+| D-22~24 | RCA / Shift-Period / PRP | **TODO-22~24** | — |
+| D-ENT-BOM | PATH-ENT 读 JPA BOM | **TODO-08** | 并入 PATH-ENT 退役 |
+| D-CONFIRM | confirm 非 ont revision | **TODO-12** P3 | — |
+| D-TRACE | 无 `@SpecRef` | **TODO-01** | TODO-28 补 CI 清单 |
+| D-IAM-01 | 注册无自动 PERSONAL WS | ~~TODO-18~~ | **已决策**：v1 手动建 WS · `IamAcTest#acIam01` |
+| D-IAM-prod | 默认 dev-mode=true | ~~TODO-18~~ M4 | `%prod` 已 false；生产部署验收 |
+| D-IAM-06 | MOD-EXT 未机械化 | — | **TODO-26** |
+| D-YAML | YAML 与 Catalog API 前缀不一致 | — | **TODO-26** |
+| D-DOC | §8/§17/aps 文档与实现不一致 | RSK-02 泛述 | **TODO-27** |
+| D-CI-SEQ | Flyway 种子 id 与 `*_SEQ` 冲突 | — | **TODO-28**（已实现 test-migration，待规范化） |
+| D-CI-IAM | QuarkusTest 缺 IAM 配置致套件不可跑 | — | **TODO-28** |
+| AC-23 | COLD 计划覆盖标记 | 分散 | 随 TODO-11/OCP 迭代补测（暂不单独 TODO） |
+| AC-05 | 迁移期 PATH 对等 | **TODO-08** 后废止 | — |
+
+\* v1 IAM：**首登手动建 WS** 为定稿行为（非待收口偏差）。
 
 ### TODO-24 分阶段（ADR-17 · PRP → SRP）
 

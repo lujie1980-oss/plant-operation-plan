@@ -95,6 +95,7 @@
 | 2026-06-21 | 1.0.0-SNAPSHOT | **ADR-17 / §5.8.2 PRP→SRP**：日历挂 PR；SRP=Σ PRP；**TODO-24** P0~P5 |
 | 2026-06-21 | 1.0.0-SNAPSHOT | **SDD 一致性修复**：§11 资源日历 · §4 RULE-MP 迁 SRP/RCA · 链接/锚点 · `05-ont-schema` 占位 |
 | 2026-06-29 | 1.0.0-SNAPSHOT | **TODO-18 完成**：§18 IAM M0–M4 落地；手动建 WS · dev 不强制首登；OIDC 联调文档 |
+| 2026-06-29 | 1.0.0-SNAPSHOT | **实现偏差审查**：§10 增 **TODO-25~28**（IAM 残余 · 模块注册表 · SDD 文档债 · CI/AC 基建）及偏差→TODO 映射表 |
 
 ## 治理约定
 

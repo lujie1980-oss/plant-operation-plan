@@ -31,10 +31,11 @@
 
 | 项 | 要求 |
 |----|------|
-| 默认数据库 | H2 文件 `./data/plantops` |
+| 默认数据库 | H2 文件 `./data/plantops`（日常开发） |
+| **Ontology / 生产** | PostgreSQL · profile `postgres` / `prod` · [ont-postgres-dev.md](../../ont-postgres-dev.md) |
 | 迁移 | Flyway 版本化；启动自动迁移 |
-| 生产可选 | PostgreSQL（配置切换） |
-| 备份 | 运维负责文件级备份（H2） |
+| 生产 | `QUARKUS_PROFILE=prod` + `DB_JDBC_URL` 等环境变量 |
+| 备份 | H2：文件级；PG：`pg_dump` / 运维 PITR |
 | **Ontology 表** | `ont_*` 与 ENT-* 1:1（§5.14）；committed 数据须可 SQL 查询 |
 | **revision 归档** | `ARCHIVED` revision 可冷存储；HEAD 仅指向 COMMITTED |
 

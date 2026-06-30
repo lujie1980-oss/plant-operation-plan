@@ -1,0 +1,24 @@
+# PostgreSQL for ontology persistence dev (TODO-12) and production profile
+# Usage: see docs/ont-postgres-dev.md
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: plantops-postgres
+    environment:
+      POSTGRES_DB: plantops
+      POSTGRES_USER: plantops
+      POSTGRES_PASSWORD: plantops
+    ports:
+      - "5432:5432"
+    volumes:
+      - plantops-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plantops -d plantops"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  plantops-pg-data:

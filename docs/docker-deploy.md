@@ -179,7 +179,7 @@ docker run -d --name plantops \
 | `PLANTOPS_SAMPLE_DATA_ENABLED` | `true` / `false` |
 | `JAVA_OPTS` | JVM 参数，如 `-Xmx4g` |
 
-生产若改用 PostgreSQL，需在 `pom.xml` 增加 `quarkus-jdbc-postgresql`，并新增 `application-prod.properties`，启动时 `-e QUARKUS_PROFILE=prod`。
+生产 PostgreSQL：见 [ont-postgres-dev.md](./ont-postgres-dev.md)。`pom.xml` 已含 `quarkus-jdbc-postgresql`；`application-prod.properties` 通过 `DB_JDBC_URL` / `DB_USER` / `DB_PASSWORD` 配置；启动时 `QUARKUS_PROFILE=prod`。
 
 ## 本地先打包再构建镜像（可选）
 
