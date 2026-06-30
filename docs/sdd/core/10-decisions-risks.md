@@ -260,7 +260,7 @@
 | TODO-09 | SCN-02c/03b/04 跳转与试算页 UI 对齐 **[§17.8](../volumes/platform/17-ui-ux.md#178-跨页导航契约ui-nav-)** | 产品+前端 |
 | TODO-10 | SCN-01f：新增 `CANCEL_PROMISE`；SCN-01e 与取消承诺解耦（RULE-FF-03） | 开发 |
 | TODO-11 | SCN-07：供需平衡专页、PISPP period 表、建供应 API-MAT-02/03、物料预留 API-MAT-04~08、多路径 ENT-RT | 产品+前端+开发 |
-| TODO-12 | **ADR-09 全量 Ontology 持久化**：**P0 Flyway 已完成**；P1~P5 OntologyPersistencePort/Restorer、Session WAL、legacy 双写迁移、AC-PERS | 架构+开发 |
+| TODO-12 | **ADR-09 全量 Ontology 持久化**：**P0~P5 骨架已完成**；**收口 Sprint 6A~6D**（H2 dev session-enabled · 读路径迁移 · AC-PERS-02 Session E2E · PG 全量 parity · 退役 loader 主路径） | 架构+开发 |
 | TODO-13 | **ADR-10 External_* 主数据**：staging、质检、sync、md_*、Projector 切读 | 架构+开发 |
 | TODO-14 | **ADR-11 外部交易数据**：external_* / txn_*、Firm WO 同步、质检、OG 装载切读 | 架构+开发 |
 | TODO-15 | **ADR-12 业务知识三层**：KnowledgeContext、Industry pack、overlay 表、引擎接 Effective | 架构+产品 |
@@ -285,7 +285,7 @@
 | 偏差 ID | 摘要 | 已有 TODO | 新增/备注 |
 |---------|------|-----------|-----------|
 | D-08 | 默认仍 PATH-ENT / `optimizeLegacy` | **TODO-08** | 已扩写子项（见上表） |
-| D-09 | confirm 写 legacy allocation，无 `ont_*` | **TODO-12** P2/P3 | **P0 DDL 已完成**（V65）；读写路径仍待 P1~P3 |
+| D-09 | ~~confirm 写 legacy allocation，无 `ont_*`~~ | ~~TODO-12~~ | **已解决 2026-06-30**：`session-enabled` + `promoteDraftToCommitted`；legacy allocation 并行保留 |
 | D-10 | 无 `CANCEL_PROMISE` | **TODO-10** | — |
 | D-11 | API-MAT-02~08 / SCN-07e~j | **TODO-11** | — |
 | D-12 | 无 external/md/txn | **TODO-13/14** | — |
@@ -293,7 +293,7 @@
 | D-19 | MOD-DI mock，无 staging | **TODO-19** | — |
 | D-22~24 | RCA / Shift-Period / PRP | **TODO-22~24** | — |
 | D-ENT-BOM | PATH-ENT 读 JPA BOM | **TODO-08** | 并入 PATH-ENT 退役 |
-| D-CONFIRM | confirm 非 ont revision | **TODO-12** P3 | — |
+| D-CONFIRM | ~~confirm 非 ont revision~~ | ~~TODO-12~~ | **已解决 2026-06-30**：`OntologyConfirmIntegrationTest` · `MasterPlanOntologySessionPersistenceIntegrationTest` |
 | D-TRACE | 无 `@SpecRef` | **TODO-01** | TODO-28 补 CI 清单 |
 | D-IAM-01 | 注册无自动 PERSONAL WS | ~~TODO-18~~ | **已决策**：v1 手动建 WS · `IamAcTest#acIam01` |
 | D-IAM-prod | 默认 dev-mode=true | ~~TODO-18~~ M4 | `%prod` 已 false；生产部署验收 |
@@ -351,11 +351,11 @@
 | 阶段 | 交付 | 验收 |
 |------|------|------|
 | **P0 Schema** | Flyway：`ont_revision`、HEAD、需求/供应/FF 核心表；**含 `ont_resource_capacity_assignment`（TODO-22 R4）**；列级规范见 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md) | **已完成 2026-06-30** · `V65__ont_p0.sql` · `OntP0SchemaMigrationTest` |
-| **P1 Read path** | `OntologyRestorer` + JPA 实体 + `OntologyEntityMapper`；**骨架已落地**；生产读仍 `OntologyLoader` | AC-PERS-01：`OntologyRestorerIntegrationTest`（P0 子集）；生产切读待收口 |
-| **P2 Write path** | `OntologySessionPersistenceService` + WAL；**库层已落地**；`MasterPlanOntologySessionService` 在 `session-enabled=true` 时写 `ont_*` | AC-PERS-02：`OntologyDraftPersistenceIntegrationTest` + Session API 接线 |
-| **P3 Confirm** | `promoteDraftToCommitted` + WORKSPACE/`PLAN:{id}` HEAD；confirm 与 legacy `OntologyStatePersister` 并行 | AC-PERS-03：`OntologyConfirmIntegrationTest`；allocation 1:1 追溯待 P4 |
-| **P4 Migration** | H2 `V66`；`work_order`→`ont_supply_order` 双写；`OntologyP0Overlay` 切读；`OntologyWorkspaceHeadBootstrapService` 引导 HEAD；H2 dev 默认开启 bootstrap/restorer-read/dual-write | AC-PERS-04 + `MasterPlanOntologySessionPersistenceIntegrationTest`；全量退役 `OntologyLoader` 主路径待收口 |
-| **P5 Partial policy** | `ont_entity_policy` + DERIVE 装载；`OntologyPartialDeriver`（PISPP 从 parent FULL fork） | AC-PERS-05：`OntologyPartialPersistence*IntegrationTest` |
+| **P1 Read path** | `OntologyRestorer` + JPA + `OntologyP0Overlay`；`OntologyMaterialPlanningService` / `CapacityService` / `StandardResourcePeriodGanttService` 经 `WorkspaceAuthoritativeOntologyGraphService` | AC-PERS-01 绿 · `AuthoritativeOntologyReadPathIntegrationTest`；**Sprint 6D** PG 全量 parity |
+| **P2 Write path** | `OntologySessionPersistenceService` + WAL；H2 dev / postgres / test 默认 `session-enabled=true` | AC-PERS-02 库层绿；**Sprint 6C** Session API kill/reload E2E |
+| **P3 Confirm** | `promoteDraftToCommitted` + WORKSPACE/`PLAN:{id}` HEAD；与 legacy `OntologyStatePersister` 并行 | **已完成** · AC-PERS-03 |
+| **P4 Migration** | H2 `V66`；双写 + overlay + `OntologyWorkspaceHeadBootstrapService`；H2 dev 四开关默认开启 | **已完成** · AC-PERS-04 + Session E2E；**Sprint 6B** 退役 loader 业务直调 |
+| **P5 Partial policy** | `ont_entity_policy` + DERIVE 装载；`OntologyPartialDeriver` | **已完成** · AC-PERS-05 |
 
 ### TODO-13 分阶段（ADR-10）
 

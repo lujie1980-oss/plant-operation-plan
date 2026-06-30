@@ -103,6 +103,8 @@
 | 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 P4（骨架）**：H2 `V66` `ont_*`；`OntologyLegacyDualWriteService` + `OntologyP0Overlay` 读叠加；AC-PERS-04 / H2 AC-PERS-01 |
 | 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 P5（骨架）**：`ont_entity_policy` + PARTIAL fork/derive；AC-PERS-05 集成测试 |
 | 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 P4 收口**：`OntologyWorkspaceHeadBootstrapService`；H2 dev 默认 P4 开关；Session confirm E2E 持久化测试；`OntologyLoader` 读路径 @Deprecated |
+| 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 Sprint 6A**：H2 dev 默认 `session-enabled=true`（与 postgres 对齐）；SDD 偏差 D-09/D-CONFIRM 标已解决 |
+| 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 Sprint 6B**：场景读路径迁 `WorkspaceAuthoritativeOntologyGraphService`；MRP 后 `OntologyLegacyMutationCoordinator` 双写+失效缓存 |
 
 ## 治理约定
 

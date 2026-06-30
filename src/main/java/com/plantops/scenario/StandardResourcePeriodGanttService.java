@@ -4,9 +4,10 @@ import com.plantops.api.dto.SrpCapacityCellDto;
 import com.plantops.api.dto.SrpCapacityGanttDto;
 import com.plantops.config.ParameterRegistry;
 import com.plantops.ontology.OntologyGraph;
-import com.plantops.ontology.OntologyLoader;
+import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
 import com.plantops.ontology.period.Period;
 import com.plantops.ontology.period.StandardResourcePeriod;
+import com.plantops.workspace.WorkspaceResolver;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -22,14 +23,15 @@ import java.util.List;
 public class StandardResourcePeriodGanttService {
 
     @Inject
-    OntologyLoader ontologyLoader;
+    WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
 
     @Inject
     ParameterRegistry parameters;
 
     @Transactional(Transactional.TxType.REQUIRES_NEW)
     public SrpCapacityGanttDto buildForMasterPlan(String masterPlanVersionId) {
-        OntologyGraph graph = ontologyLoader.loadSrpCapacityForPlanVersion(masterPlanVersionId);
+        OntologyGraph graph = authoritativeOntologyGraph.getSrpCapacityOrLoad(
+                WorkspaceResolver.currentWorkspaceId(), masterPlanVersionId);
         return project(graph, parameters.getInt("capacity_overload_threshold_pct", 110));
     }
 

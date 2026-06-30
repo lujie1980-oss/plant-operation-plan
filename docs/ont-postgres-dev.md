@@ -17,8 +17,8 @@ cd d:\AILab\PlantOperationPlan\plant-operation-plan
 
 | Profile | 数据库 | 用途 |
 |---------|--------|------|
-| *(默认)* | H2 `./data/plantops` | 日常功能开发、现有 Flyway V1–V64 |
-| `postgres` | 本地 PG :5432 | TODO-12 `ont_*` 开发、AC-PERS 集成测试 |
+| *(默认)* | H2 `./data/plantops` | 日常功能开发、legacy 计划链路 + **ont_* Session 持久化**（与 postgres 同开关） |
+| `postgres` | 本地 PG :5432 | TODO-12 `ont_*` 开发、AC-PERS PG 集成测试 |
 | `prod` | 环境变量 `DB_*` | 生产部署（见 [docker-deploy.md](./docker-deploy.md)） |
 
 ```powershell
@@ -55,12 +55,14 @@ $env:QUARKUS_PROFILE='postgres'
 | `OntologyLegacyDualWriteIntegrationTest` | H2（AC-PERS-04 work_order 双写） |
 | `OntologyLoaderRestorerParityIntegrationTest` | H2（AC-PERS-01 loader↔restorer P0） |
 
-**Session API 持久化：** `plantops.ontology.persistence.session-enabled=true`（`postgres` profile 默认开启）时，`MasterPlanOntologySessionService` 的 create/simulate/optimize/confirm 同步写 `ont_*`；默认 H2 dev 仍为内存 `OntologySandboxStore`。
+| `OntologyWorkspaceHeadBootstrapIntegrationTest` | H2（WORKSPACE HEAD bootstrap） |
+| `MasterPlanOntologySessionPersistenceIntegrationTest` | H2（AC-PERS-03 Session E2E + allocation） |
 
-**P4 迁移开关（postgres profile）：**
+**Ontology 持久化开关（H2 dev 与 `postgres` profile 默认一致）：**
 
 | 配置项 | 作用 |
 |--------|------|
+| `plantops.ontology.persistence.session-enabled` | `MasterPlanOntologySessionService` create/simulate/optimize/confirm 同步写 `ont_*` |
 | `plantops.ontology.persistence.dual-write-enabled` | confirm promote 时将 `work_order` 同步到 `ont_supply_order`（需 `legacy-schema.enabled=true`） |
 | `plantops.ontology.persistence.restorer-read-enabled` | 权威图装载时叠加 committed `ont_*` P0（`OntologyP0Overlay`） |
 | `plantops.ontology.persistence.bootstrap-head-enabled` | 启动/读路径时从 `OntologyLoader` 引导 `ont_revision_head(WORKSPACE)` |

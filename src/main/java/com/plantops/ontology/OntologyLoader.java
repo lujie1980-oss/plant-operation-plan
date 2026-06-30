@@ -258,7 +258,10 @@ public class OntologyLoader {
 
     /**
      * 轻量加载：仅 Period + SRP + 主计划 allocation 反灌，供产能甘特读取本体 reservedCapacity。
+     *
+     * @deprecated P4 迁移期：规范读路径为 {@link WorkspaceAuthoritativeOntologyGraphService#getSrpCapacityOrLoad}
      */
+    @Deprecated
     public OntologyGraph loadSrpCapacityForPlanVersion(String planVersionId) {
         LocalDate planningStart = LocalDate.now();
         if (planVersionId != null && !planVersionId.isBlank()) {

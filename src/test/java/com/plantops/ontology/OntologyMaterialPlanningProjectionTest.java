@@ -2,6 +2,7 @@ package com.plantops.ontology;
 
 import com.plantops.api.dto.MaterialRequirementReportDto;
 import com.plantops.ontology.material.OntologyMaterialBalanceProjector;
+import com.plantops.ontology.persistence.OntologyPersistencePort;
 import com.plantops.scenario.OntologyMaterialPlanningService;
 import com.plantops.persistence.entity.BomComponentEntity;
 import com.plantops.persistence.entity.MaterialEntity;
@@ -9,6 +10,7 @@ import com.plantops.persistence.entity.ProductResourceEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.persistence.entity.WorkOrderBomDependencyEntity;
+import com.plantops.workspace.WorkspaceResolver;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -39,11 +41,18 @@ class OntologyMaterialPlanningProjectionTest {
     @Inject
     OntologyLoader ontologyLoader;
 
+    @Inject
+    OntologyPersistencePort ontologyPersistence;
+
+    @Inject
+    WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
+
     @Test
     @TestTransaction
     void projectsMaterialBalanceFromPispp() {
         LocalDate planningStart = LocalDate.of(2026, 6, 10);
         ensureFixture(planningStart);
+        refreshOntWorkspaceHead(planningStart);
 
         MaterialRequirementReportDto report = ontologyMaterialPlanningService.balance(null);
 
@@ -129,6 +138,13 @@ class OntologyMaterialPlanningProjectionTest {
             bom.stampWorkspace();
             bom.persist();
         }
+    }
+
+    private void refreshOntWorkspaceHead(LocalDate planningStart) {
+        String workspaceId = WorkspaceResolver.currentWorkspaceId();
+        ontologyPersistence.importCommittedP0(
+                workspaceId, ontologyLoader.loadForWorkspace(planningStart));
+        authoritativeOntologyGraph.invalidateWorkspace(workspaceId);
     }
 
     private static void ensureRouting(String productCode, String resourceId, String opName, int seq) {

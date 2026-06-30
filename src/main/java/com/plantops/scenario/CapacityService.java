@@ -10,9 +10,11 @@ import com.plantops.api.dto.LoadBucketDto;
 
 import com.plantops.config.ParameterRegistry;
 
-import com.plantops.ontology.OntologyLoader;
+import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
 
 import com.plantops.persistence.entity.PlanVersionEntity;
+
+import com.plantops.workspace.WorkspaceResolver;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -48,7 +50,7 @@ public class CapacityService {
     ParameterRegistry parameters;
 
     @Inject
-    OntologyLoader ontologyLoader;
+    WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
 
     @Inject
     SrpLoadBucketProjector srpLoadBucketProjector;
@@ -69,7 +71,8 @@ public class CapacityService {
                 : null;
         String score = version != null ? version.score : null;
 
-        var graph = ontologyLoader.loadSrpCapacityForPlanVersion(masterPlanVersionId);
+        var graph = authoritativeOntologyGraph.getSrpCapacityOrLoad(
+                WorkspaceResolver.currentWorkspaceId(), masterPlanVersionId);
         SrpLoadBucketProjector.SrpLoadBucketResult result =
                 srpLoadBucketProjector.project(graph, masterPlanVersionId, threshold);
 

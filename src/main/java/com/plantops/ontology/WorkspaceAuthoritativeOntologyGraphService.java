@@ -43,6 +43,14 @@ public class WorkspaceAuthoritativeOntologyGraphService {
         return graphsByKey.computeIfAbsent(key, ignored -> loadFresh(workspaceId, planVersionId));
     }
 
+    /**
+     * Lightweight SRP + Period capacity view with the same committed P0 overlay as {@link #getOrLoad}.
+     */
+    public OntologyGraph getSrpCapacityOrLoad(String workspaceId, String planVersionId) {
+        String key = graphKey(workspaceId, planVersionId) + "|srp";
+        return graphsByKey.computeIfAbsent(key, ignored -> loadSrpCapacityFresh(workspaceId, planVersionId));
+    }
+
     public RolEngine newRolEngine(OntologyGraph graph) {
         return RolEngine.withMasterPlanRules(graph);
     }
@@ -51,7 +59,9 @@ public class WorkspaceAuthoritativeOntologyGraphService {
      * DB 或计划结构变更后丢弃缓存，下次 {@link #getOrLoad} 重新装载。
      */
     public void invalidate(String workspaceId, String planVersionId) {
-        graphsByKey.remove(graphKey(workspaceId, planVersionId));
+        String key = graphKey(workspaceId, planVersionId);
+        graphsByKey.remove(key);
+        graphsByKey.remove(key + "|srp");
     }
 
     public void invalidateWorkspace(String workspaceId) {
@@ -69,6 +79,27 @@ public class WorkspaceAuthoritativeOntologyGraphService {
         OntologyGraph loaderGraph = planVersionId != null && !planVersionId.isBlank()
                 ? ontologyLoader.loadForPlanVersion(planVersionId)
                 : ontologyLoader.loadForWorkspace(LocalDate.now());
+
+        if (!restorerReadFeature.enabled()) {
+            return loaderGraph;
+        }
+
+        if (workspaceHeadBootstrapFeature.enabled()) {
+            workspaceHeadBootstrap.ensureWorkspaceHead(workspaceId);
+        }
+
+        String revisionId = resolveCommittedRevisionId(workspaceId, planVersionId);
+        if (revisionId == null) {
+            return loaderGraph;
+        }
+
+        OntologyGraph restoredP0 = ontologyPersistence.loadRevision(workspaceId, revisionId);
+        return OntologyP0Overlay.apply(loaderGraph, restoredP0);
+    }
+
+    private OntologyGraph loadSrpCapacityFresh(String workspaceId, String planVersionId) {
+        String normalizedPlan = planVersionId != null && !planVersionId.isBlank() ? planVersionId.trim() : null;
+        OntologyGraph loaderGraph = ontologyLoader.loadSrpCapacityForPlanVersion(normalizedPlan);
 
         if (!restorerReadFeature.enabled()) {
             return loaderGraph;

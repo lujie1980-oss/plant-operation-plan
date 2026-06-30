@@ -3,6 +3,7 @@ package com.plantops.scenario;
 import com.plantops.api.dto.WorkOrderGenerationBatchResultDto;
 import com.plantops.api.dto.WorkOrderGenerationResultDto;
 import com.plantops.domain.SalesOrderLineId;
+import com.plantops.ontology.persistence.OntologyLegacyMutationCoordinator;
 import com.plantops.persistence.entity.BomComponentEntity;
 import com.plantops.persistence.entity.ProductResourceEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
@@ -14,6 +15,7 @@ import com.plantops.scenario.mrp.MrpDemandBucket.Key;
 import com.plantops.scenario.mrp.MrpDemandBucket.PegLine;
 import com.plantops.scenario.mrp.MrpLotSizing;
 import com.plantops.scenario.mrp.MrpLotSizing.LotRule;
+import com.plantops.workspace.WorkspaceResolver;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -45,6 +47,9 @@ public class MrpExplosionService {
 
     @Inject
     RuleScopeHelper ruleScopeHelper;
+
+    @Inject
+    OntologyLegacyMutationCoordinator legacyMutationCoordinator;
 
     @Transactional(TxType.NOT_SUPPORTED)
     public WorkOrderGenerationBatchResultDto regenerateMergedWorkOrders(boolean replaceExisting) {
@@ -170,6 +175,10 @@ public class MrpExplosionService {
 
             level++;
             levelBuckets = childAccum;
+        }
+
+        if (woCount > 0) {
+            legacyMutationCoordinator.afterWorkOrdersChanged(WorkspaceResolver.currentWorkspaceId());
         }
 
         return woCount;

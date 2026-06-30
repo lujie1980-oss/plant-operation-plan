@@ -3,19 +3,18 @@ package com.plantops.scenario;
 import com.plantops.api.dto.MaterialDemandDetailDto;
 import com.plantops.api.dto.MaterialRequirementReportDto;
 import com.plantops.ontology.OntologyGraph;
-import com.plantops.ontology.OntologyLoader;
+import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
 import com.plantops.ontology.material.OntologyMaterialBalanceProjector;
 import com.plantops.ontology.material.OntologyMaterialDemandProjector;
+import com.plantops.workspace.WorkspaceResolver;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-
-import java.time.LocalDate;
 
 @ApplicationScoped
 public class OntologyMaterialPlanningService {
 
     @Inject
-    OntologyLoader ontologyLoader;
+    WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
 
     @Inject
     OntologyMaterialBalanceProjector balanceProjector;
@@ -36,9 +35,7 @@ public class OntologyMaterialPlanningService {
     }
 
     private OntologyGraph loadGraph(String masterPlanVersionId) {
-        if (masterPlanVersionId != null && !masterPlanVersionId.isBlank()) {
-            return ontologyLoader.loadForPlanVersion(masterPlanVersionId);
-        }
-        return ontologyLoader.loadForWorkspace(LocalDate.now());
+        return authoritativeOntologyGraph.getOrLoad(
+                WorkspaceResolver.currentWorkspaceId(), masterPlanVersionId);
     }
 }
