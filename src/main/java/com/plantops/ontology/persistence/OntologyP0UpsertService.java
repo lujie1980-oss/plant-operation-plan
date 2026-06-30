@@ -15,6 +15,7 @@ import com.plantops.ontology.persistence.entity.OntSupplyOrderEntity;
 import com.plantops.ontology.supply.Operation;
 import com.plantops.ontology.supply.SupplyOrder;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -24,29 +25,43 @@ import java.util.Set;
 @ApplicationScoped
 public class OntologyP0UpsertService {
 
+    @Inject
+    OntologyEntityPolicyService policyService;
+
     public void replaceP0Graph(String workspaceId, String revisionId, OntologyGraph graph) {
-        deleteP0Entities(workspaceId, revisionId);
-        graph.demandsById().values().forEach(d ->
-                OntologyEntityMapper.fromDemand(d, workspaceId, revisionId).persist());
-        graph.supplyOrdersById().values().forEach(so ->
-                OntologyEntityMapper.fromSupplyOrder(so, workspaceId, revisionId).persist());
-        graph.operationsById().values().forEach(op ->
-                OntologyEntityMapper.fromOperation(op, workspaceId, revisionId).persist());
-        graph.fulfillments().forEach(ff ->
-                OntologyEntityMapper.fromFulfillment(ff, workspaceId, revisionId).persist());
-        graph.pispPeriodsById().values().forEach(p ->
-                OntologyEntityMapper.fromPispp(p, workspaceId, revisionId).persist());
-        graph.srpById().values().forEach(srp ->
-                OntologyEntityMapper.fromSrp(srp, workspaceId, revisionId).persist());
+        replaceP0Graph(workspaceId, revisionId, graph, OntologyEntityPolicyService.PERSISTENCE_FULL);
+    }
+
+    public void replaceP0Graph(
+            String workspaceId, String revisionId, OntologyGraph graph, String persistenceMode) {
+        deleteP0Entities(workspaceId, revisionId, persistenceMode);
+        upsertP0Graph(workspaceId, revisionId, graph, persistenceMode);
     }
 
     public void upsertP0Graph(String workspaceId, String revisionId, OntologyGraph graph) {
-        graph.demandsById().values().forEach(d -> upsertDemand(d, workspaceId, revisionId));
-        graph.supplyOrdersById().values().forEach(so -> upsertSupplyOrder(so, workspaceId, revisionId));
-        graph.operationsById().values().forEach(op -> upsertOperation(op, workspaceId, revisionId));
-        upsertFulfillments(workspaceId, revisionId, graph);
-        graph.pispPeriodsById().values().forEach(p -> upsertPispp(p, workspaceId, revisionId));
-        graph.srpById().values().forEach(srp -> upsertSrp(srp, workspaceId, revisionId));
+        upsertP0Graph(workspaceId, revisionId, graph, OntologyEntityPolicyService.PERSISTENCE_FULL);
+    }
+
+    public void upsertP0Graph(
+            String workspaceId, String revisionId, OntologyGraph graph, String persistenceMode) {
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.DEMAND)) {
+            graph.demandsById().values().forEach(d -> upsertDemand(d, workspaceId, revisionId));
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.SUPPLY_ORDER)) {
+            graph.supplyOrdersById().values().forEach(so -> upsertSupplyOrder(so, workspaceId, revisionId));
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.OPERATION)) {
+            graph.operationsById().values().forEach(op -> upsertOperation(op, workspaceId, revisionId));
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.FULFILLMENT)) {
+            upsertFulfillments(workspaceId, revisionId, graph);
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.PISPP)) {
+            graph.pispPeriodsById().values().forEach(p -> upsertPispp(p, workspaceId, revisionId));
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.SRP)) {
+            graph.srpById().values().forEach(srp -> upsertSrp(srp, workspaceId, revisionId));
+        }
     }
 
     private void upsertFulfillments(String workspaceId, String revisionId, OntologyGraph graph) {
@@ -184,11 +199,27 @@ public class OntologyP0UpsertService {
     }
 
     public void deleteP0Entities(String workspaceId, String revisionId) {
-        OntDemandEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
-        OntSupplyOrderEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
-        OntOperationEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
-        OntFulfillmentEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
-        OntPisppEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
-        OntSrpEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
+        deleteP0Entities(workspaceId, revisionId, OntologyEntityPolicyService.PERSISTENCE_FULL);
+    }
+
+    public void deleteP0Entities(String workspaceId, String revisionId, String persistenceMode) {
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.DEMAND)) {
+            OntDemandEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.SUPPLY_ORDER)) {
+            OntSupplyOrderEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.OPERATION)) {
+            OntOperationEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.FULFILLMENT)) {
+            OntFulfillmentEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.PISPP)) {
+            OntPisppEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.SRP)) {
+            OntSrpEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
+        }
     }
 }

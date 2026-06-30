@@ -13,6 +13,9 @@ public interface OntologyPersistencePort {
     /** Persist P0 entity snapshot from an in-memory graph into a new COMMITTED revision. */
     String importCommittedP0(String workspaceId, OntologyGraph graph);
 
+    /** PARTIAL fork: STORE subset; DERIVE entities resolved on {@link #loadRevision}. */
+    String importPartialP0Fork(String workspaceId, OntologyGraph graph, String parentRevisionId);
+
     /** Load a revision into memory (P0 entities). */
     OntologyGraph loadRevision(String workspaceId, String revisionId);
 

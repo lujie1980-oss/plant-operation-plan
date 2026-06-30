@@ -101,6 +101,7 @@
 | 2026-06-30 | 1.0.0-SNAPSHOT | **IAM P1**：AC-IAM-01~05 自动化（`IamAcTest`）+ OIDC live 联调测试 · [iam-p1-runbook](../../iam-p1-runbook.md) |
 | 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 P1~P3（骨架）**：`OntologyRestorer`/Session WAL/`promoteDraftToCommitted`；`MasterPlanOntologySessionService` 可选 `session-enabled` 写路径；AC-PERS-01/02/03 集成测试 |
 | 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 P4（骨架）**：H2 `V66` `ont_*`；`OntologyLegacyDualWriteService` + `OntologyP0Overlay` 读叠加；AC-PERS-04 / H2 AC-PERS-01 |
+| 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 P5（骨架）**：`ont_entity_policy` + PARTIAL fork/derive；AC-PERS-05 集成测试 |
 
 ## 治理约定
 

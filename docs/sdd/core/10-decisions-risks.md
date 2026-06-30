@@ -355,7 +355,7 @@
 | **P2 Write path** | `OntologySessionPersistenceService` + WAL；**库层已落地**；`MasterPlanOntologySessionService` 在 `session-enabled=true` 时写 `ont_*` | AC-PERS-02：`OntologyDraftPersistenceIntegrationTest` + Session API 接线 |
 | **P3 Confirm** | `promoteDraftToCommitted` + WORKSPACE/`PLAN:{id}` HEAD；confirm 与 legacy `OntologyStatePersister` 并行 | AC-PERS-03：`OntologyConfirmIntegrationTest`；allocation 1:1 追溯待 P4 |
 | **P4 Migration** | H2 `V66__ont_p0_h2`；`work_order`→`ont_supply_order` 双写；`OntologyP0Overlay` 切读叠加；legacy loader 仍提供 master/period 壳 | AC-PERS-04：`OntologyLegacyDualWriteIntegrationTest`；生产全量切读待收口 |
-| **P5 Partial policy** | `ont_entity_policy` + DERIVE 装载 | AC-PERS-05（可选） |
+| **P5 Partial policy** | `ont_entity_policy` + DERIVE 装载；`OntologyPartialDeriver`（PISPP 从 parent FULL fork） | AC-PERS-05：`OntologyPartialPersistence*IntegrationTest` |
 
 ### TODO-13 分阶段（ADR-10）
 

@@ -28,6 +28,12 @@ public class OntologyPersistenceService implements OntologyPersistencePort {
     }
 
     @Override
+    @Transactional
+    public String importPartialP0Fork(String workspaceId, OntologyGraph graph, String parentRevisionId) {
+        return legacyImporter.importPartialP0Fork(workspaceId, graph, parentRevisionId);
+    }
+
+    @Override
     public OntologyGraph loadRevision(String workspaceId, String revisionId) {
         return restorer.loadRevision(workspaceId, revisionId);
     }

@@ -20,22 +20,16 @@ public class OntologyLegacyImporter {
     @Inject
     OntologyRevisionService revisionService;
 
+    @Inject
+    OntologyP0UpsertService upsertService;
+
+    @Inject
+    OntologyEntityPolicyService policyService;
+
     @Transactional
     public void importP0(String workspaceId, String revisionId, OntologyGraph graph) {
-        revisionService.requireRevision(workspaceId, revisionId);
-
-        graph.demandsById().values().forEach(d ->
-                OntologyEntityMapper.fromDemand(d, workspaceId, revisionId).persist());
-        graph.supplyOrdersById().values().forEach(so ->
-                OntologyEntityMapper.fromSupplyOrder(so, workspaceId, revisionId).persist());
-        graph.operationsById().values().forEach(op ->
-                OntologyEntityMapper.fromOperation(op, workspaceId, revisionId).persist());
-        graph.fulfillments().forEach(ff ->
-                OntologyEntityMapper.fromFulfillment(ff, workspaceId, revisionId).persist());
-        graph.pispPeriodsById().values().forEach(p ->
-                OntologyEntityMapper.fromPispp(p, workspaceId, revisionId).persist());
-        graph.srpById().values().forEach(srp ->
-                OntologyEntityMapper.fromSrp(srp, workspaceId, revisionId).persist());
+        var rev = revisionService.requireRevision(workspaceId, revisionId);
+        upsertService.replaceP0Graph(workspaceId, revisionId, graph, rev.persistenceMode);
     }
 
     @Transactional
@@ -45,6 +39,29 @@ public class OntologyLegacyImporter {
                 workspaceId, revisionId, "COMMITTED", "FULL", null, null, null);
         importP0(workspaceId, revisionId, graph);
         revisionService.setHead(workspaceId, OntologyRevisionService.WORKSPACE_SCOPE, revisionId);
+        return revisionId;
+    }
+
+    /**
+     * PARTIAL fork: STORE entities only; DERIVE kinds (e.g. PISPP) loaded via parent revision on restore.
+     */
+    @Transactional
+    public String importPartialP0Fork(String workspaceId, OntologyGraph graph, String parentRevisionId) {
+        policyService.seedDefaultPartialPolicies(workspaceId);
+        String revisionId = revisionService.newRevisionId();
+        revisionService.createRevision(
+                workspaceId,
+                revisionId,
+                "COMMITTED",
+                OntologyEntityPolicyService.PERSISTENCE_PARTIAL,
+                parentRevisionId,
+                null,
+                null);
+        upsertService.replaceP0Graph(
+                workspaceId,
+                revisionId,
+                graph,
+                OntologyEntityPolicyService.PERSISTENCE_PARTIAL);
         return revisionId;
     }
 
