@@ -31,7 +31,9 @@ $env:QUARKUS_PROFILE='postgres'
 | 目录 | 方言 | 内容 |
 |------|------|------|
 | `db/migration/` | H2（历史） | V1–V64 legacy 表 |
-| `db/migration-postgresql/` | PostgreSQL | V65+ `ont_*`（待 Sprint 1） |
+| `db/migration-postgresql/` | PostgreSQL | V0 bootstrap + **V65** `ont_*` P0 |
+
+**验收：** `OntP0SchemaMigrationTest`（PG :5432 运行时执行；无 PG 时 `@EnabledIf` 跳过）
 
 **已知限制：** 在空 PG 上跑 **完整应用** 会因 V1 的 `AUTO_INCREMENT` / `CLOB` 失败。当前阶段：
 
@@ -46,7 +48,8 @@ $env:QUARKUS_PROFILE='postgres'
 |------|--------|
 | 大部分 `@QuarkusTest` | H2 内存（`%test`） |
 | `IamAcTest` 等 | H2 |
-| `OntologyPersistence*Test`（待建） | PostgreSQL（Testcontainers 或 compose） |
+| `OntP0SchemaMigrationTest` | PostgreSQL（compose） |
+| `OntologyRestorer*Test`（待建） | PostgreSQL |
 
 ## 5. 生产环境变量
 
