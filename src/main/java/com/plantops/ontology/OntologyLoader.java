@@ -81,6 +81,11 @@ public class OntologyLoader {
     @Inject
     RuleScopeHelper ruleScopeHelper;
 
+    /**
+     * @deprecated P4 迁移期：规范读路径为 {@link WorkspaceAuthoritativeOntologyGraphService}
+     *             + {@link com.plantops.ontology.persistence.OntologyRestorer}；本方法仅作 legacy 装载边界。
+     */
+    @Deprecated
     public OntologyGraph loadForWorkspace(LocalDate planningStart) {
         LocalDate effectiveStart = planningStart != null ? planningStart : LocalDate.now();
         return buildGraph(effectiveStart);
@@ -222,6 +227,11 @@ public class OntologyLoader {
         return workOrderNos;
     }
 
+    /**
+     * @deprecated P4 迁移期：规范读路径为 {@link WorkspaceAuthoritativeOntologyGraphService}
+     *             + {@link com.plantops.ontology.persistence.OntologyRestorer}。
+     */
+    @Deprecated
     public OntologyGraph loadForPlanVersion(String planVersionId) {
         PlanVersionEntity planVersion = PlanVersionEntity.findByVersionId(planVersionId);
         if (planVersion == null) {

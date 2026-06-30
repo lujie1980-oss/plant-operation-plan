@@ -5,6 +5,7 @@ import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.scenario.WorkOrderService;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public final class WorkOrderSupplyOrderMapper {
 
@@ -21,7 +22,7 @@ public final class WorkOrderSupplyOrderMapper {
                 productCode,
                 OntologyIds.pispId(productCode),
                 quantityValue(wo.quantity),
-                wo.needDate,
+                wo.needDate != null ? wo.needDate : LocalDate.now(),
                 mapStatus(wo.dispatchStatus),
                 mapType(wo.sourceType));
     }

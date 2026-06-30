@@ -4,6 +4,7 @@ import com.plantops.config.OntologyRestorerReadFeature;
 import com.plantops.ontology.persistence.OntologyP0Overlay;
 import com.plantops.ontology.persistence.OntologyPersistencePort;
 import com.plantops.ontology.persistence.OntologyRevisionService;
+import com.plantops.ontology.persistence.OntologyWorkspaceHeadBootstrapService;
 import com.plantops.ontology.persistence.entity.OntRevisionHeadEntity;
 import com.plantops.rol.RolEngine;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -28,6 +29,12 @@ public class WorkspaceAuthoritativeOntologyGraphService {
 
     @Inject
     OntologyPersistencePort ontologyPersistence;
+
+    @Inject
+    OntologyWorkspaceHeadBootstrapService workspaceHeadBootstrap;
+
+    @Inject
+    com.plantops.config.OntologyWorkspaceHeadBootstrapFeature workspaceHeadBootstrapFeature;
 
     private final ConcurrentHashMap<String, OntologyGraph> graphsByKey = new ConcurrentHashMap<>();
 
@@ -65,6 +72,10 @@ public class WorkspaceAuthoritativeOntologyGraphService {
 
         if (!restorerReadFeature.enabled()) {
             return loaderGraph;
+        }
+
+        if (workspaceHeadBootstrapFeature.enabled()) {
+            workspaceHeadBootstrap.ensureWorkspaceHead(workspaceId);
         }
 
         String revisionId = resolveCommittedRevisionId(workspaceId, planVersionId);

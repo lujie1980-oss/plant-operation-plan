@@ -63,6 +63,7 @@ $env:QUARKUS_PROFILE='postgres'
 |--------|------|
 | `plantops.ontology.persistence.dual-write-enabled` | confirm promote 时将 `work_order` 同步到 `ont_supply_order`（需 `legacy-schema.enabled=true`） |
 | `plantops.ontology.persistence.restorer-read-enabled` | 权威图装载时叠加 committed `ont_*` P0（`OntologyP0Overlay`） |
+| `plantops.ontology.persistence.bootstrap-head-enabled` | 启动/读路径时从 `OntologyLoader` 引导 `ont_revision_head(WORKSPACE)` |
 
 ## 5. 生产环境变量
 

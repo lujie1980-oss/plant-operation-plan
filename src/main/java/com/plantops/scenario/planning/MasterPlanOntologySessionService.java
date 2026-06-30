@@ -351,6 +351,7 @@ public class MasterPlanOntologySessionService {
                     session.workspaceId(), session.sessionId(), outcome.planVersionId());
         }
         authoritativeOntologyGraph.invalidate(session.workspaceId(), session.basePlanVersionId());
+        authoritativeOntologyGraph.invalidate(session.workspaceId(), outcome.planVersionId());
         return new MasterPlanSessionConfirmResultDto(
                 session.sessionId(),
                 outcome.planVersionId(),
