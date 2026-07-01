@@ -10,8 +10,11 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 委托 {@link TimeslotHorizonService} 生成槽位，再投影为本体 {@link SchedulingSlot}（禁止第三套时栅算法）。
+ * 委托 {@link TimeslotHorizonService} 生成槽位，再投影为本体 {@link SchedulingSlot}。
+ *
+ * @deprecated 使用 {@link PeriodTimeSlotDeriver} 从 leaf Period + SRP 派生（TODO-23 S4）。
  */
+@Deprecated
 @ApplicationScoped
 public class SchedulingSlotExpander {
 

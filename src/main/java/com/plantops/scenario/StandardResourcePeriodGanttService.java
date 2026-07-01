@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 从本体 {@link StandardResourcePeriod} 投影工序甘特/产能视图的日粒度利用率。
+ * 从本体 leaf {@link StandardResourcePeriod} 投影工序甘特/产能视图（TODO-23 S3）。
  */
 @ApplicationScoped
 public class StandardResourcePeriodGanttService {
@@ -44,24 +44,23 @@ public class StandardResourcePeriodGanttService {
         LocalDate horizonStart = periods.get(0).getStartDate();
         LocalDate horizonEnd = periods.get(periods.size() - 1).getEndDate();
         List<SrpCapacityCellDto> cells = new ArrayList<>();
-        for (StandardResourcePeriod srp : graph.srpById().values()) {
+        for (StandardResourcePeriod srp : SrpLeafCapacitySupport.leafSrps(graph)) {
             Period period = periodFor(graph, srp.getPeriodId());
             if (period == null) {
                 continue;
             }
             int available = (int) Math.round(Math.max(0, srp.getAvailableCapacity()));
             int reserved = (int) Math.round(Math.max(0, srp.getReservedCapacity()));
-            int utilization = available <= 0 ? (reserved > 0 ? 100 : 0) : (int) (reserved * 100L / available);
-            boolean overloaded = utilization >= overloadThresholdPct;
-            for (LocalDate d = period.getStartDate(); !d.isAfter(period.getEndDate()); d = d.plusDays(1)) {
-                cells.add(new SrpCapacityCellDto(
-                        srp.getStandardResourceId(),
-                        d,
-                        available,
-                        reserved,
-                        utilization,
-                        overloaded));
-            }
+            int utilization = SrpLeafCapacitySupport.utilizationPct(srp);
+            boolean overloaded = SrpLeafCapacitySupport.overloadedByThreshold(srp, overloadThresholdPct);
+            cells.add(new SrpCapacityCellDto(
+                    srp.getStandardResourceId(),
+                    period.getStartDate(),
+                    SrpLeafCapacitySupport.shiftIdFor(period),
+                    available,
+                    reserved,
+                    utilization,
+                    overloaded));
         }
         return new SrpCapacityGanttDto(horizonStart, horizonEnd, cells);
     }

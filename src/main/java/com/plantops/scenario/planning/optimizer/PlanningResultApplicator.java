@@ -2,6 +2,7 @@ package com.plantops.scenario.planning.optimizer;
 
 import com.plantops.api.dto.MasterPlanAllocationDto;
 import com.plantops.ontology.OntologyGraph;
+import com.plantops.ontology.scheduling.PeriodTimeSlotDeriver;
 import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.StandardResourcePeriodRollup;
 import com.plantops.rol.ChangeSet;
@@ -117,9 +118,7 @@ public class PlanningResultApplicator {
         }
         List<com.plantops.solver.masterplan.TimeSlot> effectiveSlots = slots != null
                 ? slots
-                : graph.schedulingSlotsOrdered().stream()
-                        .map(com.plantops.ontology.scheduling.SchedulingSlot::toTimeSlot)
-                        .toList();
+                : PeriodTimeSlotDeriver.deriveTimeSlots(graph, null);
         OntologyRcaProjector.syncOntologyFromSolverAssignments(graph, solverAssignments, effectiveSlots);
         List<MasterPlanAllocationDto> allocationDtos =
                 com.plantops.scenario.planning.ResourceCapacityResultProjector.toAllocationDtos(solverAssignments);

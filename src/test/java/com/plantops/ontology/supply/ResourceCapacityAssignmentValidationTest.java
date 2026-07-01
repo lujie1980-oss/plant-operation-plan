@@ -3,6 +3,7 @@ package com.plantops.ontology.supply;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.OntologyIds;
 import com.plantops.ontology.period.Period;
+import com.plantops.ontology.period.PeriodGranularity;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import org.junit.jupiter.api.Test;
 
@@ -77,8 +78,41 @@ class ResourceCapacityAssignmentValidationTest {
                 .periodsOrdered(java.util.List.of(period));
     }
 
-    private static ResourceCapacityAssignment rca(
-            String oosrId, String srpId, int assignedMinutes, int operationTotalMinutes) {
+    @Test
+    void rejectsRcaOnParentDaySrp() {
+        Period parent = new Period(OntologyIds.periodId(0), 0, LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 1));
+        parent.setLeaf(false);
+        Period shift = new Period(OntologyIds.periodId(1), 1, LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 1));
+        shift.setGranularity(PeriodGranularity.SHIFT);
+        shift.setShiftId("S1");
+        shift.setParentPeriodId(parent.getId());
+
+        StandardResourcePeriod parentSrp = new StandardResourcePeriod(
+                OntologyIds.srpId(RESOURCE_A, 0), RESOURCE_A, parent.getId());
+
+        OntologyGraph graph = baseGraphBuilder()
+                .periodsOrdered(java.util.List.of(parent, shift))
+                .standardResourcePeriod(parentSrp)
+                .resourceCapacityAssignment(rca(OOSR_A, parentSrp.getId(), 60, 60))
+                .build();
+
+        assertTrue(ResourceCapacityAssignmentValidation.validate(graph).stream()
+                .anyMatch(msg -> msg.contains("leaf SRP")));
+    }
+
+    @Test
+    void rejectsParallelGroupOnDifferentLeafSrps() {
+        OntologyGraph graph = baseGraphBuilder()
+                .resourceCapacityAssignment(rcaWithGroup(OOSR_A, SRP_A0, 120, 240, "GRP-1"))
+                .resourceCapacityAssignment(rcaWithGroup(OOSR_B, SRP_B0, 120, 240, "GRP-1"))
+                .build();
+
+        assertTrue(ResourceCapacityAssignmentValidation.validateParallelGroups(graph).stream()
+                .anyMatch(msg -> msg.contains("parallel group")));
+    }
+
+    private static ResourceCapacityAssignment rcaWithGroup(
+            String oosrId, String srpId, int assignedMinutes, int operationTotalMinutes, String groupId) {
         String id = OntologyIds.resourceCapacityAssignmentId(OPERATION_ID, oosrId, srpId);
         return new ResourceCapacityAssignment(
                 id,
@@ -88,6 +122,11 @@ class ResourceCapacityAssignmentValidationTest {
                 assignedMinutes,
                 operationTotalMinutes,
                 false,
-                null);
+                groupId);
+    }
+
+    private static ResourceCapacityAssignment rca(
+            String oosrId, String srpId, int assignedMinutes, int operationTotalMinutes) {
+        return rcaWithGroup(oosrId, srpId, assignedMinutes, operationTotalMinutes, null);
     }
 }

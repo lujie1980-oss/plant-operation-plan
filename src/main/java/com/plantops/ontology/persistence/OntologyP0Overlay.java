@@ -70,7 +70,6 @@ public final class OntologyP0Overlay {
         }
 
         builder.periodsOrdered(loaderBase.periodsOrdered());
-        builder.schedulingSlotsOrdered(loaderBase.schedulingSlotsOrdered());
         return builder.build();
     }
 }

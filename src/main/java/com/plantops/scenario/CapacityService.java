@@ -77,7 +77,7 @@ public class CapacityService {
                 srpLoadBucketProjector.project(graph, masterPlanVersionId, threshold);
 
         return new CapacityAnalysisDto(
-                buildKpis(result.buckets(), score),
+                buildKpis(result, score),
                 result.buckets(),
                 result.openings(),
                 result.horizonStart(),
@@ -86,7 +86,8 @@ public class CapacityService {
 
 
 
-    private List<DemandPoolKpiDto> buildKpis(List<LoadBucketDto> buckets, String score) {
+    private List<DemandPoolKpiDto> buildKpis(SrpLoadBucketProjector.SrpLoadBucketResult result, String score) {
+        List<LoadBucketDto> buckets = result.buckets();
 
         if (buckets.isEmpty()) {
 
@@ -99,6 +100,8 @@ public class CapacityService {
                     kpi("cap_avg_util", "平均利用率", 0, "%", "info"),
 
                     kpi("cap_overload", "超载区间", 0, "个", "ok"),
+
+                    kpi("cap_overload_srp_pct", "超载 SRP 占比", 0, "%", "ok"),
 
                     kpi("cap_critical", "高负荷区间", 0, "个", "ok")));
             return base;
@@ -113,6 +116,9 @@ public class CapacityService {
 
         long critical = buckets.stream().filter(b -> b.utilizationPct() > 90).count();
         int totalFeedbackLocked = buckets.stream().mapToInt(LoadBucketDto::feedbackLockedMinutes).sum();
+        double overloadSrpPct = result.leafSrpCount() == 0
+                ? 0
+                : result.overloadedLeafSrpCount() * 100.0 / result.leafSrpCount();
 
         String avgSeverity = avgUtil > 100 ? "danger" : avgUtil > 90 ? "warn" : "ok";
 
@@ -125,6 +131,13 @@ public class CapacityService {
                 kpi("cap_avg_util", "平均利用率", avgUtil, "%", avgSeverity),
 
                 kpi("cap_overload", "超载区间", overload, "个", overload > 0 ? "danger" : "ok"),
+
+                kpi(
+                        "cap_overload_srp_pct",
+                        "超载 SRP 占比",
+                        overloadSrpPct,
+                        "%",
+                        overloadSrpPct > 0 ? "danger" : "ok"),
 
                 kpi("cap_critical", "高负荷区间(>90%)", critical, "个", critical > 0 ? "warn" : "ok"),
                 kpi(

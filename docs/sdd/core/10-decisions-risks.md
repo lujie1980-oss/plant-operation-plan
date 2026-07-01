@@ -327,9 +327,9 @@
 | **S0 规范** | §5.8.1 · ADR-16 · 序列语法 · ENT-SS 废止说明 | 评审通过（**已完成 2026-06-21**） |
 | **S1 Period 模型** | `Period.granularity` · `shiftId` · `parentPeriodId` · `PeriodExpander` + `NxMshift` 语法 | 单元：`14x3shift` → 14 父日 + 42 leaf shift（**已完成 2026-07-01** · `PeriodExpanderTest`） |
 | **S2 SRP/RCA** | shift-Period SRP 产能来自日历；ENT-RCA 仅挂 leaf SRP；日 SRP rollup | Σ child RCA = parent reserved（**已完成 2026-07-01** · `StandardResourcePeriodShiftIntegrationTest` · `StandardResourcePeriodRollupTest`） |
-| **S3 规则/KPI** | RULE-MP-07/08 · KPI-MP-B05 主语改为 SRP@shift-Period | SCN-03a 产能页一致 |
-| **S4 求解器** | `TimeSlot` 由 leaf Period DERIVE；移除 `OntologyGraph.schedulingSlotsOrdered` 生产路径 | TODO-22 R3 改挂 Period 投影 |
-| **S5 退役 ENT-SS** | 删除/Deprecated `SchedulingSlot` 集合装载；`ont_scheduling_slot` 不写入 | 无 SS 依赖的 AC 绿 |
+| **S3 规则/KPI** | RULE-MP-07/08 · KPI-MP-B05 主语改为 SRP@shift-Period | SCN-03a 产能页一致（**已完成 2026-07-01** · `SrpLoadBucketProjectorTest` · `ResourceCapacityAssignmentValidationTest`） |
+| **S4 求解器** | `TimeSlot` 由 leaf Period DERIVE；移除 `OntologyGraph.schedulingSlotsOrdered` 生产路径 | TODO-22 R3 改挂 Period 投影（**已完成 2026-07-01** · `PeriodTimeSlotDeriverTest`） |
+| **S5 退役 ENT-SS** | 删除/Deprecated `SchedulingSlot` 集合装载；`ont_scheduling_slot` 不写入 | 无 SS 依赖的 AC 绿（**已完成 2026-07-01** · `PeriodTimeSlotDeriverTest` · `OntologyLoaderSchedulingSlotTest`） |
 
 **依赖：** TODO-22（RCA 本体化）· MOD-CAL 工厂日历 · 与 TODO-12 的 `ont_period` 列扩展联动。
 

@@ -7,8 +7,7 @@ import com.plantops.masterdata.BusinessRuleTypeIds;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.fulfillment.BomDependencyDerivation;
 import com.plantops.ontology.planning.MasterPlanSolveProfile;
-import com.plantops.ontology.scheduling.PeriodTimeSlotAlignment;
-import com.plantops.ontology.scheduling.SchedulingSlot;
+import com.plantops.ontology.scheduling.PeriodTimeSlotDeriver;
 import com.plantops.ontology.supply.OntologyRcaProjector;
 import com.plantops.ontology.supply.OperationTimingBoundsProjection;
 import com.plantops.ontology.supply.SupplyOrder;
@@ -66,8 +65,6 @@ public class OntologyToMasterPlanScheduleMapper {
         }
         MasterPlanSolveProfile effective = profile != null ? profile : MasterPlanSolveProfile.defaults(LocalDate.now());
         List<TimeSlot> slots = toTimeSlots(graph);
-        PeriodTimeSlotAlignment.assertAligned(graph.schedulingSlotsOrdered(), slots);
-
         WorkOrderTimingBoundsContext timingBounds = OperationTimingBoundsProjection.fromGraph(graph);
         List<OrderAllocation> allocations = buildOrderAllocations(graph, effective, slots, timingBounds);
 
@@ -104,8 +101,6 @@ public class OntologyToMasterPlanScheduleMapper {
         }
         MasterPlanSolveProfile effective = profile != null ? profile : MasterPlanSolveProfile.defaults(LocalDate.now());
         List<TimeSlot> slots = toTimeSlots(graph);
-        PeriodTimeSlotAlignment.assertAligned(graph.schedulingSlotsOrdered(), slots);
-
         WorkOrderTimingBoundsContext timingBounds = OperationTimingBoundsProjection.fromGraph(graph);
         ResourceCapacityAssignmentBuilder.BuildResult built = buildResourceCapacityAssignments(
                 graph, effective, slots, timingBounds, scopedWorkOrderNos);
@@ -251,8 +246,6 @@ public class OntologyToMasterPlanScheduleMapper {
     }
 
     private static List<TimeSlot> toTimeSlots(OntologyGraph graph) {
-        return graph.schedulingSlotsOrdered().stream()
-                .map(SchedulingSlot::toTimeSlot)
-                .toList();
+        return PeriodTimeSlotDeriver.deriveTimeSlots(graph, null);
     }
 }

@@ -11,7 +11,6 @@ import com.plantops.ontology.demand.CustomerOrderLineDelivery;
 import com.plantops.ontology.demand.Demand;
 import com.plantops.ontology.demand.ForecastDemand;
 import com.plantops.ontology.fulfillment.Fulfillment;
-import com.plantops.ontology.scheduling.SchedulingSlot;
 import com.plantops.ontology.supply.BomDependency;
 import com.plantops.ontology.supply.Operation;
 import com.plantops.ontology.supply.OperationInputMaterial;
@@ -51,7 +50,6 @@ public final class OntologyGraph {
     private final Map<String, StandardResourcePeriod> srpById;
     private final Map<String, ResourceCapacityAssignment> resourceCapacityAssignmentsById;
     private final List<Period> periodsOrdered;
-    private final List<SchedulingSlot> schedulingSlotsOrdered;
 
     private OntologyGraph(
             Map<String, Product> productsById,
@@ -73,8 +71,7 @@ public final class OntologyGraph {
             Map<String, ProductInStockingPointPeriod> pispPeriodsById,
             Map<String, StandardResourcePeriod> srpById,
             Map<String, ResourceCapacityAssignment> resourceCapacityAssignmentsById,
-            List<Period> periodsOrdered,
-            List<SchedulingSlot> schedulingSlotsOrdered) {
+            List<Period> periodsOrdered) {
         this.productsById = Collections.unmodifiableMap(productsById);
         this.defaultStockingPoint = defaultStockingPoint;
         this.pispsById = Collections.unmodifiableMap(pispsById);
@@ -95,7 +92,6 @@ public final class OntologyGraph {
         this.srpById = Collections.unmodifiableMap(srpById);
         this.resourceCapacityAssignmentsById = new LinkedHashMap<>(resourceCapacityAssignmentsById);
         this.periodsOrdered = List.copyOf(periodsOrdered);
-        this.schedulingSlotsOrdered = List.copyOf(schedulingSlotsOrdered);
     }
 
     public static Builder builder() {
@@ -355,17 +351,6 @@ public final class OntologyGraph {
         return periodsOrdered;
     }
 
-    public List<SchedulingSlot> schedulingSlotsOrdered() {
-        return schedulingSlotsOrdered;
-    }
-
-    public SchedulingSlot schedulingSlot(String id) {
-        return schedulingSlotsOrdered.stream()
-                .filter(slot -> id.equals(slot.getId()))
-                .findFirst()
-                .orElse(null);
-    }
-
     public static final class Builder {
 
         private final Map<String, Product> productsById = new LinkedHashMap<>();
@@ -388,7 +373,6 @@ public final class OntologyGraph {
         private final Map<String, StandardResourcePeriod> srpById = new LinkedHashMap<>();
         private final Map<String, ResourceCapacityAssignment> resourceCapacityAssignmentsById = new LinkedHashMap<>();
         private List<Period> periodsOrdered = List.of();
-        private List<SchedulingSlot> schedulingSlotsOrdered = List.of();
 
         public Builder product(Product product) {
             productsById.put(product.getId(), product);
@@ -516,6 +500,10 @@ public final class OntologyGraph {
             return this;
         }
 
+        public Map<String, StandardResourcePeriod> srpByIdSnapshot() {
+            return Map.copyOf(srpById);
+        }
+
         public Builder resourceCapacityAssignment(ResourceCapacityAssignment rca) {
             resourceCapacityAssignmentsById.put(rca.getId(), rca);
             return this;
@@ -523,11 +511,6 @@ public final class OntologyGraph {
 
         public Builder periodsOrdered(List<Period> periods) {
             this.periodsOrdered = periods;
-            return this;
-        }
-
-        public Builder schedulingSlotsOrdered(List<SchedulingSlot> schedulingSlots) {
-            this.schedulingSlotsOrdered = schedulingSlots != null ? schedulingSlots : List.of();
             return this;
         }
 
@@ -552,8 +535,7 @@ public final class OntologyGraph {
                     pispPeriodsById,
                     srpById,
                     resourceCapacityAssignmentsById,
-                    periodsOrdered,
-                    schedulingSlotsOrdered);
+                    periodsOrdered);
         }
     }
 }

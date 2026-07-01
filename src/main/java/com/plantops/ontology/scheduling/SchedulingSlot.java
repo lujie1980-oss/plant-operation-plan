@@ -7,8 +7,11 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 /**
- * 本体侧规划槽位，字段与 {@link TimeSlot} 1:1 对齐，供直驱 mapper 与对齐校验使用。
+ * 本体侧规划槽位，字段与 {@link TimeSlot} 1:1 对齐。
+ *
+ * @deprecated ENT-SS 已废止（ADR-16 · TODO-23 S5）；请使用 {@link PeriodTimeSlotDeriver#deriveTimeSlots}。
  */
+@Deprecated
 public final class SchedulingSlot {
 
     private final String id;

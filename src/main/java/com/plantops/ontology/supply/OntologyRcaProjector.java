@@ -3,7 +3,9 @@ package com.plantops.ontology.supply;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.OntologyIds;
 import com.plantops.ontology.period.Period;
+import com.plantops.ontology.period.PeriodGranularity;
 import com.plantops.ontology.period.PeriodIndex;
+import com.plantops.ontology.period.StandardResourcePeriodLoader;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.solver.masterplan.TimeSlot;
 
@@ -43,18 +45,30 @@ public final class OntologyRcaProjector {
             if (!srp.getStandardResourceId().equals(slot.getResourceId())) {
                 continue;
             }
-            if (!slot.getDate().isBefore(period.getStartDate()) && !slot.getDate().isAfter(period.getEndDate())) {
+            if (matchesPeriod(slot, period)) {
                 eligible.add(slot);
             }
         }
         return List.copyOf(eligible);
     }
 
+    private static boolean matchesPeriod(TimeSlot slot, Period period) {
+        if (period.getGranularity() == PeriodGranularity.SHIFT) {
+            return slot.getDate().equals(period.getStartDate())
+                    && period.getShiftId() != null
+                    && period.getShiftId().equals(
+                            StandardResourcePeriodLoader.normalizeShiftId(slot.getShiftId()));
+        }
+        return !slot.getDate().isBefore(period.getStartDate())
+                && !slot.getDate().isAfter(period.getEndDate());
+    }
+
     public static String resolveSrpIdForSlot(OntologyGraph graph, String resourceId, TimeSlot slot) {
         if (graph == null || resourceId == null || slot == null) {
             return null;
         }
-        int seq = PeriodIndex.of(graph.periodsOrdered()).sequenceFor(slot.getDate());
+        int seq = PeriodIndex.of(graph.periodsOrdered())
+                .sequenceFor(slot.getDate(), slot.getShiftId());
         String srpId = OntologyIds.srpId(resourceId, seq);
         return graph.srp(srpId) != null ? srpId : null;
     }

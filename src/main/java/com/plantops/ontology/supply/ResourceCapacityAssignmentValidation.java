@@ -61,5 +61,46 @@ public final class ResourceCapacityAssignmentValidation {
             errors.add("RCA " + rca.getId() + " OOSR resource " + oosr.getStandardResourceId()
                     + " != SRP resource " + srp.getStandardResourceId());
         }
+        validateLeafSrp(graph, rca, srp, errors);
+    }
+
+    private static void validateLeafSrp(
+            OntologyGraph graph,
+            ResourceCapacityAssignment rca,
+            StandardResourcePeriod srp,
+            List<String> errors) {
+        for (com.plantops.ontology.period.Period period : graph.periodsOrdered()) {
+            if (period.getId().equals(srp.getPeriodId()) && !period.isLeaf()) {
+                errors.add("RCA " + rca.getId() + " must target leaf SRP, not parent period " + period.getId());
+                return;
+            }
+        }
+    }
+
+    /** RULE-MP-08：并行工序组须落在同一 leaf SRP。 */
+    public static List<String> validateParallelGroups(OntologyGraph graph) {
+        if (graph == null) {
+            return List.of("graph required");
+        }
+        Map<String, String> srpByGroup = new LinkedHashMap<>();
+        List<String> errors = new ArrayList<>();
+        for (ResourceCapacityAssignment rca : graph.resourceCapacityAssignmentsById().values()) {
+            String groupId = rca.getParallelGroupId();
+            if (groupId == null || groupId.isBlank()) {
+                continue;
+            }
+            String existing = srpByGroup.putIfAbsent(groupId, rca.getStandardResourcePeriodId());
+            if (existing != null && !existing.equals(rca.getStandardResourcePeriodId())) {
+                errors.add("parallel group " + groupId
+                        + " spans SRP " + existing + " and " + rca.getStandardResourcePeriodId());
+            }
+        }
+        return List.copyOf(errors);
+    }
+
+    public static List<String> validateAll(OntologyGraph graph) {
+        List<String> errors = new ArrayList<>(validate(graph));
+        errors.addAll(validateParallelGroups(graph));
+        return List.copyOf(errors);
     }
 }

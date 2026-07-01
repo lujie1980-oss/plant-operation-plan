@@ -115,7 +115,7 @@ public final class StandardResourcePeriodLoader {
         srp.setCalendarDowntime(srp.getCalendarDowntime() + cal.unavailableCapacityMinutes);
     }
 
-    static String normalizeShiftId(String shiftId) {
+    public static String normalizeShiftId(String shiftId) {
         if (shiftId == null || shiftId.isBlank() || "DAY".equalsIgnoreCase(shiftId)) {
             return "S1";
         }

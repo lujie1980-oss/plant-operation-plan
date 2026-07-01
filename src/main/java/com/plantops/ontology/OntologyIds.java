@@ -144,6 +144,16 @@ public final class OntologyIds {
         return resourceId + "-W" + weekOffset;
     }
 
+    /** leaf shift-Period 槽 ID（TODO-23 S4）。 */
+    public static String schedulingSlotShiftId(String resourceId, int periodSequenceNr) {
+        return resourceId + "-SH" + periodSequenceNr;
+    }
+
+    /** 通用 leaf Period 槽 ID（多日/月桶）。 */
+    public static String schedulingSlotPeriodId(String resourceId, int periodSequenceNr) {
+        return resourceId + "-P" + periodSequenceNr;
+    }
+
     public static String routingId(String pispId) {
         return "RT-" + pispId;
     }

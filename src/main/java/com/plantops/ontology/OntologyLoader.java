@@ -14,8 +14,7 @@ import com.plantops.ontology.demand.Demand;
 import com.plantops.ontology.fulfillment.OntologyUpstreamFulfillmentBuilder;
 import com.plantops.ontology.fulfillment.SupplyChainLoader;
 import com.plantops.ontology.fulfillment.UpstreamFulfillmentSession;
-import com.plantops.ontology.scheduling.SchedulingSlot;
-import com.plantops.ontology.scheduling.SchedulingSlotExpander;
+import com.plantops.ontology.scheduling.PeriodTimeSlotDeriver;
 import com.plantops.ontology.supply.Operation;
 import com.plantops.ontology.supply.OperationOnStandardResource;
 import com.plantops.ontology.supply.OperationPostProcessingResolver;
@@ -61,9 +60,6 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class OntologyLoader {
-
-    @Inject
-    SchedulingSlotExpander schedulingSlotExpander;
 
     @Inject
     SupplyChainLoader supplyChainLoader;
@@ -383,10 +379,6 @@ public class OntologyLoader {
         }
 
         loadStandardResourcePeriods(builder, periods, periodIndex);
-
-        List<SchedulingSlot> schedulingSlots = schedulingSlotExpander.expand(
-                planningStart, ProductionResourceEntity.routingResourceIds());
-        builder.schedulingSlotsOrdered(schedulingSlots);
 
         OntologyGraph graph = builder.build();
         operationTimingBridgeService.applyToGraph(graph, planningStart);

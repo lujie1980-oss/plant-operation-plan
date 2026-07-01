@@ -100,7 +100,7 @@ ENT-SR 1:N ENT-PR（主数据 · RULE-MD-12）
 
 **Period 序列：** 参数 `ontology_period_sequence`（如 `14x3shift,4x1d,2x1w` 或 `14x1d,4x1w,2x1m`），缺省 `28×1d`。  
 **班次：** 不在独立 **ENT-SS** 建模，而在 **Period 定义层** 展开 shift 粒度（**ADR-16** · §5.8.1 · **TODO-23**）。  
-**过渡：** 现行 `schedulingSlotsOrdered` / `TimeSlot` 由日历 DERIVE，待 TODO-23 S5 退役 ENT-SS。
+**求解槽位：** `TimeSlot` 由 leaf Period + SRP **按需 DERIVE**（`PeriodTimeSlotDeriver`）；ENT-SS 已废止（**TODO-23 S5 已完成**）。
 
 ---
 
@@ -132,7 +132,6 @@ ENT-SR 1:N ENT-PR（主数据 · RULE-MD-12）
 | `prpById` | `PhysicalResourcePeriod` | ENT-PRP | 物理资源期间产能（日历真相源） |
 | `resourceCapacityAssignmentsById` | `ResourceCapacityAssignment` | ENT-RCA | OP×OOSR×SRP 占用分钟 |
 | `periodsOrdered` | `Period` | ENT-PER | 有序时间桶（可含 shift 粒度） |
-| `schedulingSlotsOrdered` | `SchedulingSlot` | ENT-SS | **legacy-only / transition · ADR-16 废止中**；由 Period/calendar DERIVE |
 
 ### 5.2.1 总图（ER）
 
@@ -492,9 +491,9 @@ SRP(parent).reservedCapacity  = Σ ENT-RCA on child SRP
 
 | 阶段 | ENT-SS |
 |------|--------|
-| 现行 | `SchedulingSlotExpander` → `schedulingSlotsOrdered` |
-| TODO-23 S4 | `PeriodExpander` → leaf Period → DERIVE `TimeSlot` |
-| TODO-23 S5 | 移除 `schedulingSlotsOrdered`；`ont_scheduling_slot` 不写入 |
+| 现行 | ~~`SchedulingSlotExpander` → `schedulingSlotsOrdered`~~（S4 已改） |
+| TODO-23 S4 | `PeriodExpander` → leaf Period → DERIVE `TimeSlot`（**已完成** · `PeriodTimeSlotDeriver`） |
+| TODO-23 S5 | ~~`schedulingSlotsOrdered`~~ 已移除；`SchedulingSlot` @Deprecated；`ont_scheduling_slot` 不写入（**已完成**） |
 
 ---
 
@@ -1096,7 +1095,7 @@ stateDiagram-v2
 | ENT-PRP | §5.20.2 | **spec-only** · `ont_physical_resource_period` | `spec-only`（TODO-24 P1） |
 | ENT-SRP | §5.20.3 | `StandardResourcePeriod` · `ont_srp` | `implemented`（**P0 DDL 已落地** · 直写日历 · 待 PRP rollup） |
 | ENT-RCA | §5.20.4 | `ResourceCapacityAssignment` · `ont_resource_capacity_assignment` | `implemented`（**R1~R5 已完成 2026-07-01**） |
-| ENT-SS | §5.20.5 | `SchedulingSlot` · `ont_scheduling_slot` | **legacy-only / transition**（TODO-23 S5 退役） |
+| ENT-SS | §5.20.5 | `SchedulingSlot` · `ont_scheduling_slot` | **废止**（@Deprecated · S5 已完成；`TimeSlot` 按需 DERIVE） |
 | 资源日历 | §5.20.6 | `ResourceCalendarEntity` · `resource_calendar` | `legacy-only`（键为 resourceId） |
 | 工厂日历 | §5.20.7 | `FactoryCalendarPolicyEntity` · MOD-CAL | `implemented` |
 

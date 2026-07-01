@@ -112,6 +112,9 @@
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-22 R5**：confirm 占用 SoT 迁 ENT-RCA；`PlanVersionEntRcaOccupancy` 跳过 legacy allocation 反灌 |
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-23 S1**：`PeriodGranularity` / `PeriodExpander`；`14x3shift` 序列语法 |
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-23 S2**：`StandardResourcePeriodLoader` / `Rollup`；leaf SRP 日历 + ENT-RCA；父日 SRP reserved 汇总 |
+| 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-23 S3**：leaf SRP 产能投影 · KPI-MP-B05 · RULE-MP-08 并行同 SRP 校验 |
+| 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-23 S4**：`PeriodTimeSlotDeriver` 从 leaf Period+SRP 派生 `TimeSlot`；废弃 `SchedulingSlotExpander` 装载路径 |
+| 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-23 S5**：移除 `OntologyGraph.schedulingSlotsOrdered`；`SchedulingSlot` @Deprecated；`TimeSlot` 按需 DERIVE |
 | 2026-06-30 | 1.0.0-SNAPSHOT | **SDD 同步**：§5.10/§5.14/§8 AC-PERS/ADR-09 反映 P4 切读 + Sprint 6A/6B 实现态 |
 
 ## 治理约定

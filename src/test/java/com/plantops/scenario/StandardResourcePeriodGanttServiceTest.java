@@ -38,6 +38,7 @@ class StandardResourcePeriodGanttServiceTest {
         assertEquals(start, dto.horizonEnd());
         assertEquals(1, dto.cells().size());
         assertEquals("RES-A", dto.cells().get(0).resourceId());
+        assertEquals("DAY", dto.cells().get(0).shiftId());
         assertEquals(50, dto.cells().get(0).utilizationPct());
         assertTrue(dto.cells().get(0).reservedMinutes() > 0);
     }
