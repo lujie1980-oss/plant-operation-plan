@@ -339,7 +339,7 @@
 |------|------|------|
 | **R0 规范** | §5.5.1 · ADR-15 · ENT-RCA 术语 · `ont_*` 表名 | 评审通过（**已完成 2026-06-21**） |
 | **R1 本体类型** | `ontology.supply.ResourceCapacityAssignment` + `OntologyGraph.resourceCapacityAssignmentsById` | 单元测试：OP×OOSR×SRP 键与守恒（**已完成 2026-07-01** · `ResourceCapacityAssignmentValidationTest`） |
-| **R2 写回路径** | `PlanningResultApplicator` / ROL：optimize 写 ENT-RCA → rollup SRP | AC：Σ RCA = OP 总分钟；SRP.reserved 一致 |
+| **R2 写回路径** | `PlanningResultApplicator` / ROL：optimize 写 ENT-RCA → rollup SRP | AC：Σ RCA = OP 总分钟；SRP.reserved 一致（**已完成 2026-07-01** · `ResourceCapacityAssignmentProjectionTest`） |
 | **R3 求解投影** | `OntologyRcaProjector`：ENT-RCA ↔ solver RCA/`TimeSlot`（由 **leaf Period DERIVE**，ADR-16） | `OrtoolsResourceCapacityCpSolverTest` 绿 |
 | **R4 持久化** | Flyway `ont_resource_capacity_assignment`（**P0 DDL 已完成 2026-06-30**；JPA/Restorer P0 子集已落地） | AC-PERS：restore 含 RCA（**待 TODO-22 R4 扩展**） |
 | **R5 退役** | 停止以 `MasterPlanAllocationEntity` 为占用 SoT；solver 包 RCA 仅内部 | confirm reload ≡ Session 图 |

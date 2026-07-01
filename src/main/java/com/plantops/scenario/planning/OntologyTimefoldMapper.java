@@ -4,6 +4,7 @@ import com.plantops.api.dto.MasterPlanAllocationDto;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.OntologyIds;
 import com.plantops.ontology.period.PeriodIndex;
+import com.plantops.ontology.supply.ResourceCapacityAssignmentRollup;
 import com.plantops.rol.ChangeOperation;
 import com.plantops.rol.ChangeSet;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -53,6 +54,22 @@ public class OntologyTimefoldMapper {
                     entry.getValue()));
         }
 
+        Map<String, Double> reservedBySrpId = ResourceCapacityAssignmentRollup.reservedMinutesBySrpId(graph);
+        if (reservedBySrpId.isEmpty()) {
+            reservedBySrpId = reservedMinutesFromAllocations(allocations, graph, periodIndex);
+        }
+        for (Map.Entry<String, Double> entry : reservedBySrpId.entrySet()) {
+            operations.add(new ChangeOperation(
+                    ChangeOperation.TARGET_STANDARD_RESOURCE_PERIOD,
+                    entry.getKey(), "reservedCapacity", entry.getValue()));
+        }
+        return new ChangeSet(operations, "Project allocations into PISPP supply");
+    }
+
+    private static Map<String, Double> reservedMinutesFromAllocations(
+            List<MasterPlanAllocationDto> allocations,
+            OntologyGraph graph,
+            PeriodIndex periodIndex) {
         Map<String, Double> reservedBySrpId = new LinkedHashMap<>();
         for (MasterPlanAllocationDto allocation : allocations) {
             if (allocation == null || allocation.resourceId() == null || allocation.resourceId().isBlank()) {
@@ -65,12 +82,7 @@ public class OntologyTimefoldMapper {
             }
             reservedBySrpId.merge(srpId, (double) allocation.durationMinutes(), Double::sum);
         }
-        for (Map.Entry<String, Double> entry : reservedBySrpId.entrySet()) {
-            operations.add(new ChangeOperation(
-                    ChangeOperation.TARGET_STANDARD_RESOURCE_PERIOD,
-                    entry.getKey(), "reservedCapacity", entry.getValue()));
-        }
-        return new ChangeSet(operations, "Project allocations into PISPP supply");
+        return reservedBySrpId;
     }
 
     private static LocalDate resolvePlannedDate(MasterPlanAllocationDto allocation) {

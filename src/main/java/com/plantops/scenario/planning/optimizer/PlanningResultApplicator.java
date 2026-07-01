@@ -6,6 +6,7 @@ import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.rol.ChangeSet;
 import com.plantops.rol.RolEngine;
 import com.plantops.rol.RolTransaction;
+import com.plantops.ontology.supply.ResourceCapacityAssignmentProjection;
 import com.plantops.scenario.planning.OperationPlannedTimeProjection;
 import com.plantops.scenario.planning.OntologyTimefoldMapper;
 import com.plantops.solver.masterplan.OrderAllocation;
@@ -87,7 +88,7 @@ public class PlanningResultApplicator {
         return result;
     }
 
-    private void applyAllocationDtos(
+    public void applyAllocationDtos(
             OntologyGraph graph,
             RolEngine rolEngine,
             List<MasterPlanAllocationDto> allocationDtos) {
@@ -95,8 +96,9 @@ public class PlanningResultApplicator {
             return;
         }
         OperationPlannedTimeProjection.apply(graph, allocationDtos);
+        PeriodIndex periodIndex = PeriodIndex.of(graph.periodsOrdered());
+        ResourceCapacityAssignmentProjection.apply(graph, allocationDtos, periodIndex);
         if (rolEngine != null) {
-            PeriodIndex periodIndex = PeriodIndex.of(graph.periodsOrdered());
             ChangeSet changeSet = ontologyTimefoldMapper.toChangeSet(allocationDtos, graph, periodIndex);
             rolTransaction.apply(changeSet, graph, rolEngine);
         }

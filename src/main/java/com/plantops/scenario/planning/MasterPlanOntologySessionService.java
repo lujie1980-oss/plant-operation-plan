@@ -36,6 +36,7 @@ import com.plantops.scenario.planning.optimizer.OptimizerResult;
 import com.plantops.scenario.planning.optimizer.PlanningOptimizerException;
 import com.plantops.scenario.planning.optimizer.PlanningOptimizerRegistry;
 import com.plantops.scenario.planning.optimizer.PlanningProblem;
+import com.plantops.scenario.planning.optimizer.PlanningResultApplicator;
 import com.plantops.scenario.planning.persist.OntologyStatePersister;
 import com.plantops.workspace.WorkspaceResolver;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -79,6 +80,9 @@ public class MasterPlanOntologySessionService {
 
     @Inject
     PlanningOptimizerRegistry optimizerRegistry;
+
+    @Inject
+    PlanningResultApplicator planningResultApplicator;
 
     @Inject
     OntologyStatePersister ontologyStatePersister;
@@ -415,14 +419,12 @@ public class MasterPlanOntologySessionService {
             List<MasterPlanAllocationDto> allocations,
             String score,
             long solveDurationMs) {
-        OperationPlannedTimeProjection.apply(session.graph(), allocations);
         PeriodIndex periodIndex = PeriodIndex.of(session.graph().periodsOrdered());
-        ChangeSet changeSet = ontologyTimefoldMapper.toChangeSet(allocations, session.graph(), periodIndex);
-
-        List<ProductInStockingPointPeriod> candidates = collectChangeSetCandidates(changeSet, session.graph());
+        ChangeSet previewChangeSet = ontologyTimefoldMapper.toChangeSet(allocations, session.graph(), periodIndex);
+        List<ProductInStockingPointPeriod> candidates = collectChangeSetCandidates(previewChangeSet, session.graph());
         Map<String, PispPeriodSnapshotDto> before = snapshotById(candidates);
 
-        rolTransaction.apply(changeSet, session.graph(), session.rolEngine());
+        planningResultApplicator.applyAllocationDtos(session.graph(), session.rolEngine(), allocations);
 
         List<PispPeriodSnapshotDto> affectedSnapshots = collectChangedSnapshots(candidates, before);
         if (affectedSnapshots.isEmpty() && !candidates.isEmpty()) {

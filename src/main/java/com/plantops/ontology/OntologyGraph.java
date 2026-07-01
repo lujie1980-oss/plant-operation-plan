@@ -93,7 +93,7 @@ public final class OntologyGraph {
         this.bomDependencies = List.copyOf(bomDependencies);
         this.pispPeriodsById = Collections.unmodifiableMap(pispPeriodsById);
         this.srpById = Collections.unmodifiableMap(srpById);
-        this.resourceCapacityAssignmentsById = Collections.unmodifiableMap(resourceCapacityAssignmentsById);
+        this.resourceCapacityAssignmentsById = new LinkedHashMap<>(resourceCapacityAssignmentsById);
         this.periodsOrdered = List.copyOf(periodsOrdered);
         this.schedulingSlotsOrdered = List.copyOf(schedulingSlotsOrdered);
     }
@@ -324,7 +324,19 @@ public final class OntologyGraph {
     }
 
     public Map<String, ResourceCapacityAssignment> resourceCapacityAssignmentsById() {
-        return resourceCapacityAssignmentsById;
+        return Collections.unmodifiableMap(resourceCapacityAssignmentsById);
+    }
+
+    public void replaceResourceCapacityAssignments(List<ResourceCapacityAssignment> assignments) {
+        resourceCapacityAssignmentsById.clear();
+        if (assignments == null) {
+            return;
+        }
+        for (ResourceCapacityAssignment assignment : assignments) {
+            if (assignment != null && assignment.getId() != null) {
+                resourceCapacityAssignmentsById.put(assignment.getId(), assignment);
+            }
+        }
     }
 
     public List<ResourceCapacityAssignment> resourceCapacityAssignmentsForOperation(String operationId) {

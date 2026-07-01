@@ -2,16 +2,15 @@ package com.plantops.scenario.planning;
 
 import com.plantops.api.dto.MasterPlanAllocationDto;
 import com.plantops.ontology.OntologyGraph;
-import com.plantops.ontology.OntologyIds;
 import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.ontology.supply.Operation;
+import com.plantops.ontology.supply.ResourceCapacityAssignmentProjection;
+import com.plantops.ontology.supply.ResourceCapacityAssignmentRollup;
 import com.plantops.rol.RolEngine;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.time.LocalDate;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +40,9 @@ public class PlanVersionAllocationHydrator {
         }
         OperationPlannedTimeProjection.apply(graph, allocations);
         lockAllocatedOperations(graph, allocations);
-        applySrpReserved(graph, allocations, rolEngine);
+        PeriodIndex periodIndex = PeriodIndex.of(graph.periodsOrdered());
+        ResourceCapacityAssignmentProjection.apply(graph, allocations, periodIndex);
+        applySrpReserved(graph, rolEngine);
     }
 
     private static void lockAllocatedOperations(
@@ -60,28 +61,8 @@ public class PlanVersionAllocationHydrator {
         }
     }
 
-    private static void applySrpReserved(
-            OntologyGraph graph,
-            List<MasterPlanAllocationDto> allocations,
-            RolEngine rolEngine) {
-        PeriodIndex periodIndex = PeriodIndex.of(graph.periodsOrdered());
-        Map<String, Double> reservedBySrpId = new LinkedHashMap<>();
-        for (MasterPlanAllocationDto allocation : allocations) {
-            if (allocation == null || allocation.resourceId() == null || allocation.resourceId().isBlank()) {
-                continue;
-            }
-            LocalDate plannedDate = resolvePlannedDate(allocation);
-            if (plannedDate == null) {
-                continue;
-            }
-            int seq = periodIndex.sequenceFor(plannedDate);
-            String srpId = OntologyIds.srpId(allocation.resourceId(), seq);
-            if (graph.srp(srpId) == null) {
-                continue;
-            }
-            reservedBySrpId.merge(srpId, (double) allocation.durationMinutes(), Double::sum);
-        }
-        for (Map.Entry<String, Double> entry : reservedBySrpId.entrySet()) {
+    private static void applySrpReserved(OntologyGraph graph, RolEngine rolEngine) {
+        for (Map.Entry<String, Double> entry : ResourceCapacityAssignmentRollup.reservedMinutesBySrpId(graph).entrySet()) {
             StandardResourcePeriod srp = graph.srp(entry.getKey());
             if (srp == null) {
                 continue;
@@ -93,18 +74,5 @@ public class PlanVersionAllocationHydrator {
                 srp.recalculateCapacityFields();
             }
         }
-    }
-
-    private static LocalDate resolvePlannedDate(MasterPlanAllocationDto allocation) {
-        if (allocation.slotDate() != null) {
-            return allocation.slotDate();
-        }
-        if (allocation.plannedEndTs() != null) {
-            return allocation.plannedEndTs().toLocalDate();
-        }
-        if (allocation.plannedStartTs() != null) {
-            return allocation.plannedStartTs().toLocalDate();
-        }
-        return null;
     }
 }
