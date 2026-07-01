@@ -87,7 +87,7 @@
 | **背景** | PATH-ENT（`MasterPlanPlanningContextBuilder` 扫 JPA → 求解）与 ADR-01/07 冲突：simulate 后 optimize 易与 Session 沙盘脱节；双路径对等（ADR-02）增加 CI 与认知成本 |
 | **决策** | **废弃 PATH-ENT 作为产品能力**。PROC-S04、ENT-SES、ENT-SBX 有限能力 trial、计划流水线 S04 **统一 PATH-ONT**：权威 ENT-OG → `OntologyToMasterPlanScheduleMapper` → `PlanningOptimizer` → 写回 ENT-OG → confirm 落 JPA |
 | **废止** | `ontology_direct_solve_enabled` 开关（迁移完成后删除或固定 true）；Session `optimizeLegacy`（基线 allocation 抄录） |
-| **保留（过渡）** | ~~`MasterPlanPlanningContextBuilder` 与 AC-05 对等测试~~ **已移除（2026-07-01 · TODO-08）** |
+| **保留（过渡）** | ~~`MasterPlanPlanningContextBuilder` 与 AC-05 对等测试~~ **已移除（2026-07-01 · TODO-08 收口）** |
 | **不含** | S05 详细排程、分切仍各自装载逻辑（与 PATH-ENT/PATH-ONT 无关，见 TODO-07） |
 | **后果** | 实现待办 TODO-08；规范上 RULE-SES-03 适用于全部 S04 optimize/confirm，不再标注「PATH-ONT 限定」 |
 
@@ -235,7 +235,7 @@
 
 | ID | 风险 | 缓解 |
 |----|------|------|
-| RSK-01 | PATH-ENT 退役期回归缺口 | ~~TODO-08 分阶段迁移~~ **已收口 2026-07-01** |
+| RSK-01 | PATH-ENT 退役期回归缺口 | ~~TODO-08 分阶段迁移~~ **已收口 2026-07-01**；`PlanningOptimizerParityTest` 覆盖 PATH-ONT 引擎对等 |
 | RSK-02 | 规范滞后代码 | PR 规范联动；§8 测试绑定 |
 | RSK-03 | demand_scale 二次缩放 | 文档 + 参数检查清单 |
 | RSK-04 | Session 内存压力 | TTL；并发 Session 上限；NFR 堆/集合计数；**不**以裁切并行 SoT 图缓解（ADR-07） |
@@ -256,7 +256,7 @@
 | TODO-05 | 重生成演练：仅凭规范盲重建模块 | 架构 |
 | TODO-06 | ~~对齐 ADR-07~~（2026-06-20 已实现） | 开发 |
 | TODO-07 | S05/分切求解配置纳入统一配置或插件体系 | 架构+开发 |
-| TODO-08 | ~~**PATH-ENT 代码退役（ADR-08）**~~ **已收口 2026-07-01**：删 `MasterPlanPlanningContextBuilder` / `OntologyDirectSolveParityTest`；`MasterPlanOntologyScheduleBuilder` 统一 PATH-ONT | — |
+| TODO-08 | ~~**PATH-ENT 代码退役（ADR-08）**~~ **已收口 2026-07-01**：Session `optimizeLegacy` / `ontology_direct_solve_enabled` 已删；`MasterPlanService` 统一 `MasterPlanOntologyScheduleBuilder`；AC-05 废止 | — |
 | TODO-09 | SCN-02c/03b/04 跳转与试算页 UI 对齐 **[§17.8](../volumes/platform/17-ui-ux.md#178-跨页导航契约ui-nav-)** | 产品+前端 |
 | TODO-10 | SCN-01f：新增 `CANCEL_PROMISE`；SCN-01e 与取消承诺解耦（RULE-FF-03） | 开发 |
 | TODO-11 | SCN-07：供需平衡专页、PISPP period 表、建供应 API-MAT-02/03、物料预留 API-MAT-04~08、多路径 ENT-RT | 产品+前端+开发 |
@@ -284,7 +284,8 @@
 
 | 偏差 ID | 摘要 | 已有 TODO | 新增/备注 |
 |---------|------|-----------|-----------|
-| D-08 | ~~默认仍 PATH-ENT / `optimizeLegacy`~~ | **TODO-08** | **已解决 2026-07-01**：全 S04 主路径 PATH-ONT（`MasterPlanOntologyScheduleBuilder`） |
+| D-08 | ~~默认仍 PATH-ENT / `optimizeLegacy`~~ | **TODO-08** | **已解决 2026-07-01**：S04 统一 PATH-ONT（`MasterPlanOntologyScheduleBuilder`） |
+| D-ENT-BOM | PATH-ENT 读 JPA BOM | **TODO-08** | **已解决 2026-07-01**：装载经 `BomDependencyDerivation`（AC-10） |
 | D-09 | ~~confirm 写 legacy allocation，无 `ont_*`~~ | ~~TODO-12~~ | **已解决 2026-06-30**：`session-enabled` + `promoteDraftToCommitted`；legacy allocation 并行保留 |
 | D-10 | 无 `CANCEL_PROMISE` | **TODO-10** | — |
 | D-11 | API-MAT-02~08 / SCN-07e~j | **TODO-11** | — |
@@ -292,7 +293,6 @@
 | D-15 | 无 KnowledgeResolver | **TODO-15** | — |
 | D-19 | MOD-DI mock，无 staging | **TODO-19** | — |
 | D-22~24 | RCA / Shift-Period / PRP | **TODO-22~24** | — |
-| D-ENT-BOM | PATH-ENT 读 JPA BOM | **TODO-08** | 并入 PATH-ENT 退役 |
 | D-CONFIRM | ~~confirm 非 ont revision~~ | ~~TODO-12~~ | **已解决 2026-06-30**：`OntologyConfirmIntegrationTest` · `MasterPlanOntologySessionPersistenceIntegrationTest` |
 | D-TRACE | 无 `@SpecRef` | **TODO-01** | TODO-28 补 CI 清单 |
 | D-IAM-01 | 注册无自动 PERSONAL WS | ~~TODO-18~~ | **已决策**：v1 手动建 WS · `IamAcTest#acIam01` |
@@ -303,7 +303,7 @@
 | D-CI-SEQ | Flyway 种子 id 与 `*_SEQ` 冲突 | — | **TODO-28**（已实现 test-migration，待规范化） |
 | D-CI-IAM | QuarkusTest 缺 IAM 配置致套件不可跑 | — | **TODO-28** |
 | AC-23 | COLD 计划覆盖标记 | 分散 | 随 TODO-11/OCP 迭代补测（暂不单独 TODO） |
-| AC-05 | 迁移期 PATH 对等 | **已废止 2026-07-01** | — |
+| AC-05 | 迁移期 PATH 对等 | **TODO-08** 后废止 | **已废止 2026-07-01** |
 
 \* v1 IAM：**首登手动建 WS** 为定稿行为（非待收口偏差）。
 

@@ -28,9 +28,9 @@ import com.plantops.persistence.entity.ProductionResourceEntity;
 import com.plantops.persistence.entity.ResourceCalendarEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
-import com.plantops.scenario.planning.MasterPlanOntologyScheduleBuilder;
 import com.plantops.scenario.planning.MasterPlanPlanningContext;
 import com.plantops.scenario.planning.MaterialPlanningContext;
+import com.plantops.scenario.planning.MasterPlanOntologyScheduleBuilder;
 import com.plantops.scenario.planning.MasterPlanProblemMapper;
 import com.plantops.solver.masterplan.MasterPlanCapacityStrategy;
 import com.plantops.solver.masterplan.MasterPlanObjectiveSettings;
@@ -220,7 +220,10 @@ public class MasterPlanService {
             MasterPlanStrategyConfigService.ResolvedStrategy resolved,
             MasterPlanCapacityOverlay capacityOverlay,
             MaterialPlanningContext materialPlanning) {
-        return ontologyScheduleBuilder.buildPlanningContext(resolved, capacityOverlay, materialPlanning);
+        return ontologyScheduleBuilder.buildPlanningContext(
+                resolved,
+                capacityOverlay != null ? capacityOverlay : MasterPlanCapacityOverlay.empty(),
+                materialPlanning);
     }
 
     /**
@@ -723,7 +726,11 @@ public class MasterPlanService {
     private MasterPlanSchedule buildProblem(
             MasterPlanStrategyConfigService.ResolvedStrategy resolved,
             MasterPlanCapacityOverlay capacityOverlay) {
-        return ontologyScheduleBuilder.buildSchedule(resolved, capacityOverlay, null, null);
+        return ontologyScheduleBuilder.buildSchedule(
+                resolved,
+                capacityOverlay != null ? capacityOverlay : MasterPlanCapacityOverlay.empty(),
+                null,
+                null);
     }
 
     @Transactional(Transactional.TxType.REQUIRES_NEW)

@@ -777,7 +777,7 @@ Then 输入来自 Session ENT-OG（OntologyToMasterPlanScheduleMapper）
   And 结果写回同一 ENT-OG；hard = 0 时可 confirm
 ```
 
-> 迁移期 TODO-08：退役 PATH-ENT 前保留 AC-05 parity 回归。
+> ~~迁移期 TODO-08~~ **PATH-ENT 已退役（2026-07-01）**；S04 统一 `MasterPlanOntologyScheduleBuilder`（PATH-ONT）。
 
 **异常 SCN-T01-E1 optimize 未反映 simulate**
 

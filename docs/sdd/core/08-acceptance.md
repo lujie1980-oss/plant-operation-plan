@@ -51,15 +51,15 @@
 
 ---
 
-## AC-05 直驱对等性（已废止 · TODO-08 · 2026-07-01）
+## AC-05 直驱对等性（~~迁移期~~ **已废止 2026-07-01**）
 
 | 项 | 值 |
 |----|-----|
 | **追溯** | SCN-T01 · ADR-08 迁移期 |
-| **状态** | **已废止** — PATH-ENT 已删除；PATH-ONT 为唯一路径 |
-| **原 When** | 同一 workspace 分别 PATH-ENT 与 PATH-ONT（迁移期对照） |
-| **原 Then** | hard score 相等；allocation 键 Jaccard ≥ 0.95 |
-| **原测试** | ~~`OntologyDirectSolveParityTest`~~（已删除） |
+| **状态** | **废止** — PATH-ENT 已移除；PATH-ONT 为唯一 S04 装载路径 |
+| **When** | ~~同一 workspace 分别 PATH-ENT 与 PATH-ONT~~ |
+| **Then** | ~~hard score 相等；allocation 键 Jaccard ≥ 0.95~~ |
+| **测试** | ~~`OntologyDirectSolveParityTest`~~ → 由 `PlanningOptimizerParityTest`（PATH-ONT 引擎对等）承接 |
 
 ---
 
@@ -315,7 +315,7 @@
 | AC | SCN | RULE | 自动化测试 |
 |----|-----|------|------------|
 | AC-01 | SCN-01c | FF-01 | OntologyFulfillmentChainProjectionTest |
-| AC-05 | SCN-T01（迁移期） | MP-* | ~~OntologyDirectSolveParityTest~~ **已废止** |
+| AC-05 | SCN-T01（~~迁移期~~ 已废止） | MP-* | `PlanningOptimizerParityTest`（PATH-ONT 引擎对等） |
 | AC-09 | SCN-T04 | RT-* | MasterPlanRoutingProjectorTest |
 | AC-10 | — | FF-02 | BomDependencyDerivationTest |
 | AC-13 | SCN-01b | SES-04 | AuthoritativeOntologyGraphAc13Test |
