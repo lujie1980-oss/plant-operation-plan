@@ -54,9 +54,9 @@ $env:QUARKUS_PROFILE='postgres'
 | `OntologyConfirmIntegrationTest` | PostgreSQL（AC-PERS-03 promote + HEAD） |
 | `OntologyLegacyDualWriteIntegrationTest` | H2（AC-PERS-04 work_order 双写） |
 | `OntologyLoaderRestorerParityIntegrationTest` | H2（AC-PERS-01 loader↔restorer P0） |
-
 | `OntologyWorkspaceHeadBootstrapIntegrationTest` | H2（WORKSPACE HEAD bootstrap） |
 | `MasterPlanOntologySessionPersistenceIntegrationTest` | H2（AC-PERS-03 Session E2E + allocation） |
+| `AuthoritativeOntologyReadPathIntegrationTest` | H2（Sprint 6B 场景读路径：物料平衡 + 产能） |
 
 **Ontology 持久化开关（H2 dev 与 `postgres` profile 默认一致）：**
 

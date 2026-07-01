@@ -5,7 +5,7 @@
 > **版本基线：** M4+ · ADR-07 单一权威图 · ADR-08 PATH-ONT  
 > **范围（现行）：** ENT-OG **仅规范订单协同计划**（原主计划 · **MOD-OCP** / PROC-S04）。**MOD-SCH 作业排程**、**MOD-SLT 分切排样** 仍各自独立模型与持久化（如 `DetailScheduleOperationEntity`）；纳入 Ontology 的实体、关系与 `ont_*` 表族见 **§10 TODO-20**。
 
-`OntologyGraph` 是 Session 内的**运行时**计划领域聚合图，承载供需、工序、满足、PISPP/SRP/PRP 与规划占用（ENT-RCA）。**推演与 optimize 的真相源在内存**；simulate / optimize / confirm 按 **ADR-09** 持久化到 **`ont_*`**（§5.14），legacy JPA 表在迁移期仍作装载/confirm 边界（§5.10 · TODO-12 P4）。
+`OntologyGraph` 是 Session 内的**运行时**计划领域聚合图，承载供需、工序、满足、PISPP/SRP/PRP 与规划占用（ENT-RCA）。**推演与 optimize 的真相源在内存**；simulate / optimize / confirm 按 **ADR-09** 持久化到 **`ont_*`**（§5.14）。**读装载**经 `WorkspaceAuthoritativeOntologyGraphService`（legacy `OntologyLoader` 壳 + `OntologyP0Overlay`）；legacy JPA 在迁移期仍作 confirm 并行写边界（§5.10）。
 
 ---
 
@@ -16,8 +16,8 @@
 | 读者意图 | 读哪节 | 何时有效 |
 |----------|--------|----------|
 | 理解计划本体结构 | §5.1~§5.9 | 始终 |
-| 对照**当前代码**装载 / confirm | §5.10 | TODO-12 P4 完成前 |
-| 设计 **Flyway / Restorer** | §5.14~§5.18 | 目标态；实现以 TODO-12 为准 |
+| 对照**当前代码**装载 / confirm | §5.10 | 已切读 `ont_*` P0 overlay；legacy 对照至 TODO-13/14 |
+| 设计 **Flyway / Restorer** | §5.14~§5.18 | P0~P5 骨架已落地；收口 Sprint 6C~6D |
 | Session / Sandbox API | §5.19 | 已规范 |
 | 实体字段全集 | §5.20 + [appendix](./05-domain-model-appendix-fields.md) | Phase 2 进行中（日历链 + P0 部分） |
 | SQL 列级 DDL | [05-ont-schema.md](../volumes/data/05-ont-schema.md) 或 §5.14.2 扩展 | **P0 已落地（V65 · PostgreSQL）**；Master/period/BOM 等 P1/P2 待 Flyway |
@@ -29,13 +29,13 @@ flowchart TD
   Q -->|写 Java 装载逻辑| S10[§5.10 现行]
   Q -->|写 ont_* Flyway| S14[§5.14 + 05-ont-schema]
   Q -->|Session API| S19[§5.19]
-  S10 -.->|TODO-12 P4 后收缩| ARCH[Legacy 对照附录]
+  S10 -.->|TODO-12 收口后收缩| ARCH[Legacy 对照附录]
 ```
 
 | 章节 | 性质 | 说明 |
 |------|------|------|
 | §5.1~§5.9 | **规范（结构）** | ENT-OG 内实体与关系；与 ADR-07/08 一致 |
-| §5.10 | **过渡（现行实现）** | legacy JPA 装载边界；TODO-12 P4 后收缩 |
+| §5.10 | **过渡（现行实现）** | legacy JPA confirm 边界 + 读路径对照；TODO-12 收口后收缩 |
 | §5.14~§5.18 | **规范（目标态）** | ADR-09 全量 `ont_*` 持久化 |
 | §5.19~§5.20 | **规范（补全中）** | §5.19 Session 已规范；§5.20 日历链 + P0 部分已落地；**P0 SQL 列级规范已落地（V65 · TODO-21 Phase 3 部分）** |
 
@@ -106,7 +106,7 @@ ENT-SR 1:N ENT-PR（主数据 · RULE-MD-12）
 
 ## 5.2 OntologyGraph 容器
 
-由 `OntologyLoader` → `SupplyChainLoader` → `FulfillmentLoader` → `BomDependencyDerivation` 装载后 `build()` 固化。Session / Sandbox TTL ~8h。
+由 **`WorkspaceAuthoritativeOntologyGraphService`** 装载：内部 `OntologyLoader`（legacy JPA 壳）+ 可选 **`OntologyP0Overlay`**（committed `ont_*` P0）→ `build()` 固化。Session / Sandbox TTL ~8h。
 
 | 集合字段 | 类型 | ENT | 说明 |
 |----------|------|-----|------|
@@ -181,7 +181,7 @@ erDiagram
 | `ontology.period` | 时间桶 / MRP / 产能 | `Period`, `ProductInStockingPointPeriod`, `StandardResourcePeriod` |
 | `ontology.scheduling` | 规划槽位 | `SchedulingSlot` |
 | `ontology.planning` | 求解配置 | `MasterPlanSolveProfile` |
-| 根 | 图 / ID / 装载 | `OntologyGraph`, `OntologyIds`, `OntologyLoader` |
+| 根 | 图 / ID / 装载 | `OntologyGraph`, `OntologyIds`, `WorkspaceAuthoritativeOntologyGraphService`, `OntologyLoader`（@Deprecated 内部壳） |
 
 ---
 
@@ -604,13 +604,14 @@ flowchart TB
 
 ## 5.10 持久化与求解器边界（现行实现 · 过渡）
 
-> ⚠️ **过渡章节**：描述 **TODO-12 P4 完成前** 的 legacy JPA 装载与 confirm 边界。Flyway / `OntologyRestorer` 设计以 **§5.14** 为准；本章在 P4 后收缩为 Legacy 对照表。
+> ⚠️ **过渡章节**：P4 切读已落地（`OntologyP0Overlay` + WORKSPACE HEAD bootstrap）；**业务读路径**已迁 `WorkspaceAuthoritativeOntologyGraphService`（Sprint 6B）。本节仍描述 legacy JPA **confirm 并行写**与对照关系；全量退役 loader 主路径见 **TODO-12 Sprint 6D**。
 
-> **目标态：** §5.14 **全量 Ontology 持久化（ADR-09）**。本节描述**当前代码**边界；迁移完成后以 §5.14 为准。
+> **目标态：** §5.14 **全量 Ontology 持久化（ADR-09）**。Flyway / Restorer 设计以 **§5.14** 为准。
 
 | 本体 | 持久化 / 投影 | 说明 |
 |------|---------------|------|
-| ENT-SO | `WorkOrderEntity` | 1:1 · `id = workOrderNo` |
+| ENT-OG 读装载 | `WorkspaceAuthoritativeOntologyGraphService` | `OntologyLoader` 壳 + `ont_*` P0 overlay；MRP 后 `OntologyLegacyMutationCoordinator` 双写 WO |
+| ENT-SO | `WorkOrderEntity` + `ont_supply_order` | 双写期 1:1 · `id = workOrderNo` |
 | ENT-OP | 图内 + 求解写回 | 来自工艺物化 |
 | ENT-RT/RS/* | 无表 | `MasterPlanRoutingProjector` |
 | ENT-FF | 内存 peg | `WorkOrderPeggingEntity` 对照 |
@@ -686,7 +687,9 @@ flowchart LR
 src/main/java/com/plantops/ontology/
 ├── OntologyGraph.java
 ├── OntologyIds.java
-├── OntologyLoader.java
+├── WorkspaceAuthoritativeOntologyGraphService.java
+├── OntologyLoader.java                    # @Deprecated · legacy 壳 / bootstrap 边界
+├── persistence/                           # §5.17 · ADR-09
 ├── demand/
 ├── supply/
 ├── fulfillment/
@@ -702,7 +705,7 @@ src/main/java/com/plantops/ontology/
 
 > **决策：** 以 **Ontology 为语义基准**，数据库表与 ENT-* **同构、可 SQL 查询**；内存 `OntologyGraph` 由 DB **恢复/组装**，而非仅从 legacy JPA 重算派生。  
 > **Partial 模式：** 从全量 schema **分化**——部分 ENT 标记 `DERIVE`，不落库、装载时重算（§5.17）。  
-> **实现（2026-06-30）：** PostgreSQL profile · Flyway **`V65__ont_p0.sql`**（11 张 P0 表）· 列级规范 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md) · 验收 `OntP0SchemaMigrationTest`。JPA 实体 / `OntologyRestorer` 待 **TODO-12 P1**。
+> **实现（2026-06-30）：** PostgreSQL **`V65__ont_p0.sql`** + H2 **`V66__ont_p0_h2.sql`** · 列级规范 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md) · `OntologyRestorer` / Session WAL / promote / dual-write / overlay / bootstrap **已落地**（TODO-12 P0~P5 骨架 + Sprint 6A/6B）；收口 Sprint 6C~6D（Session kill/reload E2E · PG 全量 parity）。
 
 ### 5.14.1 核心概念：Revision（图版本）
 
@@ -888,7 +891,7 @@ flowchart TB
 | `sales_order_line` | `ont_col` + `ont_cold` | 可选拆表；导入 revision |
 | Master 数据 | `ont_routing*` 快照 | 每次 fork revision 时从 master 投影 copy-in |
 
-**过渡期：** `OntologyLoader` 保留为 **LegacyImporter**；`OntologyRestorer` 为唯一生产读路径。
+**过渡期：** `OntologyLoader` 保留为 **legacy 壳 + bootstrap 边界**（`@Deprecated`）；生产读经 **`WorkspaceAuthoritativeOntologyGraphService`** + `OntologyP0Overlay`；`OntologyRestorer` 从 `ont_*` 组装 P0 子集。
 
 ---
 
@@ -943,21 +946,26 @@ Partial **不是** 另一套 schema，而是同一 `ont_*` 表 + **存储策略*
 
 ```
 com.plantops.ontology.persistence/
-├── OntologyPersistencePort.java      # 唯一写入口
-├── OntologyRestorer.java             # revision → OntologyGraph
-├── OntologyRevisionService.java      # fork / promote / HEAD
-├── OntologyChangeLog.java            # WAL replay
-├── OntologyLegacyImporter.java       # 过渡：JPA → ont_*
-└── entity/                           # ont_* JPA（与 §5.14.2 同构）
+├── OntologyPersistencePort.java           # 写入口（实现 OntologyPersistenceService）
+├── OntologyRestorer.java                  # revision → OntologyGraph（P0 子集）
+├── OntologyRevisionService.java           # fork / promote / HEAD
+├── OntologySessionPersistenceService.java # DRAFT Session + WAL
+├── OntologyLegacyImporter.java            # legacy 图 → COMMITTED ont_*
+├── OntologyLegacyDualWriteService.java    # work_order → ont_supply_order
+├── OntologyLegacyMutationCoordinator.java # MRP 等 legacy 变更后双写 + 失效缓存
+├── OntologyWorkspaceHeadBootstrapService.java
+├── OntologyP0Overlay.java
+├── OntologyPartialDeriver.java
+└── entity/                                # ont_* JPA
 ```
 
-`OntologyLoader` → `@Deprecated`，委托 `OntologyRestorer` + `OntologyLegacyImporter`。
+`OntologyLoader.loadForWorkspace` / `loadForPlanVersion` / `loadSrpCapacityForPlanVersion` → **`@Deprecated`**；外部读路径统一 `WorkspaceAuthoritativeOntologyGraphService`。
 
 ---
 
 ## 5.18 源码索引（补充）
 
-见 §5.13；持久化实现目录 **`ontology.persistence`**（**P0 Flyway 已落地** · P1 JPA/`OntologyRestorer` 待建 · TODO-12）。
+见 §5.13；持久化实现目录 **`ontology.persistence`**（**P0~P5 骨架已落地** · Sprint 6C~6D 收口 · TODO-12）。
 
 ---
 

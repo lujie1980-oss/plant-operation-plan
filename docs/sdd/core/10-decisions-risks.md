@@ -97,15 +97,15 @@
 
 | 项 | 内容 |
 |----|------|
-| **状态** | 已采纳（2026-06-20）· **P0 DDL 已落地（2026-06-30 · V65 · PostgreSQL）** |
+| **状态** | 已采纳（2026-06-20）· **P0~P5 骨架已落地（2026-06-30）** · **收口 Sprint 6A~6D 进行中** |
 | **背景** | 现行 JPA 与 ENT-OG 不同构；Session 纯内存；宕机丢失沙盘；PISPP/FF/BD 难以 SQL 查询 |
-| **决策** | **以 Ontology 为基准**，引入 **`ont_revision` + `ont_*` 实体表**，与 ENT-* 1:1；`OntologyGraph` 由 **`OntologyRestorer`** 从 DB 组装；simulate/optimize/confirm **同事务**写 revision。Partial 持久化为 FULL 的 **存储策略子集**（§5.16），非第二套 schema |
+| **决策** | **以 Ontology 为基准**，引入 **`ont_revision` + `ont_*` 实体表**，与 ENT-* 1:1；`OntologyGraph` 由 **`WorkspaceAuthoritativeOntologyGraphService`**（`OntologyLoader` 壳 + `OntologyP0Overlay`）与 **`OntologyRestorer`** 组装；simulate/optimize/confirm **同事务**写 revision。Partial 持久化为 FULL 的 **存储策略子集**（§5.16），非第二套 schema |
 | **备选** | 继续 Loader 重算 + 仅 confirm allocation（否决：与「表=Ontology」目标不符）；整图 JSON blob（否决：SQL 不可查，作可选 snapshot 加速） |
 | **BomDependency** | COMMITTED revision 中 **`ont_bom_dependency` 为真相**；派生算法用于 DRAFT 校验与 Partial DERIVE 模式 |
 | **与 ADR-07** | 仍 **每 Workspace 一张权威 OG**；权威 = `ont_revision_head(WORKSPACE)` 的 COMMITTED revision |
 | **与 ADR-04** | ADR-04 约束 **legacy** `WorkOrderBomDependencyEntity`；ADR-09 以 **`ont_bom_dependency`** 取代其规范地位 |
-| **迁移** | 双写 → 切读 `ont_*` → 退役 legacy 写路径（TODO-12）；`OntologyLoader` → `OntologyLegacyImporter` |
-| **后果** | Flyway 大迁移（**P0 已完成**）；Session/沙盘写路径重构（P1~P3）；§8 AC-PERS-*；存储与写放大 ↑ |
+| **迁移** | 双写 → 切读 `ont_*`（**P4 已落地**）→ 退役 legacy 写路径（TODO-12 收口）；`OntologyLoader` → 内部壳 + `OntologyLegacyImporter` |
+| **后果** | Flyway 大迁移（**P0 已完成**）；Session/沙盘写路径（**P2/P3 已落地**）；§8 AC-PERS-*；存储与写放大 ↑ |
 
 ---
 
@@ -260,7 +260,7 @@
 | TODO-09 | SCN-02c/03b/04 跳转与试算页 UI 对齐 **[§17.8](../volumes/platform/17-ui-ux.md#178-跨页导航契约ui-nav-)** | 产品+前端 |
 | TODO-10 | SCN-01f：新增 `CANCEL_PROMISE`；SCN-01e 与取消承诺解耦（RULE-FF-03） | 开发 |
 | TODO-11 | SCN-07：供需平衡专页、PISPP period 表、建供应 API-MAT-02/03、物料预留 API-MAT-04~08、多路径 ENT-RT | 产品+前端+开发 |
-| TODO-12 | **ADR-09 全量 Ontology 持久化**：**P0~P5 骨架已完成**；**收口 Sprint 6A~6D**（H2 dev session-enabled · 读路径迁移 · AC-PERS-02 Session E2E · PG 全量 parity · 退役 loader 主路径） | 架构+开发 |
+| TODO-12 | **ADR-09 全量 Ontology 持久化**：**P0~P5 + Sprint 6A/6B 已完成**；**收口 Sprint 6C~6D**（Session kill/reload E2E · PG 全量 parity · loader 内部化） | 架构+开发 |
 | TODO-13 | **ADR-10 External_* 主数据**：staging、质检、sync、md_*、Projector 切读 | 架构+开发 |
 | TODO-14 | **ADR-11 外部交易数据**：external_* / txn_*、Firm WO 同步、质检、OG 装载切读 | 架构+开发 |
 | TODO-15 | **ADR-12 业务知识三层**：KnowledgeContext、Industry pack、overlay 表、引擎接 Effective | 架构+产品 |
@@ -341,7 +341,7 @@
 | **R1 本体类型** | `ontology.supply.ResourceCapacityAssignment` + `OntologyGraph.resourceCapacityAssignmentsById` | 单元测试：OP×OOSR×SRP 键与守恒 |
 | **R2 写回路径** | `PlanningResultApplicator` / ROL：optimize 写 ENT-RCA → rollup SRP | AC：Σ RCA = OP 总分钟；SRP.reserved 一致 |
 | **R3 求解投影** | `OntologyRcaProjector`：ENT-RCA ↔ solver RCA/`TimeSlot`（由 **leaf Period DERIVE**，ADR-16） | `OrtoolsResourceCapacityCpSolverTest` 绿 |
-| **R4 持久化** | Flyway `ont_resource_capacity_assignment`（**P0 DDL 已完成 2026-06-30**；JPA/Restorer 待 TODO-12 P1） | AC-PERS：restore 含 RCA |
+| **R4 持久化** | Flyway `ont_resource_capacity_assignment`（**P0 DDL 已完成 2026-06-30**；JPA/Restorer P0 子集已落地） | AC-PERS：restore 含 RCA（**待 TODO-22 R4 扩展**） |
 | **R5 退役** | 停止以 `MasterPlanAllocationEntity` 为占用 SoT；solver 包 RCA 仅内部 | confirm reload ≡ Session 图 |
 
 **依赖：** TODO-12（`ont_*`）· TODO-21 Phase 3（列级 DDL）· **TODO-23 S4**（Period→TimeSlot）· 与 TODO-08 无阻塞。
@@ -351,10 +351,10 @@
 | 阶段 | 交付 | 验收 |
 |------|------|------|
 | **P0 Schema** | Flyway：`ont_revision`、HEAD、需求/供应/FF 核心表；**含 `ont_resource_capacity_assignment`（TODO-22 R4）**；列级规范见 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md) | **已完成 2026-06-30** · `V65__ont_p0.sql` · `OntP0SchemaMigrationTest` |
-| **P1 Read path** | `OntologyRestorer` + JPA + `OntologyP0Overlay`；`OntologyMaterialPlanningService` / `CapacityService` / `StandardResourcePeriodGanttService` 经 `WorkspaceAuthoritativeOntologyGraphService` | AC-PERS-01 绿 · `AuthoritativeOntologyReadPathIntegrationTest`；**Sprint 6D** PG 全量 parity |
+| **P1 Read path** | `OntologyRestorer` + JPA + `OntologyP0Overlay`；场景读经 `WorkspaceAuthoritativeOntologyGraphService`（**Sprint 6B 已完成**） | AC-PERS-01 绿 · `AuthoritativeOntologyReadPathIntegrationTest`；**Sprint 6D** PG 全量 parity |
 | **P2 Write path** | `OntologySessionPersistenceService` + WAL；H2 dev / postgres / test 默认 `session-enabled=true` | AC-PERS-02 库层绿；**Sprint 6C** Session API kill/reload E2E |
 | **P3 Confirm** | `promoteDraftToCommitted` + WORKSPACE/`PLAN:{id}` HEAD；与 legacy `OntologyStatePersister` 并行 | **已完成** · AC-PERS-03 |
-| **P4 Migration** | H2 `V66`；双写 + overlay + `OntologyWorkspaceHeadBootstrapService`；H2 dev 四开关默认开启 | **已完成** · AC-PERS-04 + Session E2E；**Sprint 6B** 退役 loader 业务直调 |
+| **P4 Migration** | H2 `V66`；双写 + overlay + bootstrap；H2 dev 四开关默认开启；MRP → `OntologyLegacyMutationCoordinator` | **已完成** · AC-PERS-04 + Session E2E |
 | **P5 Partial policy** | `ont_entity_policy` + DERIVE 装载；`OntologyPartialDeriver` | **已完成** · AC-PERS-05 |
 
 ### TODO-13 分阶段（ADR-10）

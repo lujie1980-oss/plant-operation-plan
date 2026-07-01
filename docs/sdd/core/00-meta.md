@@ -14,7 +14,7 @@
 
 ## 架构基线定义
 
-**Plant Operation Ontology** 是本产品的**计划领域本体架构**：用内存中的 **ENT-OG**（`OntologyGraph`）表达供需、工序、满足与期间约束，作为沙盘 Session 内的**运行时**业务真相源；simulate / optimize / confirm 按 **ADR-09** 持久化到 **`ont_*`**（§5.14），legacy JPA 在迁移期仍作装载边界（§5.10 · TODO-12）。
+**Plant Operation Ontology** 是本产品的**计划领域本体架构**：用内存中的 **ENT-OG**（`OntologyGraph`）表达供需、工序、满足与期间约束，作为沙盘 Session 内的**运行时**业务真相源；simulate / optimize / confirm 按 **ADR-09** 持久化到 **`ont_*`**（§5.14）；读装载经 **`WorkspaceAuthoritativeOntologyGraphService`**（§5.10）。
 
 ### 包含什么
 
@@ -105,6 +105,7 @@
 | 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 P4 收口**：`OntologyWorkspaceHeadBootstrapService`；H2 dev 默认 P4 开关；Session confirm E2E 持久化测试；`OntologyLoader` 读路径 @Deprecated |
 | 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 Sprint 6A**：H2 dev 默认 `session-enabled=true`（与 postgres 对齐）；SDD 偏差 D-09/D-CONFIRM 标已解决 |
 | 2026-06-30 | 1.0.0-SNAPSHOT | **TODO-12 Sprint 6B**：场景读路径迁 `WorkspaceAuthoritativeOntologyGraphService`；MRP 后 `OntologyLegacyMutationCoordinator` 双写+失效缓存 |
+| 2026-06-30 | 1.0.0-SNAPSHOT | **SDD 同步**：§5.10/§5.14/§8 AC-PERS/ADR-09 反映 P4 切读 + Sprint 6A/6B 实现态 |
 
 ## 治理约定
 
