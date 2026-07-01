@@ -39,6 +39,11 @@ public final class OntologyIds {
         return "OOSR-" + operationId + "-" + standardResourceId;
     }
 
+    public static String resourceCapacityAssignmentId(
+            String operationId, String operationOnStandardResourceId, String standardResourcePeriodId) {
+        return "RCA-" + operationId + "-" + operationOnStandardResourceId + "-" + standardResourcePeriodId;
+    }
+
     public static String customerOrderLineId(String salesOrderNo, int salesOrderLineNo) {
         return "COL-" + salesOrderNo + "-" + salesOrderLineNo;
     }

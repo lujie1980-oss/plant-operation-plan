@@ -19,6 +19,7 @@ import com.plantops.ontology.supply.OperationOnStandardResource;
 import com.plantops.ontology.supply.OperationResourceBinding;
 import com.plantops.ontology.supply.OperationOutputMaterial;
 import com.plantops.ontology.supply.PlanUnit;
+import com.plantops.ontology.supply.ResourceCapacityAssignment;
 import com.plantops.ontology.supply.Supply;
 import com.plantops.ontology.supply.SupplyOrder;
 
@@ -48,6 +49,7 @@ public final class OntologyGraph {
     private final List<BomDependency> bomDependencies;
     private final Map<String, ProductInStockingPointPeriod> pispPeriodsById;
     private final Map<String, StandardResourcePeriod> srpById;
+    private final Map<String, ResourceCapacityAssignment> resourceCapacityAssignmentsById;
     private final List<Period> periodsOrdered;
     private final List<SchedulingSlot> schedulingSlotsOrdered;
 
@@ -70,6 +72,7 @@ public final class OntologyGraph {
             List<BomDependency> bomDependencies,
             Map<String, ProductInStockingPointPeriod> pispPeriodsById,
             Map<String, StandardResourcePeriod> srpById,
+            Map<String, ResourceCapacityAssignment> resourceCapacityAssignmentsById,
             List<Period> periodsOrdered,
             List<SchedulingSlot> schedulingSlotsOrdered) {
         this.productsById = Collections.unmodifiableMap(productsById);
@@ -90,6 +93,7 @@ public final class OntologyGraph {
         this.bomDependencies = List.copyOf(bomDependencies);
         this.pispPeriodsById = Collections.unmodifiableMap(pispPeriodsById);
         this.srpById = Collections.unmodifiableMap(srpById);
+        this.resourceCapacityAssignmentsById = Collections.unmodifiableMap(resourceCapacityAssignmentsById);
         this.periodsOrdered = List.copyOf(periodsOrdered);
         this.schedulingSlotsOrdered = List.copyOf(schedulingSlotsOrdered);
     }
@@ -315,6 +319,26 @@ public final class OntologyGraph {
         return srpById;
     }
 
+    public ResourceCapacityAssignment resourceCapacityAssignment(String id) {
+        return resourceCapacityAssignmentsById.get(id);
+    }
+
+    public Map<String, ResourceCapacityAssignment> resourceCapacityAssignmentsById() {
+        return resourceCapacityAssignmentsById;
+    }
+
+    public List<ResourceCapacityAssignment> resourceCapacityAssignmentsForOperation(String operationId) {
+        return resourceCapacityAssignmentsById.values().stream()
+                .filter(rca -> operationId.equals(rca.getOperationId()))
+                .toList();
+    }
+
+    public List<ResourceCapacityAssignment> resourceCapacityAssignmentsForSrp(String standardResourcePeriodId) {
+        return resourceCapacityAssignmentsById.values().stream()
+                .filter(rca -> standardResourcePeriodId.equals(rca.getStandardResourcePeriodId()))
+                .toList();
+    }
+
     public List<Period> periodsOrdered() {
         return periodsOrdered;
     }
@@ -350,6 +374,7 @@ public final class OntologyGraph {
         private final List<BomDependency> bomDependencies = new java.util.ArrayList<>();
         private final Map<String, ProductInStockingPointPeriod> pispPeriodsById = new LinkedHashMap<>();
         private final Map<String, StandardResourcePeriod> srpById = new LinkedHashMap<>();
+        private final Map<String, ResourceCapacityAssignment> resourceCapacityAssignmentsById = new LinkedHashMap<>();
         private List<Period> periodsOrdered = List.of();
         private List<SchedulingSlot> schedulingSlotsOrdered = List.of();
 
@@ -479,6 +504,11 @@ public final class OntologyGraph {
             return this;
         }
 
+        public Builder resourceCapacityAssignment(ResourceCapacityAssignment rca) {
+            resourceCapacityAssignmentsById.put(rca.getId(), rca);
+            return this;
+        }
+
         public Builder periodsOrdered(List<Period> periods) {
             this.periodsOrdered = periods;
             return this;
@@ -509,6 +539,7 @@ public final class OntologyGraph {
                     bomDependencies,
                     pispPeriodsById,
                     srpById,
+                    resourceCapacityAssignmentsById,
                     periodsOrdered,
                     schedulingSlotsOrdered);
         }
