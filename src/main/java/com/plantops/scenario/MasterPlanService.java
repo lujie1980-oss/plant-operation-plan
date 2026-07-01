@@ -28,9 +28,9 @@ import com.plantops.persistence.entity.ProductionResourceEntity;
 import com.plantops.persistence.entity.ResourceCalendarEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
+import com.plantops.scenario.planning.MasterPlanOntologyScheduleBuilder;
 import com.plantops.scenario.planning.MasterPlanPlanningContext;
 import com.plantops.scenario.planning.MaterialPlanningContext;
-import com.plantops.scenario.planning.MasterPlanPlanningContextBuilder;
 import com.plantops.scenario.planning.MasterPlanProblemMapper;
 import com.plantops.solver.masterplan.MasterPlanCapacityStrategy;
 import com.plantops.solver.masterplan.MasterPlanObjectiveSettings;
@@ -167,7 +167,7 @@ public class MasterPlanService {
     WorkOrderTimingService workOrderTimingService;
 
     @Inject
-    MasterPlanPlanningContextBuilder planningContextBuilder;
+    MasterPlanOntologyScheduleBuilder ontologyScheduleBuilder;
 
     @Inject
     MasterPlanProblemMapper problemMapper;
@@ -220,11 +220,7 @@ public class MasterPlanService {
             MasterPlanStrategyConfigService.ResolvedStrategy resolved,
             MasterPlanCapacityOverlay capacityOverlay,
             MaterialPlanningContext materialPlanning) {
-        return planningContextBuilder.build(
-                resolved.capacityStrategy(),
-                resolved.objectiveSettings(),
-                capacityOverlay != null ? capacityOverlay : MasterPlanCapacityOverlay.empty(),
-                materialPlanning);
+        return ontologyScheduleBuilder.buildPlanningContext(resolved, capacityOverlay, materialPlanning);
     }
 
     /**
@@ -389,8 +385,7 @@ public class MasterPlanService {
 
         String versionId = "MP-" + UUID.randomUUID().toString().substring(0, 8);
         long solveStart = System.currentTimeMillis();
-        MasterPlanSchedule problem = buildProblem(
-                resolved.capacityStrategy(), resolved.objectiveSettings(), overlay);
+        MasterPlanSchedule problem = buildProblem(resolved, overlay);
         MasterPlanSchedule solution = solveProblem(problem);
         long duration = System.currentTimeMillis() - solveStart;
 
@@ -726,12 +721,9 @@ public class MasterPlanService {
     }
 
     private MasterPlanSchedule buildProblem(
-            MasterPlanCapacityStrategy strategy,
-            MasterPlanObjectiveSettings objectiveSettings,
+            MasterPlanStrategyConfigService.ResolvedStrategy resolved,
             MasterPlanCapacityOverlay capacityOverlay) {
-        MasterPlanPlanningContext context = planningContextBuilder.build(
-                strategy, objectiveSettings, capacityOverlay);
-        return problemMapper.toSchedule(context);
+        return ontologyScheduleBuilder.buildSchedule(resolved, capacityOverlay, null, null);
     }
 
     @Transactional(Transactional.TxType.REQUIRES_NEW)

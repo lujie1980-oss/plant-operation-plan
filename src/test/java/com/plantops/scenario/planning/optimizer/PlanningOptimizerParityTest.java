@@ -2,7 +2,11 @@ package com.plantops.scenario.planning.optimizer;
 
 import com.plantops.api.dto.MasterPlanAllocationDto;
 import com.plantops.config.MasterPlanStrategyConfigService;
+import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
+import com.plantops.persistence.entity.InventoryEntity;
 import com.plantops.persistence.entity.ProductResourceEntity;
+import com.plantops.ontology.OntologyIds;
+import com.plantops.workspace.WorkspaceResolver;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.scenario.MasterPlanService;
@@ -45,15 +49,22 @@ class PlanningOptimizerParityTest {
     @Inject
     MasterPlanStrategyConfigService strategyConfigService;
 
+    @Inject
+    WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
+
     @Test
     @TestTransaction
     void timefoldAndOrtoolsProduceHardFeasibleAssignmentsWithHighKeyOverlap() throws Exception {
         LocalDate planningStart = LocalDate.of(2026, 6, 1);
         ensureFixture(planningStart);
+        authoritativeOntologyGraph.invalidateWorkspace(WorkspaceResolver.currentWorkspaceId());
 
         MasterPlanStrategyConfigService.ResolvedStrategy resolved = strategyConfigService.resolve(null);
         MasterPlanPlanningContext context = masterPlanService.buildPlanningContext(
                 resolved, MasterPlanCapacityOverlay.empty());
+        assertFalse(
+                context.orderAllocations().isEmpty(),
+                "PATH-ONT should produce order allocation candidates");
         PlanningProblem problem = PlanningProblem.forContext(
                 context,
                 "optimizer-parity",
@@ -142,6 +153,20 @@ class PlanningOptimizerParityTest {
             routing.processTimeSeconds = new BigDecimal("60");
             routing.stampWorkspace();
             routing.persist();
+        }
+        if (InventoryEntity.find(
+                        "workspaceId = ?1 and productCode = ?2",
+                        WorkspaceResolver.currentWorkspaceId(),
+                        PRODUCT_CODE)
+                .firstResult() == null) {
+            InventoryEntity inventory = new InventoryEntity();
+            inventory.stockingPointCode = OntologyIds.DEFAULT_FG;
+            inventory.productCode = PRODUCT_CODE;
+            inventory.onhandQty = new BigDecimal("10");
+            inventory.reservedQty = BigDecimal.ZERO;
+            inventory.qualityHoldQty = BigDecimal.ZERO;
+            inventory.stampWorkspace();
+            inventory.persist();
         }
     }
 }

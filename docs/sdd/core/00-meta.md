@@ -108,6 +108,7 @@
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-12 Sprint 6C~6D 收口**：`restoreSessionFromPersistence` + `MasterPlanOntologySessionDraftRecoveryIntegrationTest`；PG extended P0 parity；**TODO-12 关闭** |
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-08（部分）**：删 `optimizeLegacy` / `ontology_direct_solve_enabled`；Session optimize 固定 PATH-ONT |
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-22 R1**：`ontology.supply.ResourceCapacityAssignment` + `OntologyGraph.resourceCapacityAssignmentsById`；`ResourceCapacityAssignmentValidationTest` |
+| 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-08 收口**：删 `MasterPlanPlanningContextBuilder` / AC-05；`MasterPlanOntologyScheduleBuilder` 统一 publish/preview/refresh PATH-ONT |
 | 2026-06-30 | 1.0.0-SNAPSHOT | **SDD 同步**：§5.10/§5.14/§8 AC-PERS/ADR-09 反映 P4 切读 + Sprint 6A/6B 实现态 |
 
 ## 治理约定

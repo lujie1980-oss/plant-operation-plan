@@ -5,6 +5,7 @@ import com.plantops.solver.masterplan.BomDependencyEdge;
 import com.plantops.solver.masterplan.MasterPlanCapacityOverlay;
 import com.plantops.solver.masterplan.MasterPlanCapacityStrategy;
 import com.plantops.solver.masterplan.MasterPlanObjectiveSettings;
+import com.plantops.solver.masterplan.MasterPlanSchedule;
 import com.plantops.solver.masterplan.MaterialFeasibilityContext;
 import com.plantops.solver.masterplan.OperationPrecedenceEdge;
 import com.plantops.solver.masterplan.OperationPrecedenceFact;
@@ -18,7 +19,7 @@ import java.util.List;
 
 /**
  * 主计划单次求解的推演快照（P0–P4）：事实 + 候选分配，不含 Timefold 得分。
- * Timefold 输入由 {@link MasterPlanProblemMapper} 投影。
+ * Timefold 输入由 {@link OntologyToMasterPlanScheduleMapper} 投影（PATH-ONT · ADR-08）。
  */
 public final class MasterPlanPlanningContext {
 
@@ -202,5 +203,62 @@ public final class MasterPlanPlanningContext {
 
     public MaterialPlanningContext materialPlanning() {
         return materialPlanning;
+    }
+
+    /** PATH-ONT：由 {@link MasterPlanSchedule} 反建推演快照（ADR-08）。 */
+    public static MasterPlanPlanningContext fromSchedule(
+            MasterPlanSchedule schedule,
+            MasterPlanPlanningDiagnosticsDto diagnostics,
+            MaterialPlanningContext materialPlanning) {
+        if (schedule == null) {
+            return new MasterPlanPlanningContext(
+                    LocalDate.now(),
+                    com.plantops.solver.masterplan.MasterPlanCapacityStrategy.UNCONSTRAINED,
+                    new com.plantops.solver.masterplan.MasterPlanObjectiveSettings(),
+                    MasterPlanCapacityOverlay.empty(),
+                    List.of(),
+                    List.of(),
+                    new MaterialFeasibilityContext(java.util.Map.of()),
+                    List.of(),
+                    List.of(),
+                    WorkOrderTimingBoundsContext.empty(),
+                    diagnostics,
+                    materialPlanning);
+        }
+        com.plantops.solver.masterplan.MasterPlanCapacityStrategy capacityStrategy =
+                schedule.getPlanningSettings() != null
+                        ? schedule.getPlanningSettings().getCapacityStrategy()
+                        : com.plantops.solver.masterplan.MasterPlanCapacityStrategy.UNCONSTRAINED;
+        if (schedule.hasResourceCapacityAssignments()) {
+            return new MasterPlanPlanningContext(
+                    schedule.getPlanningStart(),
+                    capacityStrategy,
+                    schedule.getObjectiveSettings(),
+                    schedule.getCapacityOverlay(),
+                    schedule.getTimeSlotRange(),
+                    List.of(),
+                    schedule.getMaterialFeasibility(),
+                    schedule.getBomDependencyEdges(),
+                    schedule.getOperationPrecedenceEdges(),
+                    schedule.getWorkOrderTimingBounds(),
+                    diagnostics,
+                    materialPlanning,
+                    schedule.getResourceCapacityAssignments(),
+                    schedule.getOperationPrecedenceFacts(),
+                    true);
+        }
+        return new MasterPlanPlanningContext(
+                schedule.getPlanningStart(),
+                capacityStrategy,
+                schedule.getObjectiveSettings(),
+                schedule.getCapacityOverlay(),
+                schedule.getTimeSlotRange(),
+                schedule.getOrderAllocations(),
+                schedule.getMaterialFeasibility(),
+                schedule.getBomDependencyEdges(),
+                schedule.getOperationPrecedenceEdges(),
+                schedule.getWorkOrderTimingBounds(),
+                diagnostics,
+                materialPlanning);
     }
 }

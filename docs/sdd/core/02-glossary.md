@@ -105,7 +105,7 @@
 | **PEG-INV** | INVENTORY_PEG | Fulfillment 类型：库存优先满足 | 库存 peg |
 | **PEG-WO** | WORK_ORDER_PEG | Fulfillment 类型：工单产出满足 | 工单 peg |
 | **PEG-SH** | SHORTAGE_PEG | Fulfillment 类型：缺口 | 缺料 peg |
-| **PATH-ENT** | 实体路径 | ~~S04 经 `MasterPlanPlanningContextBuilder` 扫描 JPA~~ **废止**（ADR-08）；迁移期代码待 TODO-08 移除 | 传统路径 |
+| **PATH-ENT** | 实体路径 | ~~S04 经 `MasterPlanPlanningContextBuilder` 扫描 JPA~~ **已废止并删除（ADR-08 · TODO-08 2026-07-01）** | 传统路径 |
 | **PATH-ONT** | 本体直驱路径 | **S04 唯一规范路径**：ENT-OG → `OntologyToMasterPlanScheduleMapper` → `PlanningOptimizer` | 直驱、direct solve |
 | **SOL-TF** | Timefold | 约束求解引擎；**主计划**仅当 `planning_optimizer_engine=timefold` 时使用；S05 细排与分切当前仍直连（配置化见 TODO-07） | 默认求解器 |
 | **SOL-ORT** | OR-Tools | CP-SAT；**主计划默认**引擎（`planning_optimizer_engine=ortools`） | 有限能力 trial 插件 |

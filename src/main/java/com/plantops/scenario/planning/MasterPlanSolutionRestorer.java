@@ -30,10 +30,10 @@ public class MasterPlanSolutionRestorer {
     MasterPlanStrategyConfigService strategyConfigService;
 
     @Inject
-    MasterPlanService masterPlanService;
+    MasterPlanOntologyScheduleBuilder ontologyScheduleBuilder;
 
     @Inject
-    MasterPlanProblemMapper problemMapper;
+    MasterPlanService masterPlanService;
 
     @Inject
     SampleDataLoader sampleDataLoader;
@@ -47,8 +47,7 @@ public class MasterPlanSolutionRestorer {
         MasterPlanStrategyConfigService.ResolvedStrategy resolved = strategyConfigService.resolve(
                 version.strategyId != null && !version.strategyId.isBlank() ? version.strategyId : null);
         MasterPlanCapacityOverlay overlay = overlayForVersion(version);
-        MasterPlanPlanningContext context = masterPlanService.buildPlanningContext(resolved, overlay);
-        MasterPlanSchedule schedule = problemMapper.toSchedule(context);
+        MasterPlanSchedule schedule = ontologyScheduleBuilder.buildSchedule(resolved, overlay, planVersionId, null);
         applyPersistedAssignments(schedule, planVersionId);
         return schedule;
     }
