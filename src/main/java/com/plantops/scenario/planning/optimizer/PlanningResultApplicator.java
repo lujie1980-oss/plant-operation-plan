@@ -3,6 +3,7 @@ package com.plantops.scenario.planning.optimizer;
 import com.plantops.api.dto.MasterPlanAllocationDto;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.period.PeriodIndex;
+import com.plantops.ontology.period.StandardResourcePeriodRollup;
 import com.plantops.rol.ChangeSet;
 import com.plantops.rol.RolEngine;
 import com.plantops.rol.RolTransaction;
@@ -103,6 +104,7 @@ public class PlanningResultApplicator {
             ChangeSet changeSet = ontologyTimefoldMapper.toChangeSet(allocationDtos, graph, periodIndex);
             rolTransaction.apply(changeSet, graph, rolEngine);
         }
+        StandardResourcePeriodRollup.rollupParentReserved(graph);
     }
 
     public void applySolverResourceCapacityAssignments(

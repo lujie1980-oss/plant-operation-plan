@@ -75,7 +75,7 @@ public class OntologyTimefoldMapper {
             if (allocation == null || allocation.resourceId() == null || allocation.resourceId().isBlank()) {
                 continue;
             }
-            int seq = periodIndex.sequenceFor(resolvePlannedDate(allocation));
+            int seq = periodIndex.sequenceFor(resolvePlannedDate(allocation), allocation.shiftId());
             String srpId = OntologyIds.srpId(allocation.resourceId(), seq);
             if (graph.srp(srpId) == null) {
                 continue;

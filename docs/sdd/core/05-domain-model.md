@@ -1092,7 +1092,7 @@ stateDiagram-v2
 
 | 实体 | 小节 | Java / 表 | 现状 |
 |------|------|-----------|------|
-| ENT-PER | §5.20.1 | `Period` · `ont_period` | `implemented`（缺 shift 字段 · TODO-23 S1） |
+| ENT-PER | §5.20.1 | `Period` · `ont_period` | `implemented`（**S1 shift 字段 + PeriodExpander 已落地 2026-07-01** · `ont_period` DDL 待建） |
 | ENT-PRP | §5.20.2 | **spec-only** · `ont_physical_resource_period` | `spec-only`（TODO-24 P1） |
 | ENT-SRP | §5.20.3 | `StandardResourcePeriod` · `ont_srp` | `implemented`（**P0 DDL 已落地** · 直写日历 · 待 PRP rollup） |
 | ENT-RCA | §5.20.4 | `ResourceCapacityAssignment` · `ont_resource_capacity_assignment` | `implemented`（**R1~R5 已完成 2026-07-01**） |

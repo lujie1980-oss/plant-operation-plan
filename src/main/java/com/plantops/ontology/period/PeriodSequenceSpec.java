@@ -10,10 +10,15 @@ import java.util.regex.Pattern;
 
 public final class PeriodSequenceSpec {
 
-    /** 段：count 个长度为 lengthDays 的桶。 */
-    public record Segment(int count, int lengthDays) {}
+    public sealed interface Segment permits DaySegment, ShiftSegment {}
 
-    private static final Pattern SEGMENT = Pattern.compile("(\\d+)x(\\d+)([dwm])");
+    /** 连续 count 个、每个 lengthDays 天的日/周/月桶。 */
+    public record DaySegment(int count, int lengthDays) implements Segment {}
+
+    /** 连续 dayCount 个日历日，每日 shiftsPerDay 个班次 leaf Period。 */
+    public record ShiftSegment(int dayCount, int shiftsPerDay) implements Segment {}
+
+    private static final Pattern SEGMENT = Pattern.compile("(\\d+)x(\\d+)(shift|[dwm])");
 
     private final List<Segment> segments;
 
@@ -21,11 +26,17 @@ public final class PeriodSequenceSpec {
         this.segments = List.copyOf(segments);
     }
 
-    public static PeriodSequenceSpec defaultSpec() {
-        return new PeriodSequenceSpec(List.of(new Segment(OntologyIds.DEFAULT_PERIOD_COUNT, 1)));
+    public List<Segment> segments() {
+        return segments;
     }
 
-    /** "14x1d,4x1w,2x1m" → segments；d=1天 w=7天 m=30天。 */
+    public static PeriodSequenceSpec defaultSpec() {
+        return new PeriodSequenceSpec(List.of(new DaySegment(OntologyIds.DEFAULT_PERIOD_COUNT, 1)));
+    }
+
+    /**
+     * 解析序列语法，例如 {@code 14x3shift,4x1d,2x1w}（ADR-16 · §5.8.1）。
+     */
     public static PeriodSequenceSpec parse(String text) {
         List<Segment> segments = new ArrayList<>();
         for (String token : text.split(",")) {
@@ -33,18 +44,23 @@ public final class PeriodSequenceSpec {
             if (!m.matches()) {
                 throw new IllegalArgumentException("Invalid period segment: " + token);
             }
-            int unitDays = switch (m.group(3)) {
-                case "d" -> 1;
-                case "w" -> 7;
-                case "m" -> 30;
-                default -> throw new IllegalArgumentException(token);
-            };
             int count = Integer.parseInt(m.group(1));
-            int lengthDays = Integer.parseInt(m.group(2)) * unitDays;
-            if (count < 1 || lengthDays < 1) {
+            int multiplier = Integer.parseInt(m.group(2));
+            if (count < 1 || multiplier < 1) {
                 throw new IllegalArgumentException("Invalid period segment: " + token);
             }
-            segments.add(new Segment(count, lengthDays));
+            String unit = m.group(3);
+            if ("shift".equals(unit)) {
+                segments.add(new ShiftSegment(count, multiplier));
+            } else {
+                int unitDays = switch (unit) {
+                    case "d" -> 1;
+                    case "w" -> 7;
+                    case "m" -> 30;
+                    default -> throw new IllegalArgumentException(token);
+                };
+                segments.add(new DaySegment(count, multiplier * unitDays));
+            }
         }
         if (segments.isEmpty()) {
             throw new IllegalArgumentException("Empty spec");
@@ -64,17 +80,6 @@ public final class PeriodSequenceSpec {
     }
 
     public List<Period> expand(LocalDate planningStart) {
-        List<Period> periods = new ArrayList<>();
-        LocalDate cursor = planningStart;
-        int seq = 0;
-        for (Segment segment : segments) {
-            for (int i = 0; i < segment.count(); i++) {
-                LocalDate end = cursor.plusDays(segment.lengthDays() - 1L);
-                periods.add(new Period(OntologyIds.periodId(seq), seq, cursor, end));
-                cursor = end.plusDays(1);
-                seq++;
-            }
-        }
-        return periods;
+        return PeriodExpander.expand(this, planningStart);
     }
 }

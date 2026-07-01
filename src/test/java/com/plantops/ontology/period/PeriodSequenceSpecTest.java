@@ -7,6 +7,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PeriodSequenceSpecTest {
 
@@ -46,6 +47,15 @@ class PeriodSequenceSpecTest {
         // second 14-day bucket: 6/15 – 6/28
         assertEquals(LocalDate.of(2026, 6, 15), periods.get(1).getStartDate());
         assertEquals(LocalDate.of(2026, 6, 28), periods.get(1).getEndDate());
+    }
+
+    @Test
+    void parsesShiftSegment() {
+        PeriodSequenceSpec spec = PeriodSequenceSpec.parse("14x3shift");
+        assertEquals(1, spec.segments().size());
+        assertTrue(spec.segments().get(0) instanceof PeriodSequenceSpec.ShiftSegment);
+        assertEquals(56, spec.expand(LocalDate.of(2026, 6, 1)).size());
+        assertEquals(42, spec.expand(LocalDate.of(2026, 6, 1)).stream().filter(Period::isLeaf).count());
     }
 
     @Test

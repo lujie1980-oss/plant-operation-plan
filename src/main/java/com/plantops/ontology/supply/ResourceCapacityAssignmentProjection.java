@@ -3,6 +3,7 @@ package com.plantops.ontology.supply;
 import com.plantops.api.dto.MasterPlanAllocationDto;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.OntologyIds;
+import com.plantops.ontology.period.Period;
 import com.plantops.ontology.period.PeriodIndex;
 
 import java.time.LocalDate;
@@ -70,7 +71,12 @@ public final class ResourceCapacityAssignmentProjection {
         if (plannedDate == null) {
             return null;
         }
-        String srpId = OntologyIds.srpId(allocation.resourceId(), periodIndex.sequenceFor(plannedDate));
+        int seq = periodIndex.sequenceFor(plannedDate, allocation.shiftId());
+        Period period = periodIndex.periodAt(seq);
+        if (period == null || !period.isLeaf()) {
+            return null;
+        }
+        String srpId = OntologyIds.srpId(allocation.resourceId(), seq);
         if (graph.srp(srpId) == null) {
             return null;
         }

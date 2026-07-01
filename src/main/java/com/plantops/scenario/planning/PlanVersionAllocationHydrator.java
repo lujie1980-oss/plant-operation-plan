@@ -6,6 +6,7 @@ import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.ontology.supply.Operation;
 import com.plantops.ontology.supply.ResourceCapacityAssignmentProjection;
+import com.plantops.ontology.period.StandardResourcePeriodRollup;
 import com.plantops.ontology.supply.ResourceCapacityAssignmentRollup;
 import com.plantops.rol.RolEngine;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -91,5 +92,6 @@ public class PlanVersionAllocationHydrator {
                 srp.recalculateCapacityFields();
             }
         }
+        StandardResourcePeriodRollup.rollupParentReserved(graph);
     }
 }

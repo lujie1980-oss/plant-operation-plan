@@ -9,6 +9,7 @@ import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.PeriodSequenceSpec;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
+import com.plantops.ontology.period.StandardResourcePeriodLoader;
 import com.plantops.ontology.demand.Demand;
 import com.plantops.ontology.fulfillment.OntologyUpstreamFulfillmentBuilder;
 import com.plantops.ontology.fulfillment.SupplyChainLoader;
@@ -447,45 +448,7 @@ public class OntologyLoader {
 
     private static void loadStandardResourcePeriods(
             OntologyGraph.Builder builder, List<Period> periods, PeriodIndex periodIndex) {
-        Set<String> resourceIds = new LinkedHashSet<>();
-        for (ProductionLineEntity line : ProductionLineEntity.listInWorkspace()) {
-            if (line.resourceId != null && !line.resourceId.isBlank()) {
-                resourceIds.add(line.resourceId);
-            }
-        }
-        for (ProductResourceEntity pr : ProductResourceEntity.listInWorkspace()) {
-            if (pr.resourceId != null && !pr.resourceId.isBlank()) {
-                resourceIds.add(pr.resourceId);
-            }
-        }
-        for (WorkOrderEntity wo : WorkOrderEntity.listInWorkspace()) {
-            if (wo.resourceId != null && !wo.resourceId.isBlank()) {
-                resourceIds.add(wo.resourceId);
-            }
-        }
-        Map<String, StandardResourcePeriod> srpByKey = new LinkedHashMap<>();
-        for (String resourceId : resourceIds) {
-            for (Period period : periods) {
-                StandardResourcePeriod srp = new StandardResourcePeriod(
-                        OntologyIds.srpId(resourceId, period.getSequenceNr()), resourceId, period.getId());
-                srpByKey.put(srp.getId(), srp);
-                builder.standardResourcePeriod(srp);
-            }
-        }
-        for (ResourceCalendarEntity cal : ResourceCalendarEntity.listInWorkspace()) {
-            if (cal.resourceId == null || !resourceIds.contains(cal.resourceId) || cal.calendarDate == null) {
-                continue;
-            }
-            if (cal.calendarDate.isBefore(periods.get(0).getStartDate())
-                    || cal.calendarDate.isAfter(periods.get(periods.size() - 1).getEndDate())) {
-                continue;
-            }
-            int seq = periodIndex.sequenceFor(cal.calendarDate);
-            StandardResourcePeriod srp = srpByKey.get(OntologyIds.srpId(cal.resourceId, seq));
-            srp.setTotalCapacity(srp.getTotalCapacity() + cal.availableCapacityMinutes + cal.unavailableCapacityMinutes);
-            srp.setCalendarDowntime(srp.getCalendarDowntime() + cal.unavailableCapacityMinutes);
-        }
-        srpByKey.values().forEach(StandardResourcePeriod::recalculateCapacityFields);
+        StandardResourcePeriodLoader.load(builder, periods, periodIndex);
     }
 
     private static Set<String> collectProductCodes() {
