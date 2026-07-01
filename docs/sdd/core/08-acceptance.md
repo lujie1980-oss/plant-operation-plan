@@ -341,8 +341,8 @@
 | ID | 陈述 | RULE | 自动化 |
 |----|------|------|--------|
 | AC-PERS-S0 | PostgreSQL Flyway `V65__ont_p0.sql` 迁移成功；P0 表（revision/WAL/session + 7 张核心实体）与索引存在 | — | `OntP0SchemaMigrationTest`（需 PG :5432） |
-| AC-PERS-01 | 给定 COMMITTED `revision_id`，`OntologyRestorer.load` 与迁移前 `OntologyLoader.build` 在 FF/SO/Operation/PISPP 关键字段 **对等** | PERS-01 | `OntologyRestorerIntegrationTest`（PG P0 子集）· `OntologyLoaderRestorerParityIntegrationTest`（H2 全工作区 P0）· `AuthoritativeOntologyReadPathIntegrationTest`（场景读路径） |
-| AC-PERS-02 | simulate 后 **模拟进程 kill**，重启 load 同一 `session_id` DRAFT revision，图状态与 kill 前最后一次 **成功 API** 一致 | PERS-04 | `OntologyDraftPersistenceIntegrationTest`（库层 PG）· Session API E2E **待 Sprint 6C** |
+| AC-PERS-01 | 给定 COMMITTED `revision_id`，`OntologyRestorer.load` 与迁移前 `OntologyLoader.build` 在 FF/SO/Operation/PISPP 关键字段 **对等** | PERS-01 | `OntologyRestorerIntegrationTest`（PG P0 + extended）· `OntologyLoaderRestorerParityIntegrationTest`（H2 全工作区 P0）· `AuthoritativeOntologyReadPathIntegrationTest`（场景读路径） |
+| AC-PERS-02 | simulate 后 **模拟进程 kill**，重启 load 同一 `session_id` DRAFT revision，图状态与 kill 前最后一次 **成功 API** 一致 | PERS-04 | `OntologyDraftPersistenceIntegrationTest`（库层 PG）· `MasterPlanOntologySessionDraftRecoveryIntegrationTest`（Session API E2E） |
 | AC-PERS-03 | confirm 成功后 `ont_revision_head(WORKSPACE)` 指向新 revision；`plan_version_id` 可追溯到 allocation 等价数据 | PERS-03 | `OntologyConfirmIntegrationTest` · `MasterPlanOntologySessionPersistenceIntegrationTest`（Session E2E + allocation） |
 | AC-PERS-04 | legacy 双写期：`ont_supply_order` 与 `work_order` 在 confirm 后 1:1 对齐 | PERS-02 | `OntologyLegacyDualWriteIntegrationTest`（H2 legacy + V66 `ont_*`） |
 | AC-PERS-05 | Partial policy 下 DERIVE 实体不落库，reload 后与 FULL 重算结果一致 | PERS-05 | `OntologyPartialPersistenceH2IntegrationTest` · `OntologyPartialPersistenceIntegrationTest`（PG） |

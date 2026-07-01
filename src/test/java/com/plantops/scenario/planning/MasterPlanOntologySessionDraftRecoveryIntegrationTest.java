@@ -1,15 +1,15 @@
 package com.plantops.scenario.planning;
 
 import com.plantops.api.dto.planning.CreateMasterPlanSessionRequest;
-import com.plantops.api.dto.planning.MasterPlanSessionConfirmResultDto;
 import com.plantops.api.dto.planning.MasterPlanSessionDto;
-import com.plantops.api.dto.planning.MasterPlanSessionOptimizeResultDto;
+import com.plantops.api.dto.planning.PispPeriodSnapshotDto;
 import com.plantops.api.dto.planning.SimulateMasterPlanSessionRequest;
 import com.plantops.ontology.OntologyIds;
 import com.plantops.ontology.OntologyLoader;
 import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
 import com.plantops.ontology.persistence.OntologyPersistencePort;
-import com.plantops.persistence.entity.InventoryEntity;
+import com.plantops.ontology.persistence.OntologySessionPersistenceService;
+import com.plantops.ontology.persistence.entity.OntSessionEntity;
 import com.plantops.persistence.entity.PlanVersionEntity;
 import com.plantops.persistence.entity.ProductResourceEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
@@ -23,18 +23,21 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * AC-PERS-02 (Session API): simulate persists DRAFT; after in-memory eviction, restore ≡ last write.
+ */
 @QuarkusTest
-class MasterPlanOntologySessionDirectOptimizeTest {
+class MasterPlanOntologySessionDraftRecoveryIntegrationTest {
 
-    private static final String PLAN_VERSION_ID = "MPV-OTD-DIRECT-OPT";
-    private static final String PRODUCT_CODE = "FG-OTD-DIRECT-OPT";
-    private static final String WORK_ORDER_NO = "WO-OTD-DIRECT-OPT";
-    private static final String RESOURCE_ID = "RES-OTD-DIRECT-OPT";
+    private static final String PLAN_VERSION_ID = "MPV-OTD-PERS-6C";
+    private static final String PRODUCT_CODE = "FG-OTD-PERS-6C";
+    private static final String WORK_ORDER_NO = "WO-OTD-PERS-6C";
+    private static final String RESOURCE_ID = "RES-OTD-PERS-6C";
 
     @Inject
     MasterPlanOntologySessionService sessionService;
@@ -51,39 +54,68 @@ class MasterPlanOntologySessionDirectOptimizeTest {
     @Inject
     WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
 
+    @Inject
+    OntologySessionPersistenceService sessionPersistence;
+
     @Test
     @TestTransaction
-    void directOptimizeUsesSessionGraphAndConfirmPersistsLastSolution() throws Exception {
+    void simulateSurvivesProcessRestartViaRestore() {
         LocalDate planningStart = LocalDate.of(2026, 6, 1);
         ensureFixture(planningStart);
         refreshOntWorkspaceHead();
 
-        MasterPlanSessionDto created = sessionService.create(new CreateMasterPlanSessionRequest(PLAN_VERSION_ID, null));
+        MasterPlanSessionDto created = sessionService.create(
+                new CreateMasterPlanSessionRequest(PLAN_VERSION_ID, null));
         String pispId = OntologyIds.pispId(PRODUCT_CODE);
-        String p0Id = OntologyIds.pisppId(pispId, 0);
+        String pisppId = OntologyIds.pisppId(pispId, 0);
 
         sessionService.simulate(
                 created.sessionId(),
-                new SimulateMasterPlanSessionRequest(p0Id, "plannedSupplyTotal", 180.0));
+                new SimulateMasterPlanSessionRequest(pisppId, "plannedSupplyTotal", 180.0));
 
-        MasterPlanSessionOptimizeResultDto optimized = sessionService.optimize(created.sessionId());
-        assertNotNull(optimized.score());
-        assertTrue(optimized.allocationCount() > 0);
+        List<PispPeriodSnapshotDto> afterSimulate =
+                sessionService.listPispPeriods(created.sessionId(), pispId);
+        PispPeriodSnapshotDto target = afterSimulate.stream()
+                .filter(p -> pisppId.equals(p.id()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(180.0, target.plannedSupplyTotal(), 1e-9);
 
-        MasterPlanOntologySession stored = sessionStore.require(created.sessionId(), WorkspaceResolver.currentWorkspaceId());
-        assertNotNull(stored.lastOptimizerResult());
-        assertTrue(stored.lastOptimizerResult().persistAllocations().size() > 0);
+        assertTrue(sessionPersistence.currentChangeSeq(
+                WorkspaceResolver.currentWorkspaceId(), created.sessionId()) > 0);
 
-        MasterPlanSessionConfirmResultDto confirmed = sessionService.confirm(created.sessionId());
-        assertNotNull(confirmed.planVersionId());
-        assertEquals(confirmed.allocationCount(), optimized.allocationCount());
-        assertTrue(confirmed.allocationCount() > 0);
+        sessionStore.remove(created.sessionId());
+
+        MasterPlanSessionDto restored = sessionService.restoreSessionFromPersistence(created.sessionId());
+        assertEquals(created.sessionId(), restored.sessionId());
+        assertEquals(PLAN_VERSION_ID, restored.basePlanVersionId());
+
+        List<PispPeriodSnapshotDto> afterRestore =
+                sessionService.listPispPeriods(restored.sessionId(), pispId);
+        PispPeriodSnapshotDto restoredPeriod = afterRestore.stream()
+                .filter(p -> pisppId.equals(p.id()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(180.0, restoredPeriod.plannedSupplyTotal(), 1e-9);
+
+        OntSessionEntity row = OntSessionEntity.findSession(
+                        WorkspaceResolver.currentWorkspaceId(), created.sessionId())
+                .orElseThrow();
+        assertTrue(row.solveProfileJson != null);
+        assertEquals(PLAN_VERSION_ID, row.solveProfileJson.get(
+                OntologySessionPersistenceService.SOLVE_PROFILE_PLAN_VERSION_KEY));
+    }
+
+    private void refreshOntWorkspaceHead() {
+        String workspaceId = WorkspaceResolver.currentWorkspaceId();
+        ontologyPersistence.importCommittedP0(
+                workspaceId, ontologyLoader.loadForPlanVersion(PLAN_VERSION_ID));
+        authoritativeOntologyGraph.invalidateWorkspace(workspaceId);
     }
 
     private void ensureFixture(LocalDate planningStart) {
-        PlanVersionEntity planVersion = PlanVersionEntity.findByVersionId(PLAN_VERSION_ID);
-        if (planVersion == null) {
-            planVersion = new PlanVersionEntity();
+        if (PlanVersionEntity.findByVersionId(PLAN_VERSION_ID) == null) {
+            PlanVersionEntity planVersion = new PlanVersionEntity();
             planVersion.planVersionId = PLAN_VERSION_ID;
             planVersion.planType = "MASTER_PLAN";
             planVersion.planGeneratedTs = LocalDateTime.now();
@@ -91,9 +123,9 @@ class MasterPlanOntologySessionDirectOptimizeTest {
             planVersion.persist();
         }
 
-        if (SalesOrderLineEntity.findByKey("SO-OTD-DIRECT", 1) == null) {
+        if (SalesOrderLineEntity.findByKey("SO-PERS-6C", 1) == null) {
             SalesOrderLineEntity line = new SalesOrderLineEntity();
-            line.salesOrderNo = "SO-OTD-DIRECT";
+            line.salesOrderNo = "SO-PERS-6C";
             line.salesOrderLineNo = 1;
             line.productCode = PRODUCT_CODE;
             line.orderQty = new BigDecimal("40");
@@ -107,7 +139,7 @@ class MasterPlanOntologySessionDirectOptimizeTest {
         if (WorkOrderEntity.findByNo(WORK_ORDER_NO) == null) {
             WorkOrderEntity workOrder = new WorkOrderEntity();
             workOrder.workOrderNo = WORK_ORDER_NO;
-            workOrder.salesOrderNo = "SO-OTD-DIRECT";
+            workOrder.salesOrderNo = "SO-PERS-6C";
             workOrder.salesOrderLineNo = 1;
             workOrder.productCode = PRODUCT_CODE;
             workOrder.quantity = new BigDecimal("40");
@@ -130,27 +162,5 @@ class MasterPlanOntologySessionDirectOptimizeTest {
             routing.stampWorkspace();
             routing.persist();
         }
-
-        if (InventoryEntity.find(
-                        "workspaceId = ?1 and productCode = ?2",
-                        WorkspaceResolver.currentWorkspaceId(),
-                        PRODUCT_CODE)
-                .firstResult() == null) {
-            InventoryEntity inventory = new InventoryEntity();
-            inventory.stockingPointCode = OntologyIds.DEFAULT_FG;
-            inventory.productCode = PRODUCT_CODE;
-            inventory.onhandQty = new BigDecimal("10");
-            inventory.reservedQty = BigDecimal.ZERO;
-            inventory.qualityHoldQty = BigDecimal.ZERO;
-            inventory.stampWorkspace();
-            inventory.persist();
-        }
-    }
-
-    private void refreshOntWorkspaceHead() {
-        String workspaceId = WorkspaceResolver.currentWorkspaceId();
-        ontologyPersistence.importCommittedP0(
-                workspaceId, ontologyLoader.loadForPlanVersion(PLAN_VERSION_ID));
-        authoritativeOntologyGraph.invalidateWorkspace(workspaceId);
     }
 }

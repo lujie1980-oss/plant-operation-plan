@@ -97,7 +97,7 @@
 
 | 项 | 内容 |
 |----|------|
-| **状态** | 已采纳（2026-06-20）· **P0~P5 骨架已落地（2026-06-30）** · **收口 Sprint 6A~6D 进行中** |
+| **状态** | 已采纳（2026-06-20）· **P0~P5 骨架已落地（2026-06-30）** · **收口 Sprint 6C~6D 已完成（2026-07-01）** |
 | **背景** | 现行 JPA 与 ENT-OG 不同构；Session 纯内存；宕机丢失沙盘；PISPP/FF/BD 难以 SQL 查询 |
 | **决策** | **以 Ontology 为基准**，引入 **`ont_revision` + `ont_*` 实体表**，与 ENT-* 1:1；`OntologyGraph` 由 **`WorkspaceAuthoritativeOntologyGraphService`**（`OntologyLoader` 壳 + `OntologyP0Overlay`）与 **`OntologyRestorer`** 组装；simulate/optimize/confirm **同事务**写 revision。Partial 持久化为 FULL 的 **存储策略子集**（§5.16），非第二套 schema |
 | **备选** | 继续 Loader 重算 + 仅 confirm allocation（否决：与「表=Ontology」目标不符）；整图 JSON blob（否决：SQL 不可查，作可选 snapshot 加速） |
@@ -256,11 +256,11 @@
 | TODO-05 | 重生成演练：仅凭规范盲重建模块 | 架构 |
 | TODO-06 | ~~对齐 ADR-07~~（2026-06-20 已实现） | 开发 |
 | TODO-07 | S05/分切求解配置纳入统一配置或插件体系 | 架构+开发 |
-| TODO-08 | **PATH-ENT 代码退役（ADR-08）**：删 `ontology_direct_solve_enabled` · 默认 PATH-ONT · 删 `optimizeLegacy` / `MasterPlanPlanningContextBuilder` · PATH-ENT 不再读 `WorkOrderBomDependencyEntity` · 废止 AC-05 | 开发 |
+| TODO-08 | **PATH-ENT 代码退役（ADR-08）**：Session `optimizeLegacy` + `ontology_direct_solve_enabled` **已移除（2026-07-01）**；余：`MasterPlanPlanningContextBuilder` · PATH-ENT 不再读 `WorkOrderBomDependencyEntity` · 废止 AC-05 | 开发 |
 | TODO-09 | SCN-02c/03b/04 跳转与试算页 UI 对齐 **[§17.8](../volumes/platform/17-ui-ux.md#178-跨页导航契约ui-nav-)** | 产品+前端 |
 | TODO-10 | SCN-01f：新增 `CANCEL_PROMISE`；SCN-01e 与取消承诺解耦（RULE-FF-03） | 开发 |
 | TODO-11 | SCN-07：供需平衡专页、PISPP period 表、建供应 API-MAT-02/03、物料预留 API-MAT-04~08、多路径 ENT-RT | 产品+前端+开发 |
-| TODO-12 | **ADR-09 全量 Ontology 持久化**：**P0~P5 + Sprint 6A/6B 已完成**；**收口 Sprint 6C~6D**（Session kill/reload E2E · PG 全量 parity · loader 内部化） | 架构+开发 |
+| TODO-12 | ~~**ADR-09 全量 Ontology 持久化**~~ **已收口 2026-07-01**（P0~P5 + Sprint 6A~6D）；loader 内部化文档化 · 后续扩展见 TODO-22~24 | — |
 | TODO-13 | **ADR-10 External_* 主数据**：staging、质检、sync、md_*、Projector 切读 | 架构+开发 |
 | TODO-14 | **ADR-11 外部交易数据**：external_* / txn_*、Firm WO 同步、质检、OG 装载切读 | 架构+开发 |
 | TODO-15 | **ADR-12 业务知识三层**：KnowledgeContext、Industry pack、overlay 表、引擎接 Effective | 架构+产品 |
@@ -284,7 +284,7 @@
 
 | 偏差 ID | 摘要 | 已有 TODO | 新增/备注 |
 |---------|------|-----------|-----------|
-| D-08 | 默认仍 PATH-ENT / `optimizeLegacy` | **TODO-08** | 已扩写子项（见上表） |
+| D-08 | ~~默认仍 PATH-ENT / `optimizeLegacy`~~ | **TODO-08** | **部分解决 2026-07-01**：Session optimize 固定 PATH-ONT；`ontology_direct_solve_enabled` 已删 |
 | D-09 | ~~confirm 写 legacy allocation，无 `ont_*`~~ | ~~TODO-12~~ | **已解决 2026-06-30**：`session-enabled` + `promoteDraftToCommitted`；legacy allocation 并行保留 |
 | D-10 | 无 `CANCEL_PROMISE` | **TODO-10** | — |
 | D-11 | API-MAT-02~08 / SCN-07e~j | **TODO-11** | — |
@@ -351,8 +351,8 @@
 | 阶段 | 交付 | 验收 |
 |------|------|------|
 | **P0 Schema** | Flyway：`ont_revision`、HEAD、需求/供应/FF 核心表；**含 `ont_resource_capacity_assignment`（TODO-22 R4）**；列级规范见 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md) | **已完成 2026-06-30** · `V65__ont_p0.sql` · `OntP0SchemaMigrationTest` |
-| **P1 Read path** | `OntologyRestorer` + JPA + `OntologyP0Overlay`；场景读经 `WorkspaceAuthoritativeOntologyGraphService`（**Sprint 6B 已完成**） | AC-PERS-01 绿 · `AuthoritativeOntologyReadPathIntegrationTest`；**Sprint 6D** PG 全量 parity |
-| **P2 Write path** | `OntologySessionPersistenceService` + WAL；H2 dev / postgres / test 默认 `session-enabled=true` | AC-PERS-02 库层绿；**Sprint 6C** Session API kill/reload E2E |
+| **P1 Read path** | `OntologyRestorer` + JPA + `OntologyP0Overlay`；场景读经 `WorkspaceAuthoritativeOntologyGraphService` | **已完成** · AC-PERS-01 · `OntologyRestorerIntegrationTest` extended · `AuthoritativeOntologyReadPathIntegrationTest` |
+| **P2 Write path** | `OntologySessionPersistenceService` + WAL；H2 dev / postgres / test 默认 `session-enabled=true` | **已完成** · AC-PERS-02 · `MasterPlanOntologySessionDraftRecoveryIntegrationTest` |
 | **P3 Confirm** | `promoteDraftToCommitted` + WORKSPACE/`PLAN:{id}` HEAD；与 legacy `OntologyStatePersister` 并行 | **已完成** · AC-PERS-03 |
 | **P4 Migration** | H2 `V66`；双写 + overlay + bootstrap；H2 dev 四开关默认开启；MRP → `OntologyLegacyMutationCoordinator` | **已完成** · AC-PERS-04 + Session E2E |
 | **P5 Partial policy** | `ont_entity_policy` + DERIVE 装载；`OntologyPartialDeriver` | **已完成** · AC-PERS-05 |

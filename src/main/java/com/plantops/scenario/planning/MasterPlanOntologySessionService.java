@@ -1,7 +1,6 @@
 package com.plantops.scenario.planning;
 
 import com.plantops.api.dto.MasterPlanAllocationDto;
-import com.plantops.api.dto.MasterPlanResultDto;
 import com.plantops.api.dto.planning.CreateMasterPlanSessionRequest;
 import com.plantops.api.dto.planning.MasterPlanSessionDto;
 import com.plantops.api.dto.planning.MasterPlanSessionConfirmResultDto;
@@ -14,11 +13,13 @@ import com.plantops.api.dto.planning.OntologySimulateTargetType;
 import com.plantops.api.dto.planning.SimulateMasterPlanSessionRequest;
 import com.plantops.api.dto.planning.SrpSnapshotDto;
 import com.plantops.config.MasterPlanStrategyConfigService;
-import com.plantops.config.OntologyDirectSolveFeature;
 import com.plantops.config.OntologySessionPersistenceFeature;
 import com.plantops.ontology.OntologyGraph;
+import com.plantops.ontology.OntologyLoader;
 import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
+import com.plantops.ontology.persistence.OntologyP0Overlay;
 import com.plantops.ontology.persistence.OntologyPersistencePort;
+import com.plantops.ontology.persistence.entity.OntSessionEntity;
 import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.planning.MasterPlanSolveProfile;
@@ -31,9 +32,7 @@ import com.plantops.rol.ChangeOperation;
 import com.plantops.rol.ChangeSet;
 import com.plantops.rol.RolEngine;
 import com.plantops.rol.RolTransaction;
-import com.plantops.scenario.MasterPlanService;
 import com.plantops.scenario.planning.optimizer.OptimizerResult;
-import com.plantops.scenario.planning.optimizer.OrderAllocationConverter;
 import com.plantops.scenario.planning.optimizer.PlanningOptimizerException;
 import com.plantops.scenario.planning.optimizer.PlanningOptimizerRegistry;
 import com.plantops.scenario.planning.optimizer.PlanningProblem;
@@ -61,19 +60,16 @@ public class MasterPlanOntologySessionService {
     WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
 
     @Inject
-    MasterPlanOntologySessionStore sessionStore;
+    OntologyLoader ontologyLoader;
 
     @Inject
-    MasterPlanService masterPlanService;
+    MasterPlanOntologySessionStore sessionStore;
 
     @Inject
     OntologyTimefoldMapper ontologyTimefoldMapper;
 
     @Inject
     OntologyToMasterPlanScheduleMapper ontologyToMasterPlanScheduleMapper;
-
-    @Inject
-    OntologyDirectSolveFeature directSolveFeature;
 
     @Inject
     MasterPlanStrategyConfigService strategyConfigService;
@@ -128,7 +124,45 @@ public class MasterPlanOntologySessionService {
                     graph,
                     sessionStore.defaultExpiresAt(createdAt),
                     null);
+            ontologyPersistence.recordMasterPlanContext(workspaceId, sessionId, request.planVersionId());
         }
+        return toSessionDto(session);
+    }
+
+    /**
+     * AC-PERS-02: reload in-memory Session from persisted DRAFT revision after process restart.
+     */
+    public MasterPlanSessionDto restoreSessionFromPersistence(String sessionId) {
+        if (!sessionPersistenceFeature.enabled()) {
+            throw new BadRequestException("Session persistence disabled");
+        }
+        String workspaceId = WorkspaceResolver.currentWorkspaceId();
+        OntSessionEntity row = OntSessionEntity.findSession(workspaceId, sessionId)
+                .orElseThrow(() -> new NotFoundException("Master plan session not found: " + sessionId));
+        String planVersionId = row.solveProfileJson != null
+                ? String.valueOf(row.solveProfileJson.get(
+                        com.plantops.ontology.persistence.OntologySessionPersistenceService
+                                .SOLVE_PROFILE_PLAN_VERSION_KEY))
+                : null;
+        if (planVersionId == null || planVersionId.isBlank() || "null".equals(planVersionId)) {
+            throw new BadRequestException("Persisted session missing basePlanVersionId: " + sessionId);
+        }
+        OntologyGraph loaderGraph = ontologyLoader.loadForPlanVersion(planVersionId);
+        OntologyGraph restoredP0 = ontologyPersistence.loadDraftSession(workspaceId, sessionId);
+        OntologyGraph graph = OntologyP0Overlay.apply(loaderGraph, restoredP0);
+        RolEngine rolEngine = authoritativeOntologyGraph.newRolEngine(graph);
+        MasterPlanOntologySession session = new MasterPlanOntologySession(
+                sessionId,
+                workspaceId,
+                planVersionId,
+                graph,
+                rolEngine,
+                row.createdAt,
+                row.expiresAt,
+                resolveSolveProfile(planVersionId, graph),
+                null,
+                null);
+        sessionStore.put(session);
         return toSessionDto(session);
     }
 
@@ -327,10 +361,7 @@ public class MasterPlanOntologySessionService {
     public MasterPlanSessionOptimizeResultDto optimize(String sessionId)
             throws ExecutionException, InterruptedException {
         MasterPlanOntologySession session = sessionStore.require(sessionId, WorkspaceResolver.currentWorkspaceId());
-        if (directSolveFeature.enabled()) {
-            return optimizeDirect(session);
-        }
-        return optimizeLegacy(session);
+        return optimizeDirect(session);
     }
 
     public MasterPlanSessionConfirmResultDto confirm(String sessionId)
@@ -374,34 +405,6 @@ public class MasterPlanOntologySessionService {
                 optimizerResult.persistAllocations(),
                 optimizerResult.scoreSummary(),
                 optimizerResult.solveDurationMs());
-        sessionStore.put(session.withLastOptimizerResult(optimizerResult));
-        persistOptimizeIfEnabled(session, optimizerResult);
-        return response;
-    }
-
-    private MasterPlanSessionOptimizeResultDto optimizeLegacy(MasterPlanOntologySession session)
-            throws ExecutionException, InterruptedException {
-        MasterPlanResultDto solveResult = masterPlanService.getResult(session.basePlanVersionId());
-        if (solveResult == null) {
-            throw new BadRequestException(
-                    "Base plan version has no published result: " + session.basePlanVersionId());
-        }
-
-        List<MasterPlanAllocationDto> allocations = solveResult.allocations() != null
-                ? solveResult.allocations()
-                : List.of();
-        OptimizerResult optimizerResult = new OptimizerResult(
-                "baseline",
-                OrderAllocationConverter.toPlanningAssignmentsFromDtos(allocations),
-                solveResult.score(),
-                solveResult.solveDurationMs() != null ? solveResult.solveDurationMs() : 0L,
-                List.of(),
-                allocations);
-        MasterPlanSessionOptimizeResultDto response = applyAllocationsToGraph(
-                session,
-                allocations,
-                solveResult.score(),
-                solveResult.solveDurationMs() != null ? solveResult.solveDurationMs() : 0L);
         sessionStore.put(session.withLastOptimizerResult(optimizerResult));
         persistOptimizeIfEnabled(session, optimizerResult);
         return response;

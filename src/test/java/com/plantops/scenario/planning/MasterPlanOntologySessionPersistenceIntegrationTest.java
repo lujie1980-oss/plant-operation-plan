@@ -4,8 +4,6 @@ import com.plantops.api.dto.planning.CreateMasterPlanSessionRequest;
 import com.plantops.api.dto.planning.MasterPlanSessionConfirmResultDto;
 import com.plantops.api.dto.planning.MasterPlanSessionDto;
 import com.plantops.api.dto.planning.MasterPlanSessionOptimizeResultDto;
-import com.plantops.config.OntologyDirectSolveFeature;
-import com.plantops.config.ParameterRegistry;
 import com.plantops.ontology.OntologyIds;
 import com.plantops.ontology.OntologyLoader;
 import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
@@ -22,13 +20,11 @@ import com.plantops.persistence.entity.MasterPlanAllocationEntity;
 import com.plantops.persistence.entity.PlanVersionEntity;
 import com.plantops.persistence.entity.ProductResourceEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
-import com.plantops.persistence.entity.SystemParameterEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.workspace.WorkspaceResolver;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -55,12 +51,6 @@ class MasterPlanOntologySessionPersistenceIntegrationTest {
     MasterPlanOntologySessionService sessionService;
 
     @Inject
-    ParameterRegistry parameterRegistry;
-
-    @Inject
-    OntologyDirectSolveFeature directSolveFeature;
-
-    @Inject
     OntologyRevisionService revisionService;
 
     @Inject
@@ -72,16 +62,9 @@ class MasterPlanOntologySessionPersistenceIntegrationTest {
     @Inject
     WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
 
-    @AfterEach
-    @TestTransaction
-    void resetDirectSolveFlag() {
-        setDirectSolveEnabled(false);
-    }
-
     @Test
     @TestTransaction
     void confirmPromotesOntRevisionAndTracesPlanVersion() throws Exception {
-        setDirectSolveEnabled(true);
         LocalDate planningStart = LocalDate.of(2026, 6, 1);
         ensureFixture(planningStart);
         refreshOntWorkspaceHead();
@@ -112,23 +95,6 @@ class MasterPlanOntologySessionPersistenceIntegrationTest {
                 WorkOrderEntity.findByNo(WORK_ORDER_NO),
                 OntSupplyOrderEntity.findById(new OntEntityKey(
                         workspaceId, session.draftRevisionId, WORK_ORDER_NO)));
-    }
-
-    private void setDirectSolveEnabled(boolean enabled) {
-        SystemParameterEntity row = SystemParameterEntity.findByParamId(OntologyDirectSolveFeature.PARAM_ID);
-        if (row == null) {
-            row = new SystemParameterEntity();
-            row.paramId = OntologyDirectSolveFeature.PARAM_ID;
-            row.paramValue = Boolean.toString(enabled);
-            row.description = "Ontology session direct solve";
-            row.stampWorkspace();
-            row.persist();
-        } else {
-            row.paramValue = Boolean.toString(enabled);
-            row.persist();
-        }
-        parameterRegistry.invalidate(OntologyDirectSolveFeature.PARAM_ID);
-        assertEquals(enabled, directSolveFeature.enabled());
     }
 
     private void ensureFixture(LocalDate planningStart) {

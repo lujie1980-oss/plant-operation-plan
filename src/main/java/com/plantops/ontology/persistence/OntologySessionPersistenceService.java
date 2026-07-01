@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -18,6 +19,8 @@ import java.util.Optional;
  */
 @ApplicationScoped
 public class OntologySessionPersistenceService {
+
+    public static final String SOLVE_PROFILE_PLAN_VERSION_KEY = "basePlanVersionId";
 
     public record DraftSessionHandle(
             String sessionId,
@@ -152,6 +155,29 @@ public class OntologySessionPersistenceService {
     public OntologyGraph loadDraftSession(String workspaceId, String sessionId) {
         OntSessionEntity session = requireSession(workspaceId, sessionId);
         return restorer.loadRevision(workspaceId, session.draftRevisionId);
+    }
+
+    @Transactional
+    public void recordMasterPlanContext(String workspaceId, String sessionId, String basePlanVersionId) {
+        OntSessionEntity session = requireSession(workspaceId, sessionId);
+        Map<String, Object> profile = session.solveProfileJson != null
+                ? new HashMap<>(session.solveProfileJson)
+                : new HashMap<>();
+        profile.put(SOLVE_PROFILE_PLAN_VERSION_KEY, basePlanVersionId);
+        session.solveProfileJson = profile;
+        session.updatedAt = LocalDateTime.now();
+    }
+
+    public String resolveMasterPlanVersionId(String workspaceId, String sessionId) {
+        OntSessionEntity session = requireSession(workspaceId, sessionId);
+        if (session.solveProfileJson == null) {
+            throw new IllegalStateException("ont_session missing solve_profile_json: " + sessionId);
+        }
+        Object planVersionId = session.solveProfileJson.get(SOLVE_PROFILE_PLAN_VERSION_KEY);
+        if (planVersionId == null || planVersionId.toString().isBlank()) {
+            throw new IllegalStateException("ont_session missing basePlanVersionId: " + sessionId);
+        }
+        return planVersionId.toString();
     }
 
     public Optional<DraftSessionHandle> findDraftSession(String workspaceId, String sessionId) {

@@ -73,6 +73,61 @@ public final class OntologyPersistenceTestFixtures {
                 .build();
     }
 
+    /** Multi-entity P0 graph for PG extended parity (AC-PERS-01). */
+    public static OntologyGraph extendedP0Graph() {
+        OntologyGraph base = sampleP0Graph();
+        String pispId2 = OntologyIds.pispId("FG-PERS-02");
+        String demandId2 = "DEM-PERS-02";
+        String soId2 = "SO-PERS-02";
+        String opId2 = OntologyIds.operationId(soId2, 1);
+        String pisppId2 = OntologyIds.pisppId(pispId2, 0);
+        String srpId2 = OntologyIds.srpId("RES-PERS-02", 0);
+
+        Demand demand2 = new Demand(
+                demandId2, "FG-PERS-02", pispId2, 60.0,
+                LocalDate.of(2026, 7, 15), 2,
+                DemandSourceType.CUSTOMER_DELIVERY, "COLD-PERS-02");
+
+        SupplyOrder so2 = new SupplyOrder(
+                soId2, "FG-PERS-02", pispId2, 60.0,
+                LocalDate.of(2026, 7, 12),
+                SupplyOrderStatus.OPEN, SupplyOrderType.PLANNED_PRODUCTION);
+
+        Operation op2 = new Operation(opId2, soId2, 1, "Pack");
+        op2.setRoutingSequenceNo(20);
+        op2.setProductionDuration(1800);
+
+        Fulfillment ff2 = new Fulfillment(
+                "FF-PERS-02", demandId2, soId2, 30.0, FulfillmentType.WORK_ORDER_PEG);
+
+        ProductInStockingPointPeriod pispp2 = new ProductInStockingPointPeriod(
+                pisppId2, pispId2, OntologyIds.periodId(0));
+        pispp2.setOnHand(5);
+        pispp2.setPlannedSupplyTotal(55);
+        pispp2.setPlannedDemandQuantityTotal(60);
+        pispp2.recalculatePlanningFields();
+
+        StandardResourcePeriod srp2 = new StandardResourcePeriod(srpId2, "RES-PERS-02", OntologyIds.periodId(0));
+        srp2.setTotalCapacity(240);
+        srp2.setReservedCapacity(60);
+        srp2.recalculateCapacityFields();
+
+        return OntologyGraph.builder()
+                .demand(base.demandsById().values().iterator().next())
+                .supplyOrder(base.supplyOrdersById().values().iterator().next())
+                .operation(base.operationsById().values().iterator().next())
+                .fulfillment(base.fulfillments().getFirst())
+                .pispPeriod(base.pispPeriodsById().values().iterator().next())
+                .standardResourcePeriod(base.srpById().values().iterator().next())
+                .demand(demand2)
+                .supplyOrder(so2)
+                .operation(op2)
+                .fulfillment(ff2)
+                .pispPeriod(pispp2)
+                .standardResourcePeriod(srp2)
+                .build();
+    }
+
     public static void assertP0Parity(OntologyGraph source, OntologyGraph restored) {
         assertEquals(source.demandsById().size(), restored.demandsById().size());
         for (Demand d : source.demandsById().values()) {

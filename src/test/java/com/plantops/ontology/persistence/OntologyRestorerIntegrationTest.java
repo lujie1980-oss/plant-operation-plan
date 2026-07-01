@@ -33,4 +33,14 @@ class OntologyRestorerIntegrationTest {
 
         OntologyPersistenceTestFixtures.assertP0Parity(source, restored);
     }
+
+    @Test
+    @TestTransaction
+    void importAndRestoreExtendedP0EntitiesMatch() {
+        OntologyGraph source = OntologyPersistenceTestFixtures.extendedP0Graph();
+        String revisionId = persistence.importCommittedP0(WS + "-ext", source);
+        OntologyGraph restored = persistence.loadRevision(WS + "-ext", revisionId);
+
+        OntologyPersistenceTestFixtures.assertP0Parity(source, restored);
+    }
 }

@@ -50,7 +50,7 @@
 | 参数 | 默认 | 影响 |
 |------|------|------|
 | `planning_optimizer_engine` | `ortools` | SCN-01b CTP / SCN-06 / SCN-T01 |
-| `ontology_direct_solve_enabled` | **废止中** | ADR-08；TODO-08 删除 |
+| `ontology_direct_solve_enabled` | **已废止** | ADR-08；2026-07-01 Session optimize 固定 PATH-ONT |
 | `ontology_period_sequence` | 14x1d,4x1w,2x1m（扩展：`14x3shift,...` · ADR-16） | ENT-PER · §5.8.1 |
 | `master_plan_demand_scale` | 0.01 | 求解 qty 缩放 |
 | `master_plan_multi_resource_split` | false | 多资源 CP-SAT |

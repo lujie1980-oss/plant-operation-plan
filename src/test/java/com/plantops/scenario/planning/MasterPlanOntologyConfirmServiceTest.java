@@ -3,16 +3,21 @@ package com.plantops.scenario.planning;
 import com.plantops.api.dto.planning.CreateMasterPlanSessionRequest;
 import com.plantops.api.dto.planning.MasterPlanSessionConfirmResultDto;
 import com.plantops.api.dto.planning.MasterPlanSessionDto;
+import com.plantops.api.dto.planning.MasterPlanSessionOptimizeResultDto;
 import com.plantops.ontology.OntologyIds;
+import com.plantops.ontology.OntologyLoader;
+import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
+import com.plantops.ontology.persistence.OntologyPersistencePort;
 import com.plantops.persistence.entity.InventoryEntity;
 import com.plantops.persistence.entity.MasterPlanAllocationEntity;
 import com.plantops.persistence.entity.PlanVersionEntity;
+import com.plantops.persistence.entity.ProductResourceEntity;
+import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.workspace.WorkspaceResolver;
+import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -22,6 +27,7 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 class MasterPlanOntologyConfirmServiceTest {
@@ -29,14 +35,43 @@ class MasterPlanOntologyConfirmServiceTest {
     private static final String PLAN_VERSION_ID = "MPV-OTD-CONFIRM-TEST";
     private static final String PRODUCT_CODE = "FG-OTD-CONFIRM-100";
     private static final String WORK_ORDER_NO = "WO-OTD-CONFIRM-001";
-    private static final String ALLOCATION_ID = "ALLOC-OTD-CONFIRM-001";
+    private static final String RESOURCE_ID = "RES-OTD-CONFIRM-01";
 
     @Inject
     MasterPlanOntologySessionService service;
 
-    @BeforeEach
-    @Transactional
-    void ensureFixtureData() {
+    @Inject
+    OntologyLoader ontologyLoader;
+
+    @Inject
+    OntologyPersistencePort ontologyPersistence;
+
+    @Inject
+    WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
+
+    @Test
+    @TestTransaction
+    void confirmPersistsAllocationsAndReturnsPlanVersionId() throws Exception {
+        LocalDate planningStart = LocalDate.of(2026, 6, 1);
+        ensureFixture(planningStart);
+        refreshOntWorkspaceHead();
+
+        MasterPlanSessionDto created = service.create(new CreateMasterPlanSessionRequest(PLAN_VERSION_ID, null));
+        MasterPlanSessionOptimizeResultDto optimized = service.optimize(created.sessionId());
+        assertTrue(optimized.allocationCount() > 0);
+
+        MasterPlanSessionConfirmResultDto result = service.confirm(created.sessionId());
+
+        assertNotNull(result);
+        assertEquals(created.sessionId(), result.sessionId());
+        assertFalse(result.planVersionId().isBlank());
+        assertEquals(
+                (int) MasterPlanAllocationEntity.count("planVersionId = ?1", result.planVersionId()),
+                result.allocationCount());
+        assertTrue(result.allocationCount() > 0);
+    }
+
+    private void ensureFixture(LocalDate planningStart) {
         PlanVersionEntity planVersion = PlanVersionEntity.findByVersionId(PLAN_VERSION_ID);
         if (planVersion == null) {
             planVersion = new PlanVersionEntity();
@@ -51,54 +86,55 @@ class MasterPlanOntologyConfirmServiceTest {
             planVersion.solveDurationMs = 1L;
         }
 
-        WorkOrderEntity workOrder = WorkOrderEntity.findByNo(WORK_ORDER_NO);
-        if (workOrder == null) {
-            workOrder = new WorkOrderEntity();
+        if (SalesOrderLineEntity.findByKey("SO-OTD-CONFIRM-001", 1) == null) {
+            SalesOrderLineEntity line = new SalesOrderLineEntity();
+            line.salesOrderNo = "SO-OTD-CONFIRM-001";
+            line.salesOrderLineNo = 1;
+            line.productCode = PRODUCT_CODE;
+            line.orderQty = new BigDecimal("120");
+            line.dueDate = planningStart.plusDays(10);
+            line.priority = 5;
+            line.status = "OPEN";
+            line.stampWorkspace();
+            line.persist();
+        }
+
+        if (WorkOrderEntity.findByNo(WORK_ORDER_NO) == null) {
+            WorkOrderEntity workOrder = new WorkOrderEntity();
             workOrder.workOrderNo = WORK_ORDER_NO;
             workOrder.salesOrderNo = "SO-OTD-CONFIRM-001";
             workOrder.salesOrderLineNo = 1;
             workOrder.productCode = PRODUCT_CODE;
             workOrder.quantity = new BigDecimal("120");
-            workOrder.resourceId = "RES-OTD-CONFIRM-01";
-            workOrder.sequenceNo = 1;
+            workOrder.needDate = planningStart.plusDays(10);
+            workOrder.resourceId = RESOURCE_ID;
+            workOrder.sequenceNo = WorkOrderEntity.nextSequenceNo();
             workOrder.sourceType = WorkOrderEntity.SOURCE_MRP;
             workOrder.stampWorkspace();
             workOrder.persist();
         }
 
-        MasterPlanAllocationEntity allocation = MasterPlanAllocationEntity.find(
-                        "workspaceId = ?1 and planVersionId = ?2 and allocationId = ?3",
-                        WorkspaceResolver.currentWorkspaceId(),
-                        PLAN_VERSION_ID,
-                        ALLOCATION_ID)
-                .firstResult();
-        if (allocation == null) {
-            allocation = new MasterPlanAllocationEntity();
-            allocation.planVersionId = PLAN_VERSION_ID;
-            allocation.allocationId = ALLOCATION_ID;
-            allocation.workOrderNo = WORK_ORDER_NO;
-            allocation.productCode = PRODUCT_CODE;
-            allocation.salesOrderNo = "SO-OTD-CONFIRM-001";
-            allocation.salesOrderLineNo = 1;
-            allocation.resourceId = "RES-OTD-CONFIRM-01";
-            allocation.slotIndex = 0;
-            allocation.slotDate = LocalDate.now();
-            allocation.shiftId = "DAY";
-            allocation.durationMinutes = 480;
-            allocation.stampWorkspace();
-            allocation.persist();
+        if (ProductResourceEntity.findByProductAndResource(PRODUCT_CODE, RESOURCE_ID) == null) {
+            ProductResourceEntity routing = new ProductResourceEntity();
+            routing.productCode = PRODUCT_CODE;
+            routing.resourceId = RESOURCE_ID;
+            routing.operationName = "RUN";
+            routing.sequenceNo = 1;
+            routing.setupTimeMinutes = 0;
+            routing.processTimeSeconds = new BigDecimal("60");
+            routing.stampWorkspace();
+            routing.persist();
         }
 
-        InventoryEntity inventory = InventoryEntity.find(
+        if (InventoryEntity.find(
                         "workspaceId = ?1 and productCode = ?2",
                         WorkspaceResolver.currentWorkspaceId(),
                         PRODUCT_CODE)
-                .firstResult();
-        if (inventory == null) {
-            inventory = new InventoryEntity();
+                .firstResult() == null) {
+            InventoryEntity inventory = new InventoryEntity();
             inventory.stockingPointCode = OntologyIds.DEFAULT_FG;
             inventory.productCode = PRODUCT_CODE;
-            inventory.onhandQty = new BigDecimal("40");
+            inventory.onhandQty = new BigDecimal("10");
             inventory.reservedQty = BigDecimal.ZERO;
             inventory.qualityHoldQty = BigDecimal.ZERO;
             inventory.stampWorkspace();
@@ -106,19 +142,10 @@ class MasterPlanOntologyConfirmServiceTest {
         }
     }
 
-    @Test
-    void confirmPersistsAllocationsAndReturnsPlanVersionId() throws Exception {
-        MasterPlanSessionDto created = service.create(new CreateMasterPlanSessionRequest(PLAN_VERSION_ID, null));
-        service.optimize(created.sessionId());
-
-        MasterPlanSessionConfirmResultDto result = service.confirm(created.sessionId());
-
-        assertNotNull(result);
-        assertEquals(created.sessionId(), result.sessionId());
-        assertFalse(result.planVersionId().isBlank());
-        assertEquals(
-                (int) MasterPlanAllocationEntity.count("planVersionId = ?1", result.planVersionId()),
-                result.allocationCount());
-        assertFalse(result.allocationCount() < 0);
+    private void refreshOntWorkspaceHead() {
+        String workspaceId = WorkspaceResolver.currentWorkspaceId();
+        ontologyPersistence.importCommittedP0(
+                workspaceId, ontologyLoader.loadForPlanVersion(PLAN_VERSION_ID));
+        authoritativeOntologyGraph.invalidateWorkspace(workspaceId);
     }
 }

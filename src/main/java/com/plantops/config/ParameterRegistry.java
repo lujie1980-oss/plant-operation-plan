@@ -43,7 +43,6 @@ public class ParameterRegistry {
             Map.entry("batch_kitting_create_short_batch", "true"),
             Map.entry("batch_min_qty", "10"),
             Map.entry("batch_max_qty", "200"),
-            Map.entry("ontology_direct_solve_enabled", "false"),
             Map.entry("planning_optimizer_engine", "ortools"),
             Map.entry("master_plan_multi_resource_split", "false"),
             Map.entry("master_plan_jit_warm_start", "true"),

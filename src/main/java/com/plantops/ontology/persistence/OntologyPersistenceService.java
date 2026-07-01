@@ -83,6 +83,12 @@ public class OntologyPersistenceService implements OntologyPersistencePort {
 
     @Override
     @Transactional
+    public void recordMasterPlanContext(String workspaceId, String sessionId, String basePlanVersionId) {
+        sessionPersistence.recordMasterPlanContext(workspaceId, sessionId, basePlanVersionId);
+    }
+
+    @Override
+    @Transactional
     public OntologySessionPersistenceService.ConfirmOutcome promoteDraftToCommitted(
             String workspaceId, String sessionId, String planVersionId) {
         return sessionPersistence.promoteDraftToCommitted(workspaceId, sessionId, planVersionId);
