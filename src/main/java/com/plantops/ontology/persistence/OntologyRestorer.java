@@ -5,6 +5,7 @@ import com.plantops.ontology.persistence.entity.OntDemandEntity;
 import com.plantops.ontology.persistence.entity.OntFulfillmentEntity;
 import com.plantops.ontology.persistence.entity.OntOperationEntity;
 import com.plantops.ontology.persistence.entity.OntPisppEntity;
+import com.plantops.ontology.persistence.entity.OntResourceCapacityAssignmentEntity;
 import com.plantops.ontology.persistence.entity.OntRevisionEntity;
 import com.plantops.ontology.persistence.entity.OntSrpEntity;
 import com.plantops.ontology.persistence.entity.OntSupplyOrderEntity;
@@ -61,6 +62,13 @@ public class OntologyRestorer {
         if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.SRP)) {
             for (OntSrpEntity row : OntSrpEntity.forRevision(workspaceId, revisionId)) {
                 builder.standardResourcePeriod(OntologyEntityMapper.toSrp(row));
+            }
+        }
+        if (policyService.shouldStore(
+                workspaceId, persistenceMode, OntologyEntityKind.RESOURCE_CAPACITY_ASSIGNMENT)) {
+            for (OntResourceCapacityAssignmentEntity row :
+                    OntResourceCapacityAssignmentEntity.forRevision(workspaceId, revisionId)) {
+                builder.resourceCapacityAssignment(OntologyEntityMapper.toResourceCapacityAssignment(row));
             }
         }
 

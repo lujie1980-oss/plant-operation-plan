@@ -380,7 +380,8 @@ public class MasterPlanOntologySessionService {
                         session.sessionId(),
                         session.basePlanVersionId(),
                         session.solveProfile(),
-                        optimizerResult));
+                        optimizerResult,
+                        session.graph()));
         if (sessionPersistenceFeature.enabled()) {
             ontologyPersistence.promoteDraftToCommitted(
                     session.workspaceId(), session.sessionId(), outcome.planVersionId());
@@ -390,7 +391,7 @@ public class MasterPlanOntologySessionService {
         return new MasterPlanSessionConfirmResultDto(
                 session.sessionId(),
                 outcome.planVersionId(),
-                outcome.allocationCount());
+                outcome.occupancyCount());
     }
 
     private MasterPlanSessionOptimizeResultDto optimizeDirect(MasterPlanOntologySession session)

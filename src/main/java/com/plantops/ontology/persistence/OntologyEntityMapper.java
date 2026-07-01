@@ -14,6 +14,7 @@ import com.plantops.ontology.persistence.entity.OntResourceCapacityAssignmentEnt
 import com.plantops.ontology.persistence.entity.OntSrpEntity;
 import com.plantops.ontology.persistence.entity.OntSupplyOrderEntity;
 import com.plantops.ontology.supply.Operation;
+import com.plantops.ontology.supply.ResourceCapacityAssignment;
 import com.plantops.ontology.supply.SupplyOrder;
 import com.plantops.ontology.supply.SupplyOrderStatus;
 import com.plantops.ontology.supply.SupplyOrderType;
@@ -202,6 +203,33 @@ public final class OntologyEntityMapper {
         row.availableCapacity = srp.getAvailableCapacity();
         row.freeCapacity = srp.getFreeCapacity();
         row.overloadCapacity = srp.getOverloadCapacity();
+        return row;
+    }
+
+    public static ResourceCapacityAssignment toResourceCapacityAssignment(
+            OntResourceCapacityAssignmentEntity row) {
+        return new ResourceCapacityAssignment(
+                row.entityId,
+                row.operationId,
+                row.operationOnStandardResourceId,
+                row.standardResourcePeriodId,
+                row.assignedMinutes,
+                row.operationTotalMinutes,
+                row.locked,
+                row.parallelGroupId);
+    }
+
+    public static OntResourceCapacityAssignmentEntity fromResourceCapacityAssignment(
+            ResourceCapacityAssignment rca, String workspaceId, String revisionId) {
+        OntResourceCapacityAssignmentEntity row = new OntResourceCapacityAssignmentEntity();
+        row.stampKeys(workspaceId, revisionId, rca.getId());
+        row.operationId = rca.getOperationId();
+        row.operationOnStandardResourceId = rca.getOperationOnStandardResourceId();
+        row.standardResourcePeriodId = rca.getStandardResourcePeriodId();
+        row.assignedMinutes = rca.getAssignedMinutes();
+        row.operationTotalMinutes = rca.getOperationTotalMinutes();
+        row.locked = rca.isLocked();
+        row.parallelGroupId = rca.getParallelGroupId();
         return row;
     }
 }

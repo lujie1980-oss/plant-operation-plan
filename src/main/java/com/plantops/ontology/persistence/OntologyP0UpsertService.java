@@ -10,9 +10,11 @@ import com.plantops.ontology.persistence.entity.OntEntityKey;
 import com.plantops.ontology.persistence.entity.OntFulfillmentEntity;
 import com.plantops.ontology.persistence.entity.OntOperationEntity;
 import com.plantops.ontology.persistence.entity.OntPisppEntity;
+import com.plantops.ontology.persistence.entity.OntResourceCapacityAssignmentEntity;
 import com.plantops.ontology.persistence.entity.OntSrpEntity;
 import com.plantops.ontology.persistence.entity.OntSupplyOrderEntity;
 import com.plantops.ontology.supply.Operation;
+import com.plantops.ontology.supply.ResourceCapacityAssignment;
 import com.plantops.ontology.supply.SupplyOrder;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -61,6 +63,12 @@ public class OntologyP0UpsertService {
         }
         if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.SRP)) {
             graph.srpById().values().forEach(srp -> upsertSrp(srp, workspaceId, revisionId));
+        }
+        if (policyService.shouldStore(
+                workspaceId, persistenceMode, OntologyEntityKind.RESOURCE_CAPACITY_ASSIGNMENT)) {
+            graph.resourceCapacityAssignmentsById()
+                    .values()
+                    .forEach(rca -> upsertResourceCapacityAssignment(rca, workspaceId, revisionId));
         }
     }
 
@@ -174,6 +182,24 @@ public class OntologyP0UpsertService {
         row.updatedAt = LocalDateTime.now();
     }
 
+    private void upsertResourceCapacityAssignment(
+            ResourceCapacityAssignment rca, String workspaceId, String revisionId) {
+        OntResourceCapacityAssignmentEntity row = OntResourceCapacityAssignmentEntity.findById(
+                new OntEntityKey(workspaceId, revisionId, rca.getId()));
+        if (row == null) {
+            OntologyEntityMapper.fromResourceCapacityAssignment(rca, workspaceId, revisionId).persist();
+            return;
+        }
+        row.operationId = rca.getOperationId();
+        row.operationOnStandardResourceId = rca.getOperationOnStandardResourceId();
+        row.standardResourcePeriodId = rca.getStandardResourcePeriodId();
+        row.assignedMinutes = rca.getAssignedMinutes();
+        row.operationTotalMinutes = rca.getOperationTotalMinutes();
+        row.locked = rca.isLocked();
+        row.parallelGroupId = rca.getParallelGroupId();
+        row.updatedAt = LocalDateTime.now();
+    }
+
     static void copyOperationFields(OntOperationEntity row, Operation op) {
         row.supplyOrderId = op.getSupplyOrderId();
         row.planUnitId = op.getPlanUnitId();
@@ -220,6 +246,11 @@ public class OntologyP0UpsertService {
         }
         if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.SRP)) {
             OntSrpEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
+        }
+        if (policyService.shouldStore(
+                workspaceId, persistenceMode, OntologyEntityKind.RESOURCE_CAPACITY_ASSIGNMENT)) {
+            OntResourceCapacityAssignmentEntity.delete(
+                    "workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
         }
     }
 }

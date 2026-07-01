@@ -1,5 +1,6 @@
 package com.plantops.ontology;
 
+import com.plantops.config.OntologyRestorerReadFeature;
 import com.plantops.ontology.master.Product;
 import com.plantops.ontology.master.ProductInStockingPoint;
 import com.plantops.ontology.master.StockingPoint;
@@ -25,6 +26,7 @@ import com.plantops.persistence.entity.BomComponentEntity;
 import com.plantops.persistence.entity.InventoryEntity;
 import com.plantops.persistence.entity.MaterialEntity;
 import com.plantops.persistence.entity.PlanVersionEntity;
+import com.plantops.persistence.entity.ProductResourceEntity;
 import com.plantops.persistence.entity.ProductionLineEntity;
 import com.plantops.persistence.entity.ProductionResourceEntity;
 import com.plantops.persistence.entity.ResourceCalendarEntity;
@@ -37,9 +39,11 @@ import com.plantops.ontology.supply.OperationTimingBridgeService;
 import com.plantops.rol.PispRolling;
 import com.plantops.scenario.OntologyUpstreamChainWorkOrderPersister;
 import com.plantops.scenario.planning.PlanVersionAllocationHydrator;
+import com.plantops.scenario.planning.PlanVersionEntRcaOccupancy;
 import com.plantops.scenario.ProductRoutingSteps;
 import com.plantops.scenario.RuleScopeHelper;
 import com.plantops.scenario.WorkOrderService;
+import com.plantops.workspace.WorkspaceResolver;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotFoundException;
@@ -71,6 +75,9 @@ public class OntologyLoader {
 
     @Inject
     PlanVersionAllocationHydrator planVersionAllocationHydrator;
+
+    @Inject
+    OntologyRestorerReadFeature restorerReadFeature;
 
     @Inject
     OntologyUpstreamFulfillmentBuilder upstreamFulfillmentBuilder;
@@ -239,8 +246,23 @@ public class OntologyLoader {
         }
         LocalDate planningStart = resolvePlanningStart(planVersion);
         OntologyGraph graph = buildGraph(planningStart);
-        planVersionAllocationHydrator.hydrate(graph, planVersionId);
+        hydrateLegacyAllocationsIfNeeded(graph, planVersionId);
         return graph;
+    }
+
+    private void hydrateLegacyAllocationsIfNeeded(OntologyGraph graph, String planVersionId) {
+        if (shouldSkipLegacyAllocationHydration(planVersionId)) {
+            return;
+        }
+        planVersionAllocationHydrator.hydrateFromLegacyAllocations(graph, planVersionId);
+    }
+
+    private boolean shouldSkipLegacyAllocationHydration(String planVersionId) {
+        if (!restorerReadFeature.enabled()) {
+            return false;
+        }
+        return PlanVersionEntRcaOccupancy.hasCommittedEntRca(
+                WorkspaceResolver.currentWorkspaceId(), planVersionId);
     }
 
     /**
@@ -276,7 +298,7 @@ public class OntologyLoader {
         loadStandardResourcePeriods(builder, periods, periodIndex);
         OntologyGraph graph = builder.build();
         if (planVersionId != null && !planVersionId.isBlank()) {
-            planVersionAllocationHydrator.hydrate(graph, planVersionId);
+            hydrateLegacyAllocationsIfNeeded(graph, planVersionId);
         }
         return graph;
     }
@@ -429,6 +451,16 @@ public class OntologyLoader {
         for (ProductionLineEntity line : ProductionLineEntity.listInWorkspace()) {
             if (line.resourceId != null && !line.resourceId.isBlank()) {
                 resourceIds.add(line.resourceId);
+            }
+        }
+        for (ProductResourceEntity pr : ProductResourceEntity.listInWorkspace()) {
+            if (pr.resourceId != null && !pr.resourceId.isBlank()) {
+                resourceIds.add(pr.resourceId);
+            }
+        }
+        for (WorkOrderEntity wo : WorkOrderEntity.listInWorkspace()) {
+            if (wo.resourceId != null && !wo.resourceId.isBlank()) {
+                resourceIds.add(wo.resourceId);
             }
         }
         Map<String, StandardResourcePeriod> srpByKey = new LinkedHashMap<>();

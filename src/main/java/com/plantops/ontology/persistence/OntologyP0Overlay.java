@@ -10,6 +10,7 @@ import com.plantops.ontology.supply.OperationInputMaterial;
 import com.plantops.ontology.supply.OperationOnStandardResource;
 import com.plantops.ontology.supply.OperationOutputMaterial;
 import com.plantops.ontology.supply.PlanUnit;
+import com.plantops.ontology.supply.ResourceCapacityAssignment;
 import com.plantops.ontology.supply.Supply;
 import com.plantops.ontology.supply.SupplyOrder;
 
@@ -63,6 +64,9 @@ public final class OntologyP0Overlay {
         }
         for (StandardResourcePeriod srp : restoredP0.srpById().values()) {
             builder.standardResourcePeriod(srp);
+        }
+        for (ResourceCapacityAssignment rca : restoredP0.resourceCapacityAssignmentsById().values()) {
+            builder.resourceCapacityAssignment(rca);
         }
 
         builder.periodsOrdered(loaderBase.periodsOrdered());

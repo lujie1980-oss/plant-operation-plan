@@ -8,8 +8,9 @@ import com.plantops.ontology.OntologyIds;
 import com.plantops.ontology.OntologyLoader;
 import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
 import com.plantops.ontology.persistence.OntologyPersistencePort;
+import com.plantops.ontology.persistence.entity.OntResourceCapacityAssignmentEntity;
+import com.plantops.ontology.persistence.entity.OntRevisionHeadEntity;
 import com.plantops.persistence.entity.InventoryEntity;
-import com.plantops.persistence.entity.MasterPlanAllocationEntity;
 import com.plantops.persistence.entity.PlanVersionEntity;
 import com.plantops.persistence.entity.ProductResourceEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
@@ -49,9 +50,12 @@ class MasterPlanOntologyConfirmServiceTest {
     @Inject
     WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
 
+    @Inject
+    MasterPlanOntologySessionStore sessionStore;
+
     @Test
     @TestTransaction
-    void confirmPersistsAllocationsAndReturnsPlanVersionId() throws Exception {
+    void confirmPersistsEntRcaAndReturnsPlanVersionId() throws Exception {
         LocalDate planningStart = LocalDate.of(2026, 6, 1);
         ensureFixture(planningStart);
         refreshOntWorkspaceHead();
@@ -60,15 +64,26 @@ class MasterPlanOntologyConfirmServiceTest {
         MasterPlanSessionOptimizeResultDto optimized = service.optimize(created.sessionId());
         assertTrue(optimized.allocationCount() > 0);
 
+        MasterPlanOntologySession beforeConfirm =
+                sessionStore.require(created.sessionId(), WorkspaceResolver.currentWorkspaceId());
+        int rcaCount = beforeConfirm.graph().resourceCapacityAssignmentsById().size();
+        assertTrue(rcaCount > 0);
+
         MasterPlanSessionConfirmResultDto result = service.confirm(created.sessionId());
 
         assertNotNull(result);
         assertEquals(created.sessionId(), result.sessionId());
         assertFalse(result.planVersionId().isBlank());
+        assertEquals(rcaCount, result.allocationCount());
+
+        String workspaceId = WorkspaceResolver.currentWorkspaceId();
+        String revisionId = OntRevisionHeadEntity.findHead(
+                        workspaceId, PlanVersionEntRcaOccupancy.planScope(result.planVersionId()))
+                .map(h -> h.revisionId)
+                .orElseThrow();
         assertEquals(
-                (int) MasterPlanAllocationEntity.count("planVersionId = ?1", result.planVersionId()),
-                result.allocationCount());
-        assertTrue(result.allocationCount() > 0);
+                rcaCount,
+                OntResourceCapacityAssignmentEntity.forRevision(workspaceId, revisionId).size());
     }
 
     private void ensureFixture(LocalDate planningStart) {

@@ -271,7 +271,7 @@ SupplyOrder → PlanUnit → Operation
 ### 5.5.1 产能分配（ENT-RCA · ResourceCapacityAssignment）
 
 > **规范定位（2026-06-21）：** **ENT-RCA** 是 **ENT-OG 内** 的产能占用边，不是仅存在于求解器包内的中间结构。  
-> **实现差距：** 本体类型 **ENT-RCA** 已纳入 `OntologyGraph`（TODO-22 **R1 已完成 2026-07-01**）；optimize 写回 **ENT-RCA + SRP rollup** 已落地（**R2 已完成 2026-07-01**）；**`OntologyRcaProjector`** ENT-RCA ↔ solver RCA/`TimeSlot` 已落地（**R3 已完成 2026-07-01**）；持久化扩展见 **R4**。
+> **实现差距：** 本体类型 **ENT-RCA** 已纳入 `OntologyGraph`（TODO-22 **R1 已完成 2026-07-01**）；optimize 写回 **ENT-RCA + SRP rollup** 已落地（**R2 已完成 2026-07-01**）；**`OntologyRcaProjector`** ENT-RCA ↔ solver RCA/`TimeSlot` 已落地（**R3 已完成 2026-07-01**）；**`ont_resource_capacity_assignment` 持久化/restore** 已落地（**R4 已完成 2026-07-01**）；**占用 SoT 退役 `MasterPlanAllocationEntity`** 已落地（**R5 已完成 2026-07-01**）。
 
 **语义：** 一条 **ENT-RCA** 表示：某 **ENT-OP** 经其 **ENT-OOSR** 候选资源绑定，在某一 **ENT-SRP**（标准资源×期间）上 **已分配（或待求解）的占用分钟数** `assignedMinutes`。
 
@@ -325,7 +325,7 @@ erDiagram
 
 > **跟踪：** [§10 TODO-22](./10-decisions-risks.md#todo-22-分阶段adr-15--ent-rca) · [ADR-15](./10-decisions-risks.md#adr-15-ent-rca-纳入-ontology产能占用边) · [TODO-23 / ADR-16 §5.8.1](./10-decisions-risks.md#todo-23-分阶段adr-16--shift-period)
 
-**持久化（目标态 · TODO-12 · TODO-22 R4）：** 表 `ont_resource_capacity_assignment`；与 `ont_operation_osr`、`ont_srp` FK 逻辑一致。
+**持久化（TODO-12 · TODO-22 R4 · 已完成 2026-07-01）：** 表 `ont_resource_capacity_assignment`；`OntologyRestorer` / `OntologyP0UpsertService` / `OntologyP0Overlay` 已纳入 ENT-RCA。
 
 ---
 
@@ -577,7 +577,7 @@ md_resource_calendar（按 physical_resource_code）
 | 层级 | 方法 | 范围 | simulate / optimize / confirm |
 |------|------|------|--------------------------------|
 | **权威 ENT-OG** | `loadForWorkspace` | 全 Workspace 开放工单 + PISPP/SRP/Slot | ✅ ENT-SES / ENT-SBX |
-| **权威 + 反灌** | `loadForPlanVersion` | 同上 + **ENT-RCA** / allocation → Operation/SRP（**过渡** · TODO-22 R5） | ✅ |
+| **权威 + 反灌** | `loadForPlanVersion` | 同上 + committed **ENT-RCA**（`PlanVersionEntRcaOccupancy` · R5） | ✅ |
 | **COLD 视图** | `OntologyFulfillmentChainProjector.project` | DTO-FC | 只读 |
 | **只读快照（废止中）** | `buildDeliveryFulfillmentProjectionGraph` | 无 Session 轻量链 API | ❌ RULE-SES-04 |
 | **SRP 只读** | `loadSrpCapacityForPlanVersion` | Period + SRP | ❌ |
@@ -617,8 +617,8 @@ flowchart TB
 | ENT-FF | 内存 peg | `WorkOrderPeggingEntity` 对照 |
 | ENT-BD | 派生 | 非 JPA 真相源 |
 | ENT-OG | Session 内存 + **`ont_*`（ADR-09）** | 运行时推演在内存；simulate/optimize/confirm 写 DRAFT/COMMITTED revision |
-| ENT-PV 结果 | **`ont_resource_capacity_assignment`** + `ont_operation` / `ont_srp` | confirm 占用 SoT（ADR-15 · TODO-22 R4） |
-| ENT-PV 结果（过渡） | `MasterPlanAllocationEntity` | legacy confirm；TODO-22 R5 退役 |
+| ENT-PV 结果 | **`ont_resource_capacity_assignment`** + `ont_operation` / `ont_srp` | confirm 占用 SoT（ADR-15 · R4~R5） |
+| ENT-PV 结果（legacy audit） | `MasterPlanAllocationEntity` | 仅 session 持久化关闭时写入；报表/需求 API 过渡 |
 | S05 结果 | `DetailScheduleOperationEntity` | 细排 confirm |
 | ENT-SS | `TimeSlot` | **过渡** 1:1；ADR-16 后由 leaf Period DERIVE |
 
@@ -887,7 +887,7 @@ flowchart TB
 | `work_order` | `ont_supply_order` | 双写 → 切读 `ont_*` → 废弃 legacy 写 |
 | `work_order_pegging` | `ont_fulfillment` | 迁移脚本 1:1 映射 WO peg |
 | `work_order_bom_dependency` | `ont_bom_dependency` | 一次性导入；之后仅写 `ont_*` |
-| `master_plan_allocation` | **`ont_resource_capacity_assignment`** + `ont_srp.reserved` | allocation 反灌改为读 committed **ENT-RCA**（TODO-22 R5） |
+| `master_plan_allocation` | **`ont_resource_capacity_assignment`** + `ont_srp.reserved` | confirm 读 committed **ENT-RCA**（R5）；legacy 表仅 audit/报表 |
 | `sales_order_line` | `ont_col` + `ont_cold` | 可选拆表；导入 revision |
 | Master 数据 | `ont_routing*` 快照 | 每次 fork revision 时从 master 投影 copy-in |
 
@@ -1095,7 +1095,7 @@ stateDiagram-v2
 | ENT-PER | §5.20.1 | `Period` · `ont_period` | `implemented`（缺 shift 字段 · TODO-23 S1） |
 | ENT-PRP | §5.20.2 | **spec-only** · `ont_physical_resource_period` | `spec-only`（TODO-24 P1） |
 | ENT-SRP | §5.20.3 | `StandardResourcePeriod` · `ont_srp` | `implemented`（**P0 DDL 已落地** · 直写日历 · 待 PRP rollup） |
-| ENT-RCA | §5.20.4 | solver 包 · `ont_resource_capacity_assignment` | `legacy-only`（**P0 DDL 已落地** · TODO-22 R1~R3 本体/写回） |
+| ENT-RCA | §5.20.4 | `ResourceCapacityAssignment` · `ont_resource_capacity_assignment` | `implemented`（**R1~R5 已完成 2026-07-01**） |
 | ENT-SS | §5.20.5 | `SchedulingSlot` · `ont_scheduling_slot` | **legacy-only / transition**（TODO-23 S5 退役） |
 | 资源日历 | §5.20.6 | `ResourceCalendarEntity` · `resource_calendar` | `legacy-only`（键为 resourceId） |
 | 工厂日历 | §5.20.7 | `FactoryCalendarPolicyEntity` · MOD-CAL | `implemented` |

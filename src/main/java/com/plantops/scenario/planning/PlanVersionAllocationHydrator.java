@@ -17,8 +17,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 从已发布 {@code planVersionId} 的 {@link com.plantops.persistence.entity.MasterPlanAllocationEntity}
- * 反灌 Session 图：工序计划时间 + locked，以及 SRP {@code reservedCapacity}。
+ * 从已发布 {@code planVersionId} 反灌 Session 图：工序计划时间 + locked，以及 SRP {@code reservedCapacity}。
+ * <p>
+ * <strong>TODO-22 R5：</strong>当 PLAN HEAD 已含 committed ENT-RCA 时，读路径改由
+ * {@link com.plantops.ontology.persistence.OntologyRestorer} + {@link com.plantops.ontology.persistence.OntologyP0Overlay}
+ * 供给占用；本类仅作 legacy {@code master_plan_allocation} 回退。
  */
 @ApplicationScoped
 public class PlanVersionAllocationHydrator {
@@ -26,11 +29,25 @@ public class PlanVersionAllocationHydrator {
     @Inject
     com.plantops.scenario.MasterPlanService masterPlanService;
 
+    /**
+     * @deprecated 优先使用 committed ENT-RCA；保留作无 ont_* HEAD 时的回退。
+     */
+    @Deprecated
     public void hydrate(OntologyGraph graph, String planVersionId) {
         hydrate(graph, planVersionId, null);
     }
 
+    @Deprecated
     public void hydrate(OntologyGraph graph, String planVersionId, RolEngine rolEngine) {
+        hydrateFromLegacyAllocations(graph, planVersionId, rolEngine);
+    }
+
+    public void hydrateFromLegacyAllocations(OntologyGraph graph, String planVersionId) {
+        hydrateFromLegacyAllocations(graph, planVersionId, null);
+    }
+
+    public void hydrateFromLegacyAllocations(
+            OntologyGraph graph, String planVersionId, RolEngine rolEngine) {
         if (graph == null || planVersionId == null || planVersionId.isBlank()) {
             return;
         }

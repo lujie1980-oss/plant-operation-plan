@@ -32,4 +32,14 @@ class OntologyPartialPersistenceH2IntegrationTest {
         OntologyGraph partialRestored = persistence.loadRevision(workspaceId, partialRevisionId);
         OntologyPersistenceTestFixtures.assertP0Parity(fullRestored, partialRestored);
     }
+
+    @Test
+    @TestTransaction
+    void importAndRestoreResourceCapacityAssignments() {
+        String workspaceId = WorkspaceResolver.currentWorkspaceId();
+        OntologyGraph source = OntologyPersistenceTestFixtures.sampleP0Graph();
+        String revisionId = persistence.importCommittedP0(workspaceId, source);
+        OntologyGraph restored = persistence.loadRevision(workspaceId, revisionId);
+        OntologyPersistenceTestFixtures.assertP0Parity(source, restored);
+    }
 }

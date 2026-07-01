@@ -795,6 +795,21 @@ public class MasterPlanService {
         return versionId;
     }
 
+    /**
+     * 本体 Session confirm（ENT-RCA SoT）：仅写 PlanVersion 头，占用由 {@code ont_resource_capacity_assignment} 承担。
+     */
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public String persistPlanVersionHeaderOnly(
+            String score,
+            long solveDurationMs,
+            MasterPlanStrategyConfigService.ResolvedStrategy resolved,
+            String parentPlanVersionId) {
+        String versionId = "MP-" + UUID.randomUUID().toString().substring(0, 8);
+        persistPlanVersionHeader(versionId, score, solveDurationMs, resolved, parentPlanVersionId, null);
+        persistLineOpenings(versionId);
+        return versionId;
+    }
+
     @Transactional(Transactional.TxType.REQUIRES_NEW)
     void persistAllocationRows(String versionId, List<MasterPlanAllocationDto> allocations) {
         if (allocations == null) {

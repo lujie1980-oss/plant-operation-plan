@@ -15,6 +15,8 @@ import com.plantops.ontology.persistence.entity.OntSessionEntity;
 import com.plantops.ontology.persistence.entity.OntSupplyOrderEntity;
 import com.plantops.ontology.persistence.entity.OntEntityKey;
 import com.plantops.ontology.persistence.support.OntologyWorkOrderParity;
+import com.plantops.ontology.persistence.entity.OntResourceCapacityAssignmentEntity;
+import com.plantops.ontology.persistence.entity.OntRevisionHeadEntity;
 import com.plantops.persistence.entity.InventoryEntity;
 import com.plantops.persistence.entity.MasterPlanAllocationEntity;
 import com.plantops.persistence.entity.PlanVersionEntity;
@@ -62,6 +64,9 @@ class MasterPlanOntologySessionPersistenceIntegrationTest {
     @Inject
     WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
 
+    @Inject
+    MasterPlanOntologySessionStore sessionStore;
+
     @Test
     @TestTransaction
     void confirmPromotesOntRevisionAndTracesPlanVersion() throws Exception {
@@ -73,13 +78,30 @@ class MasterPlanOntologySessionPersistenceIntegrationTest {
         MasterPlanSessionOptimizeResultDto optimized = sessionService.optimize(created.sessionId());
         assertTrue(optimized.allocationCount() > 0);
 
+        int rcaCount = sessionStore
+                .require(created.sessionId(), WorkspaceResolver.currentWorkspaceId())
+                .graph()
+                .resourceCapacityAssignmentsById()
+                .size();
+        assertTrue(rcaCount > 0);
+
         MasterPlanSessionConfirmResultDto confirmed = sessionService.confirm(created.sessionId());
         assertNotNull(confirmed.planVersionId());
-        assertEquals(optimized.allocationCount(), confirmed.allocationCount());
-        assertTrue(
-                MasterPlanAllocationEntity.count("planVersionId = ?1", confirmed.planVersionId()) > 0);
+        assertEquals(rcaCount, confirmed.allocationCount());
+
+        assertEquals(
+                0,
+                MasterPlanAllocationEntity.count("planVersionId = ?1", confirmed.planVersionId()));
 
         String workspaceId = WorkspaceResolver.currentWorkspaceId();
+        String revisionId = OntRevisionHeadEntity.findHead(
+                        workspaceId, PlanVersionEntRcaOccupancy.planScope(confirmed.planVersionId()))
+                .map(h -> h.revisionId)
+                .orElseThrow();
+        assertEquals(
+                rcaCount,
+                OntResourceCapacityAssignmentEntity.forRevision(workspaceId, revisionId).size());
+
         OntSessionEntity session = OntSessionEntity.findSession(workspaceId, created.sessionId())
                 .orElseThrow();
         OntRevisionEntity committed = revisionService.requireRevision(workspaceId, session.draftRevisionId);

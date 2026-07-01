@@ -9,6 +9,8 @@ import com.plantops.ontology.fulfillment.FulfillmentType;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.ontology.supply.Operation;
+import com.plantops.ontology.supply.OperationOnStandardResource;
+import com.plantops.ontology.supply.ResourceCapacityAssignment;
 import com.plantops.ontology.supply.SupplyOrder;
 import com.plantops.ontology.supply.SupplyOrderStatus;
 import com.plantops.ontology.supply.SupplyOrderType;
@@ -63,13 +65,21 @@ public final class OntologyPersistenceTestFixtures {
         srp.setReservedCapacity(120);
         srp.recalculateCapacityFields();
 
+        String oosrId = OntologyIds.operationOnStandardResourceId(opId, "RES-PERS-01");
+        OperationOnStandardResource oosr = new OperationOnStandardResource(
+                oosrId, opId, "RES-PERS-01", 0, 0, 60.0);
+        ResourceCapacityAssignment rca = new ResourceCapacityAssignment(
+                "RCA-PERS-01", opId, oosrId, srpId, 120, 120, false, null);
+
         return OntologyGraph.builder()
                 .demand(demand)
                 .supplyOrder(so)
                 .operation(op)
+                .operationOnStandardResource(oosr)
                 .fulfillment(ff)
                 .pispPeriod(pispp)
                 .standardResourcePeriod(srp)
+                .resourceCapacityAssignment(rca)
                 .build();
     }
 
@@ -112,19 +122,29 @@ public final class OntologyPersistenceTestFixtures {
         srp2.setReservedCapacity(60);
         srp2.recalculateCapacityFields();
 
+        String oosrId2 = OntologyIds.operationOnStandardResourceId(opId2, "RES-PERS-02");
+        OperationOnStandardResource oosr2 = new OperationOnStandardResource(
+                oosrId2, opId2, "RES-PERS-02", 0, 0, 30.0);
+        ResourceCapacityAssignment rca2 = new ResourceCapacityAssignment(
+                "RCA-PERS-02", opId2, oosrId2, srpId2, 60, 60, true, "PG-PERS-02");
+
         return OntologyGraph.builder()
                 .demand(base.demandsById().values().iterator().next())
                 .supplyOrder(base.supplyOrdersById().values().iterator().next())
                 .operation(base.operationsById().values().iterator().next())
+                .operationOnStandardResource(base.operationOnStandardResourceById().values().iterator().next())
                 .fulfillment(base.fulfillments().getFirst())
                 .pispPeriod(base.pispPeriodsById().values().iterator().next())
                 .standardResourcePeriod(base.srpById().values().iterator().next())
+                .resourceCapacityAssignment(base.resourceCapacityAssignmentsById().values().iterator().next())
                 .demand(demand2)
                 .supplyOrder(so2)
                 .operation(op2)
+                .operationOnStandardResource(oosr2)
                 .fulfillment(ff2)
                 .pispPeriod(pispp2)
                 .standardResourcePeriod(srp2)
+                .resourceCapacityAssignment(rca2)
                 .build();
     }
 
@@ -191,6 +211,21 @@ public final class OntologyPersistenceTestFixtures {
             assertNotNull(r);
             assertEquals(srp.getTotalCapacity(), r.getTotalCapacity(), 1e-9);
             assertEquals(srp.getReservedCapacity(), r.getReservedCapacity(), 1e-9);
+        }
+
+        assertEquals(
+                source.resourceCapacityAssignmentsById().size(),
+                restored.resourceCapacityAssignmentsById().size());
+        for (ResourceCapacityAssignment rca : source.resourceCapacityAssignmentsById().values()) {
+            ResourceCapacityAssignment r = restored.resourceCapacityAssignment(rca.getId());
+            assertNotNull(r, "rca " + rca.getId());
+            assertEquals(rca.getOperationId(), r.getOperationId());
+            assertEquals(rca.getOperationOnStandardResourceId(), r.getOperationOnStandardResourceId());
+            assertEquals(rca.getStandardResourcePeriodId(), r.getStandardResourcePeriodId());
+            assertEquals(rca.getAssignedMinutes(), r.getAssignedMinutes());
+            assertEquals(rca.getOperationTotalMinutes(), r.getOperationTotalMinutes());
+            assertEquals(rca.isLocked(), r.isLocked());
+            assertEquals(rca.getParallelGroupId(), r.getParallelGroupId());
         }
     }
 }

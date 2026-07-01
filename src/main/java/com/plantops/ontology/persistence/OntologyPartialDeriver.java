@@ -33,6 +33,7 @@ public class OntologyPartialDeriver {
         storeOnly.fulfillments().forEach(builder::fulfillment);
         storeOnly.pispPeriodsById().values().forEach(builder::pispPeriod);
         storeOnly.srpById().values().forEach(builder::standardResourcePeriod);
+        storeOnly.resourceCapacityAssignmentsById().values().forEach(builder::resourceCapacityAssignment);
         builder.periodsOrdered(storeOnly.periodsOrdered());
 
         if (policyService.shouldDerive(workspaceId, rev.persistenceMode, OntologyEntityKind.PISPP)) {
