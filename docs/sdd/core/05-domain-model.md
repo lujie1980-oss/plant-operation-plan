@@ -271,7 +271,7 @@ SupplyOrder → PlanUnit → Operation
 ### 5.5.1 产能分配（ENT-RCA · ResourceCapacityAssignment）
 
 > **规范定位（2026-06-21）：** **ENT-RCA** 是 **ENT-OG 内** 的产能占用边，不是仅存在于求解器包内的中间结构。  
-> **实现差距：** 本体类型 **ENT-RCA** 已纳入 `OntologyGraph`（TODO-22 **R1 已完成 2026-07-01**）；optimize 写回 **ENT-RCA + SRP rollup** 已落地（**R2 已完成 2026-07-01**）；求解器包 `com.plantops.solver.masterplan.ResourceCapacityAssignment` 仍绑定 `TimeSlot` / 日拆段；投影见 **R3**。
+> **实现差距：** 本体类型 **ENT-RCA** 已纳入 `OntologyGraph`（TODO-22 **R1 已完成 2026-07-01**）；optimize 写回 **ENT-RCA + SRP rollup** 已落地（**R2 已完成 2026-07-01**）；**`OntologyRcaProjector`** ENT-RCA ↔ solver RCA/`TimeSlot` 已落地（**R3 已完成 2026-07-01**）；持久化扩展见 **R4**。
 
 **语义：** 一条 **ENT-RCA** 表示：某 **ENT-OP** 经其 **ENT-OOSR** 候选资源绑定，在某一 **ENT-SRP**（标准资源×期间）上 **已分配（或待求解）的占用分钟数** `assignedMinutes`。
 

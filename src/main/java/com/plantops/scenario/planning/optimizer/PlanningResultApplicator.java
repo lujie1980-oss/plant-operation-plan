@@ -6,6 +6,7 @@ import com.plantops.ontology.period.PeriodIndex;
 import com.plantops.rol.ChangeSet;
 import com.plantops.rol.RolEngine;
 import com.plantops.rol.RolTransaction;
+import com.plantops.ontology.supply.OntologyRcaProjector;
 import com.plantops.ontology.supply.ResourceCapacityAssignmentProjection;
 import com.plantops.scenario.planning.OperationPlannedTimeProjection;
 import com.plantops.scenario.planning.OntologyTimefoldMapper;
@@ -102,6 +103,25 @@ public class PlanningResultApplicator {
             ChangeSet changeSet = ontologyTimefoldMapper.toChangeSet(allocationDtos, graph, periodIndex);
             rolTransaction.apply(changeSet, graph, rolEngine);
         }
+    }
+
+    public void applySolverResourceCapacityAssignments(
+            OntologyGraph graph,
+            RolEngine rolEngine,
+            List<com.plantops.solver.masterplan.ResourceCapacityAssignment> solverAssignments,
+            List<com.plantops.solver.masterplan.TimeSlot> slots) {
+        if (graph == null || solverAssignments == null || solverAssignments.isEmpty()) {
+            return;
+        }
+        List<com.plantops.solver.masterplan.TimeSlot> effectiveSlots = slots != null
+                ? slots
+                : graph.schedulingSlotsOrdered().stream()
+                        .map(com.plantops.ontology.scheduling.SchedulingSlot::toTimeSlot)
+                        .toList();
+        OntologyRcaProjector.syncOntologyFromSolverAssignments(graph, solverAssignments, effectiveSlots);
+        List<MasterPlanAllocationDto> allocationDtos =
+                com.plantops.scenario.planning.ResourceCapacityResultProjector.toAllocationDtos(solverAssignments);
+        applyAllocationDtos(graph, rolEngine, allocationDtos);
     }
 
     private static List<MasterPlanAllocationDto> scopedAllocationDtos(

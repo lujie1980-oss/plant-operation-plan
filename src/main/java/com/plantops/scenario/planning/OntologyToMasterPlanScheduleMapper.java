@@ -9,6 +9,7 @@ import com.plantops.ontology.fulfillment.BomDependencyDerivation;
 import com.plantops.ontology.planning.MasterPlanSolveProfile;
 import com.plantops.ontology.scheduling.PeriodTimeSlotAlignment;
 import com.plantops.ontology.scheduling.SchedulingSlot;
+import com.plantops.ontology.supply.OntologyRcaProjector;
 import com.plantops.ontology.supply.OperationTimingBoundsProjection;
 import com.plantops.ontology.supply.SupplyOrder;
 import com.plantops.persistence.entity.WorkOrderEntity;
@@ -184,6 +185,7 @@ public class OntologyToMasterPlanScheduleMapper {
             candidates.addAll(woResult.assignments());
             precedenceFacts.addAll(woResult.operationPrecedenceFacts());
         }
+        OntologyRcaProjector.overlayOntologyOntoSolverCandidates(graph, candidates, slots);
         return new ResourceCapacityAssignmentBuilder.BuildResult(candidates, precedenceFacts);
     }
 
