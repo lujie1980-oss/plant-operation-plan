@@ -38,6 +38,7 @@ public final class PhysicalResourcePeriodLoader {
         }
 
         applyCalendar(prpByKey, registry, periods, periodIndex);
+        PhysicalResourceSchedulerFeedbackApplier.apply(prpByKey, registry, periods, periodIndex);
         PhysicalResourcePeriodRollup.rollupParentCapacities(prpByKey, periods, periodIndex);
         prpByKey.values().forEach(PhysicalResourcePeriod::recalculateCapacityFields);
 

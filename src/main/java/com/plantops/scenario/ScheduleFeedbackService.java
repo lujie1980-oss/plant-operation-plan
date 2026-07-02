@@ -81,6 +81,7 @@ public class ScheduleFeedbackService {
             row.operationSeq = parseOperationSeq(op.operationId);
             row.operationId = op.operationId;
             row.resourceId = resolveResourceId(op);
+            row.physicalResourceId = op.lineId;
             row.plannedStart = plannedStart;
             row.plannedEnd = plannedEnd;
             row.slotDate = endDay;

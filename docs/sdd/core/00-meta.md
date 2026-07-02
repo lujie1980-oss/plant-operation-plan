@@ -32,7 +32,7 @@
 | **Ontology 持久化（P0）** | PostgreSQL `ont_*` Flyway V65（revision/WAL/核心实体）；H2 legacy 仍 V1–V64 | §5.14 · ADR-09 · [05-ont-schema](../volumes/data/05-ont-schema.md) · **P0 已落地 2026-06-30** |
 | **主计划路径** | **PATH-ONT** 唯一规范路径（ADR-08 废止 PATH-ENT）；JPA 仅装载/confirm 边界 | §2 · SCN-T01 · SCN-06 · ADR-01 · ADR-08 |
 | **求解器边界** | 主计划经 `PlanningOptimizer` + `planning_optimizer_engine`（默认 SOL-ORT）；S05 细排与分切仍直连 SOL-TF，配置化见 §10 TODO-07 | §10 ADR-05 · [ontology-optimizer-plugin.md](../../ontology-optimizer-plugin.md) |
-| **Ontology 范围（现行）** | ENT-OG **仅覆盖 MOD-OCP**；**shift-Period 已落地**（TODO-23）；**ENT-PRP** 待 TODO-24；MOD-SCH/SLT 见 TODO-20 | §5 · **TODO-20** · **TODO-24** |
+| **Ontology 范围（现行）** | ENT-OG **仅覆盖 MOD-OCP**；**shift-Period 已落地**（TODO-23）；**ENT-PRP 已落地**（TODO-24）；MOD-SCH/SLT 见 TODO-20 | §5 · **TODO-20** |
 
 ### 不包含什么
 

@@ -563,7 +563,7 @@ md_resource_calendar（按 physical_resource_code）
   → ENT-RCA optimize 更新 SRP.reserved（PRP 占用可选 DERIVE 分摊）
 ```
 
-**实现差距：** ~~现行 `OntologyLoader.loadStandardResourcePeriods` 按 `ResourceCalendarEntity.resourceId`（≈ SR）直写 SRP，无 ENT-PRP~~ **P1~P4 已落地**（`PhysicalResourcePeriodLoader` → `StandardResourcePeriodAggregator`）；余 P5 细排反馈写 PRP。
+**实现差距：** ~~现行 `OntologyLoader.loadStandardResourcePeriods` 按 `ResourceCalendarEntity.resourceId`（≈ SR）直写 SRP，无 ENT-PRP~~ **P1~P5 已落地**（`PhysicalResourcePeriodLoader` → `PhysicalResourceSchedulerFeedbackApplier` → `StandardResourcePeriodAggregator`）。
 
 > **跟踪：** [§10 TODO-24](./10-decisions-risks.md#todo-24-分阶段adr-17--prp--srp) · [ADR-17](./10-decisions-risks.md#adr-17-physicalresource-产能聚合pr--sr--prp--srp)
 
@@ -1124,7 +1124,7 @@ stateDiagram-v2
 | `periodId` | String | Y | memory | 同 ENT-SRP | implemented |
 | `totalCapacityMinutes` | double | Y | md_* | RULE-SUP-05 L1 | implemented |
 | `calendarDowntimeMinutes` | double | Y | md_* | RULE-SUP-05 | implemented |
-| `schedulerFeedbackMinutes` | double | Y | txn_* / derived | RULE-SUP-05 · TODO-24 P5 | **spec-only** |
+| `schedulerFeedbackMinutes` | double | Y | txn_* / derived | RULE-SUP-05 · TODO-24 P5 | implemented |
 | `availableCapacityMinutes` | double | Y | derived | × resourceEfficiency | implemented |
 | `reservedCapacityMinutes` | double | Y | derived | 可选 RCA 分摊 | implemented |
 | `overloadCapacityMinutes` | double | Y | derived | RULE-MP-07 | implemented |

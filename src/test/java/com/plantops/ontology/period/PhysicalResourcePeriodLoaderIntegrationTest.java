@@ -5,6 +5,8 @@ import com.plantops.ontology.OntologyIds;
 import com.plantops.ontology.OntologyLoader;
 import com.plantops.persistence.entity.ProductionLineEntity;
 import com.plantops.persistence.entity.ResourceCalendarEntity;
+import com.plantops.persistence.entity.ScheduleFeedbackEntity;
+import com.plantops.persistence.entity.ScheduleFeedbackScope;
 import com.plantops.workspace.WorkspaceResolver;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
@@ -12,6 +14,7 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -49,6 +52,46 @@ class PhysicalResourcePeriodLoaderIntegrationTest {
                 srp.getTotalCapacity(),
                 1e-6);
         assertEquals(840, srp.getAvailableCapacity(), 1e-6);
+    }
+
+    @Test
+    @TestTransaction
+    void frozenSchedulerFeedbackReducesPrpAndSrpCapacity() {
+        LocalDate planningStart = LocalDate.now();
+        ensureFixture(planningStart);
+        insertFrozenFeedback(planningStart, LINE_A, 120);
+
+        OntologyGraph graph = loader.loadForWorkspace(planningStart);
+        String periodId = graph.periodsOrdered().getFirst().getId();
+
+        PhysicalResourcePeriod prpA = graph.prp(OntologyIds.prpId(LINE_A, periodId));
+        StandardResourcePeriod srp = graph.srp(OntologyIds.srpId(SR_ID, 0));
+
+        assertNotNull(prpA);
+        assertNotNull(srp);
+        assertEquals(120, prpA.getSchedulerFeedbackMinutes(), 1e-6);
+        assertEquals(360, prpA.getAvailableCapacity(), 1e-6);
+        assertEquals(720, srp.getTotalCapacity(), 1e-6);
+        assertEquals(720, srp.getAvailableCapacity(), 1e-6);
+    }
+
+    private void insertFrozenFeedback(LocalDate slotDate, String physicalResourceId, int minutes) {
+        ScheduleFeedbackEntity fb = new ScheduleFeedbackEntity();
+        fb.feedbackId = "FB-PRP-" + physicalResourceId;
+        fb.detailScheduleVersionId = "DSV-PRP-TEST";
+        fb.workOrderNo = "WO-PRP-TEST";
+        fb.operationId = "OP-PRP-" + physicalResourceId;
+        fb.resourceId = SR_ID;
+        fb.physicalResourceId = physicalResourceId;
+        fb.plannedStart = slotDate.atStartOfDay();
+        fb.plannedEnd = slotDate.atTime(2, 0);
+        fb.slotDate = slotDate;
+        fb.durationMinutes = minutes;
+        fb.scope = ScheduleFeedbackScope.FROZEN.name();
+        fb.planningAnchorDate = slotDate;
+        fb.feedbackTs = LocalDateTime.now();
+        fb.stampWorkspace();
+        fb.persist();
     }
 
     private void ensureFixture(LocalDate planningStart) {

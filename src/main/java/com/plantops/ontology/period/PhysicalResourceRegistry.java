@@ -50,6 +50,25 @@ public final class PhysicalResourceRegistry {
         return new PhysicalResourceRegistry(byId, bySr);
     }
 
+    /** 单元测试用：不依赖 JPA 产线主数据。 */
+    static PhysicalResourceRegistry forPhysicalResources(
+            List<PhysicalResource> resources, Set<String> standardResourceIds) {
+        Map<String, PhysicalResource> byId = new LinkedHashMap<>();
+        Map<String, List<PhysicalResource>> bySr = new LinkedHashMap<>();
+        for (PhysicalResource pr : resources) {
+            byId.putIfAbsent(pr.getId(), pr);
+            bySr.computeIfAbsent(pr.getStandardResourceId(), ignored -> new ArrayList<>()).add(pr);
+        }
+        for (String srId : standardResourceIds) {
+            if (!bySr.containsKey(srId) || bySr.get(srId).isEmpty()) {
+                PhysicalResource synthetic = new PhysicalResource(srId, srId);
+                byId.putIfAbsent(synthetic.getId(), synthetic);
+                bySr.computeIfAbsent(srId, ignored -> new ArrayList<>()).add(synthetic);
+            }
+        }
+        return new PhysicalResourceRegistry(byId, bySr);
+    }
+
     public boolean isPhysicalResource(String id) {
         return byId.containsKey(id);
     }
