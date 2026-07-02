@@ -32,13 +32,13 @@
 | **Ontology 持久化（P0）** | PostgreSQL `ont_*` Flyway V65（revision/WAL/核心实体）；H2 legacy 仍 V1–V64 | §5.14 · ADR-09 · [05-ont-schema](../volumes/data/05-ont-schema.md) · **P0 已落地 2026-06-30** |
 | **主计划路径** | **PATH-ONT** 唯一规范路径（ADR-08 废止 PATH-ENT）；JPA 仅装载/confirm 边界 | §2 · SCN-T01 · SCN-06 · ADR-01 · ADR-08 |
 | **求解器边界** | 主计划经 `PlanningOptimizer` + `planning_optimizer_engine`（默认 SOL-ORT）；S05 细排与分切仍直连 SOL-TF，配置化见 §10 TODO-07 | §10 ADR-05 · [ontology-optimizer-plugin.md](../../ontology-optimizer-plugin.md) |
-| **Ontology 范围（现行）** | ENT-OG **仅覆盖 MOD-OCP**；**shift-Period / ENT-PRP** 为 **ADR-16/17 规范目标**（代码见 TODO-23/24）；MOD-SCH/SLT 见 TODO-20 | §5 · **TODO-20** · **TODO-23/24** |
+| **Ontology 范围（现行）** | ENT-OG **仅覆盖 MOD-OCP**；**shift-Period 已落地**（TODO-23）；**ENT-PRP** 待 TODO-24；MOD-SCH/SLT 见 TODO-20 | §5 · **TODO-20** · **TODO-24** |
 
 ### 不包含什么
 
 - **不是**外部 OTD 产品的全模块复刻；§7 Gap 分析仅作对标参考。
 - **尚未**将作业排程、分切计划纳入 ENT-OG 规范正文（见 **TODO-20**）；现行细排/分切见 `aps-planning-layer.md` 与独立 JPA。
-- **SHIFT 级 Period** 与 **ENT-SS 废止** 见 **ADR-16** · **TODO-23**（规范已采纳，代码未收敛）。
+- **SHIFT 级 Period** 与 **ENT-SS 废止** 已收口（**ADR-16** · **TODO-23 S0~S5 · 2026-07-01**）；`TimeSlot` 由 `PeriodTimeSlotDeriver` 按需 DERIVE。
 - **不是** JPA 实体即规划模型；已移除实体路径推演诊断 UI（ADR-03）。
 - **不含**已定稿的架构演进路线图（待重新制定）；本节只描述**现行基线**能力边界。
 
@@ -115,7 +115,7 @@
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-23 S3**：leaf SRP 产能投影 · KPI-MP-B05 · RULE-MP-08 并行同 SRP 校验 |
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-23 S4**：`PeriodTimeSlotDeriver` 从 leaf Period+SRP 派生 `TimeSlot`；废弃 `SchedulingSlotExpander` 装载路径 |
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-23 S5**：移除 `OntologyGraph.schedulingSlotsOrdered`；`SchedulingSlot` @Deprecated；`TimeSlot` 按需 DERIVE |
-| 2026-06-30 | 1.0.0-SNAPSHOT | **SDD 同步**：§5.10/§5.14/§8 AC-PERS/ADR-09 反映 P4 切读 + Sprint 6A/6B 实现态 |
+| 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-27**：SDD 与实现对齐（TODO-22/23 关闭 · AC-17 API 路径 · UI-NAV 深链标注 · `aps-planning-layer` 废止 diagnostics preview · §18 `local-login-enabled`） |
 
 ## 治理约定
 

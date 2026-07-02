@@ -188,7 +188,7 @@
 | **决策** | **ENT-RCA**（ResourceCapacityAssignment）为 **ENT-OG 内**实体：一条 RCA = **ENT-OP** 经 **ENT-OOSR** 在 **ENT-SRP** 上的 `assignedMinutes`；`Σ RCA → SRP.reservedCapacity`（ROL） |
 | **与 ENT-SS** | ENT-SS / `TimeSlot` 为日历细栅，供求解 **DERIVE**（**ADR-16** 目标态废止 ENT-SS）；规范读路径与 confirm 写回以 **ENT-RCA + SRP** 为准 |
 | **备选** | 仅保留 solver RCA + allocation 表（否决：非 Ontology SoT，与 ADR-09 冲突） |
-| **后果** | §5.5.1 · ENT-RCA 术语 · `ont_resource_capacity_assignment` · **TODO-22** 代码收敛 |
+| **后果** | §5.5.1 · ENT-RCA 术语 · `ont_resource_capacity_assignment` · ~~**TODO-22**~~ **已收口 2026-07-01**（R0~R5） |
 
 ---
 
@@ -199,10 +199,10 @@
 | **状态** | 已采纳（2026-06-21） |
 | **背景** | 现行 **ENT-PER**（日/周/月）与 **ENT-SS**（日槽+`shiftId`）两套栅格并行；ADR-15 后 ENT-RCA 已挂 **ENT-SRP×Period**，班次拆分若再依赖 ENT-SS 会重复建模 |
 | **决策** | **在 Period 定义层支持 Shift 粒度**：近端可配置 `NxMshift`（如 `14x3shift`）；每个 **leaf Period**（含 shift）对应一组 **ENT-SRP / ENT-PISPP**；**ENT-RCA 挂在 leaf SRP 上**；父 Period（日/周）容量与占用 **rollup 自子 Period** |
-| **ENT-SS 目标态** | **废止**为本体集合与 SoT；`schedulingSlotsOrdered` / `ont_scheduling_slot` 不再扩展；迁移期由 **PeriodExpander** 唯一展开，`SchedulingSlot`/`TimeSlot` 仅 **DERIVE** 供旧求解器（TODO-23 S5 退役） |
+| **ENT-SS 目标态** | **废止**为本体集合与 SoT；`schedulingSlotsOrdered` / `ont_scheduling_slot` 不再扩展；`SchedulingSlot`/`TimeSlot` 仅 **DERIVE**（**TODO-23 S5 已完成 2026-07-01**） |
 | **物料粒度** | v1 默认 **PISPP 仍按日 Period 闭合**（RULE-MRP-05）；shift 级 PISPP 为 **TODO-23 可选**；产能（SRP/RCA）与物料（PISPP）粒度不一致时须显式 RULE |
 | **备选** | 保留 ENT-SS 作班次层（否决：与 SRP/RCA 双轨，ADR-15 不一致） |
-| **后果** | §5.8.1 · `ontology_period_sequence` 扩展 · ENT-PER 字段 · **TODO-23**；RULE-MP-07/08 主语逐步改为 **SRP@shift-Period** |
+| **后果** | §5.8.1 · `ontology_period_sequence` 扩展 · ENT-PER 字段 · ~~**TODO-23**~~ **已收口 2026-07-01**（S0~S5）；RULE-MP-07/08 主语已迁 **SRP@shift-Period** |
 
 ---
 
@@ -240,7 +240,7 @@
 | RSK-03 | demand_scale 二次缩放 | 文档 + 参数检查清单 |
 | RSK-04 | Session 内存压力 | TTL；并发 Session 上限；NFR 堆/集合计数；**不**以裁切并行 SoT 图缓解（ADR-07） |
 | RSK-05 | 全量持久化写放大 / 表膨胀 | revision 归档策略；PISPP 按 horizon 裁剪；可选 snapshot 加速读 |
-| RSK-06 | legacy 与 `ont_*` 双写期不一致 | TODO-12 分阶段；对等测试 revision ↔ OG |
+| RSK-06 | legacy 与 `ont_*` 双写期不一致 | ~~TODO-12~~ **已收口 2026-07-01**；对等测试 revision ↔ OG；legacy 写路径逐步退役见 TODO-13/14 |
 | RSK-07 | ~~IAM 未落地前 WS id 泄露即越权~~ | **已缓解**：Filter 链 + 成员校验；生产禁 dev-mode · 见 §18 |
 
 ---
@@ -260,7 +260,7 @@
 | TODO-09 | SCN-02c/03b/04 跳转与试算页 UI 对齐 **[§17.8](../volumes/platform/17-ui-ux.md#178-跨页导航契约ui-nav-)** | 产品+前端 |
 | TODO-10 | SCN-01f：新增 `CANCEL_PROMISE`；SCN-01e 与取消承诺解耦（RULE-FF-03） | 开发 |
 | TODO-11 | SCN-07：供需平衡专页、PISPP period 表、建供应 API-MAT-02/03、物料预留 API-MAT-04~08、多路径 ENT-RT | 产品+前端+开发 |
-| TODO-12 | ~~**ADR-09 全量 Ontology 持久化**~~ **已收口 2026-07-01**（P0~P5 + Sprint 6A~6D）；loader 内部化文档化 · 后续扩展见 TODO-22~24 | — |
+| TODO-12 | ~~**ADR-09 全量 Ontology 持久化**~~ **已收口 2026-07-01**（P0~P5 + Sprint 6A~6D）；loader 内部化文档化 · 后续扩展见 **TODO-24**（PRP）· **TODO-21**（`ont_period` DDL） | — |
 | TODO-13 | **ADR-10 External_* 主数据**：staging、质检、sync、md_*、Projector 切读 | 架构+开发 |
 | TODO-14 | **ADR-11 外部交易数据**：external_* / txn_*、Firm WO 同步、质检、OG 装载切读 | 架构+开发 |
 | TODO-15 | **ADR-12 业务知识三层**：KnowledgeContext、Industry pack、overlay 表、引擎接 Effective | 架构+产品 |
@@ -270,12 +270,12 @@
 | TODO-19 | **ADR-14 数据集成**：MOD-DI UI、ADP-ERP-SAP/MES/Excel SPI、external 浏览 API | 架构+前后端 |
 | TODO-20 | **§5 Ontology 范围扩展**：现行 ENT-OG **仅覆盖订单协同计划**（原主计划 · **MOD-OCP** / PROC-S04）；**MOD-SCH 作业排程**、**MOD-SLT 分切排样** 的领域实体、装载路径与 `ont_*` 表族 **后续完善**（与 TODO-07 求解插件化协同，不阻塞当前 OCP 基线） | 架构+产品 |
 | TODO-21 | **§5 领域模型细化**：§5.0 阅读指引 · §5.19 Session · §5.20 字段目录 · **`05-ont-schema` P0 列级规范已落地（V65）** | 架构+产品 |
-| TODO-22 | **ADR-15 ENT-RCA 本体化**（**§5.5.1**）：`ontology.supply.ResourceCapacityAssignment` 纳入 ENT-OG；一条 RCA = OP×OOSR×**ENT-SRP** 的 `assignedMinutes`；optimize→ENT-RCA + ROL→`SRP.reservedCapacity`；solver RCA/`TimeSlot` 降为 DERIVE；`ont_resource_capacity_assignment` | 架构+开发 |
-| TODO-23 | **ADR-16 Shift 级 Period**（**§5.8.1**）：扩展 ENT-PER（`granularity`/`shiftId`）与 `ontology_period_sequence`（如 `14x3shift,4x1d`）；班次占用 = shift-Period 上 ENT-RCA；rollup 日/周 SRP；**废止 ENT-SS** 本体地位；RULE-MP-07/08 迁 SRP | 架构+开发 |
+| TODO-22 | ~~**ADR-15 ENT-RCA 本体化**~~ **已收口 2026-07-01**（R0~R5）：ENT-RCA SoT · `ont_resource_capacity_assignment` · `OntologyRcaProjector` | — |
+| TODO-23 | ~~**ADR-16 Shift 级 Period**~~ **已收口 2026-07-01**（S0~S5）：shift-Period · leaf SRP/RCA · `PeriodTimeSlotDeriver` · ENT-SS 废止 | — |
 | TODO-24 | **ADR-17 PR/PRP 产能聚合**（**§5.8.2**）：ENT-PRP · 日历挂 ENT-PR · SRP=Σ PRP；`OntologyLoader`/`PeriodExpander` 收敛；`ont_physical_resource_period` | 架构+开发 |
 | TODO-25 | ~~IAM 规范残余~~ **已决策 2026-06**：v1 **首登手动建 WS**（改规范 · §18.3.1 / RULE-IAM-02）；`%prod` `dev-mode=false` 验收 | — |
 | TODO-26 | **模块注册表一致性（§19 · AC-IAM-06）**：`workspace-modules.yaml` ↔ `WorkspaceModuleCatalog` 同步/校验（含 API 前缀漂移）；MOD-EXT / ADP-EXT 扩展契约机械化 | 架构+开发 |
-| TODO-27 | **SDD 文档债同步（RSK-02）**：§8 AC-17 路径 · §17 UI-NAV-02 `[GAP]` · `aps-planning-layer.md` 废止 diagnostics · §18 OIDC/`local-login-enabled` 与实现一致 · ~~`05-ont-schema` 占位~~ **P0 已同步 2026-06-30** | 全员 |
+| TODO-27 | ~~**SDD 文档债同步（RSK-02）**~~ **已收口 2026-07-01**：AC-17 API 路径 · UI-NAV 深链 `[GAP]` 标注 · `aps-planning-layer` 废止 diagnostics preview · §18 `local-login-enabled` · TODO-22/23 主表关闭 | — |
 | TODO-28 | **CI 与 AC 测试基建**：Flyway demo 种子 vs Hibernate `*_SEQ` 基线（`db/test-migration`）；`@QuarkusTest` IAM 配置清单；补 AC-IAM-06 / AC-UI-* 自动化（配合 TODO-01 `@SpecRef`） | 开发 |
 
 ### 偏差 → TODO 映射（2026-06-29 审查）
@@ -292,14 +292,16 @@
 | D-12 | 无 external/md/txn | **TODO-13/14** | — |
 | D-15 | 无 KnowledgeResolver | **TODO-15** | — |
 | D-19 | MOD-DI mock，无 staging | **TODO-19** | — |
-| D-22~24 | RCA / Shift-Period / PRP | **TODO-22~24** | — |
+| D-22 | ~~ENT-RCA 未本体化~~ | ~~TODO-22~~ | **已解决 2026-07-01**（R0~R5） |
+| D-23 | ~~Shift-Period / ENT-SS 双轨~~ | ~~TODO-23~~ | **已解决 2026-07-01**（S0~S5） |
+| D-24 | 无 ENT-PRP / SRP≠Σ PRP | **TODO-24** | — |
 | D-CONFIRM | ~~confirm 非 ont revision~~ | ~~TODO-12~~ | **已解决 2026-06-30**：`OntologyConfirmIntegrationTest` · `MasterPlanOntologySessionPersistenceIntegrationTest` |
 | D-TRACE | 无 `@SpecRef` | **TODO-01** | TODO-28 补 CI 清单 |
 | D-IAM-01 | 注册无自动 PERSONAL WS | ~~TODO-18~~ | **已决策**：v1 手动建 WS · `IamAcTest#acIam01` |
 | D-IAM-prod | 默认 dev-mode=true | ~~TODO-18~~ M4 | `%prod` 已 false；生产部署验收 |
 | D-IAM-06 | MOD-EXT 未机械化 | — | **TODO-26** |
 | D-YAML | YAML 与 Catalog API 前缀不一致 | — | **TODO-26** |
-| D-DOC | §8/§17/aps 文档与实现不一致 | RSK-02 泛述 | **TODO-27** |
+| D-DOC | ~~§8/§17/aps 文档与实现不一致~~ | ~~TODO-27~~ | **已解决 2026-07-01**（本轮同步）；后续 PR 仍须规范联动（RSK-02） |
 | D-CI-SEQ | Flyway 种子 id 与 `*_SEQ` 冲突 | — | **TODO-28**（已实现 test-migration，待规范化） |
 | D-CI-IAM | QuarkusTest 缺 IAM 配置致套件不可跑 | — | **TODO-28** |
 | AC-23 | COLD 计划覆盖标记 | 分散 | 随 TODO-11/OCP 迭代补测（暂不单独 TODO） |

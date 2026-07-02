@@ -194,10 +194,10 @@
 |----|-----|
 | **追溯** | SCN-07a · API-MAT-01 |
 | **Given** | 黄金 Workspace 含已知 ENT-PISPP |
-| **When** | GET `/material-planning/balance` |
+| **When** | GET `/api/v1/ontology/material-planning/balance` |
 | **Then** | DTO-MBP 含 PISP 行；period/日列与 opening/demand/supply/closing/shortage 可核对 |
 | **And** | 合计 shortage 与 ENT-PISPP.stockShortageQuantity 一致 |
-| **测试** | `OntologyMaterialBalanceProjector` 单元/集成测试（过渡：日粒度行） |
+| **测试** | `OntologyMaterialPlanningProjectionTest` · `OntologyMaterialBalanceProjector` 单元测试（过渡：日粒度行） |
 
 ---
 
@@ -322,7 +322,7 @@
 | AC-14 | SCN-01e | FF-03, DEM-01 | `OrderDemandActionOntologyChainTest#cancelPlanRemovesExclusiveWorkOrdersAndReturnsScopedChain` |
 | AC-15 | SCN-01g | FF-01, FF-04, DEM-01 | `OrderDemandActionOntologyChainTest#buildUpstreamChainReturnsOntologyProjectedFulfillmentChain` |
 | AC-16 | SCN-01f | FF-03, DEM-01 | 待实现（TODO-10） |
-| AC-17 | SCN-07a | MAT-01 | OntologyMaterialBalanceProjector 测试 |
+| AC-17 | SCN-07a | MAT-01 | `OntologyMaterialPlanningProjectionTest` |
 | AC-18 | SCN-07b~d | MRP-01~03, MAT-02/03 | 待 TODO-11 |
 | AC-19 | SCN-07e~f | MAT-04, MAT-05 | 待 TODO-11 |
 | AC-20 | SCN-07g | FF-05, MAT-06 | 待 TODO-11 |

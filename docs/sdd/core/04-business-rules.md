@@ -414,7 +414,7 @@ priorityScore = Σ dimensionWeight × dimensionRank
 | **hard** | 分配须满足资源匹配、工序顺序、并行等同 **periodId** 等 hard 规则 |
 | **soft** | **Σ ENT-RCA.assignedMinutes** 允许超过 SRP `availableCapacity`；超出部分计 **CapacityOverloadCost**（极高软惩罚），求解器最小化超载 |
 
-> **过渡：** 求解器内部仍经 **DERIVE** 的 `TimeSlot`/`ENT-SS` 投影（TODO-23 S4）；规范读路径与 confirm 写回以 **ENT-RCA + leaf SRP** 为准（ADR-16）。
+> **过渡（已收口 2026-07-01）：** 求解器内部经 `PeriodTimeSlotDeriver` **DERIVE** `TimeSlot`；规范读路径与 confirm 写回以 **ENT-RCA + leaf SRP** 为准（ADR-16 · TODO-23 S4/S5）。
 
 ---
 
@@ -452,7 +452,7 @@ priorityScore = Σ dimensionWeight × dimensionRank
 
 **主数据：** BusinessRules · `parallel-operations`
 
-> **过渡：** 迁移期求解器仍可能用 DERIVE 的 `TimeSlot` 表达同槽；TODO-23 S3 收敛后 UI/KPI 主语统一为 **SRP@Period**。
+> **现状（2026-07-01）：** UI/KPI 与校验主语已统一为 **SRP@Period**（TODO-23 S3）；求解器侧同槽表达仍可能经 DERIVE 的 `TimeSlot`。
 
 **字段：** 见 [§5.20.4 ENT-RCA](../../core/05-domain-model.md#5204-ent-rcaresourcecapacityassignment--adr-15)
 

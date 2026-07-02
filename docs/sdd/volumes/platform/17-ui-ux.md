@@ -247,9 +247,9 @@ flowchart LR
 
 | ID | 触发 | 目标 | Query/State | 状态 |
 |----|------|------|-------------|------|
-| **UI-NAV-01** | SCN-02c「查看产能计划」 | `/master-plan/analysis/capacity` | `?resource={srId}` | `[GAP]` |
-| **UI-NAV-02** | SCN-02c「查看物料计划」 | `/master-plan/analysis/material-planning` | `?product={pispId}` | `[GAP]` |
-| **UI-NAV-03** | SCN-03b 点击工单 | `/master-plan/analysis/work-orders` | `?workOrderNo=` | `[GAP]` |
+| **UI-NAV-01** | SCN-02c「查看产能计划」 | `/master-plan/analysis/capacity` | `?resource={srId}` | 路由已实现；**query 深链筛选** `[GAP]` · TODO-09 |
+| **UI-NAV-02** | SCN-02c「查看物料计划」 | `/master-plan/analysis/material-planning` | `?product={pispId}` | 路由已实现（`MaterialPlanningPage`）；**query 深链筛选** `[GAP]` · TODO-09 |
+| **UI-NAV-03** | SCN-03b 点击工单 | `/master-plan/analysis/work-orders` | `?workOrderNo=` | 路由已实现；**query 深链筛选** `[GAP]` · TODO-09 |
 | **UI-NAV-04** | 生产工单 → 细排 | `/scheduling/detail-schedule` | `?workOrderNo=` | 部分实现 |
 
 **规则：** 目标页 **必须** 读取 URL query 并应用表格筛选；若参数无效，显示 `StatusBanner` 提示而非静默忽略。

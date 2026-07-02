@@ -270,7 +270,7 @@ SupplyOrder → PlanUnit → Operation
 ### 5.5.1 产能分配（ENT-RCA · ResourceCapacityAssignment）
 
 > **规范定位（2026-06-21）：** **ENT-RCA** 是 **ENT-OG 内** 的产能占用边，不是仅存在于求解器包内的中间结构。  
-> **实现差距：** 本体类型 **ENT-RCA** 已纳入 `OntologyGraph`（TODO-22 **R1 已完成 2026-07-01**）；optimize 写回 **ENT-RCA + SRP rollup** 已落地（**R2 已完成 2026-07-01**）；**`OntologyRcaProjector`** ENT-RCA ↔ solver RCA/`TimeSlot` 已落地（**R3 已完成 2026-07-01**）；**`ont_resource_capacity_assignment` 持久化/restore** 已落地（**R4 已完成 2026-07-01**）；**占用 SoT 退役 `MasterPlanAllocationEntity`** 已落地（**R5 已完成 2026-07-01**）。
+> **实现状态（2026-07-01）：** ENT-RCA 全链路已落地（TODO-22 R0~R5）；shift-Period 与 `PeriodTimeSlotDeriver` 已落地（TODO-23 S0~S5）。
 
 **语义：** 一条 **ENT-RCA** 表示：某 **ENT-OP** 经其 **ENT-OOSR** 候选资源绑定，在某一 **ENT-SRP**（标准资源×期间）上 **已分配（或待求解）的占用分钟数** `assignedMinutes`。
 
@@ -317,7 +317,7 @@ erDiagram
 |------|------|------|
 | **ENT-SRP** | 资源 × **Period**（含 **shift-Period**） | 产能期间桶；**ENT-RCA 的规范挂接面** |
 | **ENT-RCA** | OP × OOSR × **SRP** | 本体 **占用真相**；optimize confirm 后读路径 SoT |
-| **ENT-SS** | 资源 × 日槽 | **废止中**（TODO-23 S5）；迁移期 = `TimeSlot` DERIVE，非 SoT |
+| **ENT-SS** | 资源 × 日槽 | **已废止**（TODO-23 S5）；`TimeSlot` 仅 DERIVE，非 SoT |
 
 > 班次占用 = **shift 级 ENT-PER** 上的 **ENT-SRP + ENT-RCA**，不再引入平行 ENT-SS 集合。  
 > 求解器 `TimeSlot` 由 **leaf Period** 投影（TODO-23 S4）；confirm 写回 **ENT-RCA + SRP**。

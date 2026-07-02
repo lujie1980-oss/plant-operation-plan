@@ -173,9 +173,10 @@ flowchart TB
 
 | 项 | 规范 |
 |----|------|
-| **生产** | `%prod` profile：`dev-mode=false`；OIDC 或本地账号 + JWT；`JWT_SECRET` / `OIDC_*` 环境变量 |
+| **生产** | `%prod` profile：`dev-mode=false`；OIDC 或本地账号 + JWT；`JWT_SECRET` / `OIDC_*` 环境变量；`plantops.security.local-login-enabled` 默认 **false**（`LOCAL_LOGIN_ENABLED`） |
 | **开发** | 默认 `plantops.security.dev-mode=true`：无 Bearer 时注入 `dev` Super Admin |
 | **OIDC 联调** | `QUARKUS_PROFILE=oidc` + Keycloak realm `plantops`；见 [oidc-keycloak-dev.md](../../../oidc-keycloak-dev.md) |
+| **本地密码登录** | `plantops.security.local-login-enabled`（默认 **true**；`%prod` 默认 false）；`GET /api/v1/auth/config` → `localLoginEnabled`；前端 `LoginPage` 按配置显隐表单 |
 | **Filter 顺序** | Authentication(100) → WorkspaceRequest(200) → Authorization(300) |
 | **请求上下文** | 解析后注入 `SecurityContext` + 校验 `X-Workspace-Id` 成员资格（dev-mode 跳过成员校验） |
 | **与 RULE-WS-01** | 先 **认证** → 再 **WS 成员** → 再 **模块+权限** → 最后 **行级 WS 隔离** |

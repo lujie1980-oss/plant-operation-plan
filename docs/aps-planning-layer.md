@@ -2,6 +2,8 @@
 
 本文描述 Plant Operation Plan 中 **确定性推演层** 与 **Timefold 选优层** 的分工，以及 S04 主计划 / S05 详细排程的代码落点。与流水线总览见 [architecture.md](./architecture.md)；BOM/MRP/工单见 [master-plan-bom-routing.md](./master-plan-bom-routing.md)。
 
+> **维护说明（2026-07-01 · TODO-27）：** S04 主计划已统一 **PATH-ONT**（ADR-08）；`GET .../master-plan/diagnostics/preview` 与 `GET .../detail-schedule/diagnostics/preview` **已移除**（ADR-03），请使用 `POST .../planning/master-plan/preview` / `POST .../planning/detail-schedule/preview`。槽位由 `PeriodTimeSlotDeriver` 从 leaf Period+SRP **DERIVE**；占用 SoT 为 **ENT-RCA**（TODO-22）。规范以 SDD §5 / §6 为准。
+
 ---
 
 ## 1. 设计原则
@@ -178,7 +180,7 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | 内存求解 | `solve=true` | Context → `DetailSchedule` → Timefold → 赋时；结果反写到同一批 `OperationAssignment` |
 | 正式排程 | `solve=true` & `persist=true` | 同上并落库，等价于 `POST .../detail-schedule/solve` |
 
-`GET .../detail-schedule/diagnostics/preview` 保留为轻量诊断；新接口返回 `DetailSchedulePlanningPreviewDto`（诊断 + 产线 + 工序 + 可选 score/版本号）。
+`GET .../detail-schedule/diagnostics/preview` **已移除**（ADR-03）。请使用 `POST .../planning/detail-schedule/preview`（`solve=false`）获取诊断 + 工序候选。
 
 前端入口：**主计划 → 推演诊断** 页「运行推演预览」。
 
@@ -192,7 +194,9 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | 内存求解 | `solve=true` | Context → `MasterPlanSchedule` → Timefold；结果反写到同一批 `OrderAllocation` |
 | 正式主计划 | `solve=true` & `persist=true` | 同上并落库，等价于 `POST .../master-plan/solve` |
 
-可选 `feedbackCutoff` 构建反馈产能 overlay（与滚动刷新主计划一致）。`GET .../master-plan/diagnostics/preview` 仍保留为轻量诊断。
+可选 `feedbackCutoff` 构建反馈产能 overlay（与滚动刷新主计划一致）。
+
+> ~~`GET .../master-plan/diagnostics/preview`~~ **已移除**（ADR-03）。诊断数据随 `POST .../planning/master-plan/preview` 响应中的 `diagnostics` 字段返回，或由 `PlanningOrchestrator` 写入 pipeline `diagnostics_json`。
 
 ### 5.6 SchedulingSession 与增量推演（已实现）
 
@@ -230,22 +234,23 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 
 **前端**：**生产排程**页 Session 推演面板 + 甘特/列表「Session 推演」视图；**推演诊断**页保留预览入口。
 
-### 5.7 OTD 本体 M1 + M2 + M3
+### 5.7 OTD 本体（PATH-ONT · M1~M4+）
 
-M1 在主计划侧引入 **OTD 本体图 + ROL-lite 传播** 的内存 Session；M2 将 SupplyOrder/销售需求聚合进 PISPP、打通 Timefold optimize 与 confirm 持久化；**M3** 升级可配置混合周期桶、SRP 进 Session 与 optimize 回写、Operation 时间窗 derived，并统一 S05/M2 的 Sandbox Store 基础设施。本体装载自已发布 `planVersionId`，不替代 `MasterPlanPlanningContext` / `OrderAllocation` 求解路径（D5/D16 维持复用）。
+S04 已统一 **PATH-ONT**（ADR-08）：权威 **ENT-OG** → `OntologyToMasterPlanScheduleMapper` → `PlanningOptimizer` → 写回 **ENT-RCA + SRP rollup**（TODO-22）→ confirm 落 `ont_*` + legacy 边界。`TimeSlot` 由 **`PeriodTimeSlotDeriver`** 按需 DERIVE（TODO-23）；不再装载 `schedulingSlotsOrdered`。
 
 | 类 | 职责 |
 |----|------|
-| `OntologyGraph` | MPS 最小对象集内存图（Product、Period、SupplyOrder、PISP、**M3** SRP、Operation 等） |
-| `PeriodSequenceSpec` / `PeriodIndex` | **M3** — 系统参数 `ontology_period_sequence`（如 `"14x1d,4x1w,2x1m"`）展开混合桶；缺省 `28×1d`；统一 date→period |
-| `MasterPlanOntologySession` | 工作区隔离的 Session 快照（图 + `RolEngine`，8h TTL；**M3** `implements OntologySandbox`） |
-| `OntologySandbox` / `OntologySandboxStore` | **M3** — S05 `SchedulingSessionStore` 与本体 Store 共用泛型基类（TTL / require / workspace 隔离） |
-| `MasterPlanOntologySessionService` | create / get / simulate / optimize / confirm；**M3** `listResources` / `listOperations` |
-| `OntologyLoader` | 从 `planVersionId` 投影本体图；M2 按 dueDate/needDate 聚合供需进 PISPP；**M3** 装载 SRP（`ResourceCalendarEntity`）与 Operation 链 |
-| `OntologyTimefoldMapper` | 求解 `OrderAllocation` ↔ 本体 `ChangeSet`；**M3** 使用 `PeriodIndex`；optimize 写 PISPP supply + SRP `reservedCapacity` |
-| `RolEngine.withMasterPlanRules` | **M3** — PISPP + SRP + Operation 三组 derivation 合一 registry |
-| `RolTransaction` | 应用 ChangeSet 并触发 PISPP/SRP/Operation 传播 |
-| `MasterPlanOntologyConfirmService` | confirm → `MasterPlanService.solve()` → `MasterPlanAllocationEntity` |
+| `OntologyGraph` | ENT-OG：供需、工序、FF、**ENT-RCA**、leaf **ENT-SRP**、Period 等 |
+| `PeriodSequenceSpec` / `PeriodExpander` / `PeriodIndex` | `ontology_period_sequence`（含 `NxMshift`）；混合桶展开 |
+| `PeriodTimeSlotDeriver` | leaf Period + SRP → solver `TimeSlot`（DERIVE） |
+| `WorkspaceAuthoritativeOntologyGraphService` | 场景读路径：Loader + `OntologyP0Overlay` |
+| `MasterPlanOntologySession` | Session 快照（图 + `RolEngine`，8h TTL） |
+| `MasterPlanOntologySessionService` | create / simulate / optimize / confirm（可选 `session-enabled` → `ont_*` WAL） |
+| `OntologyLoader` | legacy JPA 壳 + Period/SRP/供需装载；`@Deprecated` 对外路径 |
+| `OntologyRcaProjector` | ENT-RCA ↔ solver RCA / `TimeSlot` |
+| `PlanningResultApplicator` | optimize 写 ENT-RCA + ROL → SRP `reservedCapacity` |
+| `OntologyTimefoldMapper` | `ChangeSet` ↔ Operation planned 时间 |
+| `MasterPlanOntologyScheduleBuilder` | ENT-OG → `MasterPlanPlanningContext`（PATH-ONT 唯一入口） |
 
 **REST**（`MasterPlanSessionResource`）
 
@@ -258,8 +263,8 @@ M1 在主计划侧引入 **OTD 本体图 + ROL-lite 传播** 的内存 Session�
 | GET | `/api/v1/master-plan/sessions/{sessionId}/resources` | **M3** — SRP 产能快照（`SrpSnapshotDto`） |
 | GET | `/api/v1/master-plan/sessions/{sessionId}/supply-orders/{supplyOrderId}/operations` | **M3** — Operation 链与时间窗（`OperationSnapshotDto`） |
 | POST | `/api/v1/master-plan/sessions/{sessionId}/simulate` | ROL-lite 字段变更 + 传播 |
-| POST | `/api/v1/master-plan/sessions/{sessionId}/optimize` | Timefold 求解 → ChangeSet → 本体传播（PISPP `plannedSupplyTotal` + **M3** SRP `reservedCapacity`） |
-| POST | `/api/v1/master-plan/sessions/{sessionId}/confirm` | 持久化至 `MasterPlanAllocationEntity`，返回 `planVersionId` |
+| POST | `/api/v1/master-plan/sessions/{sessionId}/optimize` | `PlanningOptimizer` 求解 → ENT-RCA + SRP rollup |
+| POST | `/api/v1/master-plan/sessions/{sessionId}/confirm` | promote `ont_*` revision + legacy 边界（`PlanVersionEntRcaOccupancy`） |
 
 **系统参数（M3）：** 工作区 `SystemParameterEntity` 键 `ontology_period_sequence`，格式 `"<count>x<length><unit>,..."`（`d`=日、`w`=周、`m`=月）；无效或空值回退 `28×1d`。
 
@@ -380,12 +385,12 @@ S05 额外：`masterPlanVersionId`（契约加载来源）。
 
 ```mermaid
 flowchart TB
-  API["GET .../diagnostics/preview"]
-  SVC["*Service.previewPlanningDiagnostics"]
-  BLDR["*PlanningContextBuilder.build"]
+  API["POST .../planning/*/preview"]
+  SVC["*Service.previewPlanning"]
+  BLDR["MasterPlanOntologyScheduleBuilder / DetailSchedulePlanningContextBuilder"]
   COLL["*PlanningDiagnosticsCollector"]
   CTX["*PlanningContext"]
-  DTO["*PlanningDiagnosticsDto"]
+  DTO["*PlanningPreviewDto + diagnostics"]
 
   API --> SVC --> BLDR
   BLDR --> COLL
@@ -445,22 +450,30 @@ feasible = base 中 slotAllowed(wo, slot)（最早可行下界）
 
 #### 8.3.7 REST API
 
+> **废止（ADR-03）：** ~~`GET /api/v1/planning/master-plan/diagnostics/preview`~~ · ~~`GET /api/v1/planning/detail-schedule/diagnostics/preview`~~ 已移除。与 [§6 API 契约](sdd/core/06-api-contracts.md) 一致。
+
 **主计划预览（不求解）：**
 
 ```http
-GET /api/v1/planning/master-plan/diagnostics/preview?strategyId={optional}
+POST /api/v1/planning/master-plan/preview
+Content-Type: application/json
+
+{ "strategyId": null, "solve": false, "persist": false, "feedbackCutoff": null }
 ```
 
 **详细排程预览：**
 
 ```http
-GET /api/v1/planning/detail-schedule/diagnostics/preview?masterPlanVersionId={optional}
+POST /api/v1/planning/detail-schedule/preview
+Content-Type: application/json
+
+{ "masterPlanVersionId": null, "solve": false, "persist": false, "seedInitialQueues": false }
 ```
 
 服务入口：
 
-- `MasterPlanService.previewPlanningDiagnostics(strategyId)` — 解析策略、延展日历、空 overlay 构建 context。
-- `DetailScheduleService.previewPlanningDiagnostics(masterPlanVersionId)` — 加载契约与开线决策后构建 context。
+- `MasterPlanService.previewPlanning(MasterPlanPlanningPreviewRequest)` — PATH-ONT：`MasterPlanOntologyScheduleBuilder` 构建 context。
+- `DetailScheduleService.previewPlanning(...)` — 加载契约与开线决策后构建 context。
 
 **响应示例（S04 片段）：**
 
@@ -500,7 +513,7 @@ GET /api/v1/planning/detail-schedule/diagnostics/preview?masterPlanVersionId={op
 #### 8.3.9 后续扩展
 
 - ~~将 `context.diagnostics()` 写入 `PlanningPipelineRun` 各 step 的 metadata~~（已实现：`diagnostics_json` + 运行日志摘要）
-- ~~反馈滚动场景：`preview` 增加 `feedbackCutoff` + overlay 参数~~（已实现：`GET .../diagnostics/preview?feedbackCutoff=`）
+- ~~反馈滚动场景：`preview` 增加 `feedbackCutoff` + overlay 参数~~（已实现：`POST .../planning/master-plan/preview` 请求体 `feedbackCutoff`）
 - ~~前端：`PlanningDiagnosticsPanel` 已接入 **计划运行** / **生产排程** / **计划分析** 页~~
 - ~~选优层约束 explain / score 分解（P4）~~（见 §8.3.10）
 

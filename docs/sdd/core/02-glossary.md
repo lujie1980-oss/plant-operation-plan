@@ -29,7 +29,7 @@
 | **ENT-SRP** | StandardResourcePeriod | 标准资源×Period 产能；**= Σ ENT-PRP**（ADR-17 · §5.8.2） | 产能期间 |
 | **ENT-PRP** | PhysicalResourcePeriod | 物理资源×Period 产能；**日历真相源** | 设备期间 |
 | **ENT-PER** | Period | 有序时间桶；由 `ontology_period_sequence` 展开；**可含 shift 粒度**（ADR-16 · §5.8.1） | 时段 |
-| **ENT-SS** | SchedulingSlot | **过渡 · ADR-16 废止中**；原规划日槽；由 Period/calendar DERIVE | 时间槽、TimeSlot |
+| **ENT-SS** | SchedulingSlot | **已废止**（@Deprecated · S5）；`TimeSlot` 按需 DERIVE | 时间槽、TimeSlot |
 | **ENT-RT** | Routing | 工艺路线头；挂 ENT-PISP；ID `RT-{pispId}` 或 `RT-{pispId}-{seq}`；**一个 PISP 可有多条路径**，含 **pathPriority**（SCN-07b~d） | 路线 |
 | **ENT-RS** | RoutingStep | 工艺工序模板；ID `RS-{pispId}-{seq}` | 工艺步骤、OperationDefinition |
 | **ENT-RSOSR** | RoutingStepOnStandardResource | 模板层资源候选 | — |
