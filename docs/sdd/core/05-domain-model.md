@@ -37,7 +37,7 @@ flowchart TD
 | §5.1~§5.9 | **规范（结构）** | ENT-OG 内实体与关系；与 ADR-07/08 一致 |
 | §5.10 | **过渡（现行实现）** | legacy JPA confirm 边界 + 读路径对照；TODO-12 收口后收缩 |
 | §5.14~§5.18 | **规范（目标态）** | ADR-09 全量 `ont_*` 持久化 |
-| §5.19~§5.20 | **规范（补全中）** | §5.19 Session 已规范；§5.20 日历链 + P0 部分已落地；**P0 SQL 列级规范已落地（V65 · TODO-21 Phase 3 部分）** |
+| §5.19~§5.20 | **规范（已落地）** | §5.19 Session · §5.20 字段目录；**`ont_period` DDL V67（TODO-21 Phase 3）** |
 
 ---
 
@@ -816,7 +816,7 @@ stateDiagram-v2
 
 | 表 | ENT |
 |----|-----|
-| `ont_period` | Period（`sequence_nr`, `granularity`, `shift_id`, `start/end`, `parent_period_id` · **TODO-23 S1**） |
+| `ont_period` | Period（`sequence_nr`, `granularity`, `shift_id`, `start/end`, `parent_period_id`, `is_leaf` · **V67**） |
 | `ont_pispp` | ProductInStockingPointPeriod |
 | `ont_physical_resource_period` | PhysicalResourcePeriod（ENT-PRP · **TODO-24**） |
 | `ont_srp` | StandardResourcePeriod（**Σ PRP** · ADR-17） |
@@ -1081,7 +1081,7 @@ stateDiagram-v2
 
 ---
 
-## 5.20 实体属性目录（TODO-21 Phase 2）
+## 5.20 实体属性目录（TODO-21）
 
 > **列约定：** `属性` · `类型` · `必填` · `来源`（`memory`/`md_*`/`txn_*`/`derived`/`solver`/`rol`）· `RULE/SCN` · `现状`（`implemented`/`spec-only`/`legacy-only`）  
 > **SQL 类型：** P0 列级 DDL 见 [`05-ont-schema.md`](../volumes/data/05-ont-schema.md)（**V65 已落地**）；P1/P2 扩展表待后续 Flyway。  
@@ -1091,7 +1091,7 @@ stateDiagram-v2
 
 | 实体 | 小节 | Java / 表 | 现状 |
 |------|------|-----------|------|
-| ENT-PER | §5.20.1 | `Period` · `ont_period` | `implemented`（**S1 shift 字段 + PeriodExpander 已落地 2026-07-01** · `ont_period` DDL 待建） |
+| ENT-PER | §5.20.1 | `Period` · `ont_period` | `implemented`（**S1 + V67 持久化 2026-07-01**） |
 | ENT-PRP | §5.20.2 | **spec-only** · `ont_physical_resource_period` | `spec-only`（TODO-24 P1） |
 | ENT-SRP | §5.20.3 | `StandardResourcePeriod` · `ont_srp` | `implemented`（**P0 DDL 已落地** · 直写日历 · 待 PRP rollup） |
 | ENT-RCA | §5.20.4 | `ResourceCapacityAssignment` · `ont_resource_capacity_assignment` | `implemented`（**R1~R5 已完成 2026-07-01**） |
@@ -1107,11 +1107,12 @@ stateDiagram-v2
 | `sequenceNr` | int | Y | derived | `ontology_period_sequence` | implemented |
 | `startDate` | LocalDate | Y | derived | — | implemented |
 | `endDate` | LocalDate | Y | derived | — | implemented |
-| `granularity` | enum | Y | derived | ADR-16 · §5.8.1 | **spec-only** |
-| `shiftId` | String | N | md_* / MOD-CAL | ADR-16 | **spec-only** |
-| `startDateTime` | datetime | N | derived | shift 桶边界 | **spec-only** |
-| `endDateTime` | datetime | N | derived | shift 桶边界 | **spec-only** |
-| `parentPeriodId` | String | N | derived | rollup 父桶 | **spec-only** |
+| `granularity` | enum | Y | derived | ADR-16 · §5.8.1 | implemented |
+| `shiftId` | String | N | md_* / MOD-CAL | ADR-16 | implemented |
+| `startDateTime` | datetime | N | derived | shift 桶边界 | implemented |
+| `endDateTime` | datetime | N | derived | shift 桶边界 | implemented |
+| `parentPeriodId` | String | N | derived | rollup 父桶 | implemented |
+| `leaf` | boolean | Y | derived | RCA 挂接面 | implemented |
 
 ### 5.20.2 ENT-PRP（PhysicalResourcePeriod · ADR-17）
 
@@ -1147,12 +1148,12 @@ stateDiagram-v2
 
 | 属性 | 类型 | 必填 | 来源 | RULE/SCN | 现状 |
 |------|------|------|------|----------|------|
-| `id` | String | Y | derived | §5.5.1 | **spec-only** |
-| `operationId` | String | Y | memory | RULE-MP-01 | solver 包 only |
-| `operationOnStandardResourceId` | String | Y | memory | RULE-MP-01 | **spec-only** |
-| `standardResourcePeriodId` | String | Y | memory | leaf SRP | solver 包 only |
-| `assignedMinutes` | double | Y | solver | 守恒 §5.5.1 | solver 包 only |
-| `locked` | boolean | N | rol / CFG | — | **spec-only** |
+| `id` | String | Y | derived | §5.5.1 | implemented |
+| `operationId` | String | Y | memory | RULE-MP-01 | implemented |
+| `operationOnStandardResourceId` | String | Y | memory | RULE-MP-01 | implemented |
+| `standardResourcePeriodId` | String | Y | memory | leaf SRP | implemented |
+| `assignedMinutes` | double | Y | solver | 守恒 §5.5.1 | implemented |
+| `locked` | boolean | N | rol / CFG | — | implemented |
 
 ### 5.20.5 ENT-SS（SchedulingSlot · 过渡）
 

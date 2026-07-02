@@ -116,6 +116,7 @@
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-23 S4**：`PeriodTimeSlotDeriver` 从 leaf Period+SRP 派生 `TimeSlot`；废弃 `SchedulingSlotExpander` 装载路径 |
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-23 S5**：移除 `OntologyGraph.schedulingSlotsOrdered`；`SchedulingSlot` @Deprecated；`TimeSlot` 按需 DERIVE |
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-27**：SDD 与实现对齐（TODO-22/23 关闭 · AC-17 API 路径 · UI-NAV 深链标注 · `aps-planning-layer` 废止 diagnostics preview · §18 `local-login-enabled`） |
+| 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-21**：`ont_period` Flyway V67/V68 · ENT-PER 持久化 Mapper/Restorer · §5.20 字段目录收口 |
 
 ## 治理约定
 

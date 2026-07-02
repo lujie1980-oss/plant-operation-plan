@@ -1,6 +1,6 @@
 # §5.20 附录 — 实体属性目录（P0 核心）
 
-> **状态：** TODO-21 Phase 2 进行中。P0 列级 SQL 已落地（V65 · [05-ont-schema.md](../volumes/data/05-ont-schema.md)）；P1/P2 扩展表待 Flyway。  
+> **状态：** TODO-21 **已收口 2026-07-01**。P0 列级 SQL（V65/V67 · [05-ont-schema.md](../volumes/data/05-ont-schema.md)）；P1/P2 扩展表（PRP 等）待 Flyway。  
 > **日历链实体**（ENT-PER · ENT-PRP · ENT-SRP · MOD-CAL）已写入 [05-domain-model.md §5.20.0~5.20.7](./05-domain-model.md#520-实体属性目录todo-21-phase-2)。
 
 ## 目录模板
@@ -82,6 +82,25 @@
 | `plannedInventoryLevel` | double | Y | derived | RULE-MRP-05 | implemented |
 | `replenishedInventoryLevel` | double | Y | derived | — | implemented |
 | `stockShortageQuantity` | double | Y | derived | SCN-07a | implemented |
+
+---
+
+## ENT-PER（Period）
+
+**Java：** `com.plantops.ontology.period.Period` · **表：** `ont_period`（V67）
+
+| 属性 | 类型 | 必填 | 来源 | RULE/SCN | 现状 |
+|------|------|------|------|----------|------|
+| `id` | String | Y | derived | `ontology_period_sequence` | implemented |
+| `sequenceNr` | int | Y | derived | PeriodExpander | implemented |
+| `startDate` | LocalDate | Y | derived | — | implemented |
+| `endDate` | LocalDate | Y | derived | — | implemented |
+| `granularity` | enum | Y | derived | ADR-16 | implemented |
+| `shiftId` | String | N | MOD-CAL | ADR-16 | implemented |
+| `parentPeriodId` | String | N | derived | rollup | implemented |
+| `startDateTime` | datetime | N | derived | shift 边界 | implemented |
+| `endDateTime` | datetime | N | derived | shift 边界 | implemented |
+| `leaf` | boolean | Y | derived | ENT-RCA 挂接 | implemented |
 
 ---
 

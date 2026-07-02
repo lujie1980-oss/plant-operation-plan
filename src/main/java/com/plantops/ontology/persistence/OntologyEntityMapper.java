@@ -4,11 +4,14 @@ import com.plantops.ontology.demand.Demand;
 import com.plantops.ontology.demand.DemandSourceType;
 import com.plantops.ontology.fulfillment.Fulfillment;
 import com.plantops.ontology.fulfillment.FulfillmentType;
+import com.plantops.ontology.period.Period;
+import com.plantops.ontology.period.PeriodGranularity;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.ontology.persistence.entity.OntDemandEntity;
 import com.plantops.ontology.persistence.entity.OntFulfillmentEntity;
 import com.plantops.ontology.persistence.entity.OntOperationEntity;
+import com.plantops.ontology.persistence.entity.OntPeriodEntity;
 import com.plantops.ontology.persistence.entity.OntPisppEntity;
 import com.plantops.ontology.persistence.entity.OntResourceCapacityAssignmentEntity;
 import com.plantops.ontology.persistence.entity.OntSrpEntity;
@@ -177,6 +180,32 @@ public final class OntologyEntityMapper {
         row.plannedInventoryLevel = p.getPlannedInventoryLevel();
         row.replenishedInventoryLevel = p.getReplenishedInventoryLevel();
         row.stockShortageQuantity = p.getStockShortageQuantity();
+        return row;
+    }
+
+    public static Period toPeriod(OntPeriodEntity row) {
+        Period period = new Period(row.entityId, row.sequenceNr, row.startDate, row.endDate);
+        period.setGranularity(PeriodGranularity.valueOf(row.granularity));
+        period.setShiftId(row.shiftId);
+        period.setParentPeriodId(row.parentPeriodId);
+        period.setStartDateTime(row.startDateTime);
+        period.setEndDateTime(row.endDateTime);
+        period.setLeaf(row.leaf);
+        return period;
+    }
+
+    public static OntPeriodEntity fromPeriod(Period period, String workspaceId, String revisionId) {
+        OntPeriodEntity row = new OntPeriodEntity();
+        row.stampKeys(workspaceId, revisionId, period.getId());
+        row.sequenceNr = period.getSequenceNr();
+        row.startDate = period.getStartDate();
+        row.endDate = period.getEndDate();
+        row.granularity = period.getGranularity().name();
+        row.shiftId = period.getShiftId();
+        row.parentPeriodId = period.getParentPeriodId();
+        row.startDateTime = period.getStartDateTime();
+        row.endDateTime = period.getEndDateTime();
+        row.leaf = period.isLeaf();
         return row;
     }
 

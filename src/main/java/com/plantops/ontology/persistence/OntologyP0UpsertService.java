@@ -3,12 +3,14 @@ package com.plantops.ontology.persistence;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.demand.Demand;
 import com.plantops.ontology.fulfillment.Fulfillment;
+import com.plantops.ontology.period.Period;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.ontology.persistence.entity.OntDemandEntity;
 import com.plantops.ontology.persistence.entity.OntEntityKey;
 import com.plantops.ontology.persistence.entity.OntFulfillmentEntity;
 import com.plantops.ontology.persistence.entity.OntOperationEntity;
+import com.plantops.ontology.persistence.entity.OntPeriodEntity;
 import com.plantops.ontology.persistence.entity.OntPisppEntity;
 import com.plantops.ontology.persistence.entity.OntResourceCapacityAssignmentEntity;
 import com.plantops.ontology.persistence.entity.OntSrpEntity;
@@ -60,6 +62,9 @@ public class OntologyP0UpsertService {
         }
         if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.PISPP)) {
             graph.pispPeriodsById().values().forEach(p -> upsertPispp(p, workspaceId, revisionId));
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.PERIOD)) {
+            graph.periodsOrdered().forEach(period -> upsertPeriod(period, workspaceId, revisionId));
         }
         if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.SRP)) {
             graph.srpById().values().forEach(srp -> upsertSrp(srp, workspaceId, revisionId));
@@ -163,6 +168,25 @@ public class OntologyP0UpsertService {
         row.updatedAt = LocalDateTime.now();
     }
 
+    private void upsertPeriod(Period period, String workspaceId, String revisionId) {
+        OntPeriodEntity row = OntPeriodEntity.findById(
+                new OntEntityKey(workspaceId, revisionId, period.getId()));
+        if (row == null) {
+            OntologyEntityMapper.fromPeriod(period, workspaceId, revisionId).persist();
+            return;
+        }
+        row.sequenceNr = period.getSequenceNr();
+        row.startDate = period.getStartDate();
+        row.endDate = period.getEndDate();
+        row.granularity = period.getGranularity().name();
+        row.shiftId = period.getShiftId();
+        row.parentPeriodId = period.getParentPeriodId();
+        row.startDateTime = period.getStartDateTime();
+        row.endDateTime = period.getEndDateTime();
+        row.leaf = period.isLeaf();
+        row.updatedAt = LocalDateTime.now();
+    }
+
     private void upsertSrp(StandardResourcePeriod srp, String workspaceId, String revisionId) {
         OntSrpEntity row = OntSrpEntity.findById(
                 new OntEntityKey(workspaceId, revisionId, srp.getId()));
@@ -243,6 +267,9 @@ public class OntologyP0UpsertService {
         }
         if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.PISPP)) {
             OntPisppEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.PERIOD)) {
+            OntPeriodEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
         }
         if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.SRP)) {
             OntSrpEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);

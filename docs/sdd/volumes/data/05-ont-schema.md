@@ -38,14 +38,15 @@
 | `ont_operation` | ENT-OP | `supply_order_id`, `plan_unit_id`, `sequence_nr`, `routing_sequence_no`, `operation_name`, 时长/窗口/planned 时间戳, `infeasible` — 对齐 `Operation.java` |
 | `ont_fulfillment` | ENT-FF | `demand_id`, `supply_id`, `quantity`, `type` |
 | `ont_pispp` | ENT-PISPP | `pisp_id`, `period_id`, 库存/计划/缺口各 `double` 字段 — 对齐 `ProductInStockingPointPeriod.java` |
+| `ont_period` | ENT-PER | `sequence_nr`, `start_date`, `end_date`, `granularity`, `shift_id`, `parent_period_id`, `start_date_time`, `end_date_time`, `is_leaf` — 对齐 `Period.java`（**V67 · TODO-21**） |
 | `ont_srp` | ENT-SRP | `standard_resource_id`, `period_id`, `total_capacity`, `*_downtime`, `reserved/available/free/overload_capacity` |
 | `ont_resource_capacity_assignment` | ENT-RCA | `operation_id`, `operation_on_standard_resource_id`, `standard_resource_period_id`, `assigned_minutes`, `operation_total_minutes`, `locked`, `parallel_group_id` |
 
-## P1/P2 扩展（未含 V65）
+## P1/P2 扩展（未含 V65/V67）
 
 | 表 | 说明 |
 |----|------|
-| `ont_period` | shift 列 · TODO-23 S1 |
+| ~~`ont_period`~~ | **已落地 V67**（shift 列 · ADR-16） |
 | `ont_physical_resource_period` | ENT-PRP · TODO-24 P4 |
 | Master 快照 | `ont_product`, `ont_routing*`, … |
 | `ont_bom_dependency` | COMMITTED 真相 · 随 P1 Restorer |

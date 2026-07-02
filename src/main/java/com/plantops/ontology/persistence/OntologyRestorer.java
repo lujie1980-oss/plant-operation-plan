@@ -4,6 +4,7 @@ import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.persistence.entity.OntDemandEntity;
 import com.plantops.ontology.persistence.entity.OntFulfillmentEntity;
 import com.plantops.ontology.persistence.entity.OntOperationEntity;
+import com.plantops.ontology.persistence.entity.OntPeriodEntity;
 import com.plantops.ontology.persistence.entity.OntPisppEntity;
 import com.plantops.ontology.persistence.entity.OntResourceCapacityAssignmentEntity;
 import com.plantops.ontology.persistence.entity.OntRevisionEntity;
@@ -58,6 +59,12 @@ public class OntologyRestorer {
             for (OntPisppEntity row : OntPisppEntity.forRevision(workspaceId, revisionId)) {
                 builder.pispPeriod(OntologyEntityMapper.toPispp(row));
             }
+        }
+        if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.PERIOD)) {
+            builder.periodsOrdered(
+                    OntPeriodEntity.forRevision(workspaceId, revisionId).stream()
+                            .map(OntologyEntityMapper::toPeriod)
+                            .toList());
         }
         if (policyService.shouldStore(workspaceId, persistenceMode, OntologyEntityKind.SRP)) {
             for (OntSrpEntity row : OntSrpEntity.forRevision(workspaceId, revisionId)) {

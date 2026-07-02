@@ -6,6 +6,8 @@ import com.plantops.ontology.demand.Demand;
 import com.plantops.ontology.demand.DemandSourceType;
 import com.plantops.ontology.fulfillment.Fulfillment;
 import com.plantops.ontology.fulfillment.FulfillmentType;
+import com.plantops.ontology.period.Period;
+import com.plantops.ontology.period.PeriodGranularity;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.ontology.supply.Operation;
@@ -71,6 +73,10 @@ public final class OntologyPersistenceTestFixtures {
         ResourceCapacityAssignment rca = new ResourceCapacityAssignment(
                 "RCA-PERS-01", opId, oosrId, srpId, 120, 120, false, null);
 
+        Period period = new Period(OntologyIds.periodId(0), 0, LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 1));
+        period.setGranularity(PeriodGranularity.DAY);
+        period.setLeaf(true);
+
         return OntologyGraph.builder()
                 .demand(demand)
                 .supplyOrder(so)
@@ -80,6 +86,7 @@ public final class OntologyPersistenceTestFixtures {
                 .pispPeriod(pispp)
                 .standardResourcePeriod(srp)
                 .resourceCapacityAssignment(rca)
+                .periodsOrdered(java.util.List.of(period))
                 .build();
     }
 
@@ -203,6 +210,20 @@ public final class OntologyPersistenceTestFixtures {
             assertEquals(p.getOnHand(), r.getOnHand(), 1e-9);
             assertEquals(p.getPlannedSupplyTotal(), r.getPlannedSupplyTotal(), 1e-9);
             assertEquals(p.getPlannedDemandQuantityTotal(), r.getPlannedDemandQuantityTotal(), 1e-9);
+        }
+
+        assertEquals(source.periodsOrdered().size(), restored.periodsOrdered().size());
+        for (int i = 0; i < source.periodsOrdered().size(); i++) {
+            Period expected = source.periodsOrdered().get(i);
+            Period actual = restored.periodsOrdered().get(i);
+            assertEquals(expected.getId(), actual.getId());
+            assertEquals(expected.getSequenceNr(), actual.getSequenceNr());
+            assertEquals(expected.getStartDate(), actual.getStartDate());
+            assertEquals(expected.getEndDate(), actual.getEndDate());
+            assertEquals(expected.getGranularity(), actual.getGranularity());
+            assertEquals(expected.getShiftId(), actual.getShiftId());
+            assertEquals(expected.getParentPeriodId(), actual.getParentPeriodId());
+            assertEquals(expected.isLeaf(), actual.isLeaf());
         }
 
         assertEquals(source.srpById().size(), restored.srpById().size());

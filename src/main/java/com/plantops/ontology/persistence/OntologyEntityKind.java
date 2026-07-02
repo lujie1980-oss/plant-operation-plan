@@ -7,6 +7,7 @@ public enum OntologyEntityKind {
     OPERATION,
     FULFILLMENT,
     PISPP,
+    PERIOD,
     SRP,
     RESOURCE_CAPACITY_ASSIGNMENT,
     BOM_DEPENDENCY
