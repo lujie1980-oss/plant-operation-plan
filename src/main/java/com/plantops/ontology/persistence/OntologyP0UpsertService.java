@@ -81,7 +81,7 @@ public class OntologyP0UpsertService {
         Set<String> desiredIds = new HashSet<>();
         for (Fulfillment ff : graph.fulfillments()) {
             desiredIds.add(ff.getId());
-            upsertFulfillment(ff, workspaceId, revisionId);
+            upsertFulfillmentInternal(ff, workspaceId, revisionId);
         }
         for (OntFulfillmentEntity row : OntFulfillmentEntity.forRevision(workspaceId, revisionId)) {
             if (!desiredIds.contains(row.entityId)) {
@@ -133,7 +133,11 @@ public class OntologyP0UpsertService {
         row.updatedAt = LocalDateTime.now();
     }
 
-    private void upsertFulfillment(Fulfillment ff, String workspaceId, String revisionId) {
+    public void upsertFulfillment(Fulfillment ff, String workspaceId, String revisionId) {
+        upsertFulfillmentInternal(ff, workspaceId, revisionId);
+    }
+
+    private void upsertFulfillmentInternal(Fulfillment ff, String workspaceId, String revisionId) {
         OntFulfillmentEntity row = OntFulfillmentEntity.findById(
                 new OntEntityKey(workspaceId, revisionId, ff.getId()));
         if (row == null) {

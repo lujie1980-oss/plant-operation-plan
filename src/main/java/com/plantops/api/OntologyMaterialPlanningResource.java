@@ -2,6 +2,13 @@ package com.plantops.api;
 
 import com.plantops.api.dto.MaterialDemandDetailDto;
 import com.plantops.api.dto.MaterialRequirementReportDto;
+import com.plantops.api.dto.materialplanning.MaterialReservationDtos.AutoReservationRequest;
+import com.plantops.api.dto.materialplanning.MaterialReservationDtos.AutoReservationResultDto;
+import com.plantops.api.dto.materialplanning.MaterialReservationDtos.CreateFulfillmentRequest;
+import com.plantops.api.dto.materialplanning.MaterialReservationDtos.EligibleSupplyListDto;
+import com.plantops.api.dto.materialplanning.MaterialReservationDtos.FulfillmentDto;
+import com.plantops.api.dto.materialplanning.MaterialReservationDtos.PeriodDemandListDto;
+import com.plantops.api.dto.materialplanning.MaterialReservationDtos.ReservationAlertDto;
 import com.plantops.api.dto.materialplanning.MaterialSupplyPlanningDtos.CreateSupplyPlanRequest;
 import com.plantops.api.dto.materialplanning.MaterialSupplyPlanningDtos.CreateSupplyPlanResultDto;
 import com.plantops.api.dto.materialplanning.MaterialSupplyPlanningDtos.SupplyRoutingCandidateDto;
@@ -67,5 +74,53 @@ public class OntologyMaterialPlanningResource {
             CreateSupplyPlanRequest request,
             @QueryParam("masterPlanVersionId") String masterPlanVersionId) {
         return ontologyMaterialPlanningService.createSupplyPlan(pispId, request, masterPlanVersionId);
+    }
+
+    @GET
+    @Path("/pisps/{pispId}/period-demands")
+    public PeriodDemandListDto periodDemands(
+            @PathParam("pispId") String pispId,
+            @QueryParam("periodFrom") String periodFrom,
+            @QueryParam("periodTo") String periodTo,
+            @QueryParam("masterPlanVersionId") String masterPlanVersionId) {
+        return ontologyMaterialPlanningService.periodDemands(
+                pispId, periodFrom, periodTo, masterPlanVersionId);
+    }
+
+    @GET
+    @Path("/demands/{demandId}/eligible-supplies")
+    public EligibleSupplyListDto eligibleSupplies(
+            @PathParam("demandId") String demandId,
+            @QueryParam("masterPlanVersionId") String masterPlanVersionId) {
+        return ontologyMaterialPlanningService.eligibleSupplies(demandId, masterPlanVersionId);
+    }
+
+    @POST
+    @Path("/fulfillments")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public FulfillmentDto createFulfillment(
+            CreateFulfillmentRequest request,
+            @QueryParam("masterPlanVersionId") String masterPlanVersionId) {
+        return ontologyMaterialPlanningService.createFulfillment(request, masterPlanVersionId);
+    }
+
+    @POST
+    @Path("/reservations/auto")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public AutoReservationResultDto autoReserve(
+            AutoReservationRequest request,
+            @QueryParam("masterPlanVersionId") String masterPlanVersionId) {
+        return ontologyMaterialPlanningService.autoReserve(request, masterPlanVersionId);
+    }
+
+    @GET
+    @Path("/pisps/{pispId}/reservation-alerts")
+    public List<ReservationAlertDto> reservationAlerts(
+            @PathParam("pispId") String pispId,
+            @QueryParam("periodFrom") String periodFrom,
+            @QueryParam("periodTo") String periodTo,
+            @QueryParam("masterPlanVersionId") String masterPlanVersionId) {
+        return ontologyMaterialPlanningService.reservationAlerts(
+                pispId, periodFrom, periodTo, masterPlanVersionId);
     }
 }

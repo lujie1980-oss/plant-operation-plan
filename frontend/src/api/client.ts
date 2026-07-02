@@ -285,6 +285,54 @@ export const api = {
       `/api/v1/ontology/material-planning/pisps/${encodeURIComponent(pispId)}/supply-plans${versionQuery(masterPlanVersionId)}`,
       { method: 'POST', body: JSON.stringify(body) },
     ),
+  ontologyMaterialPlanningPeriodDemands: (
+    pispId: string,
+    periodFrom: string,
+    periodTo: string,
+    masterPlanVersionId?: string,
+  ) => {
+    const params = new URLSearchParams();
+    params.set('periodFrom', periodFrom);
+    params.set('periodTo', periodTo);
+    if (masterPlanVersionId) params.set('masterPlanVersionId', masterPlanVersionId);
+    return request<import('../types/api').PeriodDemandList>(
+      `/api/v1/ontology/material-planning/pisps/${encodeURIComponent(pispId)}/period-demands?${params}`,
+    );
+  },
+  ontologyMaterialPlanningEligibleSupplies: (demandId: string, masterPlanVersionId?: string) =>
+    request<import('../types/api').EligibleSupplyList>(
+      `/api/v1/ontology/material-planning/demands/${encodeURIComponent(demandId)}/eligible-supplies${versionQuery(masterPlanVersionId)}`,
+    ),
+  ontologyMaterialPlanningCreateFulfillment: (
+    body: import('../types/api').CreateFulfillmentRequest,
+    masterPlanVersionId?: string,
+  ) =>
+    request<import('../types/api').FulfillmentResult>(
+      `/api/v1/ontology/material-planning/fulfillments${versionQuery(masterPlanVersionId)}`,
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
+  ontologyMaterialPlanningAutoReserve: (
+    body: import('../types/api').AutoReservationRequest,
+    masterPlanVersionId?: string,
+  ) =>
+    request<import('../types/api').AutoReservationResult>(
+      `/api/v1/ontology/material-planning/reservations/auto${versionQuery(masterPlanVersionId)}`,
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
+  ontologyMaterialPlanningReservationAlerts: (
+    pispId: string,
+    periodFrom: string,
+    periodTo: string,
+    masterPlanVersionId?: string,
+  ) => {
+    const params = new URLSearchParams();
+    params.set('periodFrom', periodFrom);
+    params.set('periodTo', periodTo);
+    if (masterPlanVersionId) params.set('masterPlanVersionId', masterPlanVersionId);
+    return request<import('../types/api').ReservationAlert[]>(
+      `/api/v1/ontology/material-planning/pisps/${encodeURIComponent(pispId)}/reservation-alerts?${params}`,
+    );
+  },
   masterPlanDataModelTree: () =>
     request<import('../types/masterPlanDataModel').MasterPlanDataModelTree>(
       '/api/v1/ontology/master-model/tree',

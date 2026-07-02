@@ -647,3 +647,69 @@
   margin: 0.35rem 0 0;
   padding-left: 1.25rem;
 }
+
+.sdb-reservation {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.sdb-reservation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.sdb-reservation-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+.sdb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.sdb-list li {
+  margin-bottom: 0.25rem;
+}
+
+.sdb-list button {
+  width: 100%;
+  text-align: left;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.sdb-list button.is-selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.sdb-list li.muted {
+  color: #94a3b8;
+}
+
+.sdb-list li.warn {
+  color: #b45309;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 960px) {
+  .sdb-reservation-grid {
+    grid-template-columns: 1fr;
+  }
+}

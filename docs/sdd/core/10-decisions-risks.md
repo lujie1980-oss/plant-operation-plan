@@ -259,7 +259,7 @@
 | TODO-08 | ~~**PATH-ENT 代码退役（ADR-08）**~~ **已收口 2026-07-01**：Session `optimizeLegacy` / `ontology_direct_solve_enabled` 已删；`MasterPlanService` 统一 `MasterPlanOntologyScheduleBuilder`；AC-05 废止 | — |
 | TODO-09 | SCN-02c/03b/04 跳转与试算页 UI 对齐 **[§17.8](../volumes/platform/17-ui-ux.md#178-跨页导航契约ui-nav-)** | 产品+前端 |
 | TODO-10 | ~~SCN-01f：`CANCEL_PROMISE`；SCN-01e 与取消承诺解耦~~ **已收口 2026-07-02**（`OrderDemandCancelPromiseService` · `OrderDemandActionOntologyChainTest`） | — |
-| TODO-11 | SCN-07：供需平衡专页、PISPP period 表、建供应 API-MAT-02/03、物料预留 API-MAT-04~08、多路径 ENT-RT | 产品+前端+开发 |
+| TODO-11 | ~~SCN-07 供需平衡专页、PISPP period、MAT-02~08~~ **主体已收口 2026-07-02**；余 **SCN-07d OPTIMIZE**、多路径 ENT-RT | — |
 | TODO-12 | ~~**ADR-09 全量 Ontology 持久化**~~ **已收口 2026-07-01**（P0~P5 + Sprint 6A~6D）；loader 内部化文档化 · 后续扩展见 **TODO-24**（PRP）· **TODO-21**（`ont_period` DDL） | — |
 | TODO-13 | **ADR-10 External_* 主数据**：staging、质检、sync、md_*、Projector 切读 | 架构+开发 |
 | TODO-14 | **ADR-11 外部交易数据**：external_* / txn_*、Firm WO 同步、质检、OG 装载切读 | 架构+开发 |
@@ -288,7 +288,7 @@
 | D-ENT-BOM | PATH-ENT 读 JPA BOM | **TODO-08** | **已解决 2026-07-01**：装载经 `BomDependencyDerivation`（AC-10） |
 | D-09 | ~~confirm 写 legacy allocation，无 `ont_*`~~ | ~~TODO-12~~ | **已解决 2026-06-30**：`session-enabled` + `promoteDraftToCommitted`；legacy allocation 并行保留 |
 | D-10 | ~~无 `CANCEL_PROMISE`~~ | ~~TODO-10~~ | **已解决 2026-07-02** |
-| D-11 | API-MAT-02~08 / SCN-07e~j | **TODO-11** | — |
+| D-11 | ~~API-MAT-02~08 / SCN-07e~j~~ | ~~TODO-11~~ | **已解决 2026-07-02**（OPTIMIZE/多路径 RT 余量见 TODO-11 注） |
 | D-12 | 无 external/md/txn | **TODO-13/14** | — |
 | D-15 | 无 KnowledgeResolver | **TODO-15** | — |
 | D-19 | MOD-DI mock，无 staging | **TODO-19** | — |

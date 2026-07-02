@@ -172,7 +172,7 @@
 | **路径** | `/api/v1/ontology/material-planning/balance` |
 | **Query** | `masterPlanVersionId`（可选） |
 | **响应** | `MaterialRequirementReportDto`（DTO-MBP）；PISP × period 投影 |
-| **说明** | 现行实现为日粒度 `MaterialBalanceRowDto`；规范目标为 ENT-PISPP period 二维表（TODO-11） |
+| **说明** | 含 `periodHeaders` + `MaterialBalancePeriodDto` 期间桶列（2026-07-02）；日粒度 `days` 保留作过渡 |
 
 **重算：** `POST .../material-planning/compute` — 触发 MRP 重算后返回同结构报告。
 
@@ -188,7 +188,7 @@
 | **路径** | `/api/v1/ontology/material-planning/pisps/{pispId}/routing-candidates` |
 | **Query** | `periodFrom`, `periodTo`, `quantity`, `masterPlanVersionId` |
 | **响应** | `SupplyRoutingCandidateDto[]`（routingId, pathPriority, steps[], earliestAchievableTime） |
-| **说明** | **规范新增**；实现待 TODO-11 |
+| **说明** | **已实现**（2026-07-02）；EAT 基于工艺工时正推试算 |
 
 ---
 
@@ -203,11 +203,7 @@
 | **Body** | `CreateSupplyPlanRequest`（mode: `AUTO` \| `MANUAL` \| `OPTIMIZE`, periodFrom, periodTo, quantity, routingId?, needDate?） |
 | **响应** | `CreateSupplyPlanResultDto`（supplyOrderIds[], routingId, earliestAchievableTime, updatedPisppSummary） |
 | **规则** | RULE-MRP-01~03, RULE-FF-04 |
-| **说明** | **规范新增**；实现待 TODO-11 |
-
----
-
-## API-MAT-04 区间 Demand 列表
+| **说明** | **已实现**（2026-07-02）；`AUTO`/`MANUAL`；`OPTIMIZE` 待 SCN-07d |
 
 | 项 | 值 |
 |----|-----|
@@ -217,6 +213,7 @@
 | **路径** | `/api/v1/ontology/material-planning/pisps/{pispId}/period-demands` |
 | **Query** | `periodFrom`, `periodTo`（或 `periodId`）, `masterPlanVersionId` |
 | **响应** | `PeriodDemandListDto`（DTO-PDL） |
+| **说明** | **已实现**（2026-07-02） |
 
 ---
 
@@ -231,6 +228,7 @@
 | **Query** | `masterPlanVersionId` |
 | **响应** | `EligibleSupplyListDto`（DTO-PSM） |
 | **规则** | RULE-FF-05 |
+| **说明** | **已实现**（2026-07-02） |
 
 ---
 
@@ -245,6 +243,7 @@
 | **Body** | `CreateFulfillmentRequest`（demandId, supplyId, quantity, source=`DRAG`） |
 | **响应** | `FulfillmentDto` + 更新后 unpegged 摘要 |
 | **规则** | RULE-FF-05, RULE-FF-07 |
+| **说明** | **已实现**（2026-07-02）；写入 `ont_fulfillment` |
 
 ---
 
@@ -259,6 +258,7 @@
 | **Body** | `AutoReservationRequest`（anchorType: `DEMAND` \| `SUPPLY`, anchorId, maxQty?） |
 | **响应** | `AutoReservationResultDto`（fulfillments[], reservedQty, remainingUnpeggedQty） |
 | **规则** | RULE-FF-06 |
+| **说明** | **已实现**（2026-07-02）；DEMAND/SUPPLY 锚点 |
 
 ---
 
@@ -273,6 +273,7 @@
 | **Query** | `periodFrom`, `periodTo`, `masterPlanVersionId` |
 | **响应** | `ReservationAlertDto[]`（DTO-PRA） |
 | **规则** | RULE-FF-07 |
+| **说明** | **已实现**（2026-07-02） |
 
 ---
 

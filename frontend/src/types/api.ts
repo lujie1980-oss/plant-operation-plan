@@ -209,6 +209,75 @@ export interface CreateSupplyPlanResult {
   updatedPisppSummary: MaterialBalancePeriod | null;
 }
 
+export interface PeriodDemandRow {
+  demandId: string;
+  sourceType: string;
+  needDate: string;
+  quantity: number;
+  peggedQty: number;
+  unpeggedQty: number;
+  pispId: string;
+  periodId: string;
+}
+
+export interface PeriodDemandList {
+  pispId: string;
+  periodFrom: string;
+  periodTo: string;
+  demands: PeriodDemandRow[];
+}
+
+export interface EligibleSupplyRow {
+  supplyId: string;
+  supplyType: string;
+  availableDate: string;
+  availableQty: number;
+  peggedQty: number;
+  unpeggedQty: number;
+}
+
+export interface EligibleSupplyList {
+  demandId: string;
+  supplies: EligibleSupplyRow[];
+}
+
+export interface CreateFulfillmentRequest {
+  demandId: string;
+  supplyId: string;
+  quantity?: number;
+  source?: string;
+}
+
+export interface FulfillmentResult {
+  fulfillmentId: string;
+  demandId: string;
+  supplyId: string;
+  quantity: number;
+  type: string;
+  demandUnpeggedQty: number;
+  supplyUnpeggedQty: number;
+}
+
+export interface AutoReservationRequest {
+  anchorType: 'DEMAND' | 'SUPPLY';
+  anchorId: string;
+  maxQty?: number;
+}
+
+export interface AutoReservationResult {
+  fulfillments: FulfillmentResult[];
+  reservedQty: number;
+  remainingUnpeggedQty: number;
+}
+
+export interface ReservationAlert {
+  alertType: string;
+  demandId: string | null;
+  supplyId: string | null;
+  periodId: string | null;
+  message: string;
+}
+
 export interface MaterialDemandUsage {
   demandType: string;
   demanderLabel: string;

@@ -5,10 +5,13 @@ import { StatusBanner } from '../components/StatusBanner';
 import { FilterableTable, type TableColumnDef } from '../components/table/FilterableTable';
 import { usePlan } from '../context/PlanContext';
 import type {
+  EligibleSupplyList,
   MaterialBalancePeriod,
   MaterialBalanceRow,
   MaterialPeriodHeader,
   MaterialRequirementReport,
+  PeriodDemandList,
+  ReservationAlert,
   SupplyRoutingCandidate,
 } from '../types/api';
 import './MaterialPlanningPage.css';
@@ -54,6 +57,10 @@ export function SupplyDemandBalancePage() {
   const [periodFrom, setPeriodFrom] = useState<string | null>(null);
   const [periodTo, setPeriodTo] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<SupplyRoutingCandidate[]>([]);
+  const [periodDemands, setPeriodDemands] = useState<PeriodDemandList | null>(null);
+  const [selectedDemandId, setSelectedDemandId] = useState<string | null>(null);
+  const [eligibleSupplies, setEligibleSupplies] = useState<EligibleSupplyList | null>(null);
+  const [alerts, setAlerts] = useState<ReservationAlert[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
 
   const load = useCallback(async (versionId: string | null | undefined) => {
@@ -90,6 +97,66 @@ export function SupplyDemandBalancePage() {
       setSelectedPispId(filteredMaterials[0].pispId ?? null);
     }
   }, [filteredMaterials, selectedPispId]);
+
+  useEffect(() => {
+    if (!selectedPispId || !periodFrom || !periodTo) {
+      setPeriodDemands(null);
+      setAlerts([]);
+      return;
+    }
+    let cancelled = false;
+    void Promise.all([
+      api.ontologyMaterialPlanningPeriodDemands(
+        selectedPispId,
+        periodFrom,
+        periodTo,
+        activePlanVersionId ?? undefined,
+      ),
+      api.ontologyMaterialPlanningReservationAlerts(
+        selectedPispId,
+        periodFrom,
+        periodTo,
+        activePlanVersionId ?? undefined,
+      ),
+    ])
+      .then(([demands, reservationAlerts]) => {
+        if (cancelled) return;
+        setPeriodDemands(demands);
+        setAlerts(reservationAlerts);
+        setSelectedDemandId((prev) => {
+          if (prev && demands.demands.some((d) => d.demandId === prev)) return prev;
+          return demands.demands[0]?.demandId ?? null;
+        });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPeriodDemands(null);
+          setAlerts([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPispId, periodFrom, periodTo, activePlanVersionId]);
+
+  useEffect(() => {
+    if (!selectedDemandId) {
+      setEligibleSupplies(null);
+      return;
+    }
+    let cancelled = false;
+    void api
+      .ontologyMaterialPlanningEligibleSupplies(selectedDemandId, activePlanVersionId ?? undefined)
+      .then((data) => {
+        if (!cancelled) setEligibleSupplies(data);
+      })
+      .catch(() => {
+        if (!cancelled) setEligibleSupplies(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDemandId, activePlanVersionId]);
 
   const selectedMaterial = useMemo(
     () => filteredMaterials.find((m) => m.pispId === selectedPispId) ?? null,
@@ -204,6 +271,92 @@ export function SupplyDemandBalancePage() {
     }
   };
 
+  const pegSupplyToDemand = async (supplyId: string) => {
+    if (!selectedDemandId) return;
+    setActionLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const result = await api.ontologyMaterialPlanningCreateFulfillment(
+        { demandId: selectedDemandId, supplyId, source: 'DRAG' },
+        activePlanVersionId ?? undefined,
+      );
+      setSuccess(`已预留 ${fmtQty(result.quantity)}（${result.fulfillmentId}）`);
+      if (selectedPispId && periodFrom && periodTo) {
+        const [demands, reservationAlerts] = await Promise.all([
+          api.ontologyMaterialPlanningPeriodDemands(
+            selectedPispId,
+            periodFrom,
+            periodTo,
+            activePlanVersionId ?? undefined,
+          ),
+          api.ontologyMaterialPlanningReservationAlerts(
+            selectedPispId,
+            periodFrom,
+            periodTo,
+            activePlanVersionId ?? undefined,
+          ),
+        ]);
+        setPeriodDemands(demands);
+        setAlerts(reservationAlerts);
+      }
+      const supplies = await api.ontologyMaterialPlanningEligibleSupplies(
+        selectedDemandId,
+        activePlanVersionId ?? undefined,
+      );
+      setEligibleSupplies(supplies);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '手工预留失败');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const autoReserveDemand = async () => {
+    if (!selectedDemandId) return;
+    setActionLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const result = await api.ontologyMaterialPlanningAutoReserve(
+        { anchorType: 'DEMAND', anchorId: selectedDemandId },
+        activePlanVersionId ?? undefined,
+      );
+      setSuccess(
+        result.reservedQty > 0
+          ? `自动预留 ${fmtQty(result.reservedQty)}，剩余未预留 ${fmtQty(result.remainingUnpeggedQty)}`
+          : '无可自动预留数量',
+      );
+      if (selectedPispId && periodFrom && periodTo) {
+        const [demands, reservationAlerts] = await Promise.all([
+          api.ontologyMaterialPlanningPeriodDemands(
+            selectedPispId,
+            periodFrom,
+            periodTo,
+            activePlanVersionId ?? undefined,
+          ),
+          api.ontologyMaterialPlanningReservationAlerts(
+            selectedPispId,
+            periodFrom,
+            periodTo,
+            activePlanVersionId ?? undefined,
+          ),
+        ]);
+        setPeriodDemands(demands);
+        setAlerts(reservationAlerts);
+      }
+      const supplies = await api.ontologyMaterialPlanningEligibleSupplies(
+        selectedDemandId,
+        activePlanVersionId ?? undefined,
+      );
+      setEligibleSupplies(supplies);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '自动预留失败');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <div className="mrp-page">
       <PageHeader
@@ -313,6 +466,79 @@ export function SupplyDemandBalancePage() {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {selectedMaterial && (
+            <div className="sdb-reservation">
+              <h4>物料预留（SCN-07e~j）</h4>
+              <div className="sdb-reservation-grid">
+                <div>
+                  <div className="sdb-reservation-head">
+                    <span>区间 Demand</span>
+                    {selectedDemandId && (
+                      <button
+                        type="button"
+                        disabled={actionLoading}
+                        onClick={() => void autoReserveDemand()}
+                      >
+                        Demand 自动预留
+                      </button>
+                    )}
+                  </div>
+                  <ul className="sdb-list">
+                    {(periodDemands?.demands ?? []).map((d) => (
+                      <li key={d.demandId}>
+                        <button
+                          type="button"
+                          className={d.demandId === selectedDemandId ? 'is-selected' : ''}
+                          onClick={() => setSelectedDemandId(d.demandId)}
+                        >
+                          {d.demandId} · {d.needDate} · 未预留 {fmtQty(d.unpeggedQty)}
+                        </button>
+                      </li>
+                    ))}
+                    {(periodDemands?.demands ?? []).length === 0 && (
+                      <li className="muted">区间内无 Demand</li>
+                    )}
+                  </ul>
+                </div>
+                <div>
+                  <div className="sdb-reservation-head">
+                    <span>可匹配 Supply</span>
+                  </div>
+                  <ul className="sdb-list">
+                    {(eligibleSupplies?.supplies ?? []).map((s) => (
+                      <li key={s.supplyId}>
+                        <button
+                          type="button"
+                          disabled={actionLoading || !selectedDemandId}
+                          onClick={() => void pegSupplyToDemand(s.supplyId)}
+                        >
+                          {s.supplyType} · {s.availableDate} · 可预留 {fmtQty(s.unpeggedQty)}
+                        </button>
+                      </li>
+                    ))}
+                    {selectedDemandId && (eligibleSupplies?.supplies ?? []).length === 0 && (
+                      <li className="muted">无可匹配 Supply</li>
+                    )}
+                    {!selectedDemandId && <li className="muted">请先选择 Demand</li>}
+                  </ul>
+                </div>
+                <div>
+                  <div className="sdb-reservation-head">
+                    <span>预留预警</span>
+                  </div>
+                  <ul className="sdb-list">
+                    {alerts.map((a, idx) => (
+                      <li key={`${a.alertType}-${a.demandId ?? a.supplyId ?? idx}`} className="warn">
+                        {a.alertType}: {a.message}
+                      </li>
+                    ))}
+                    {alerts.length === 0 && <li className="muted">无预警</li>}
+                  </ul>
+                </div>
+              </div>
             </div>
           )}
         </section>

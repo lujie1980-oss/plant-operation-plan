@@ -201,15 +201,15 @@
 
 ---
 
-## AC-18 按路径创建供应计划（待实现）
+## AC-18 按路径创建供应计划
 
 | 项 | 值 |
 |----|-----|
 | **追溯** | SCN-07b~d · RULE-MRP-01~03 · API-MAT-02, API-MAT-03 |
-| **Given** | PISP 有 ≥2 条 ENT-RT 且区间存在缺口 |
-| **When** | AUTO / MANUAL / OPTIMIZE 创建 |
-| **Then** | 落库 ENT-SO；PISPP plannedSupplyTotal 更新；MANUAL 尊重 routingId；AUTO 选最高优先级路径 |
-| **测试** | 待 TODO-11 |
+| **Given** | PISP 有工艺路径且区间存在缺口 |
+| **When** | AUTO / MANUAL 创建（OPTIMIZE 待 SCN-07d） |
+| **Then** | 落库 ENT-SO；PISPP plannedSupplyTotal 更新；MANUAL 尊重 routingId；AUTO 选 pathPriority 最小路径 |
+| **测试** | `OntologyMaterialSupplyPlanIntegrationTest` |
 
 ---
 
@@ -221,7 +221,7 @@
 | **Given** | PISP×period 含已知 Demand 与 Supply |
 | **When** | GET period-demands → GET eligible-supplies |
 | **Then** | unpeggedQty 与 ENT-OG 一致；eligible 列表不含物料不匹配项 |
-| **测试** | 待 TODO-11 |
+| **测试** | `OntologyMaterialReservationIntegrationTest#periodDemandsEligibleSuppliesAndAlerts` |
 
 ---
 
@@ -230,9 +230,9 @@
 | 项 | 值 |
 |----|-----|
 | **追溯** | SCN-07g · RULE-FF-05 · API-MAT-06 |
-| **When** | Demand→Supply 或 Supply→Demand 创建 ENT-FF |
-| **Then** | quantity 守恒；超额/错料拒绝；PISPP 刷新 |
-| **测试** | 待 TODO-11 |
+| **When** | POST fulfillments（点击/拖拽） |
+| **Then** | quantity 守恒；超额/错料拒绝；写入 ont_fulfillment |
+| **测试** | `OntologyMaterialReservationIntegrationTest`（手工路径待补专用用例） |
 
 ---
 
@@ -243,7 +243,7 @@
 | **追溯** | SCN-07h, SCN-07i · RULE-FF-06 · API-MAT-07 |
 | **When** | anchorType=DEMAND 或 SUPPLY |
 | **Then** | 选供/选需符合默认策略；unpeggedQty 下降 |
-| **测试** | 待 TODO-11 |
+| **测试** | `OntologyMaterialReservationIntegrationTest#autoReserveFromDemandCreatesFulfillment` |
 
 ---
 
@@ -253,7 +253,7 @@
 |----|-----|
 | **追溯** | SCN-07j · RULE-FF-07 · API-MAT-08 |
 | **Then** | 未分配 Demand/Supply 与 TIME_MISMATCH 均可查询 |
-| **测试** | 待 TODO-11 |
+| **测试** | `OntologyMaterialReservationIntegrationTest#periodDemandsEligibleSuppliesAndAlerts` |
 
 ---
 
@@ -275,7 +275,7 @@
 | **追溯** | SCN-07g~h · RULE-FF-08 · API-MAT-06/07 |
 | **When** | availableDate > needDate |
 | **Then** | 拒绝创建 ENT-FF |
-| **测试** | 待 TODO-11 |
+| **测试** | `OntologyMaterialReservationService` 单元/集成（RULE-FF-08 待专用用例） |
 
 ---
 
@@ -323,13 +323,13 @@
 | AC-15 | SCN-01g | FF-01, FF-04, DEM-01 | `OrderDemandActionOntologyChainTest#buildUpstreamChainReturnsOntologyProjectedFulfillmentChain` |
 | AC-16 | SCN-01f | FF-03, DEM-01 | `OrderDemandActionOntologyChainTest` |
 | AC-17 | SCN-07a | MAT-01 | `OntologyMaterialPlanningProjectionTest` |
-| AC-18 | SCN-07b~d | MRP-01~03, MAT-02/03 | 待 TODO-11 |
-| AC-19 | SCN-07e~f | MAT-04, MAT-05 | 待 TODO-11 |
-| AC-20 | SCN-07g | FF-05, MAT-06 | 待 TODO-11 |
-| AC-21 | SCN-07h~i | FF-06, MAT-07 | 待 TODO-11 |
-| AC-22 | SCN-07j | FF-07, MAT-08 | 待 TODO-11 |
+| AC-18 | SCN-07b~d | MRP-01~03, MAT-02/03 | `OntologyMaterialSupplyPlanIntegrationTest` |
+| AC-19 | SCN-07e~f | MAT-04, MAT-05 | `OntologyMaterialReservationIntegrationTest` |
+| AC-20 | SCN-07g | FF-05, MAT-06 | 待补专用用例 |
+| AC-21 | SCN-07h~i | FF-06, MAT-07 | `OntologyMaterialReservationIntegrationTest` |
+| AC-22 | SCN-07j | FF-07, MAT-08 | `OntologyMaterialReservationIntegrationTest` |
 | AC-23 | SCN-06, SCN-02a | PLAN-01, MRP-04 | 待补 |
-| AC-24 | SCN-07g~h | FF-08 | 待 TODO-11 |
+| AC-24 | SCN-07g~h | FF-08 | 待补专用用例 |
 | AC-25 | SCN-06, SCN-T05 | MP-06 | 约束测试 |
 | AC-26 | SCN-06, SCN-T05 | MP-08 | 并行约束测试 |
 | AC-27 | SCN-03a, SCN-06 | MP-02,07 | OrtoolsResourceCapacityCpSolverTest |
