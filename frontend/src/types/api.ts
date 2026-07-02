@@ -536,6 +536,7 @@ export interface ScheduleFeedback {
   operationSeq: number;
   operationId: string;
   resourceId: string;
+  physicalResourceId?: string | null;
   plannedStart: string;
   plannedEnd: string;
   slotDate: string;

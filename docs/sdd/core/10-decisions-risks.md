@@ -265,7 +265,7 @@
 | TODO-14 | **ADR-11 外部交易数据**：external_* / txn_*、Firm WO 同步、质检、OG 装载切读 | 架构+开发 |
 | TODO-15 | **ADR-12 业务知识三层**：KnowledgeContext、Industry pack、overlay 表、引擎接 Effective | 架构+产品 |
 | TODO-16 | **§15 主计划 KPI 结构化**：`kpiBreakdown` API、求解器域分、B01~B10 面板 | 开发+产品 |
-| TODO-17 | **§16 供需知识 UI**：BusinessRules 六 tab、SchedulerFeedback→SRP（RULE-SUP-05）、md/txn 字段 | 产品+前后端 |
+| TODO-17 | ~~**§16 供需知识 UI**~~ **已收口 2026-07-02**：BusinessRules 六 tab + 细排反馈只读页；`delivery-date-strategy` / `supply-quantity-rules` / `resource-efficiency` / `routing-step-*` API | — |
 | TODO-18 | ~~ADR-13 IAM~~：**已完成 2026-06** — M0–M4（Filter、JWT、OIDC 联调、Super Admin UI、侧栏 MOD） | 架构+前后端 |
 | TODO-19 | **ADR-14 数据集成**：MOD-DI UI、ADP-ERP-SAP/MES/Excel SPI、external 浏览 API | 架构+前后端 |
 | TODO-20 | **§5 Ontology 范围扩展**：现行 ENT-OG **仅覆盖订单协同计划**（原主计划 · **MOD-OCP** / PROC-S04）；**MOD-SCH 作业排程**、**MOD-SLT 分切排样** 的领域实体、装载路径与 `ont_*` 表族 **后续完善**（与 TODO-07 求解插件化协同，不阻塞当前 OCP 基线） | 架构+产品 |

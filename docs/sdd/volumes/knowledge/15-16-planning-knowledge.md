@@ -329,7 +329,7 @@ effectiveAvailable = (calendarMinutes − downTime − schedulerFeedback) × res
 | 字段 | 表 |
 |------|-----|
 | `resource_efficiency` | md_standard_resource, md_resource_group |
-| SchedulerFeedback | 细排反馈表（S05 → SRP 占用，TODO-17） |
+| SchedulerFeedback | 细排反馈表（S05 → PRP/SRP 占用，**BusinessRules · scheduler-feedback 只读**） |
 
 ---
 

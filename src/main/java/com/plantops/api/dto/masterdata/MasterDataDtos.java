@@ -267,4 +267,53 @@ public final class MasterDataDtos {
             String description
     ) {
     }
+
+    public record DeliveryDateStrategyDto(
+            Long id,
+            String customerCode,
+            String productCode,
+            String deliveryGranularity,
+            int earlyAllowDays,
+            int lateAllowDays,
+            BigDecimal earlyPenaltyCoef,
+            BigDecimal latePenaltyCoef) {
+    }
+
+    public record SupplyQuantityRuleDto(
+            Long id,
+            String productCode,
+            String stockingPointCode,
+            int lotSize,
+            int minQuantity,
+            int maxQuantity,
+            String minQtyStrategy) {
+    }
+
+    public record ResourceEfficiencyDto(
+            Long id,
+            String resourceId,
+            String resourceGroupCode,
+            BigDecimal resourceEfficiency,
+            int schedulerFeedbackMinutes) {
+    }
+
+    public record RoutingStepTimingDto(
+            Long id,
+            String routingCode,
+            int sequenceNo,
+            int preProcessingMinutes,
+            int schedulingSpaceMinutes,
+            int productionMinutes,
+            int postProcessingMinutes) {
+    }
+
+    public record RoutingStepResourceDto(
+            Long id,
+            String standardResourceCode,
+            int resourcePriority,
+            BigDecimal productionRate,
+            String resourceUsageType,
+            int batchSize,
+            int batchDurationMinutes) {
+    }
 }

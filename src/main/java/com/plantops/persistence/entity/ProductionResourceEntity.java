@@ -42,7 +42,8 @@ public class ProductionResourceEntity extends WorkspaceScopedEntity {
 
     public BigDecimal runRatePerHour = BigDecimal.ONE;
 
-
+    /** RULE-SUP-05 资源效率系数 (0,1] */
+    public BigDecimal resourceEfficiency = BigDecimal.ONE;
 
     public static List<ProductionResourceEntity> listInWorkspace() {
 

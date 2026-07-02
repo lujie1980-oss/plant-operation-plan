@@ -223,7 +223,8 @@ export interface ResourceEfficiencyMd extends MasterDataRecord {
   resourceId: string;
   resourceGroupCode: string;
   resourceEfficiency: number;
-  schedulerFeedbackMinutes: number;
+  /** 只读：Σ 冻结 schedule_feedback（按 SR） */
+  schedulerFeedbackMinutes?: number;
 }
 
 /** §16 routing-step-timing — RULE-SUP-02 工序时间 */

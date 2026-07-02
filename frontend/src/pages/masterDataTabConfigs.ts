@@ -478,12 +478,38 @@ const resourceEfficiencyTab: TabConfig<ResourceEfficiencyMd> = {
     { key: 'resourceId', label: '资源 ID', type: 'text', required: true, width: 140 },
     { key: 'resourceGroupCode', label: '资源组', type: 'text', width: 120 },
     { key: 'resourceEfficiency', label: '效率系数 (0,1]', type: 'number', required: true, width: 130 },
-    { key: 'schedulerFeedbackMinutes', label: '排程反馈占用(分)', type: 'integer', width: 150 },
+    {
+      key: 'schedulerFeedbackMinutes',
+      label: '细排反馈占用(分)',
+      type: 'integer',
+      width: 150,
+    },
   ],
+};
+
+const schedulerFeedbackTab: TabConfig<{ id: null }> = {
+  id: 'scheduler-feedback',
+  label: '细排反馈占用',
+  description:
+    '产能规则：S05 冻结细排反馈（txn schedule_feedback），占用 rollup 至 PRP/SRP（RULE-SUP-05）。本页只读。',
+  api: {
+    list: async () => [],
+    save: async () => {
+      throw new Error('细排反馈为交易数据，不可在此编辑');
+    },
+    delete: async () => {
+      throw new Error('细排反馈为交易数据，不可删除');
+    },
+  },
+  rowKey: () => 'scheduler-feedback',
+  search: () => '',
+  emptyRow: () => ({ id: null }),
+  columns: [],
 };
 
 export const CAPACITY_RULE_TABS: TabConfig<MasterDataRecord>[] = [
   resourceEfficiencyTab as unknown as TabConfig<MasterDataRecord>,
+  schedulerFeedbackTab as unknown as TabConfig<MasterDataRecord>,
 ];
 
 const DELIVERY_GRANULARITY_OPTIONS = [

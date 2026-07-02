@@ -11,6 +11,7 @@ public record ScheduleFeedbackDto(
         int operationSeq,
         String operationId,
         String resourceId,
+        String physicalResourceId,
         LocalDateTime plannedStart,
         LocalDateTime plannedEnd,
         LocalDate slotDate,

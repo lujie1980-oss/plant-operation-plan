@@ -270,7 +270,7 @@ BusinessRules 页 **内嵌于计划模块**；**不得** 再使用全局 `/busin
 | MOD-OCP | `/master-plan/rules/material` | 采购提前期 | RULE-MRP-04 |
 | MOD-SCH | `/scheduling/rules/production` | 并行工序、工序衔接 | RULE-MP-06, MP-08 |
 
-**§16 待增 tab（TODO-17）：** `demand-priority-rules` · `delivery-date-strategy` · `supply-quantity-rules` · `routing-step-timing` · `routing-step-resource`
+**§16 待增 tab（TODO-17）：** ~~`demand-priority-rules` · `delivery-date-strategy` · `supply-quantity-rules` · `routing-step-timing` · `routing-step-resource`~~ **已实现 2026-07-02**；产能规则另含 `scheduler-feedback` 只读（RULE-SUP-05）
 
 **字段标签：** 与 §2 术语一致（COLD、PISPP、SRP）；禁止同义词混用。
 
@@ -364,7 +364,7 @@ BusinessRules 页 **内嵌于计划模块**；**不得** 再使用全局 `/busin
 |----|------|------|------|
 | 供需平衡专页 | SCN-07 · §3 | 物料计划页过渡 | TODO-11 |
 | SCN-02c/03b 跳转 | §17.8 | 未自动筛选 | TODO-09 |
-| §16 六 tab | BusinessRules | 未建 tab | TODO-17 |
+| §16 六 tab | BusinessRules | **已实现 2026-07-02**（TODO-17） | — |
 | **IAM** | §18 · SCN-T06 | 登录/RBAC/MOD 过滤/Super Admin **已落地** | — |
 | **数据集成 MOD-DI** | §19 · SCN-T07 | `/integration` 骨架已建；API/ADP 待建 | **TODO-19** |
 | VAL-06 场景对比 | SCN | 页面已有 | 深度 KPI 待 §15 TODO-16 |

@@ -4,6 +4,7 @@ import { consumeMasterDataTableFocus, type MasterDataTableFocus } from '../utils
 import { api } from '../api/client';
 import { BusinessRulesExcelToolbar } from '../components/BusinessRulesExcelToolbar';
 import { MaterialLeadTimeRuleCallout } from '../components/MaterialLeadTimeRuleCallout';
+import { SchedulerFeedbackRulesPanel } from '../components/SchedulerFeedbackRulesPanel';
 import { BusinessRuleDescriptionHeader } from '../components/BusinessRuleDescriptionHeader';
 import { BusinessRuleScopePanel, useBusinessRuleScopes } from '../components/BusinessRuleScopePanel';
 import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
@@ -260,21 +261,29 @@ export function BusinessRulesPage({ moduleId }: { moduleId: PlanningModuleId }) 
                 scope={scopesById[activeTabId] ?? null}
                 onScopeUpdated={replaceScope}
               />
-              <BusinessRulesExcelToolbar
-                activeTabId={activeTabId}
-                onImported={() => setDataRevision((n) => n + 1)}
-              />
+              {activeTabId !== 'scheduler-feedback' && (
+                <BusinessRulesExcelToolbar
+                  activeTabId={activeTabId}
+                  onImported={() => setDataRevision((n) => n + 1)}
+                />
+              )}
               {activeTabId === 'material-lead-time' && (
                 <MaterialLeadTimeRuleCallout dataRevision={dataRevision} />
               )}
-              <div className="md-tab-content">
-                <TabBodyAny
-                  key={`${activeTab.id}-${dataRevision}`}
-                  config={activeTab}
-                  onDataChange={() => setDataRevision((n) => n + 1)}
-                  tableFocus={tableFocus}
-                />
-              </div>
+              {activeTabId === 'scheduler-feedback' ? (
+                <div className="md-tab-content">
+                  <SchedulerFeedbackRulesPanel />
+                </div>
+              ) : (
+                <div className="md-tab-content">
+                  <TabBodyAny
+                    key={`${activeTab.id}-${dataRevision}`}
+                    config={activeTab}
+                    onDataChange={() => setDataRevision((n) => n + 1)}
+                    tableFocus={tableFocus}
+                  />
+                </div>
+              )}
             </div>
           ) : null}
         </div>

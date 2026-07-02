@@ -74,6 +74,7 @@ const TAB_CATEGORY: Record<string, RuleCategoryId> = {
   'demand-priority-rules': 'demand',
   'delivery-date-strategy': 'demand',
   'resource-efficiency': 'capacity',
+  'scheduler-feedback': 'capacity',
 };
 
 export function ruleCategoryId(tabId: string): RuleCategoryId {

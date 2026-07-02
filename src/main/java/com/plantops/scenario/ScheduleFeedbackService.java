@@ -401,6 +401,7 @@ public class ScheduleFeedbackService {
                 e.operationSeq,
                 e.operationId,
                 e.resourceId,
+                e.physicalResourceId,
                 e.plannedStart,
                 e.plannedEnd,
                 e.slotDate,
