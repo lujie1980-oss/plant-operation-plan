@@ -612,3 +612,38 @@
     min-height: 50vh;
   }
 }
+
+.sdb-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.sdb-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.sdb-toolbar-actions label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.sdb-candidates {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.sdb-candidates ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.25rem;
+}

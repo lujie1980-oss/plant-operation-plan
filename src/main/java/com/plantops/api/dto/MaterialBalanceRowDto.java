@@ -5,7 +5,9 @@ import java.util.List;
 
 public record MaterialBalanceRowDto(
         String productCode,
+        String pispId,
         boolean critical,
         BigDecimal totalShortageQty,
-        List<MaterialBalanceDayDto> days) {
+        List<MaterialBalanceDayDto> days,
+        List<MaterialBalancePeriodDto> periods) {
 }

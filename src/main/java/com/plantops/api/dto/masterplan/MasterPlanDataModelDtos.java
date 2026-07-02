@@ -39,7 +39,8 @@ public final class MasterPlanDataModelDtos {
             String pispId,
             String productCode,
             String routingName,
-            int stepCount) {
+            int stepCount,
+            int pathPriority) {
     }
 
     public record RoutingStepDetailDto(

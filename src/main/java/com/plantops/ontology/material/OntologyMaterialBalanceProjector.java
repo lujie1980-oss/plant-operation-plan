@@ -3,7 +3,9 @@ package com.plantops.ontology.material;
 import com.plantops.api.dto.DemandPoolKpiDto;
 import com.plantops.api.dto.KittingResultDto;
 import com.plantops.api.dto.MaterialBalanceDayDto;
+import com.plantops.api.dto.MaterialBalancePeriodDto;
 import com.plantops.api.dto.MaterialBalanceRowDto;
+import com.plantops.api.dto.MaterialPeriodHeaderDto;
 import com.plantops.api.dto.MaterialRequirementReportDto;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.master.ProductInStockingPoint;
@@ -51,6 +53,7 @@ public class OntologyMaterialBalanceProjector {
         List<LocalDate> dates = dateRange(horizonStart, horizonEnd);
         Set<String> criticalMaterials = loadCriticalMaterials();
 
+        List<MaterialPeriodHeaderDto> periodHeaders = buildPeriodHeaders(periods);
         List<MaterialBalanceRowDto> rows = new ArrayList<>();
         BigDecimal totalShortage = BigDecimal.ZERO;
         int materialsWithGap = 0;
@@ -78,6 +81,7 @@ public class OntologyMaterialBalanceProjector {
             }
 
             Map<LocalDate, DailyMetrics> metricsByDay = projectDailyMetrics(chain, periods);
+            List<MaterialBalancePeriodDto> periodRows = projectPeriodMetrics(chain);
             BigDecimal carry = BigDecimal.valueOf(chain.get(0).getOnHand());
             List<MaterialBalanceDayDto> days = new ArrayList<>();
             BigDecimal rowShortage = BigDecimal.ZERO;
@@ -105,9 +109,11 @@ public class OntologyMaterialBalanceProjector {
             totalShortage = totalShortage.add(rowShortage);
             rows.add(new MaterialBalanceRowDto(
                     productCode,
+                    pispId,
                     criticalMaterials.contains(productCode),
                     rowShortage,
-                    days));
+                    days,
+                    periodRows));
         }
 
         rows.sort(Comparator
@@ -121,8 +127,46 @@ public class OntologyMaterialBalanceProjector {
                 horizonStart,
                 horizonEnd,
                 dates,
+                periodHeaders,
                 rows,
                 List.of());
+    }
+
+    private static List<MaterialPeriodHeaderDto> buildPeriodHeaders(List<Period> periods) {
+        List<MaterialPeriodHeaderDto> headers = new ArrayList<>();
+        for (Period period : periods) {
+            String label = period.getStartDate() != null && period.getEndDate() != null
+                    ? period.getStartDate() + "~" + period.getEndDate()
+                    : period.getId();
+            headers.add(new MaterialPeriodHeaderDto(
+                    period.getId(),
+                    period.getSequenceNr(),
+                    period.getStartDate(),
+                    period.getEndDate(),
+                    label));
+        }
+        return headers;
+    }
+
+    private static List<MaterialBalancePeriodDto> projectPeriodMetrics(
+            List<ProductInStockingPointPeriod> chain) {
+        List<MaterialBalancePeriodDto> rows = new ArrayList<>(chain.size());
+        for (ProductInStockingPointPeriod pispp : chain) {
+            BigDecimal opening = BigDecimal.valueOf(pispp.getOnHand());
+            BigDecimal demand = BigDecimal.valueOf(pispp.getPlannedDemandQuantityTotal());
+            BigDecimal supply = BigDecimal.valueOf(pispp.getPlannedSupplyTotal());
+            BigDecimal closingRaw = opening.add(supply).subtract(demand);
+            BigDecimal closing = closingRaw.max(BigDecimal.ZERO);
+            BigDecimal shortage = BigDecimal.valueOf(pispp.getStockShortageQuantity());
+            rows.add(new MaterialBalancePeriodDto(
+                    pispp.getPeriodId(),
+                    opening,
+                    demand,
+                    supply,
+                    closing,
+                    shortage));
+        }
+        return rows;
     }
 
     private Map<LocalDate, DailyMetrics> projectDailyMetrics(
@@ -211,6 +255,7 @@ public class OntologyMaterialBalanceProjector {
                 start,
                 end,
                 dateRange(start, end),
+                List.of(),
                 List.of(),
                 List.<KittingResultDto>of());
     }

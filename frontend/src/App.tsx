@@ -18,6 +18,7 @@ import { DetailSchedulePage } from './pages/DetailSchedulePage';
 import { DemandPage } from './pages/DemandPage';
 import { CapacityPage } from './pages/CapacityPage';
 import { MaterialPlanningPage } from './pages/MaterialPlanningPage';
+import { SupplyDemandBalancePage } from './pages/SupplyDemandBalancePage';
 import { ProductionPlanPage } from './pages/ProductionPlanPage';
 import { MasterDataPage } from './pages/MasterDataPage';
 import { MasterPlanObjectivesPage } from './pages/MasterPlanObjectivesPage';
@@ -122,6 +123,7 @@ function AppContent() {
             <Route path="master-plan/analysis/demand" element={<DemandPage />} />
             <Route path="master-plan/analysis/capacity" element={<CapacityPage />} />
             <Route path="master-plan/analysis/material-planning" element={<MaterialPlanningPage />} />
+            <Route path="master-plan/analysis/supply-demand-balance" element={<SupplyDemandBalancePage />} />
             <Route path="master-plan/analysis/material" element={<Navigate to="/master-plan/analysis/material-planning" replace />} />
             <Route path="master-plan/analysis/work-orders" element={<ProductionPlanPage />} />
             <Route path="master-plan/analysis/order-chain" element={<Navigate to="/master-plan/analysis/demand" replace />} />

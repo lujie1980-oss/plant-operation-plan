@@ -78,6 +78,7 @@ export const MASTER_PLAN_GROUP: NavGroup = {
         { to: '/master-plan/analysis/demand', label: '需求满足', moduleId: 'MOD-OCP' },
         { to: '/master-plan/analysis/capacity', label: '产能平衡', moduleId: 'MOD-OCP' },
         { to: '/master-plan/analysis/material-planning', label: '物料计划', moduleId: 'MOD-OCP' },
+        { to: '/master-plan/analysis/supply-demand-balance', label: '供需平衡', moduleId: 'MOD-OCP' },
         { to: '/master-plan/analysis/work-orders', label: '生产工单', moduleId: 'MOD-OCP' },
       ],
     },

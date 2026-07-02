@@ -261,6 +261,30 @@ export const api = {
     request<MaterialDemandDetail>(
       `/api/v1/ontology/material-planning/materials/${encodeURIComponent(productCode)}/demand-detail${versionQuery(masterPlanVersionId)}`,
     ),
+  ontologyMaterialPlanningRoutingCandidates: (
+    pispId: string,
+    periodFrom: string,
+    periodTo: string,
+    opts?: { quantity?: number; masterPlanVersionId?: string },
+  ) => {
+    const params = new URLSearchParams();
+    params.set('periodFrom', periodFrom);
+    params.set('periodTo', periodTo);
+    if (opts?.quantity != null) params.set('quantity', String(opts.quantity));
+    if (opts?.masterPlanVersionId) params.set('masterPlanVersionId', opts.masterPlanVersionId);
+    return request<import('../types/api').SupplyRoutingCandidate[]>(
+      `/api/v1/ontology/material-planning/pisps/${encodeURIComponent(pispId)}/routing-candidates?${params}`,
+    );
+  },
+  ontologyMaterialPlanningCreateSupplyPlan: (
+    pispId: string,
+    body: import('../types/api').CreateSupplyPlanRequest,
+    masterPlanVersionId?: string,
+  ) =>
+    request<import('../types/api').CreateSupplyPlanResult>(
+      `/api/v1/ontology/material-planning/pisps/${encodeURIComponent(pispId)}/supply-plans${versionQuery(masterPlanVersionId)}`,
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
   masterPlanDataModelTree: () =>
     request<import('../types/masterPlanDataModel').MasterPlanDataModelTree>(
       '/api/v1/ontology/master-model/tree',

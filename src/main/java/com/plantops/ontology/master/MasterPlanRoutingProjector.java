@@ -30,7 +30,15 @@ public class MasterPlanRoutingProjector {
                 pispId,
                 productCode,
                 routingName,
-                operations.size());
+                operations.size(),
+                1);
+    }
+
+    public List<RoutingDto> listRoutingsForPisp(String pispId, String productCode) {
+        if (!hasRouting(productCode)) {
+            return List.of();
+        }
+        return List.of(projectRoutingHeader(pispId, productCode));
     }
 
     public List<RoutingStepDetailDto> projectRoutingSteps(String pispId, String productCode) {

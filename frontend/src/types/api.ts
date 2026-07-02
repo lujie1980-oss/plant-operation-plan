@@ -135,11 +135,30 @@ export interface MaterialBalanceDay {
   shortageQty: number;
 }
 
+export interface MaterialBalancePeriod {
+  periodId: string;
+  openingQty: number;
+  demandQty: number;
+  supplyQty: number;
+  closingQty: number;
+  shortageQty: number;
+}
+
+export interface MaterialPeriodHeader {
+  periodId: string;
+  sequenceNr: number;
+  startDate: string;
+  endDate: string;
+  label: string;
+}
+
 export interface MaterialBalanceRow {
   productCode: string;
+  pispId: string | null;
   critical: boolean;
   totalShortageQty: number;
   days: MaterialBalanceDay[];
+  periods: MaterialBalancePeriod[];
 }
 
 export interface MaterialRequirementReport {
@@ -147,8 +166,47 @@ export interface MaterialRequirementReport {
   horizonStart: string;
   horizonEnd: string;
   dates: string[];
+  periodHeaders: MaterialPeriodHeader[];
   materials: MaterialBalanceRow[];
   kittingResults: KittingResult[];
+}
+
+export interface SupplyRoutingStepSummary {
+  sequenceNo: number;
+  operationName: string;
+  primaryResourceId: string | null;
+}
+
+export interface SupplyRoutingCandidate {
+  routingId: string;
+  pathPriority: number;
+  routingName: string;
+  stepCount: number;
+  steps: SupplyRoutingStepSummary[];
+  earliestAchievableTime: string;
+}
+
+export interface CreateSupplyPlanRequest {
+  mode: 'AUTO' | 'MANUAL' | 'OPTIMIZE';
+  periodFrom: string;
+  periodTo: string;
+  quantity?: number;
+  routingId?: string;
+  needDate?: string;
+}
+
+export interface SupplyPlanOrderSummary {
+  supplyOrderId: string;
+  productCode: string;
+  quantity: number;
+  needDate: string;
+}
+
+export interface CreateSupplyPlanResult {
+  supplyOrderIds: SupplyPlanOrderSummary[];
+  routingId: string;
+  earliestAchievableTime: string;
+  updatedPisppSummary: MaterialBalancePeriod | null;
 }
 
 export interface MaterialDemandUsage {
