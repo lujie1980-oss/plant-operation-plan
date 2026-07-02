@@ -326,6 +326,11 @@ export function DemandPage({ embedded = false }: { embedded?: boolean }) {
           label: '取消计划',
           onSelect: () => requestAction(contextMenu.row, 'CANCEL_PLAN'),
         },
+        {
+          id: 'cancel-promise',
+          label: '取消承诺交期',
+          onSelect: () => requestAction(contextMenu.row, 'CANCEL_PROMISE'),
+        },
       ]
     : [];
 

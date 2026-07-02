@@ -194,7 +194,7 @@ When 执行 CANCEL_PROMISE
 Then 返回提示「当前无承诺交期」；HTTP 200
 ```
 
-> **实现注记：** 现行 `CANCEL_PLAN` 实现会一并清空 `promiseDate`；规范要求与 SCN-01f 解耦，见 §10 TODO-10。
+> **实现注记（2026-07-02）：** `CANCEL_PROMISE` 清空 `SalesOrderLineEntity.promiseDate`；`CANCEL_PLAN` 不再清承诺。`confirmedDeliveryDate`（ENT-COLD）字段待后续落地。
 
 ---
 

@@ -92,9 +92,25 @@ export function demandActionConfirmCopy(action: OrderDemandActionId): DemandActi
 
         description:
 
-          '将解除本订单行的计划满足链。仅服务本行的工单会被删除；若工单还供应其他订单，则保留工单并只解除 pegging 关系。已下发工单不会被删除。',
+          '将解除本订单行的计划满足链。仅服务本行的工单会被删除；若工单还供应其他订单，则保留工单并只解除 pegging 关系。已下发工单不会被删除。承诺交期不会被清除（请使用「取消承诺」）。',
 
         confirmLabel: '确认取消',
+
+        destructive: true,
+
+      };
+
+    case 'CANCEL_PROMISE':
+
+      return {
+
+        title: '取消承诺交期',
+
+        description:
+
+          '仅清空销售订单行的承诺交期（promiseDate），不删除计划工单、pegging 或满足链。',
+
+        confirmLabel: '确认取消承诺',
 
         destructive: true,
 

@@ -5,6 +5,7 @@ export type OrderDemandActionId =
   | 'FINITE_PLAN'
   | 'CONFIRM_PROMISE_DATE'
   | 'CANCEL_PLAN'
+  | 'CANCEL_PROMISE'
   /** @deprecated */
   | 'BUILD_UPSTREAM_CHAIN'
   /** @deprecated */

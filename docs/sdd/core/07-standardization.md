@@ -33,7 +33,7 @@
 | OTD 概念 | 本产品 | Gap |
 |----------|--------|-----|
 | CustomerOrderLineDelivery | 实现 | 多批次交付；confirmedDeliveryDate（SCN-01d）；取消承诺（SCN-01f） |
-| 取消计划 vs 取消承诺 | SCN-01e / SCN-01f | 现行 CANCEL_PLAN  bundled 清 promiseDate；待 TODO-10 拆分 |
+| 取消计划 vs 取消承诺 | SCN-01e / SCN-01f | **已拆分**（2026-07-02 · `CANCEL_PROMISE`） |
 | 手工建链（JIT / 有限能力） | SCN-01g / SCN-01h | INFINITE_PLAN_JIT / FINITE_PLAN 已实现 |
 | 需求满足分析跳转 | SCN-02c 规范 | 部分 UI 待实现 |
 | 产能/物料试算页 | SCN-03c, SCN-04c | simulate 深度待对齐 |

@@ -30,6 +30,9 @@ public class OrderDemandActionService {
     OrderDemandCancelPlanService orderDemandCancelPlanService;
 
     @Inject
+    OrderDemandCancelPromiseService orderDemandCancelPromiseService;
+
+    @Inject
     WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
 
     public OrderDemandActionResult execute(
@@ -44,6 +47,7 @@ public class OrderDemandActionService {
             case PLAN_UNCONSTRAINED -> unconstrainedPlanPreview(salesOrderNo, salesOrderLineNo, req);
             case CONFIRM_PROMISE_DATE -> confirmPromiseDate(salesOrderNo, salesOrderLineNo, req);
             case CANCEL_PLAN -> cancelPlan(salesOrderNo, salesOrderLineNo, req);
+            case CANCEL_PROMISE -> cancelPromise(salesOrderNo, salesOrderLineNo, req);
         };
     }
 
@@ -96,6 +100,25 @@ public class OrderDemandActionService {
             sb.append("，保留 ").append(summary.workOrdersRetained()).append(" 个共享/已下发工单（仅解除 pegging）");
         }
         return sb.toString();
+    }
+
+    private OrderDemandActionResult cancelPromise(
+            String salesOrderNo,
+            int salesOrderLineNo,
+            OrderDemandActionRequest req) {
+        OrderDemandCancelPromiseService.CancelPromiseResult summary =
+                orderDemandCancelPromiseService.cancelForOrderLine(salesOrderNo, salesOrderLineNo);
+        String deliveryId = ontologyFulfillmentService.deliveryIdForOrderLine(salesOrderNo, salesOrderLineNo);
+        authoritativeOntologyGraph.invalidate(
+                WorkspaceResolver.currentWorkspaceId(), blankToNull(req.masterPlanVersionId()));
+        OrderFulfillmentChainDto chain = ontologyFulfillmentService.fulfillmentChainFromDeliveryScoped(
+                deliveryId, blankToNull(req.masterPlanVersionId()));
+        return new OrderDemandActionResult(
+                OrderDemandAction.CANCEL_PROMISE.name(),
+                summary.message(),
+                chain,
+                null,
+                null);
     }
 
     private OrderDemandActionResult infinitePlanJit(

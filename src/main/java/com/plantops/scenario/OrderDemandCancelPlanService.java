@@ -32,7 +32,6 @@ public class OrderDemandCancelPlanService {
         }
 
         CancelPlanSummary summary = removeExclusiveRegeneratableWorkOrders(salesOrderNo, salesOrderLineNo);
-        order.promiseDate = null;
         return summary;
     }
 

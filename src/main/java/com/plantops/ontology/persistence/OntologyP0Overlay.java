@@ -30,9 +30,10 @@ public final class OntologyP0Overlay {
         loaderBase.customerOrderLineDeliveriesById().values().forEach(builder::customerOrderLineDelivery);
         loaderBase.forecastDemandsById().values().forEach(builder::forecastDemand);
 
-        for (Demand demand : restoredP0.demandsById().values()) {
-            builder.demand(demand);
-        }
+        java.util.LinkedHashMap<String, Demand> demandsById = new java.util.LinkedHashMap<>();
+        loaderBase.demandsById().values().forEach(d -> demandsById.put(d.getId(), d));
+        restoredP0.demandsById().values().forEach(d -> demandsById.put(d.getId(), d));
+        demandsById.values().forEach(builder::demand);
         for (SupplyOrder supplyOrder : restoredP0.supplyOrdersById().values()) {
             builder.supplyOrder(supplyOrder);
         }

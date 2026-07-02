@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -60,6 +61,9 @@ class OrderDemandActionOntologyChainTest {
         LocalDate planningStart = LocalDate.of(2026, 6, 10);
         ensureFixture(planningStart);
         ensurePegging();
+        SalesOrderLineEntity line = SalesOrderLineEntity.findByKey(SALES_ORDER_NO, 1);
+        line.promiseDate = planningStart.plusDays(6);
+        line.persist();
 
         OrderDemandActionResult result = orderDemandActionService.execute(
                 SALES_ORDER_NO,
@@ -70,9 +74,49 @@ class OrderDemandActionOntologyChainTest {
         assertNotNull(result.fulfillmentChain());
         assertNull(WorkOrderEntity.findByNo(PARENT_WO));
         assertNull(WorkOrderEntity.findByNo(CHILD_WO));
+        assertEquals(planningStart.plusDays(6), SalesOrderLineEntity.findByKey(SALES_ORDER_NO, 1).promiseDate);
         assertTrue(result.fulfillmentChain().nodes().stream()
                 .noneMatch(n -> "SUPPLY_ORDER".equals(n.nodeType())));
         assertTrue(result.message().contains("已取消计划"));
+    }
+
+    @Test
+    @TestTransaction
+    void cancelPromiseClearsPromiseDateButKeepsPeggingAndWorkOrders() {
+        LocalDate planningStart = LocalDate.of(2026, 6, 10);
+        ensureFixture(planningStart);
+        ensurePegging();
+        SalesOrderLineEntity line = SalesOrderLineEntity.findByKey(SALES_ORDER_NO, 1);
+        line.promiseDate = planningStart.plusDays(6);
+        line.persist();
+
+        OrderDemandActionResult result = orderDemandActionService.execute(
+                SALES_ORDER_NO,
+                1,
+                OrderDemandAction.CANCEL_PROMISE,
+                new OrderDemandActionRequest(null, null, null, null));
+
+        assertNotNull(result.fulfillmentChain());
+        assertNull(SalesOrderLineEntity.findByKey(SALES_ORDER_NO, 1).promiseDate);
+        assertNotNull(WorkOrderEntity.findByNo(PARENT_WO));
+        assertNotNull(WorkOrderEntity.findByNo(CHILD_WO));
+        assertFalse(WorkOrderPeggingEntity.findByOrderLine(SALES_ORDER_NO, 1).isEmpty());
+        assertTrue(result.message().contains("已取消承诺交期"));
+    }
+
+    @Test
+    @TestTransaction
+    void cancelPromiseWhenNoPromiseReturnsHint() {
+        LocalDate planningStart = LocalDate.of(2026, 6, 10);
+        ensureFixture(planningStart);
+
+        OrderDemandActionResult result = orderDemandActionService.execute(
+                SALES_ORDER_NO,
+                1,
+                OrderDemandAction.CANCEL_PROMISE,
+                new OrderDemandActionRequest(null, null, null, null));
+
+        assertTrue(result.message().contains("当前无承诺交期"));
     }
 
     private void ensurePegging() {

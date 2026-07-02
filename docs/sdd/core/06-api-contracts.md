@@ -54,7 +54,7 @@
 | `FINITE_PLAN` | SCN-01h, SCN-01b | 单交付有限能力 optimize（别名 `PLAN_FINITE`） |
 | `CONFIRM_PROMISE_DATE` | SCN-01d | 确认承诺交期 |
 | `CANCEL_PLAN` | SCN-01e | 取消订单计划 |
-| `CANCEL_PROMISE` | SCN-01f | 取消订单承诺（**规范新增；实现待办 TODO-10**） |
+| `CANCEL_PROMISE` | SCN-01f | 取消订单承诺（**已实现 2026-07-02** · 仅清 `promiseDate`） |
 
 **预览：** `POST .../actions/CONFIRM_PROMISE_DATE/preview` → `PromiseDatePreviewDto`（SCN-01d 默认交期）
 

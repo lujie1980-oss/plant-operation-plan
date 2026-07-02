@@ -10,6 +10,8 @@ public enum OrderDemandAction {
     FINITE_PLAN,
     CONFIRM_PROMISE_DATE,
     CANCEL_PLAN,
+    /** 取消承诺交期（SCN-01f）；不删除计划工单或 pegging。 */
+    CANCEL_PROMISE,
     /** @deprecated 使用 {@link #INFINITE_PLAN_JIT} */
     BUILD_UPSTREAM_CHAIN,
     /** @deprecated 全场景无限能力预览 */

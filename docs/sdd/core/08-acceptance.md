@@ -175,16 +175,16 @@
 
 ---
 
-## AC-16 取消订单承诺（待实现）
+## AC-16 取消订单承诺
 
 | 项 | 值 |
 |----|-----|
 | **追溯** | SCN-01f · RULE-FF-03 · API-DEM-01 |
 | **Given** | COLD/COL 已写入承诺交期且存在 pegging |
 | **When** | POST `CANCEL_PROMISE` |
-| **Then** | confirmedDeliveryDate / promiseDate 清空 |
+| **Then** | `promiseDate` 清空（`confirmedDeliveryDate` 待 ENT-COLD 字段落地） |
 | **And** | pegging 与 ENT-SO **不变** |
-| **测试** | 待 TODO-10 |
+| **测试** | `OrderDemandActionOntologyChainTest#cancelPromiseClearsPromiseDateButKeepsPeggingAndWorkOrders` |
 
 ---
 
@@ -321,7 +321,7 @@
 | AC-13 | SCN-01b | SES-04 | AuthoritativeOntologyGraphAc13Test |
 | AC-14 | SCN-01e | FF-03, DEM-01 | `OrderDemandActionOntologyChainTest#cancelPlanRemovesExclusiveWorkOrdersAndReturnsScopedChain` |
 | AC-15 | SCN-01g | FF-01, FF-04, DEM-01 | `OrderDemandActionOntologyChainTest#buildUpstreamChainReturnsOntologyProjectedFulfillmentChain` |
-| AC-16 | SCN-01f | FF-03, DEM-01 | 待实现（TODO-10） |
+| AC-16 | SCN-01f | FF-03, DEM-01 | `OrderDemandActionOntologyChainTest` |
 | AC-17 | SCN-07a | MAT-01 | `OntologyMaterialPlanningProjectionTest` |
 | AC-18 | SCN-07b~d | MRP-01~03, MAT-02/03 | 待 TODO-11 |
 | AC-19 | SCN-07e~f | MAT-04, MAT-05 | 待 TODO-11 |
