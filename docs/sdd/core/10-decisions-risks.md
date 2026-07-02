@@ -259,7 +259,7 @@
 | TODO-08 | ~~**PATH-ENT 代码退役（ADR-08）**~~ **已收口 2026-07-01**：Session `optimizeLegacy` / `ontology_direct_solve_enabled` 已删；`MasterPlanService` 统一 `MasterPlanOntologyScheduleBuilder`；AC-05 废止 | — |
 | TODO-09 | SCN-02c/03b/04 跳转与试算页 UI 对齐 **[§17.8](../volumes/platform/17-ui-ux.md#178-跨页导航契约ui-nav-)** | 产品+前端 |
 | TODO-10 | ~~SCN-01f：`CANCEL_PROMISE`；SCN-01e 与取消承诺解耦~~ **已收口 2026-07-02**（`OrderDemandCancelPromiseService` · `OrderDemandActionOntologyChainTest`） | — |
-| TODO-11 | ~~SCN-07 供需平衡专页、PISPP period、MAT-02~08~~ **主体已收口 2026-07-02**；余 **SCN-07d OPTIMIZE**、多路径 ENT-RT | — |
+| TODO-11 | ~~SCN-07 供需平衡专页、PISPP period、MAT-02~08~~ **已收口 2026-07-02**（含 **SCN-07d OPTIMIZE**、多路径 ENT-RT · `routing_path_priority`） | — |
 | TODO-12 | ~~**ADR-09 全量 Ontology 持久化**~~ **已收口 2026-07-01**（P0~P5 + Sprint 6A~6D）；loader 内部化文档化 · 后续扩展见 **TODO-24**（PRP）· **TODO-21**（`ont_period` DDL） | — |
 | TODO-13 | **ADR-10 External_* 主数据**：staging、质检、sync、md_*、Projector 切读 | 架构+开发 |
 | TODO-14 | **ADR-11 外部交易数据**：external_* / txn_*、Firm WO 同步、质检、OG 装载切读 | 架构+开发 |
@@ -272,7 +272,7 @@
 | TODO-21 | ~~**§5 领域模型细化**~~ **已收口 2026-07-01**：§5.0/§5.19/§5.20 · `05-ont-schema` P0+V67 `ont_period` · Mapper/Restorer 持久化 | — |
 | TODO-22 | ~~**ADR-15 ENT-RCA 本体化**~~ **已收口 2026-07-01**（R0~R5）：ENT-RCA SoT · `ont_resource_capacity_assignment` · `OntologyRcaProjector` | — |
 | TODO-23 | ~~**ADR-16 Shift 级 Period**~~ **已收口 2026-07-01**（S0~S5）：shift-Period · leaf SRP/RCA · `PeriodTimeSlotDeriver` · ENT-SS 废止 | — |
-| TODO-24 | **ADR-17 PR/PRP 产能聚合**（**§5.8.2**）：ENT-PRP · 日历挂 ENT-PR · SRP=Σ PRP；`OntologyLoader`/`PeriodExpander` 收敛；`ont_physical_resource_period` | 架构+开发 |
+| TODO-24 | **ADR-17 PR/PRP 产能聚合**（**§5.8.2**）：ENT-PRP · 日历挂 ENT-PR · SRP=Σ PRP；`OntologyLoader`/`PeriodExpander` 收敛；`ont_physical_resource_period` — **P1~P4 已收口 2026-06-28**；余 **P5** 细排反馈 | 架构+开发 |
 | TODO-25 | ~~IAM 规范残余~~ **已决策 2026-06**：v1 **首登手动建 WS**（改规范 · §18.3.1 / RULE-IAM-02）；`%prod` `dev-mode=false` 验收 | — |
 | TODO-26 | **模块注册表一致性（§19 · AC-IAM-06）**：`workspace-modules.yaml` ↔ `WorkspaceModuleCatalog` 同步/校验（含 API 前缀漂移）；MOD-EXT / ADP-EXT 扩展契约机械化 | 架构+开发 |
 | TODO-27 | ~~**SDD 文档债同步（RSK-02）**~~ **已收口 2026-07-01**：AC-17 API 路径 · UI-NAV 深链 `[GAP]` 标注 · `aps-planning-layer` 废止 diagnostics preview · §18 `local-login-enabled` · TODO-22/23 主表关闭 | — |
@@ -288,7 +288,7 @@
 | D-ENT-BOM | PATH-ENT 读 JPA BOM | **TODO-08** | **已解决 2026-07-01**：装载经 `BomDependencyDerivation`（AC-10） |
 | D-09 | ~~confirm 写 legacy allocation，无 `ont_*`~~ | ~~TODO-12~~ | **已解决 2026-06-30**：`session-enabled` + `promoteDraftToCommitted`；legacy allocation 并行保留 |
 | D-10 | ~~无 `CANCEL_PROMISE`~~ | ~~TODO-10~~ | **已解决 2026-07-02** |
-| D-11 | ~~API-MAT-02~08 / SCN-07e~j~~ | ~~TODO-11~~ | **已解决 2026-07-02**（OPTIMIZE/多路径 RT 余量见 TODO-11 注） |
+| D-11 | ~~API-MAT-02~08 / SCN-07e~j~~ | ~~TODO-11~~ | **已解决 2026-07-02** |
 | D-12 | 无 external/md/txn | **TODO-13/14** | — |
 | D-15 | 无 KnowledgeResolver | **TODO-15** | — |
 | D-19 | MOD-DI mock，无 staging | **TODO-19** | — |
@@ -314,10 +314,10 @@
 | 阶段 | 交付 | 验收 |
 |------|------|------|
 | **P0 规范** | §5.8.2 · ADR-17 · RULE-SUP-05 修订 · ENT-PRP 术语 | 评审通过（**已完成 2026-06-21**） |
-| **P1 本体类型** | `PhysicalResourcePeriod` + `OntologyGraph.prpById`；ENT-PR 主数据投影 | PR 1:N 校验 RULE-MD-12 |
-| **P2 日历装载** | `md_resource_calendar` / `ResourceCalendar` **按 physical_resource_code** → PRP | 单 SR 双 PR：SRP.total = PRP1+PRP2 |
-| **P3 SRP 聚合** | `StandardResourcePeriod` 由 PRP rollup；ROL 可写 PRP 明细（可选） | AC：SRP ≡ Σ PRP |
-| **P4 持久化** | `ont_physical_resource_period`（TODO-12 扩展） | AC-PERS restore 含 PRP |
+| **P1 本体类型** | `PhysicalResourcePeriod` + `OntologyGraph.prpById`；ENT-PR 主数据投影 | PR 1:N 校验 RULE-MD-12（**已完成 2026-06-28**） |
+| **P2 日历装载** | `md_resource_calendar` / `ResourceCalendar` **按 physical_resource_code** → PRP | 单 SR 双 PR：SRP.total = PRP1+PRP2（**已完成 2026-06-28**） |
+| **P3 SRP 聚合** | `StandardResourcePeriod` 由 PRP rollup；ROL 可写 PRP 明细（可选） | AC：SRP ≡ Σ PRP（**已完成 2026-06-28**） |
+| **P4 持久化** | `ont_physical_resource_period`（TODO-12 扩展） | AC-PERS restore 含 PRP（**已完成 2026-06-28**） |
 | **P5 细排反馈** | SchedulerFeedback 占用写入 **PRP**，rollup 至 SRP（RULE-SUP-05） | S05 confirm 后 SRP 可用分钟下降 |
 
 **依赖：** ADR-16/TODO-23（Period 展开）· TODO-22（RCA→SRP）· §11 日历主数据挂 PR。

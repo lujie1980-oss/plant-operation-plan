@@ -9,6 +9,7 @@ import com.plantops.ontology.fulfillment.FulfillmentType;
 import com.plantops.ontology.period.Period;
 import com.plantops.ontology.period.PeriodGranularity;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
+import com.plantops.ontology.period.PhysicalResourcePeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.ontology.supply.Operation;
 import com.plantops.ontology.supply.OperationOnStandardResource;
@@ -67,6 +68,14 @@ public final class OntologyPersistenceTestFixtures {
         srp.setReservedCapacity(120);
         srp.recalculateCapacityFields();
 
+        PhysicalResourcePeriod prp = new PhysicalResourcePeriod(
+                OntologyIds.prpId("RES-PERS-01", OntologyIds.periodId(0)),
+                "RES-PERS-01",
+                "RES-PERS-01",
+                OntologyIds.periodId(0));
+        prp.setTotalCapacity(480);
+        prp.recalculateCapacityFields();
+
         String oosrId = OntologyIds.operationOnStandardResourceId(opId, "RES-PERS-01");
         OperationOnStandardResource oosr = new OperationOnStandardResource(
                 oosrId, opId, "RES-PERS-01", 0, 0, 60.0);
@@ -84,6 +93,7 @@ public final class OntologyPersistenceTestFixtures {
                 .operationOnStandardResource(oosr)
                 .fulfillment(ff)
                 .pispPeriod(pispp)
+                .physicalResourcePeriod(prp)
                 .standardResourcePeriod(srp)
                 .resourceCapacityAssignment(rca)
                 .periodsOrdered(java.util.List.of(period))
@@ -232,6 +242,15 @@ public final class OntologyPersistenceTestFixtures {
             assertNotNull(r);
             assertEquals(srp.getTotalCapacity(), r.getTotalCapacity(), 1e-9);
             assertEquals(srp.getReservedCapacity(), r.getReservedCapacity(), 1e-9);
+        }
+
+        assertEquals(source.prpById().size(), restored.prpById().size());
+        for (PhysicalResourcePeriod prp : source.prpById().values()) {
+            PhysicalResourcePeriod r = restored.prp(prp.getId());
+            assertNotNull(r, "prp " + prp.getId());
+            assertEquals(prp.getTotalCapacity(), r.getTotalCapacity(), 1e-9);
+            assertEquals(prp.getCalendarDowntime(), r.getCalendarDowntime(), 1e-9);
+            assertEquals(prp.getReservedCapacity(), r.getReservedCapacity(), 1e-9);
         }
 
         assertEquals(

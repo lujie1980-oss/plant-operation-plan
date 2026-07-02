@@ -31,6 +31,10 @@ public final class OntologyIds {
         return "SRP-" + resourceId + "-" + periodId(sequenceNr);
     }
 
+    public static String prpId(String physicalResourceId, String periodId) {
+        return "PRP-" + physicalResourceId + "-" + periodId;
+    }
+
     public static String operationId(String supplyOrderId, int sequenceNr) {
         return "OP-" + supplyOrderId + "-" + sequenceNr;
     }
@@ -155,7 +159,14 @@ public final class OntologyIds {
     }
 
     public static String routingId(String pispId) {
-        return "RT-" + pispId;
+        return routingId(pispId, 1, false);
+    }
+
+    public static String routingId(String pispId, int pathPriority, boolean multiPath) {
+        if (!multiPath && pathPriority <= 1) {
+            return "RT-" + pispId;
+        }
+        return "RT-" + pispId + "-" + pathPriority;
     }
 
     public static String routingStepId(String pispId, int sequenceNo) {

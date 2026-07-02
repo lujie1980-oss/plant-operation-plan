@@ -7,6 +7,7 @@ import com.plantops.ontology.persistence.entity.OntOperationEntity;
 import com.plantops.ontology.persistence.entity.OntPeriodEntity;
 import com.plantops.ontology.persistence.entity.OntPisppEntity;
 import com.plantops.ontology.persistence.entity.OntResourceCapacityAssignmentEntity;
+import com.plantops.ontology.persistence.entity.OntPrpEntity;
 import com.plantops.ontology.persistence.entity.OntSrpEntity;
 import com.plantops.ontology.persistence.entity.OntSupplyOrderEntity;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -75,6 +76,7 @@ public class OntologyLegacyImporter {
         OntFulfillmentEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
         OntPisppEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
         OntPeriodEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
+        OntPrpEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
         OntSrpEntity.delete("workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);
         OntResourceCapacityAssignmentEntity.delete(
                 "workspaceId = ?1 and revisionId = ?2", workspaceId, revisionId);

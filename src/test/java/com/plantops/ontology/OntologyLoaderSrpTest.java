@@ -30,9 +30,9 @@ class OntologyLoaderSrpTest {
         OntologyGraph g = loader.loadForWorkspace(planningStart);
         StandardResourcePeriod srp = g.srp(OntologyIds.srpId(RESOURCE_ID, 0));
         assertNotNull(srp);
-        assertEquals(960, srp.getTotalCapacity(), 1e-6);     // (480+0)+(420+60)
-        assertEquals(60, srp.getCalendarDowntime(), 1e-6);
-        assertEquals(900, srp.getAvailableCapacity(), 1e-6); // total - downtime
+        assertEquals(900, srp.getTotalCapacity(), 1e-6);     // Σ PRP available (ADR-17)
+        assertEquals(0, srp.getCalendarDowntime(), 1e-6);
+        assertEquals(900, srp.getAvailableCapacity(), 1e-6);
 
         // Out-of-horizon calendar row must not be clamped into the last bucket.
         int lastSeq = g.periodsOrdered().size() - 1;

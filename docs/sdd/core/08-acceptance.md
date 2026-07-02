@@ -207,8 +207,8 @@
 |----|-----|
 | **追溯** | SCN-07b~d · RULE-MRP-01~03 · API-MAT-02, API-MAT-03 |
 | **Given** | PISP 有工艺路径且区间存在缺口 |
-| **When** | AUTO / MANUAL 创建（OPTIMIZE 待 SCN-07d） |
-| **Then** | 落库 ENT-SO；PISPP plannedSupplyTotal 更新；MANUAL 尊重 routingId；AUTO 选 pathPriority 最小路径 |
+| **When** | AUTO / MANUAL / OPTIMIZE 创建 |
+| **Then** | 落库 ENT-SO；PISPP plannedSupplyTotal 更新；MANUAL 尊重 routingId；AUTO 选 pathPriority 最小路径；OPTIMIZE 按 EAT/延期选优 |
 | **测试** | `OntologyMaterialSupplyPlanIntegrationTest` |
 
 ---

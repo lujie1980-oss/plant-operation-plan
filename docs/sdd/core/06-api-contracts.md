@@ -203,7 +203,7 @@
 | **Body** | `CreateSupplyPlanRequest`（mode: `AUTO` \| `MANUAL` \| `OPTIMIZE`, periodFrom, periodTo, quantity, routingId?, needDate?） |
 | **响应** | `CreateSupplyPlanResultDto`（supplyOrderIds[], routingId, earliestAchievableTime, updatedPisppSummary） |
 | **规则** | RULE-MRP-01~03, RULE-FF-04 |
-| **说明** | **已实现**（2026-07-02）；`AUTO`/`MANUAL`；`OPTIMIZE` 待 SCN-07d |
+| **说明** | **已实现**（2026-07-02）；`AUTO` / `MANUAL` / `OPTIMIZE` |
 
 | 项 | 值 |
 |----|-----|

@@ -43,6 +43,10 @@ public class ProductResourceEntity extends WorkspaceScopedEntity {
     @Column(name = "resource_priority")
     public Integer resourcePriority = DEFAULT_RESOURCE_PRIORITY;
 
+    /** 多路径工艺：同一 product 下不同 path 分组；path_priority 越小越优先（RULE-MRP-01）。 */
+    @Column(name = "routing_path_priority")
+    public Integer routingPathPriority = 1;
+
     @Column(name = "operation_name")
 
     public String operationName;

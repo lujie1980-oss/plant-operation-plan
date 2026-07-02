@@ -6,6 +6,7 @@ import com.plantops.ontology.fulfillment.Fulfillment;
 import com.plantops.ontology.fulfillment.FulfillmentType;
 import com.plantops.ontology.period.Period;
 import com.plantops.ontology.period.PeriodGranularity;
+import com.plantops.ontology.period.PhysicalResourcePeriod;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.ontology.persistence.entity.OntDemandEntity;
@@ -13,6 +14,7 @@ import com.plantops.ontology.persistence.entity.OntFulfillmentEntity;
 import com.plantops.ontology.persistence.entity.OntOperationEntity;
 import com.plantops.ontology.persistence.entity.OntPeriodEntity;
 import com.plantops.ontology.persistence.entity.OntPisppEntity;
+import com.plantops.ontology.persistence.entity.OntPrpEntity;
 import com.plantops.ontology.persistence.entity.OntResourceCapacityAssignmentEntity;
 import com.plantops.ontology.persistence.entity.OntSrpEntity;
 import com.plantops.ontology.persistence.entity.OntSupplyOrderEntity;
@@ -217,6 +219,32 @@ public final class OntologyEntityMapper {
         srp.setTechnicalDowntime(row.technicalDowntime);
         srp.setReservedCapacity(row.reservedCapacity);
         return srp;
+    }
+
+    public static PhysicalResourcePeriod toPrp(OntPrpEntity row) {
+        PhysicalResourcePeriod prp = new PhysicalResourcePeriod(
+                row.entityId, row.physicalResourceId, row.standardResourceId, row.periodId);
+        prp.setTotalCapacity(row.totalCapacity);
+        prp.setCalendarDowntime(row.calendarDowntime);
+        prp.setSchedulerFeedbackMinutes(row.schedulerFeedbackMinutes);
+        prp.setReservedCapacity(row.reservedCapacity);
+        return prp;
+    }
+
+    public static OntPrpEntity fromPrp(
+            PhysicalResourcePeriod prp, String workspaceId, String revisionId) {
+        OntPrpEntity row = new OntPrpEntity();
+        row.stampKeys(workspaceId, revisionId, prp.getId());
+        row.physicalResourceId = prp.getPhysicalResourceId();
+        row.standardResourceId = prp.getStandardResourceId();
+        row.periodId = prp.getPeriodId();
+        row.totalCapacity = prp.getTotalCapacity();
+        row.calendarDowntime = prp.getCalendarDowntime();
+        row.schedulerFeedbackMinutes = prp.getSchedulerFeedbackMinutes();
+        row.reservedCapacity = prp.getReservedCapacity();
+        row.availableCapacity = prp.getAvailableCapacity();
+        row.overloadCapacity = prp.getOverloadCapacity();
+        return row;
     }
 
     public static OntSrpEntity fromSrp(

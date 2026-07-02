@@ -60,6 +60,36 @@ class MasterPlanRoutingProjectorTest {
         assertTrue(projector.projectRoutingSteps(pispId, raw).isEmpty());
     }
 
+    @Test
+    @TestTransaction
+    void listsMultipleRoutingsByPathPriority() {
+        ensureFixture();
+        ensureAlternatePath();
+
+        String pispId = com.plantops.ontology.OntologyIds.pispId(PRODUCT, com.plantops.ontology.master.StockingPoint.FG);
+        var routings = projector.listRoutingsForPisp(pispId, PRODUCT);
+        assertEquals(2, routings.size());
+        assertEquals(1, routings.get(0).pathPriority());
+        assertEquals(2, routings.get(1).pathPriority());
+        assertEquals(2, projector.projectRoutingSteps(pispId, PRODUCT, 1).size());
+        assertEquals(1, projector.projectRoutingSteps(pispId, PRODUCT, 2).size());
+    }
+
+    private static void ensureAlternatePath() {
+        if (ProductResourceEntity.findByProductAndResource(PRODUCT, "RES-MPDM-FAST") != null) {
+            return;
+        }
+        ProductResourceEntity fast = new ProductResourceEntity();
+        fast.productCode = PRODUCT;
+        fast.resourceId = "RES-MPDM-FAST";
+        fast.operationName = "OP-FAST";
+        fast.sequenceNo = 1;
+        fast.routingPathPriority = 2;
+        fast.processTimeSeconds = new BigDecimal("600");
+        fast.stampWorkspace();
+        fast.persist();
+    }
+
     private static void ensureFixture() {
         if (MaterialEntity.findByCode(PRODUCT) == null) {
             MaterialEntity fg = new MaterialEntity();

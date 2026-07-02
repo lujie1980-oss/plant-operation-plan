@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -66,6 +67,75 @@ class OntologyMaterialSupplyPlanIntegrationTest {
                 .map(MaterialBalancePeriodDto::shortageQty)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         assertTrue(periodShortageSum.compareTo(BigDecimal.ZERO) >= 0);
+    }
+
+    @Test
+    @TestTransaction
+    void optimizeCreateSupplyPlanSelectsFasterPath() {
+        LocalDate planningStart = LocalDate.of(2026, 6, 25);
+        ensureFixture(planningStart);
+        ensureAlternateRouting(FG_CODE);
+        refreshOntWorkspaceHead(planningStart);
+
+        MaterialRequirementReportDto before = materialPlanningService.balance(null);
+        var fgRow = before.materials().stream()
+                .filter(r -> FG_CODE.equals(r.productCode()))
+                .findFirst()
+                .orElseThrow();
+        String periodFrom = before.periodHeaders().get(0).periodId();
+        String periodTo = before.periodHeaders().get(Math.min(1, before.periodHeaders().size() - 1)).periodId();
+
+        var candidates = materialPlanningService.routingCandidates(
+                fgRow.pispId(), periodFrom, periodTo, 10.0, null);
+        assertTrue(candidates.size() >= 2);
+
+        CreateSupplyPlanResultDto created = materialPlanningService.createSupplyPlan(
+                fgRow.pispId(),
+                new CreateSupplyPlanRequest("OPTIMIZE", periodFrom, periodTo, 10.0, null, null),
+                null);
+        assertNotNull(created.optimizeScoreSummary());
+        assertTrue(created.routingId().contains("-2") || created.routingId().endsWith("2"));
+        WorkOrderEntity wo = WorkOrderEntity.findByNo(created.supplyOrderIds().get(0).supplyOrderId());
+        assertNotNull(wo);
+        assertEquals("RES-MAT-FG-FAST", wo.resourceId);
+    }
+
+    @Test
+    @TestTransaction
+    void listsMultipleRoutingCandidatesByPathPriority() {
+        LocalDate planningStart = LocalDate.of(2026, 6, 22);
+        ensureFixture(planningStart);
+        ensureAlternateRouting(FG_CODE);
+        refreshOntWorkspaceHead(planningStart);
+
+        MaterialRequirementReportDto report = materialPlanningService.balance(null);
+        var fgRow = report.materials().stream()
+                .filter(r -> FG_CODE.equals(r.productCode()))
+                .findFirst()
+                .orElseThrow();
+        String periodFrom = report.periodHeaders().get(0).periodId();
+        String periodTo = report.periodHeaders().get(Math.min(1, report.periodHeaders().size() - 1)).periodId();
+
+        var candidates = materialPlanningService.routingCandidates(
+                fgRow.pispId(), periodFrom, periodTo, 5.0, null);
+        assertTrue(candidates.size() >= 2);
+        assertEquals(1, candidates.get(0).pathPriority());
+        assertTrue(candidates.get(1).pathPriority() > candidates.get(0).pathPriority());
+    }
+
+    private static void ensureAlternateRouting(String productCode) {
+        if (ProductResourceEntity.findByProductAndResource(productCode, "RES-MAT-FG-FAST") != null) {
+            return;
+        }
+        ProductResourceEntity fast = new ProductResourceEntity();
+        fast.productCode = productCode;
+        fast.resourceId = "RES-MAT-FG-FAST";
+        fast.operationName = "FG-OP-FAST";
+        fast.sequenceNo = 1;
+        fast.routingPathPriority = 2;
+        fast.processTimeSeconds = new BigDecimal("600");
+        fast.stampWorkspace();
+        fast.persist();
     }
 
     @Test

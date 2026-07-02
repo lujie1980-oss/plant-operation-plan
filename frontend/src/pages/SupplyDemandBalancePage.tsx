@@ -271,6 +271,33 @@ export function SupplyDemandBalancePage() {
     }
   };
 
+  const optimizeCreateSupply = async () => {
+    if (!selectedPispId || !periodFrom || !periodTo) return;
+    setActionLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const result = await api.ontologyMaterialPlanningCreateSupplyPlan(
+        selectedPispId,
+        { mode: 'OPTIMIZE', periodFrom, periodTo },
+        activePlanVersionId ?? undefined,
+      );
+      const wo = result.supplyOrderIds[0];
+      const score = result.optimizeScoreSummary ? ` · ${result.optimizeScoreSummary}` : '';
+      setSuccess(
+        wo
+          ? `优化创建 ${wo.supplyOrderId}（${fmtQty(wo.quantity)} 件，路径 ${result.routingId}${score}）`
+          : '优化供应计划已创建',
+      );
+      setCandidates([]);
+      await load(activePlanVersionId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '优化创建供应计划失败');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const pegSupplyToDemand = async (supplyId: string) => {
     if (!selectedDemandId) return;
     setActionLoading(true);
@@ -436,6 +463,14 @@ export function SupplyDemandBalancePage() {
                   onClick={() => void autoCreateSupply()}
                 >
                   自动创建供应
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={actionLoading}
+                  onClick={() => void optimizeCreateSupply()}
+                >
+                  优化创建供应
                 </button>
               </div>
             )}

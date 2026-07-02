@@ -15,7 +15,6 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 
 import java.math.BigDecimal;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -26,7 +25,7 @@ import java.util.List;
 @ApplicationScoped
 public class OntologyMaterialSupplyRoutingService {
 
-    private static final LocalTime DEFAULT_SHIFT_END = LocalTime.of(17, 0);
+    static final LocalTime DEFAULT_SHIFT_END = LocalTime.of(17, 0);
 
     @Inject
     MasterPlanRoutingProjector routingProjector;
@@ -51,7 +50,7 @@ public class OntologyMaterialSupplyRoutingService {
         List<SupplyRoutingCandidateDto> candidates = new ArrayList<>(routings.size());
         for (RoutingDto routing : routings) {
             List<RoutingStepDetailDto> steps =
-                    routingProjector.projectRoutingSteps(pispId, pisp.getProductCode());
+                    routingProjector.projectRoutingSteps(pispId, pisp.getProductCode(), routing.pathPriority());
             if (steps.isEmpty()) {
                 continue;
             }
@@ -64,7 +63,7 @@ public class OntologyMaterialSupplyRoutingService {
                                     : step.standardResources().get(0).standardResourceId()))
                     .toList();
             LocalDateTime eat = estimateEarliestAchievableTime(
-                    pisp.getProductCode(), effectiveQty, anchorDate);
+                    pisp.getProductCode(), effectiveQty, anchorDate, routing.pathPriority());
             candidates.add(new SupplyRoutingCandidateDto(
                     routing.id(),
                     routing.pathPriority(),
@@ -82,10 +81,7 @@ public class OntologyMaterialSupplyRoutingService {
             String mode,
             String routingId) {
         ProductInStockingPoint pisp = requirePisp(graph, pispId);
-        List<RoutingDto> routings = routingProjector.listRoutingsForPisp(pispId, pisp.getProductCode()).stream()
-                .filter(r -> !routingProjector.projectRoutingSteps(pispId, pisp.getProductCode()).isEmpty())
-                .sorted(Comparator.comparingInt(RoutingDto::pathPriority))
-                .toList();
+        List<RoutingDto> routings = eligibleRoutings(pispId, pisp.getProductCode());
         if (routings.isEmpty()) {
             throw new BadRequestException("PISP 无可用工艺路径，请先维护主数据（SCN-T04）");
         }
@@ -101,9 +97,24 @@ public class OntologyMaterialSupplyRoutingService {
         return routings.get(0);
     }
 
+    public List<RoutingDto> eligibleRoutings(String pispId, String productCode) {
+        return routingProjector.listRoutingsForPisp(pispId, productCode).stream()
+                .filter(r -> !routingProjector
+                        .projectRoutingSteps(pispId, productCode, r.pathPriority())
+                        .isEmpty())
+                .sorted(Comparator.comparingInt(RoutingDto::pathPriority))
+                .toList();
+    }
+
     public LocalDateTime estimateEarliestAchievableTime(
             String productCode, double quantity, LocalDate anchorDate) {
-        int minutes = ProductRoutingSteps.totalDurationMinutes(productCode, BigDecimal.valueOf(quantity));
+        return estimateEarliestAchievableTime(productCode, quantity, anchorDate, 1);
+    }
+
+    public LocalDateTime estimateEarliestAchievableTime(
+            String productCode, double quantity, LocalDate anchorDate, int routingPathPriority) {
+        int minutes = ProductRoutingSteps.totalDurationMinutes(
+                productCode, BigDecimal.valueOf(quantity), routingPathPriority);
         LocalDateTime finishAnchor = anchorDate.atTime(DEFAULT_SHIFT_END);
         return finishAnchor.minusMinutes(Math.max(minutes, 0));
     }

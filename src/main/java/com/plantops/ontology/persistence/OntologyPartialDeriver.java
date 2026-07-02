@@ -32,6 +32,7 @@ public class OntologyPartialDeriver {
         storeOnly.operationsById().values().forEach(builder::operation);
         storeOnly.fulfillments().forEach(builder::fulfillment);
         storeOnly.pispPeriodsById().values().forEach(builder::pispPeriod);
+        storeOnly.prpById().values().forEach(builder::physicalResourcePeriod);
         storeOnly.srpById().values().forEach(builder::standardResourcePeriod);
         storeOnly.resourceCapacityAssignmentsById().values().forEach(builder::resourceCapacityAssignment);
         builder.periodsOrdered(storeOnly.periodsOrdered());

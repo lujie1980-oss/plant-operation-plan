@@ -37,7 +37,7 @@
 | 手工建链（JIT / 有限能力） | SCN-01g / SCN-01h | INFINITE_PLAN_JIT / FINITE_PLAN 已实现 |
 | 需求满足分析跳转 | SCN-02c 规范 | 部分 UI 待实现 |
 | 产能/物料试算页 | SCN-03c, SCN-04c | simulate 深度待对齐 |
-| 供需平衡 PISPP 页 | SCN-07a~j | **已实现**（2026-07-02）；OPTIMIZE / 多路径 RT 待补 |
+| 供需平衡 PISPP 页 | SCN-07a~j | **已实现**（2026-07-02） |
 | 物料预留拖拽/自动 | SCN-07g~j | UI 与 ENT-FF 手工写入待实现 |
 | 默认最长采购周期 UI | RULE-MRP-04 | MOD-OCP `/master-plan/rules/material` · 采购提前期 tab 已标注 * 默认行 |
 | 多路径 ENT-RT | SCN-07b~d | 初版可能单 RT/PISP；多路径为规范目标 |

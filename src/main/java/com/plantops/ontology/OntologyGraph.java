@@ -4,6 +4,7 @@ import com.plantops.ontology.master.Product;
 import com.plantops.ontology.master.ProductInStockingPoint;
 import com.plantops.ontology.master.StockingPoint;
 import com.plantops.ontology.period.Period;
+import com.plantops.ontology.period.PhysicalResourcePeriod;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.ontology.demand.CustomerOrderLine;
@@ -47,6 +48,7 @@ public final class OntologyGraph {
     private final List<Fulfillment> fulfillments;
     private final List<BomDependency> bomDependencies;
     private final Map<String, ProductInStockingPointPeriod> pispPeriodsById;
+    private final Map<String, PhysicalResourcePeriod> prpById;
     private final Map<String, StandardResourcePeriod> srpById;
     private final Map<String, ResourceCapacityAssignment> resourceCapacityAssignmentsById;
     private final List<Period> periodsOrdered;
@@ -69,6 +71,7 @@ public final class OntologyGraph {
             List<Fulfillment> fulfillments,
             List<BomDependency> bomDependencies,
             Map<String, ProductInStockingPointPeriod> pispPeriodsById,
+            Map<String, PhysicalResourcePeriod> prpById,
             Map<String, StandardResourcePeriod> srpById,
             Map<String, ResourceCapacityAssignment> resourceCapacityAssignmentsById,
             List<Period> periodsOrdered) {
@@ -89,6 +92,7 @@ public final class OntologyGraph {
         this.fulfillments = List.copyOf(fulfillments);
         this.bomDependencies = List.copyOf(bomDependencies);
         this.pispPeriodsById = Collections.unmodifiableMap(pispPeriodsById);
+        this.prpById = Collections.unmodifiableMap(prpById);
         this.srpById = Collections.unmodifiableMap(srpById);
         this.resourceCapacityAssignmentsById = new LinkedHashMap<>(resourceCapacityAssignmentsById);
         this.periodsOrdered = List.copyOf(periodsOrdered);
@@ -307,6 +311,14 @@ public final class OntologyGraph {
         return pispPeriodsById;
     }
 
+    public PhysicalResourcePeriod prp(String id) {
+        return prpById.get(id);
+    }
+
+    public Map<String, PhysicalResourcePeriod> prpById() {
+        return prpById;
+    }
+
     public StandardResourcePeriod srp(String id) {
         return srpById.get(id);
     }
@@ -370,6 +382,7 @@ public final class OntologyGraph {
         private final List<Fulfillment> fulfillments = new java.util.ArrayList<>();
         private final List<BomDependency> bomDependencies = new java.util.ArrayList<>();
         private final Map<String, ProductInStockingPointPeriod> pispPeriodsById = new LinkedHashMap<>();
+        private final Map<String, PhysicalResourcePeriod> prpById = new LinkedHashMap<>();
         private final Map<String, StandardResourcePeriod> srpById = new LinkedHashMap<>();
         private final Map<String, ResourceCapacityAssignment> resourceCapacityAssignmentsById = new LinkedHashMap<>();
         private List<Period> periodsOrdered = List.of();
@@ -495,6 +508,15 @@ public final class OntologyGraph {
             return this;
         }
 
+        public Builder physicalResourcePeriod(PhysicalResourcePeriod prp) {
+            prpById.put(prp.getId(), prp);
+            return this;
+        }
+
+        public Map<String, PhysicalResourcePeriod> prpByIdSnapshot() {
+            return Map.copyOf(prpById);
+        }
+
         public Builder standardResourcePeriod(StandardResourcePeriod srp) {
             srpById.put(srp.getId(), srp);
             return this;
@@ -533,6 +555,7 @@ public final class OntologyGraph {
                     fulfillments,
                     bomDependencies,
                     pispPeriodsById,
+                    prpById,
                     srpById,
                     resourceCapacityAssignmentsById,
                     periodsOrdered);

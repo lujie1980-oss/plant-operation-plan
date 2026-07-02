@@ -46,6 +46,7 @@ public final class MaterialSupplyPlanningDtos {
             List<SupplyPlanOrderSummaryDto> supplyOrderIds,
             String routingId,
             LocalDateTime earliestAchievableTime,
-            MaterialBalancePeriodDto updatedPisppSummary) {
+            MaterialBalancePeriodDto updatedPisppSummary,
+            String optimizeScoreSummary) {
     }
 }

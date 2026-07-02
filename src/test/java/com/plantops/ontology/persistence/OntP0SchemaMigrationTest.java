@@ -29,6 +29,7 @@ class OntP0SchemaMigrationTest {
         "ont_fulfillment",
         "ont_pispp",
         "ont_period",
+        "ont_physical_resource_period",
         "ont_srp",
         "ont_resource_capacity_assignment"
     };

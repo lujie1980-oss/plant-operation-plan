@@ -207,6 +207,7 @@ export interface CreateSupplyPlanResult {
   routingId: string;
   earliestAchievableTime: string;
   updatedPisppSummary: MaterialBalancePeriod | null;
+  optimizeScoreSummary?: string | null;
 }
 
 export interface PeriodDemandRow {

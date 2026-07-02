@@ -563,7 +563,7 @@ md_resource_calendar（按 physical_resource_code）
   → ENT-RCA optimize 更新 SRP.reserved（PRP 占用可选 DERIVE 分摊）
 ```
 
-**实现差距：** 现行 `OntologyLoader.loadStandardResourcePeriods` 按 `ResourceCalendarEntity.resourceId`（≈ SR）直写 SRP，无 ENT-PRP（**TODO-24**）。
+**实现差距：** ~~现行 `OntologyLoader.loadStandardResourcePeriods` 按 `ResourceCalendarEntity.resourceId`（≈ SR）直写 SRP，无 ENT-PRP~~ **P1~P4 已落地**（`PhysicalResourcePeriodLoader` → `StandardResourcePeriodAggregator`）；余 P5 细排反馈写 PRP。
 
 > **跟踪：** [§10 TODO-24](./10-decisions-risks.md#todo-24-分阶段adr-17--prp--srp) · [ADR-17](./10-decisions-risks.md#adr-17-physicalresource-产能聚合pr--sr--prp--srp)
 
@@ -1118,16 +1118,16 @@ stateDiagram-v2
 
 | 属性 | 类型 | 必填 | 来源 | RULE/SCN | 现状 |
 |------|------|------|------|----------|------|
-| `id` | String | Y | derived | `PRP-{pr}-{period}` | **spec-only** |
-| `physicalResourceId` | String | Y | md_* | RULE-MD-12 | **spec-only** |
-| `standardResourceId` | String | Y | md_* | 冗余聚合键 | **spec-only** |
-| `periodId` | String | Y | memory | 同 ENT-SRP | **spec-only** |
-| `totalCapacityMinutes` | double | Y | md_* | RULE-SUP-05 L1 | **spec-only** |
-| `calendarDowntimeMinutes` | double | Y | md_* | RULE-SUP-05 | **spec-only** |
+| `id` | String | Y | derived | `PRP-{pr}-{period}` | implemented |
+| `physicalResourceId` | String | Y | md_* | RULE-MD-12 | implemented |
+| `standardResourceId` | String | Y | md_* | 冗余聚合键 | implemented |
+| `periodId` | String | Y | memory | 同 ENT-SRP | implemented |
+| `totalCapacityMinutes` | double | Y | md_* | RULE-SUP-05 L1 | implemented |
+| `calendarDowntimeMinutes` | double | Y | md_* | RULE-SUP-05 | implemented |
 | `schedulerFeedbackMinutes` | double | Y | txn_* / derived | RULE-SUP-05 · TODO-24 P5 | **spec-only** |
-| `availableCapacityMinutes` | double | Y | derived | × resourceEfficiency | **spec-only** |
-| `reservedCapacityMinutes` | double | Y | derived | 可选 RCA 分摊 | **spec-only** |
-| `overloadCapacityMinutes` | double | Y | derived | RULE-MP-07 | **spec-only** |
+| `availableCapacityMinutes` | double | Y | derived | × resourceEfficiency | implemented |
+| `reservedCapacityMinutes` | double | Y | derived | 可选 RCA 分摊 | implemented |
+| `overloadCapacityMinutes` | double | Y | derived | RULE-MP-07 | implemented |
 
 ### 5.20.3 ENT-SRP（StandardResourcePeriod）
 
@@ -1136,7 +1136,7 @@ stateDiagram-v2
 | `id` | String | Y | derived | `SRP-{sr}-{seq}` | implemented |
 | `standardResourceId` | String | Y | md_* | — | implemented |
 | `periodId` | String | Y | memory | — | implemented |
-| `totalCapacity` | double | Y | md_* → **Σ PRP** | RULE-SUP-05 L2 | implemented（**直写日历**） |
+| `totalCapacity` | double | Y | md_* → **Σ PRP** | RULE-SUP-05 L2 | implemented（**Σ PRP** · ADR-17） |
 | `calendarDowntime` | double | Y | md_* | RULE-SUP-05 | implemented |
 | `technicalDowntime` | double | Y | rol / derived | — | implemented |
 | `reservedCapacity` | double | Y | solver → **Σ RCA** | ADR-15 · RULE-MP-02 | implemented |

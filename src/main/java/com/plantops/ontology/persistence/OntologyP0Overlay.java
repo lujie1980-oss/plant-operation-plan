@@ -4,6 +4,7 @@ import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.demand.Demand;
 import com.plantops.ontology.fulfillment.Fulfillment;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
+import com.plantops.ontology.period.PhysicalResourcePeriod;
 import com.plantops.ontology.period.StandardResourcePeriod;
 import com.plantops.ontology.supply.Operation;
 import com.plantops.ontology.supply.OperationInputMaterial;
@@ -62,6 +63,9 @@ public final class OntologyP0Overlay {
 
         for (ProductInStockingPointPeriod pispp : restoredP0.pispPeriodsById().values()) {
             builder.pispPeriod(pispp);
+        }
+        for (PhysicalResourcePeriod prp : restoredP0.prpById().values()) {
+            builder.physicalResourcePeriod(prp);
         }
         for (StandardResourcePeriod srp : restoredP0.srpById().values()) {
             builder.standardResourcePeriod(srp);

@@ -23,31 +23,59 @@ import java.util.List;
 public class MasterPlanRoutingProjector {
 
     public RoutingDto projectRoutingHeader(String pispId, String productCode) {
-        List<ProductRoutingSteps.Operation> operations = masterDataOperations(productCode);
-        String routingName = resolveRoutingName(productCode);
+        List<Integer> priorities = ProductRoutingSteps.routingPathPrioritiesForProduct(productCode);
+        int pathPriority = priorities.isEmpty() ? 1 : priorities.get(0);
+        return projectRoutingHeader(pispId, productCode, pathPriority);
+    }
+
+    public RoutingDto projectRoutingHeader(String pispId, String productCode, int pathPriority) {
+        List<ProductRoutingSteps.Operation> operations = masterDataOperations(productCode, pathPriority);
+        String routingName = resolveRoutingName(productCode, pathPriority);
+        boolean multiPath = ProductRoutingSteps.routingPathPrioritiesForProduct(productCode).size() > 1;
         return new RoutingDto(
-                OntologyIds.routingId(pispId),
+                OntologyIds.routingId(pispId, pathPriority, multiPath),
                 pispId,
                 productCode,
                 routingName,
                 operations.size(),
-                1);
+                pathPriority);
     }
 
     public List<RoutingDto> listRoutingsForPisp(String pispId, String productCode) {
         if (!hasRouting(productCode)) {
             return List.of();
         }
-        return List.of(projectRoutingHeader(pispId, productCode));
+        List<Integer> priorities = ProductRoutingSteps.routingPathPrioritiesForProduct(productCode);
+        boolean multiPath = priorities.size() > 1;
+        List<RoutingDto> routings = new ArrayList<>(priorities.size());
+        for (int pathPriority : priorities) {
+            List<ProductRoutingSteps.Operation> operations = masterDataOperations(productCode, pathPriority);
+            if (operations.isEmpty()) {
+                continue;
+            }
+            routings.add(projectRoutingHeader(pispId, productCode, pathPriority));
+        }
+        if (routings.isEmpty()) {
+            return List.of();
+        }
+        return routings;
     }
 
     public List<RoutingStepDetailDto> projectRoutingSteps(String pispId, String productCode) {
-        List<ProductRoutingSteps.Operation> operations = masterDataOperations(productCode);
+        List<Integer> priorities = ProductRoutingSteps.routingPathPrioritiesForProduct(productCode);
+        int pathPriority = priorities.isEmpty() ? 1 : priorities.get(0);
+        return projectRoutingSteps(pispId, productCode, pathPriority);
+    }
+
+    public List<RoutingStepDetailDto> projectRoutingSteps(
+            String pispId, String productCode, int pathPriority) {
+        List<ProductRoutingSteps.Operation> operations = masterDataOperations(productCode, pathPriority);
         if (operations.isEmpty()) {
             return List.of();
         }
 
-        String routingId = OntologyIds.routingId(pispId);
+        boolean multiPath = ProductRoutingSteps.routingPathPrioritiesForProduct(productCode).size() > 1;
+        String routingId = OntologyIds.routingId(pispId, pathPriority, multiPath);
         List<RoutingStepDetailDto> steps = new ArrayList<>(operations.size());
         for (int i = 0; i < operations.size(); i++) {
             ProductRoutingSteps.Operation operation = operations.get(i);
@@ -89,20 +117,21 @@ public class MasterPlanRoutingProjector {
         if (productCode == null || productCode.isBlank()) {
             return false;
         }
-        return !masterDataOperations(productCode).isEmpty();
+        return !ProductResourceEntity.findByProductOrdered(productCode).isEmpty();
     }
 
-    /**
-     * 主计划数据模型仅投影已维护的 {@code product_resource}，不回退演示用 {@code ProductRoutingCatalog}。
-     */
     static List<ProductRoutingSteps.Operation> masterDataOperations(String productCode) {
+        return masterDataOperations(productCode, 1);
+    }
+
+    static List<ProductRoutingSteps.Operation> masterDataOperations(String productCode, int pathPriority) {
         if (productCode == null || productCode.isBlank()) {
             return List.of();
         }
-        if (!ProductResourceEntity.findByProductOrdered(productCode).isEmpty()) {
-            return ProductRoutingSteps.operationsForProduct(productCode);
+        if (ProductResourceEntity.findByProductOrdered(productCode).isEmpty()) {
+            return List.of();
         }
-        return List.of();
+        return ProductRoutingSteps.operationsForProduct(productCode, pathPriority);
     }
 
     private static List<RoutingStepInputMaterialDto> projectInputMaterials(String stepId, String productCode) {
@@ -123,11 +152,17 @@ public class MasterPlanRoutingProjector {
         return inputs;
     }
 
-    private static String resolveRoutingName(String productCode) {
+    private static String resolveRoutingName(String productCode, int pathPriority) {
         MaterialEntity material = MaterialEntity.findByCode(productCode);
+        String base;
         if (material != null && material.materialName != null && !material.materialName.isBlank()) {
-            return material.materialName + " 工艺";
+            base = material.materialName + " 工艺";
+        } else {
+            base = productCode + " 工艺";
         }
-        return productCode + " 工艺";
+        if (pathPriority > 1) {
+            return base + " · 路径 " + pathPriority;
+        }
+        return base;
     }
 }

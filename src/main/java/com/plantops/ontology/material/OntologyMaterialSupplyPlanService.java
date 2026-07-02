@@ -5,8 +5,10 @@ import com.plantops.api.dto.materialplanning.MaterialSupplyPlanningDtos.CreateSu
 import com.plantops.api.dto.materialplanning.MaterialSupplyPlanningDtos.CreateSupplyPlanResultDto;
 import com.plantops.api.dto.materialplanning.MaterialSupplyPlanningDtos.SupplyPlanOrderSummaryDto;
 import com.plantops.api.dto.masterplan.MasterPlanDataModelDtos.RoutingDto;
+import com.plantops.api.dto.masterplan.MasterPlanDataModelDtos.RoutingStepDetailDto;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
+import com.plantops.ontology.master.MasterPlanRoutingProjector;
 import com.plantops.ontology.master.ProductInStockingPoint;
 import com.plantops.ontology.period.Period;
 import com.plantops.ontology.period.ProductInStockingPointPeriod;
@@ -39,6 +41,12 @@ public class OntologyMaterialSupplyPlanService {
     OntologyMaterialSupplyRoutingService routingService;
 
     @Inject
+    OntologyMaterialSupplyOptimizeService optimizeService;
+
+    @Inject
+    MasterPlanRoutingProjector routingProjector;
+
+    @Inject
     OntologyLegacyMutationCoordinator legacyMutationCoordinator;
 
     @Transactional
@@ -50,10 +58,7 @@ public class OntologyMaterialSupplyPlanService {
             throw new BadRequestException("mode 必填（AUTO / MANUAL / OPTIMIZE）");
         }
         String mode = request.mode().trim().toUpperCase();
-        if ("OPTIMIZE".equals(mode)) {
-            throw new BadRequestException("OPTIMIZE 模式尚未实现（SCN-07d）");
-        }
-        if (!"AUTO".equals(mode) && !"MANUAL".equals(mode)) {
+        if (!"AUTO".equals(mode) && !"MANUAL".equals(mode) && !"OPTIMIZE".equals(mode)) {
             throw new BadRequestException("不支持的 mode: " + request.mode());
         }
 
@@ -76,11 +81,26 @@ public class OntologyMaterialSupplyPlanService {
             throw new BadRequestException("选定区间无需补货（stockShortageQuantity = 0）");
         }
 
-        RoutingDto routing = routingService.selectRouting(graph, pispId, mode, request.routingId());
         LocalDate needDate = request.needDate() != null
                 ? request.needDate()
                 : OntologyMaterialSupplyRoutingService.resolveRangeEndDate(
                         graph, request.periodFrom(), request.periodTo());
+
+        RoutingDto routing;
+        LocalDateTime eat;
+        String optimizeSummary = null;
+        if ("OPTIMIZE".equals(mode)) {
+            OntologyMaterialSupplyOptimizeService.OptimizeSelection selection =
+                    optimizeService.selectOptimalRouting(
+                            graph, pispId, quantity, needDate, request.periodFrom(), request.periodTo());
+            routing = selection.routing();
+            eat = selection.eat();
+            optimizeSummary = selection.scoreSummary();
+        } else {
+            routing = routingService.selectRouting(graph, pispId, mode, request.routingId());
+            eat = routingService.estimateEarliestAchievableTime(
+                    pisp.getProductCode(), quantity, needDate, routing.pathPriority());
+        }
 
         String workOrderNo = MrpExplosionService.allocateUniqueWorkOrderNo(
                 pisp.getProductCode(), needDate, 1);
@@ -91,7 +111,7 @@ public class OntologyMaterialSupplyPlanService {
         wo.salesOrderLineNo = 0;
         wo.productCode = pisp.getProductCode();
         wo.quantity = BigDecimal.valueOf(quantity).setScale(4, RoundingMode.HALF_UP);
-        wo.resourceId = resolveResourceId(pisp.getProductCode());
+        wo.resourceId = resolveResourceIdForRouting(pispId, pisp.getProductCode(), routing);
         wo.sequenceNo = WorkOrderEntity.nextSequenceNo();
         wo.parentWorkOrderNo = null;
         wo.dispatchStatus = WorkOrderService.DISPATCH_PENDING;
@@ -108,8 +128,6 @@ public class OntologyMaterialSupplyPlanService {
         OntologyGraph refreshed = authoritativeOntologyGraph.getOrLoad(workspaceId, masterPlanVersionId);
         ProductInStockingPointPeriod updatedPispp = findLastScopedPispp(refreshed, pispId, periods, request.periodTo());
         MaterialBalancePeriodDto summary = toPeriodDto(updatedPispp);
-        LocalDateTime eat = routingService.estimateEarliestAchievableTime(
-                pisp.getProductCode(), quantity, needDate);
 
         return new CreateSupplyPlanResultDto(
                 List.of(new SupplyPlanOrderSummaryDto(
@@ -119,7 +137,17 @@ public class OntologyMaterialSupplyPlanService {
                         needDate)),
                 routing.id(),
                 eat,
-                summary);
+                summary,
+                optimizeSummary);
+    }
+
+    private String resolveResourceIdForRouting(String pispId, String productCode, RoutingDto routing) {
+        List<RoutingStepDetailDto> steps =
+                routingProjector.projectRoutingSteps(pispId, productCode, routing.pathPriority());
+        if (!steps.isEmpty() && !steps.get(0).standardResources().isEmpty()) {
+            return steps.get(0).standardResources().get(0).standardResourceId();
+        }
+        return resolveResourceId(productCode);
     }
 
     private static List<ProductInStockingPointPeriod> periodsInRange(
