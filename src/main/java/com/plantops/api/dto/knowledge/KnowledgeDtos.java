@@ -22,4 +22,11 @@ public final class KnowledgeDtos {
     public record KnowledgeOverlayUpsertRequest(String overlayKey, String overlayValue) {}
 
     public record KnowledgePackInfoDto(String packId, String version, String layer) {}
+
+    public record IndustryInstallResultDto(
+            String workspaceId,
+            String industryId,
+            String packId,
+            String packVersion,
+            boolean seededMaterialLeadTimeWildcard) {}
 }

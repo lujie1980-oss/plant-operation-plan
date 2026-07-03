@@ -1,5 +1,6 @@
 package com.plantops.api;
 
+import com.plantops.api.dto.knowledge.KnowledgeDtos.IndustryInstallResultDto;
 import com.plantops.api.dto.knowledge.KnowledgeDtos.KnowledgeContextDto;
 import com.plantops.api.dto.knowledge.KnowledgeDtos.KnowledgeOverlayDto;
 import com.plantops.api.dto.knowledge.KnowledgeDtos.KnowledgeOverlayUpsertRequest;
@@ -7,6 +8,7 @@ import com.plantops.api.dto.knowledge.KnowledgeDtos.KnowledgePackInfoDto;
 import com.plantops.api.dto.knowledge.KnowledgeDtos.ResolvedValueDto;
 import com.plantops.knowledge.EffectiveKnowledge;
 import com.plantops.knowledge.KnowledgeContext;
+import com.plantops.knowledge.KnowledgeIndustryInstallService;
 import com.plantops.knowledge.KnowledgeOverlayService;
 import com.plantops.knowledge.KnowledgePack;
 import com.plantops.knowledge.KnowledgeRegistry;
@@ -39,6 +41,9 @@ public class KnowledgeResource {
 
     @Inject
     KnowledgeOverlayService overlayService;
+
+    @Inject
+    KnowledgeIndustryInstallService industryInstallService;
 
     @GET
     @Path("/context")
@@ -89,5 +94,11 @@ public class KnowledgeResource {
     @Path("/overlays/{id}")
     public void deleteOverlay(@PathParam("id") Long id) {
         overlayService.delete(id);
+    }
+
+    @POST
+    @Path("/industry/{industryId}/install")
+    public IndustryInstallResultDto installIndustry(@PathParam("industryId") String industryId) {
+        return industryInstallService.install(industryId);
     }
 }

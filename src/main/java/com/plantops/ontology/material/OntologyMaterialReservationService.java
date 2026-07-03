@@ -6,6 +6,7 @@ import com.plantops.api.dto.materialplanning.MaterialReservationDtos.CreateFulfi
 import com.plantops.api.dto.materialplanning.MaterialReservationDtos.EligibleSupplyRowDto;
 import com.plantops.api.dto.materialplanning.MaterialReservationDtos.FulfillmentDto;
 import com.plantops.api.dto.materialplanning.MaterialReservationDtos.ReservationAlertDto;
+import com.plantops.knowledge.ReservationAutoPolicyService;
 import com.plantops.ontology.OntologyGraph;
 import com.plantops.ontology.OntologyIds;
 import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
@@ -42,6 +43,9 @@ public class OntologyMaterialReservationService {
 
     @Inject
     OntologyMaterialEligibleSupplyProjector eligibleSupplyProjector;
+
+    @Inject
+    ReservationAutoPolicyService reservationAutoPolicy;
 
     @Transactional
     public FulfillmentDto createFulfillment(CreateFulfillmentRequest request, String masterPlanVersionId) {
@@ -189,10 +193,7 @@ public class OntologyMaterialReservationService {
                 .filter(row -> row.availableDate() == null
                         || demand.getNeedDate() == null
                         || !row.availableDate().isAfter(demand.getNeedDate()))
-                .sorted(Comparator
-                        .comparing((EligibleSupplyRowDto row) -> !"INVENTORY".equals(row.supplyType()))
-                        .thenComparing(EligibleSupplyRowDto::availableDate, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(EligibleSupplyRowDto::unpeggedQty, Comparator.reverseOrder()))
+                .sorted(reservationAutoPolicy.compareSuppliesForDemandAnchor())
                 .findFirst()
                 .orElseThrow(() -> new BadRequestException("无 eligible Supply 可自动预留"));
 
@@ -227,10 +228,7 @@ public class OntologyMaterialReservationService {
                 .filter(d -> d.getNeedDate() == null
                         || availability.availableDate() == null
                         || !availability.availableDate().isAfter(d.getNeedDate()))
-                .sorted(Comparator
-                        .comparing(Demand::getNeedDate, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(Comparator.comparingInt(Demand::getPriority).reversed())
-                        .thenComparing(Demand::getId))
+                .sorted(reservationAutoPolicy.compareDemandsForSupplyAnchor())
                 .findFirst()
                 .orElseThrow(() -> new BadRequestException("无 eligible Demand 可自动预留"));
 

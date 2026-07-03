@@ -7,6 +7,7 @@ parameters:
   master_plan_multi_resource_split: false
   capacity_overload_threshold_pct: 110
   default_procurement_lead_time_days: 7
+  reservation_auto_policy: DEFAULT
 
 business_rules_tabs:
   material-lead-time:

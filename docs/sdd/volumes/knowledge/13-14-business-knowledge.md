@@ -268,8 +268,8 @@ Customized：**DB** `knowledge_overlay` + 现有 BusinessRules 表（不随 git 
 | **K0** | `KnowledgeContext` 读 Standard defaults + BusinessRules（= Custom CFG） | **已完成** · `KnowledgeResolver` · `ParameterRegistry` 接 Effective |
 | **K1** | `Workspace.industry_id` + 1 个 Industry pack（discrete-assembly） | **已完成** · `V75` · `DISCRETE_ASSEMBLY` |
 | **K2** | `knowledge_overlay` 表 + 导入校验（KN validator） | **已完成** · `KnowledgeOverlayService` · `GET/POST /api/v1/knowledge/*` |
-| **K3** | Optimizer / FF-06 / MRP-04 全改读 Effective | 待办 |
-| **K4** | Industry pack 安装 CLI + AC-KN-* | 待办 |
+| **K3** | Optimizer / FF-06 / MRP-04 全改读 Effective | **已完成 2026-07-03** · `MaterialLeadTimeKnowledgeService` · `ReservationAutoPolicyService` |
+| **K4** | Industry pack 安装 CLI + AC-KN-* | **已完成 2026-07-03** · `POST /api/v1/knowledge/industry/{id}/install` |
 
 ---
 
