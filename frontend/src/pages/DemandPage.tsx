@@ -6,6 +6,10 @@ import { DemandOrderContextMenu } from '../components/DemandOrderContextMenu';
 import { FulfillmentChainTreePanel } from '../components/FulfillmentChainTreePanel';
 import { FulfillmentGanttToolbar } from '../components/FulfillmentGanttToolbar';
 import { FulfillmentMaterialDrawer } from '../components/FulfillmentMaterialDrawer';
+import { FulfillmentRootCausePanel } from '../components/FulfillmentRootCausePanel';
+import '../components/FulfillmentRootCausePanel.css';
+import { MasterPlanBusinessKpiPanel } from '../components/MasterPlanBusinessKpiPanel';
+import '../components/MasterPlanBusinessKpiPanel.css';
 import { SupplyOrderPlanUnitGantt } from '../components/SupplyOrderPlanUnitGantt';
 import { FilterableTable } from '../components/table/FilterableTable';
 import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
@@ -363,22 +367,29 @@ export function DemandPage({ embedded = false }: { embedded?: boolean }) {
       )}
 
       <div className="demand-s01-layout">
-        <aside className="demand-kpi-panel card">
-          <h3 className="panel-title">关键 KPI</h3>
-          <div className="panel-scroll kpi-scroll">
-            <ul className="kpi-list">
-              {kpis.map((k) => (
-                <li key={k.metricId} className={`kpi-item severity-${k.severity}`}>
-                  <span className="kpi-item-label">{k.label}</span>
-                  <span className="kpi-item-value">
-                    {k.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    <small>{k.unit}</small>
-                  </span>
-                </li>
-              ))}
-            </ul>
-            {kpis.length === 0 && <p className="empty">加载中…</p>}
+        <aside className="demand-kpi-stack">
+          <div className="demand-kpi-panel card">
+            <h3 className="panel-title">需求池 KPI</h3>
+            <div className="panel-scroll kpi-scroll">
+              <ul className="kpi-list">
+                {kpis.map((k) => (
+                  <li key={k.metricId} className={`kpi-item severity-${k.severity}`}>
+                    <span className="kpi-item-label">{k.label}</span>
+                    <span className="kpi-item-value">
+                      {k.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      <small>{k.unit}</small>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {kpis.length === 0 && <p className="empty">加载中…</p>}
+            </div>
           </div>
+          <MasterPlanBusinessKpiPanel
+            planVersionId={activePlanVersionId}
+            filterKpiIds={['KPI-MP-B01', 'KPI-MP-B02', 'KPI-MP-B03']}
+            title="主计划交付 KPI"
+          />
         </aside>
 
         <VerticalResizeSplit
@@ -485,6 +496,7 @@ export function DemandPage({ embedded = false }: { embedded?: boolean }) {
                           </div>
                         )}
                       </div>
+                      <FulfillmentRootCausePanel chain={chainForSelection} />
                       <div className="demand-fulfillment-body">
                         <FulfillmentChainTreePanel
                           nodes={displayNodes}

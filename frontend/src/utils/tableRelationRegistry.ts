@@ -67,7 +67,7 @@ function workOrderRelations(row: {
       id: 'wo-pp',
       label: '生产工单分析',
       to: '/master-plan/analysis/work-orders',
-      search: `wo=${encodeURIComponent(wo)}`,
+      search: `workOrderNo=${encodeURIComponent(wo)}`,
     },
     {
       id: 'wo-batch',
@@ -85,6 +85,7 @@ function workOrderRelations(row: {
       id: 'wo-ds',
       label: '生产排程',
       to: '/scheduling/detail-schedule',
+      search: `workOrderNo=${encodeURIComponent(wo)}`,
     },
   ];
   if (row.salesOrderNo) {

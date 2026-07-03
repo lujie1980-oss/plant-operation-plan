@@ -1,0 +1,56 @@
+.fulfillment-root-cause-panel {
+  margin: 0.65rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.fulfillment-root-cause-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.fulfillment-root-cause-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+}
+
+.fulfillment-root-cause-group + .fulfillment-root-cause-group {
+  margin-top: 0.45rem;
+}
+
+.fulfillment-root-cause-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.2rem;
+}
+
+.fulfillment-root-cause-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fulfillment-root-cause-link {
+  font-size: 0.8rem;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.fulfillment-root-cause-link:hover {
+  text-decoration: underline;
+}
+
+.fulfillment-root-cause-link small {
+  margin-left: 0.2rem;
+  color: #64748b;
+  font-weight: 400;
+}

@@ -1,20 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { usePlan } from '../context/PlanContext';
 import { CapacityUtilizationGantt } from '../components/CapacityUtilizationGantt';
+import { DeepLinkNotice } from '../components/DeepLinkNotice';
+import { MasterPlanBusinessKpiPanel } from '../components/MasterPlanBusinessKpiPanel';
+import '../components/MasterPlanBusinessKpiPanel.css';
 import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { VerticalResizeSplit } from '../components/VerticalResizeSplit';
 import { FilterableTable } from '../components/table/FilterableTable';
 import type { CapacityAnalysis, DemandPoolKpi, LoadBucket } from '../types/api';
 import { formatBucketColumnLabel } from '../utils/capacityUtilization';
+import { DEEP_LINK_QUERY, productionWorkOrdersLink } from '../utils/masterPlanDeepLink';
 import './CapacityPage.css';
 
 export function CapacityPage({ embedded = false }: { embedded?: boolean }) {
+  const [searchParams] = useSearchParams();
+  const deepLinkResource = searchParams.get(DEEP_LINK_QUERY.resource)?.trim() || null;
   const { activePlanVersionId, selectedScenarioId, scenarios } = usePlan();
   const [data, setData] = useState<CapacityAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deepLinkNotice, setDeepLinkNotice] = useState<string | null>(null);
   const [selectedBucket, setSelectedBucket] = useState<LoadBucket | null>(null);
 
   const currentScenario = scenarios.find((s) => s.scenarioId === selectedScenarioId);
@@ -47,8 +55,32 @@ export function CapacityPage({ embedded = false }: { embedded?: boolean }) {
     void analyze(activePlanVersionId);
   }, [activePlanVersionId, analyze]);
 
+  useEffect(() => {
+    if (!deepLinkResource) {
+      setDeepLinkNotice(null);
+      return;
+    }
+    if (!data || loading) return;
+
+    const matching = data.loadBuckets.filter((b) => b.resourceId === deepLinkResource);
+    if (matching.length === 0) {
+      setDeepLinkNotice(`深链参数 resource=${deepLinkResource} 在当前产能分析中未找到对应机台`);
+      return;
+    }
+
+    setDeepLinkNotice(null);
+    const best = [...matching].sort((a, b) => b.utilizationPct - a.utilizationPct)[0];
+    setSelectedBucket(best);
+  }, [data, deepLinkResource, loading]);
+
+  const visibleBuckets = useMemo(() => {
+    if (!deepLinkResource || !data) return data?.loadBuckets ?? [];
+    const filtered = data.loadBuckets.filter((b) => b.resourceId === deepLinkResource);
+    return filtered.length > 0 ? filtered : data.loadBuckets;
+  }, [data, deepLinkResource]);
+
   const kpis: DemandPoolKpi[] = data?.kpis ?? [];
-  const buckets = data?.loadBuckets ?? [];
+  const buckets = visibleBuckets;
   const workOrders = selectedBucket?.workOrders ?? [];
 
   const selectionTitle = useMemo(() => {
@@ -73,26 +105,36 @@ export function CapacityPage({ embedded = false }: { embedded?: boolean }) {
         />
       )}
       {!embedded && <StatusBanner loading={loading} error={error} />}
+      {!embedded && deepLinkNotice && (
+        <DeepLinkNotice message={deepLinkNotice} onDismiss={() => setDeepLinkNotice(null)} />
+      )}
 
       <div className="capacity-layout">
-        <aside className="capacity-kpi-panel card">
-          <h3 className="panel-title">关键 KPI</h3>
-          <div className="panel-scroll kpi-scroll">
-            <ul className="kpi-list">
-              {kpis.map((k) => (
-                <li key={k.metricId} className={`kpi-item severity-${k.severity}`}>
-                  <span className="kpi-item-label">{k.label}</span>
-                  <span className="kpi-item-value">
-                    {k.value.toLocaleString(undefined, { maximumFractionDigits: 1 })}
-                    <small>{k.unit}</small>
-                  </span>
-                </li>
-              ))}
-            </ul>
-            {kpis.length === 0 && !loading && (
-              <p className="empty">{activePlanVersionId ? '暂无 KPI' : '请先选择场景并运行计划'}</p>
-            )}
+        <aside className="capacity-kpi-stack">
+          <div className="capacity-kpi-panel card">
+            <h3 className="panel-title">产能分析 KPI</h3>
+            <div className="panel-scroll kpi-scroll">
+              <ul className="kpi-list">
+                {kpis.map((k) => (
+                  <li key={k.metricId} className={`kpi-item severity-${k.severity}`}>
+                    <span className="kpi-item-label">{k.label}</span>
+                    <span className="kpi-item-value">
+                      {k.value.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                      <small>{k.unit}</small>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {kpis.length === 0 && !loading && (
+                <p className="empty">{activePlanVersionId ? '暂无 KPI' : '请先选择场景并运行计划'}</p>
+              )}
+            </div>
           </div>
+          <MasterPlanBusinessKpiPanel
+            planVersionId={activePlanVersionId}
+            filterKpiIds={['KPI-MP-B04', 'KPI-MP-B05']}
+            title="主计划产能 KPI"
+          />
         </aside>
 
         <div className="capacity-main">
@@ -109,6 +151,7 @@ export function CapacityPage({ embedded = false }: { embedded?: boolean }) {
                     buckets={buckets}
                     selectedBucketId={selectedBucket?.bucketId ?? null}
                     onSelectBucket={setSelectedBucket}
+                    focusResourceId={deepLinkResource}
                   />
                 </div>
               </section>
@@ -126,7 +169,16 @@ export function CapacityPage({ embedded = false }: { embedded?: boolean }) {
                       rowKey={(wo) => wo.workOrderNo}
                       emptyText="该区间暂无排产工单"
                       columns={[
-                        { key: 'workOrderNo', header: '工单', className: 'mono', render: (wo) => wo.workOrderNo },
+                        {
+                          key: 'workOrderNo',
+                          header: '工单',
+                          className: 'mono',
+                          render: (wo) => (
+                            <Link to={productionWorkOrdersLink(wo.workOrderNo)} className="cap-wo-link">
+                              {wo.workOrderNo}
+                            </Link>
+                          ),
+                        },
                         {
                           key: 'salesOrder',
                           header: '销售订单',

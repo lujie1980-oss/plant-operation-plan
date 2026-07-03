@@ -1,6 +1,7 @@
 # §6 接口与集成契约
 
 > **约定：** Base `/api/v1`；Header `X-Workspace-Id` 必填（业务 API）。  
+> **OpenAPI 骨架（TODO-02）：** 由本节自动生成 [`docs/api/openapi.yaml`](../../api/openapi.yaml)（`GenerateOpenApiFromSdd` · `OpenApiSpecCoverageTest`）。
 > **IAM（ADR-13）：** 生产环境须 **认证**；业务 API 另校验 WS 成员与模块权限（§18 · RULE-IAM-*）。**v1 已落地** Filter + JWT/OIDC。
 > 响应 JSON；错误时 HTTP 4xx/5xx + 消息体。
 

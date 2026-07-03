@@ -387,7 +387,7 @@
 | AC-UI-03 | 产能页 SRP 超载 period 可识别 | SCN-03a · RULE-MP-07 |
 | AC-UI-04 | PlanningSignalBadge 覆盖主数据缺口/WARNING | ADR-03 · RULE-MD-06 |
 | AC-UI-05 | 旧 URL redirect 可达 canonical 页 | §17.2.2 |
-| AC-UI-06 | SCN-02c 深链跳转后目标页筛选生效 | §17.8 · TODO-09 |
+| AC-UI-06 | SCN-02c 深链跳转后目标页筛选生效 | §17.8 · UI-NAV-01~03 · `FulfillmentRootCausePanel` |
 
 ---
 
@@ -430,6 +430,7 @@
 
 | ID | 陈述 | 自动化 |
 |----|------|--------|
+| AC-API-01 | §6 契约生成 `docs/api/openapi.yaml` 与解析器输出一致 | `OpenApiSpecCoverageTest` · `SddApiContractParserTest` |
 | AC-MP-KPI-01 | `GET master-plan/kpis/{versionId}` 返回 B01~B10 与 kpiBreakdown | `MasterPlanKpiServiceIntegrationTest` · `MasterPlanKpiBreakdownBuilderTest` |
 
 ---

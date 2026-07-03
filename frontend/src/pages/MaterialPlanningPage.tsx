@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
+import { DeepLinkNotice } from '../components/DeepLinkNotice';
 import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { VerticalResizeSplit } from '../components/VerticalResizeSplit';
@@ -13,6 +15,7 @@ import type {
   MaterialDemandTreeNode,
   MaterialRequirementReport,
 } from '../types/api';
+import { DEEP_LINK_QUERY, productCodeFromDeepLinkProduct } from '../utils/masterPlanDeepLink';
 import './MaterialPlanningPage.css';
 
 const METRIC_ROWS = [
@@ -51,11 +54,14 @@ function metricValue(day: MaterialBalanceDay | undefined, key: (typeof METRIC_RO
 }
 
 export function MaterialPlanningPage({ embedded = false }: { embedded?: boolean }) {
+  const [searchParams] = useSearchParams();
+  const deepLinkProduct = searchParams.get(DEEP_LINK_QUERY.product)?.trim() || null;
   const { activePlanVersionId, selectedScenarioId, scenarios } = usePlan();
   const [report, setReport] = useState<MaterialRequirementReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [deepLinkNotice, setDeepLinkNotice] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
   const [scope, setScope] = useState<ScopeFilter>('all');
@@ -95,6 +101,30 @@ export function MaterialPlanningPage({ embedded = false }: { embedded?: boolean 
   useEffect(() => {
     void load(activePlanVersionId);
   }, [activePlanVersionId, load]);
+
+  useEffect(() => {
+    if (!deepLinkProduct) {
+      setDeepLinkNotice(null);
+      return;
+    }
+    if (!report || loading) return;
+
+    const productCode = productCodeFromDeepLinkProduct(deepLinkProduct);
+    const material =
+      report.materials.find((m) => m.pispId === deepLinkProduct) ??
+      report.materials.find((m) => m.productCode === productCode);
+
+    if (!material) {
+      setDeepLinkNotice(`深链参数 product=${deepLinkProduct} 在当前物料计划中未找到对应物料`);
+      return;
+    }
+
+    setDeepLinkNotice(null);
+    setSearch(material.productCode);
+    setScope('all');
+    setPickedMaterials([]);
+    setSelectedMaterial(material.productCode);
+  }, [deepLinkProduct, loading, report]);
 
   const kpis: DemandPoolKpi[] = report?.kpis ?? [];
   const dates = report?.dates ?? [];
@@ -251,6 +281,9 @@ export function MaterialPlanningPage({ embedded = false }: { embedded?: boolean 
         />
       )}
       {!embedded && <StatusBanner loading={loading} error={error} success={success} />}
+      {!embedded && deepLinkNotice && (
+        <DeepLinkNotice message={deepLinkNotice} onDismiss={() => setDeepLinkNotice(null)} />
+      )}
 
       {report && (
         <p className="mrp-horizon">

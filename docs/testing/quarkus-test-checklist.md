@@ -39,6 +39,17 @@
 | AC-INT-01~03 | `IntegrationApiIntegrationTest` |
 | AC-PERS-03~04 | `MasterPlanOntologySessionPersistenceIntegrationTest` |
 | AC-KN-* | `KnowledgeEffectiveEngineIntegrationTest` |
+| AC-API-01 | `OpenApiSpecCoverageTest` · `SddApiContractParserTest` |
+
+## OpenAPI skeleton (TODO-02)
+
+- Source of truth: `docs/sdd/core/06-api-contracts.md` (§6).
+- Generated artifact: `docs/api/openapi.yaml` (do not edit by hand).
+- Regenerate after §6 changes:
+
+```bash
+./mvnw -q "-Dskip.frontend.build=true" compile exec:java
+```
 
 ## CI command (local)
 

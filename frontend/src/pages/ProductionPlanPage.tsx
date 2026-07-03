@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
+import { DeepLinkNotice } from '../components/DeepLinkNotice';
 import { FulfillmentChainTree } from '../components/FulfillmentChainTree';
 import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { PpToolbar, PpToolbarHint, PpToolbarRow } from '../components/PpToolbar';
@@ -20,17 +21,21 @@ import type {
   WorkOrderCapacityGantt,
   WorkOrderDispatchResult,
 } from '../types/api';
+import { readWorkOrderNoFromSearch } from '../utils/masterPlanDeepLink';
 import './ProductionPlanPage.css';
 
 type BottomDetailTab = 'operationPlan' | 'upstream' | 'downstream';
 
 export function ProductionPlanPage({ embedded = false }: { embedded?: boolean }) {
+  const [searchParams] = useSearchParams();
+  const deepLinkWorkOrderNo = readWorkOrderNoFromSearch(searchParams)?.trim() || null;
   const { activePlanVersionId, selectedScenarioId, scenarios } = usePlan();
   const [rows, setRows] = useState<WorkOrder[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [deepLinkNotice, setDeepLinkNotice] = useState<string | null>(null);
   const [lastDispatch, setLastDispatch] = useState<WorkOrderDispatchResult | null>(null);
   const [filter, setFilter] = useState<'all' | 'pending' | 'dispatched'>('all');
 
@@ -67,6 +72,26 @@ export function ProductionPlanPage({ embedded = false }: { embedded?: boolean })
   useEffect(() => {
     void load(activePlanVersionId);
   }, [activePlanVersionId, load]);
+
+  useEffect(() => {
+    if (!deepLinkWorkOrderNo) {
+      setDeepLinkNotice(null);
+      return;
+    }
+    if (loading) return;
+
+    const match = rows.find((r) => r.workOrderNo === deepLinkWorkOrderNo);
+    if (!match) {
+      if (rows.length > 0) {
+        setDeepLinkNotice(`深链参数 workOrderNo=${deepLinkWorkOrderNo} 在当前工单列表中未找到`);
+      }
+      return;
+    }
+
+    setDeepLinkNotice(null);
+    setFilter('all');
+    setActiveWo(match);
+  }, [deepLinkWorkOrderNo, loading, rows]);
 
   const filtered = useMemo(() => {
     if (filter === 'pending') {
@@ -258,6 +283,9 @@ export function ProductionPlanPage({ embedded = false }: { embedded?: boolean })
         />
       )}
       <StatusBanner loading={loading} error={error} success={success} />
+      {deepLinkNotice && (
+        <DeepLinkNotice message={deepLinkNotice} onDismiss={() => setDeepLinkNotice(null)} />
+      )}
 
       <PpToolbar>
         <PpToolbarRow>

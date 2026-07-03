@@ -4,6 +4,8 @@ import { api } from '../api/client';
 import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { FilterableTable } from '../components/table/FilterableTable';
+import { MasterPlanBusinessKpiPanel } from '../components/MasterPlanBusinessKpiPanel';
+import '../components/MasterPlanBusinessKpiPanel.css';
 import { usePlan } from '../context/PlanContext';
 import type { PipelineRunLogLine, PlanningPipelineRun, PlanningScenario, RuleSetVersion } from '../types/api';
 import {
@@ -384,6 +386,11 @@ export function PlanRunPage() {
             </span>
           )}
         </div>
+        <MasterPlanBusinessKpiPanel
+          className="plan-run-kpi-panel"
+          planVersionId={runScenario?.currentPlanVersionId ?? masterPlan?.planVersionId}
+          showBreakdown
+        />
         <FilterableTable
           tableId="plan-run-pipeline"
           wrapClassName="dash-detail-table-wrap ft-table-wrap"

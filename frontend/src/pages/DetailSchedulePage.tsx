@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
+import { DeepLinkNotice } from '../components/DeepLinkNotice';
 import { AssignLineDialog } from '../components/AssignLineDialog';
 import { BatchOperationListPanel } from '../components/BatchOperationListPanel';
 import { DetailScheduleKpiPanel } from '../components/DetailScheduleKpiPanel';
@@ -23,6 +24,7 @@ import type { DetailSchedulePlanningPreviewOperation } from '../types/detailSche
 import type { SessionStepPatch } from '../types/scheduleSession';
 import type { GanttDragCommit } from '../utils/ganttDragDrop';
 import { buildMachineScheduleModel } from '../utils/machineScheduleModel';
+import { readWorkOrderNoFromSearch } from '../utils/masterPlanDeepLink';
 import { previewOperationsToGantt } from '../utils/previewOperationsToGantt';
 import {
   buildBatchPatches,
@@ -49,6 +51,8 @@ type AssignDialogState =
     };
 
 export function DetailSchedulePage() {
+  const [searchParams] = useSearchParams();
+  const deepLinkWorkOrderNo = readWorkOrderNoFromSearch(searchParams)?.trim() || null;
   const { activePlanVersionId, setDetailSchedule, setMasterPlan } = usePlan();
   const { viewHistory, registerNewVersion, activeVersionId } = useScheduleVersion();
   const {
@@ -69,6 +73,7 @@ export function DetailSchedulePage() {
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [deepLinkNotice, setDeepLinkNotice] = useState<string | null>(null);
   const [refreshMasterPlan, setRefreshMasterPlan] = useState(true);
   const [feedbackCutoff, setFeedbackCutoff] = useState(() => new Date().toISOString().slice(0, 10));
   const [selectedBatch, setSelectedBatch] = useState<ProductionBatchKitting | null>(null);
@@ -462,6 +467,9 @@ export function DetailSchedulePage() {
         description="左侧 KPI；右上批次与工序；下方全量可拖拽推演甘特。"
       />
       <StatusBanner loading={busy} error={bannerError} success={success} />
+      {deepLinkNotice && (
+        <DeepLinkNotice message={deepLinkNotice} onDismiss={() => setDeepLinkNotice(null)} />
+      )}
 
       <PpToolbar className="ds-toolbar-compact">
         <PpToolbarRow>
@@ -593,6 +601,12 @@ export function DetailSchedulePage() {
                       onScheduleBatch={(b) => void handleScheduleBatch(b)}
                       onPickBatchLine={openBatchLineDialog}
                       onCancelBatchPlan={handleCancelBatchPlan}
+                      workOrderNoFilter={deepLinkWorkOrderNo}
+                      onWorkOrderFilterMiss={() =>
+                        setDeepLinkNotice(
+                          `深链参数 workOrderNo=${deepLinkWorkOrderNo} 在待排批次中未找到`,
+                        )
+                      }
                     />
                   }
                   right={

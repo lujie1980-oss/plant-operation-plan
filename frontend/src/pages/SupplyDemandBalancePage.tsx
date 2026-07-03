@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
+import { DeepLinkNotice } from '../components/DeepLinkNotice';
 import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { FilterableTable, type TableColumnDef } from '../components/table/FilterableTable';
@@ -14,6 +16,7 @@ import type {
   ReservationAlert,
   SupplyRoutingCandidate,
 } from '../types/api';
+import { DEEP_LINK_QUERY, productCodeFromDeepLinkProduct } from '../utils/masterPlanDeepLink';
 import './MaterialPlanningPage.css';
 
 const METRIC_ROWS = [
@@ -47,11 +50,14 @@ function metricValue(
 }
 
 export function SupplyDemandBalancePage() {
+  const [searchParams] = useSearchParams();
+  const deepLinkProduct = searchParams.get(DEEP_LINK_QUERY.product)?.trim() || null;
   const { activePlanVersionId } = usePlan();
   const [report, setReport] = useState<MaterialRequirementReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [deepLinkNotice, setDeepLinkNotice] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [selectedPispId, setSelectedPispId] = useState<string | null>(null);
   const [periodFrom, setPeriodFrom] = useState<string | null>(null);
@@ -83,6 +89,28 @@ export function SupplyDemandBalancePage() {
   useEffect(() => {
     void load(activePlanVersionId);
   }, [activePlanVersionId, load]);
+
+  useEffect(() => {
+    if (!deepLinkProduct) {
+      setDeepLinkNotice(null);
+      return;
+    }
+    if (!report || loading) return;
+
+    const productCode = productCodeFromDeepLinkProduct(deepLinkProduct);
+    const material =
+      report.materials.find((m) => m.pispId === deepLinkProduct) ??
+      report.materials.find((m) => m.productCode === productCode);
+
+    if (!material?.pispId) {
+      setDeepLinkNotice(`深链参数 product=${deepLinkProduct} 在当前供需平衡中未找到对应 PISP`);
+      return;
+    }
+
+    setDeepLinkNotice(null);
+    setSearch(material.productCode);
+    setSelectedPispId(material.pispId);
+  }, [deepLinkProduct, loading, report]);
 
   const periodHeaders: MaterialPeriodHeader[] = report?.periodHeaders ?? [];
 
@@ -387,13 +415,14 @@ export function SupplyDemandBalancePage() {
   return (
     <div className="mrp-page">
       <PageHeader
-        {...DECISION_PAGE_HEADER}
+        variant={DECISION_PAGE_HEADER}
         title="供需平衡"
-        subtitle="PISPP 期间桶视图 · SCN-07a~d"
+        showScenarioSelector
+        description="PISPP 期间桶视图 · SCN-07a~d"
       />
-      {error && <StatusBanner variant="error" message={error} onDismiss={() => setError(null)} />}
-      {success && (
-        <StatusBanner variant="success" message={success} onDismiss={() => setSuccess(null)} />
+      <StatusBanner loading={loading || actionLoading} error={error} success={success} />
+      {deepLinkNotice && (
+        <DeepLinkNotice message={deepLinkNotice} onDismiss={() => setDeepLinkNotice(null)} />
       )}
       {report && (
         <p className="mrp-horizon">

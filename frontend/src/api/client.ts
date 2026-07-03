@@ -40,6 +40,7 @@ import type {
   CreateRuleSetVersionPayload,
   ScenarioComparison,
 } from '../types/api';
+import type { MasterPlanKpisResponse } from '../types/masterPlanKpis';
 import type {
   FactoryCalendarDay,
   FactoryCalendarMonth,
@@ -456,6 +457,8 @@ export const api = {
       body: JSON.stringify({ strategyId, capacityStrategy }),
     }),
   getMasterPlan: (versionId: string) => request<MasterPlanResult>(`/api/v1/planning/master-plan/result/${versionId}`),
+  getMasterPlanKpis: (versionId: string) =>
+    request<MasterPlanKpisResponse>(`/api/v1/planning/master-plan/kpis/${encodeURIComponent(versionId)}`),
   previewMasterPlanPlanning: (body: MasterPlanPlanningPreviewRequest) =>
     request<MasterPlanPlanningPreview>('/api/v1/planning/master-plan/preview', {
       method: 'POST',

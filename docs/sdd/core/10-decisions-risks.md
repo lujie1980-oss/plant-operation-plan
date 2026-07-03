@@ -250,21 +250,21 @@
 | ID | 项 | 负责人 |
 |----|-----|--------|
 | TODO-01 | 为现有测试补 `@SpecRef(AC-xx)` | 开发 | **已完成 2026-07-03** · `@SpecRef` 注解 · `SpecRefCoverageTest` · 核心 AC 集成测试已标注 |
-| TODO-02 | OpenAPI 从 §6 生成契约骨架 | 开发 |
+| TODO-02 | OpenAPI 从 §6 生成契约骨架 | 开发 | **已完成 2026-07-03** · `SddApiContractParser` · `docs/api/openapi.yaml` · `OpenApiSpecCoverageTest` |
 | TODO-03 | 多 COLD 批次场景 SCN 扩展 | 产品 |
 | TODO-04 | ~~直驱默认签字~~ → 并入 TODO-08（ADR-08 废止 PATH-ENT） | PO |
 | TODO-05 | 重生成演练：仅凭规范盲重建模块 | 架构 |
 | TODO-06 | ~~对齐 ADR-07~~（2026-06-20 已实现） | 开发 |
 | TODO-07 | S05/分切求解配置纳入统一配置或插件体系 | 架构+开发 |
 | TODO-08 | ~~**PATH-ENT 代码退役（ADR-08）**~~ **已收口 2026-07-01**：Session `optimizeLegacy` / `ontology_direct_solve_enabled` 已删；`MasterPlanService` 统一 `MasterPlanOntologyScheduleBuilder`；AC-05 废止 | — |
-| TODO-09 | SCN-02c/03b/04 跳转与试算页 UI 对齐 **[§17.8](../volumes/platform/17-ui-ux.md#178-跨页导航契约ui-nav-)** | 产品+前端 |
+| TODO-09 | SCN-02c/03b/04 跳转与试算页 UI 对齐 **[§17.8](../volumes/platform/17-ui-ux.md#178-跨页导航契约ui-nav-)** | 产品+前端 | **已完成 2026-07-03** · UI-NAV-01~03 · `FulfillmentRootCausePanel` · 深链 query 筛选 |
 | TODO-10 | ~~SCN-01f：`CANCEL_PROMISE`；SCN-01e 与取消承诺解耦~~ **已收口 2026-07-02**（`OrderDemandCancelPromiseService` · `OrderDemandActionOntologyChainTest`） | — |
 | TODO-11 | ~~SCN-07 供需平衡专页、PISPP period、MAT-02~08~~ **已收口 2026-07-02**（含 **SCN-07d OPTIMIZE**、多路径 ENT-RT · `routing_path_priority`） | — |
 | TODO-12 | ~~**ADR-09 全量 Ontology 持久化**~~ **已收口 2026-07-01**（P0~P5 + Sprint 6A~6D）；loader 内部化文档化 · 后续扩展见 **TODO-24**（PRP）· **TODO-21**（`ont_period` DDL） | — |
 | TODO-13 | **ADR-10 External_* 主数据**：staging、质检、sync、md_*、Projector 切读 | 架构+开发 · **M0–M5 已完成 2026-07-03** |
 | TODO-14 | **ADR-11 外部交易数据**：external_* / txn_*、Firm WO 同步、质检、OG 装载切读 | 架构+开发 · **T0–T5 已完成 2026-07-03** |
 | TODO-15 | **ADR-12 业务知识三层**：KnowledgeContext、Industry pack、overlay 表、引擎接 Effective | 架构+产品 · **K0–K4 已完成 2026-07-03** |
-| TODO-16 | **§15 主计划 KPI 结构化**：`kpiBreakdown` API、求解器域分、B01~B10 面板 | 开发+产品 | **已完成 2026-06-28** · `GET /api/v1/planning/master-plan/kpis/{versionId}` · `MasterPlanKpiService` · V77 |
+| TODO-16 | **§15 主计划 KPI 结构化**：`kpiBreakdown` API、求解器域分、B01~B10 面板 | 开发+产品 | **已完成 2026-06-28** · `GET /api/v1/planning/master-plan/kpis/{versionId}` · `MasterPlanKpiService` · V77 · 前端 `MasterPlanBusinessKpiPanel`（计划运行/需求/产能页） |
 | TODO-17 | ~~**§16 供需知识 UI**~~ **已收口 2026-07-02**：BusinessRules 六 tab + 细排反馈只读页；`delivery-date-strategy` / `supply-quantity-rules` / `resource-efficiency` / `routing-step-*` API | — |
 | TODO-18 | ~~ADR-13 IAM~~：**已完成 2026-06** — M0–M4（Filter、JWT、OIDC 联调、Super Admin UI、侧栏 MOD） | 架构+前后端 |
 | TODO-19 | **ADR-14 数据集成**：MOD-DI UI、ADP-ERP-SAP/MES/Excel SPI、external 浏览 API | 架构+前后端 · **API-INT-01~08 + ADP SPI 已完成 2026-07-03** |

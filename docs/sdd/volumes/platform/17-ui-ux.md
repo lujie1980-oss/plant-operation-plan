@@ -230,7 +230,7 @@ flowchart LR
 | SCN-01d~f | 需求满足 | `DemandActionConfirmDialog` |
 | SCN-01g~h | 需求满足 | JIT / 有限能力建链 |
 | SCN-02a~b | 需求满足 | KPI 条 + 根因 panel |
-| SCN-02c | 需求满足 → 产能/物料 | **深链 + 自动筛选** `[GAP]` TODO-09 |
+| SCN-02c | 需求满足 → 产能/物料 | **深链 + 自动筛选**（UI-NAV-01/02） |
 | SCN-03a~c | 产能平衡 | 超载 KPI；simulate 能力 `[GAP]` 深度 |
 | SCN-04a~c | 物料计划 | 短缺表；试算 `[GAP]` |
 | SCN-05a~d | 生产工单 | 工单层级表；跳转细排 |
@@ -247,10 +247,10 @@ flowchart LR
 
 | ID | 触发 | 目标 | Query/State | 状态 |
 |----|------|------|-------------|------|
-| **UI-NAV-01** | SCN-02c「查看产能计划」 | `/master-plan/analysis/capacity` | `?resource={srId}` | 路由已实现；**query 深链筛选** `[GAP]` · TODO-09 |
-| **UI-NAV-02** | SCN-02c「查看物料计划」 | `/master-plan/analysis/material-planning` | `?product={pispId}` | 路由已实现（`MaterialPlanningPage`）；**query 深链筛选** `[GAP]` · TODO-09 |
-| **UI-NAV-03** | SCN-03b 点击工单 | `/master-plan/analysis/work-orders` | `?workOrderNo=` | 路由已实现；**query 深链筛选** `[GAP]` · TODO-09 |
-| **UI-NAV-04** | 生产工单 → 细排 | `/scheduling/detail-schedule` | `?workOrderNo=` | 部分实现 |
+| **UI-NAV-01** | SCN-02c「查看产能计划」 | `/master-plan/analysis/capacity` | `?resource={srId}` | **已实现** · `CapacityPage` |
+| **UI-NAV-02** | SCN-02c「查看物料计划」 | `/master-plan/analysis/material-planning` | `?product={pispId}` | **已实现** · `MaterialPlanningPage` |
+| **UI-NAV-03** | SCN-03b 点击工单 | `/master-plan/analysis/work-orders` | `?workOrderNo=` | **已实现** · `ProductionPlanPage` |
+| **UI-NAV-04** | 生产工单 → 细排 | `/scheduling/detail-schedule` | `?workOrderNo=` | **已实现** · `DetailSchedulePage` |
 
 **规则：** 目标页 **必须** 读取 URL query 并应用表格筛选；若参数无效，显示 `StatusBanner` 提示而非静默忽略。
 
@@ -363,7 +363,7 @@ BusinessRules 页 **内嵌于计划模块**；**不得** 再使用全局 `/busin
 | 项 | 规范 | 现状 | 跟踪 |
 |----|------|------|------|
 | 供需平衡专页 | SCN-07 · §3 | 物料计划页过渡 | TODO-11 |
-| SCN-02c/03b 跳转 | §17.8 | 未自动筛选 | TODO-09 |
+| SCN-02c/03b 跳转 | §17.8 | UI-NAV-01~03 深链筛选 | **已完成 2026-07-03** |
 | §16 六 tab | BusinessRules | **已实现 2026-07-02**（TODO-17） | — |
 | **IAM** | §18 · SCN-T06 | 登录/RBAC/MOD 过滤/Super Admin **已落地** | — |
 | **数据集成 MOD-DI** | §19 · SCN-T07 | `/integration` 骨架已建；API/ADP 待建 | **TODO-19** |
