@@ -261,7 +261,7 @@
 | TODO-10 | ~~SCN-01f：`CANCEL_PROMISE`；SCN-01e 与取消承诺解耦~~ **已收口 2026-07-02**（`OrderDemandCancelPromiseService` · `OrderDemandActionOntologyChainTest`） | — |
 | TODO-11 | ~~SCN-07 供需平衡专页、PISPP period、MAT-02~08~~ **已收口 2026-07-02**（含 **SCN-07d OPTIMIZE**、多路径 ENT-RT · `routing_path_priority`） | — |
 | TODO-12 | ~~**ADR-09 全量 Ontology 持久化**~~ **已收口 2026-07-01**（P0~P5 + Sprint 6A~6D）；loader 内部化文档化 · 后续扩展见 **TODO-24**（PRP）· **TODO-21**（`ont_period` DDL） | — |
-| TODO-13 | **ADR-10 External_* 主数据**：staging、质检、sync、md_*、Projector 切读 | 架构+开发 |
+| TODO-13 | **ADR-10 External_* 主数据**：staging、质检、sync、md_*、Projector 切读 | 架构+开发 · **M0–M4 已完成 2026-06-28** · M5 legacy 退役待办 |
 | TODO-14 | **ADR-11 外部交易数据**：external_* / txn_*、Firm WO 同步、质检、OG 装载切读 | 架构+开发 |
 | TODO-15 | **ADR-12 业务知识三层**：KnowledgeContext、Industry pack、overlay 表、引擎接 Effective | 架构+产品 |
 | TODO-16 | **§15 主计划 KPI 结构化**：`kpiBreakdown` API、求解器域分、B01~B10 面板 | 开发+产品 |
@@ -361,14 +361,14 @@
 
 ### TODO-13 分阶段（ADR-10）
 
-| 阶段 | 交付 | 验收 |
-|------|------|------|
-| **M0 Schema** | Flyway `external_*` + `md_*` + 公共质量列 | 表与 §11 一致 |
-| **M1 Import** | 只写 external；Excel/API 导入 | AC-MD-01 |
-| **M2 Quality** | `MasterDataQualityService` + issue_codes | AC-MD-02 |
-| **M3 Sync** | 有序 sync → md_* | AC-MD-03 |
-| **M4 Projector** | `MasterPlanRoutingProjector` 读 md_* | AC-MD-04 · RULE-MD-01 |
-| **M5 Legacy 退役** | 停止直写 legacy 作计划源 | AC-MD-05 |
+| 阶段 | 交付 | 验收 | 状态 |
+|------|------|------|------|
+| **M0 Schema** | Flyway `external_*` + `md_*` + 公共质量列 | 表与 §11 一致 | **已完成** · `V73` |
+| **M1 Import** | 只写 external；Excel/API 导入 | AC-MD-01 | **已完成** · `MasterDataExternalImportService` · `POST .../master-data/import/routing` |
+| **M2 Quality** | `MasterDataQualityService` + issue_codes | AC-MD-02 | **已完成** · `POST .../master-data/quality/check` |
+| **M3 Sync** | 有序 sync → md_* | AC-MD-03 | **已完成** · `MasterDataSyncService` · `POST .../master-data/sync` |
+| **M4 Projector** | `MasterPlanRoutingProjector` 读 md_* | AC-MD-04 · RULE-MD-01 | **已完成** · `MdRoutingReadService` |
+| **M5 Legacy 退役** | 停止直写 legacy 作计划源 | AC-MD-05 | 待办 |
 
 ### TODO-14 分阶段（ADR-11）
 

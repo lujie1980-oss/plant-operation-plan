@@ -105,7 +105,7 @@ public class MasterPlanDataModelService {
                 : assignment.productCode();
         String pispId = OntologyIds.pispId(assignment.productCode(), assignment.stockingPointId());
         boolean hasRouting = !StockingPoint.RAW.equals(assignment.stockingPointId())
-                && MasterPlanRoutingProjector.hasRouting(assignment.productCode());
+                && routingProjector.hasRoutingForProduct(assignment.productCode());
         return new ProductInStockingPointNodeDto(
                 pispId,
                 assignment.productCode(),
