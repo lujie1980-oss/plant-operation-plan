@@ -1,4 +1,6 @@
-target/
+target/*
+!target/quarkus-app/
+!target/quarkus-app/**
 frontend/node_modules/
 frontend/dist/
 .git/

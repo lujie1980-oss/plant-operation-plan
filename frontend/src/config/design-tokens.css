@@ -1,0 +1,34 @@
+/**
+ * Design tokens — aligned with docs/sdd/volumes/platform/17-ui-ux.md §17.3
+ * Ant Design theme maps these via config/antTheme.ts
+ */
+:root {
+  --shell-bg: #f1f5f9;
+  --sidebar-bg-start: #0f172a;
+  --sidebar-bg-end: #1e293b;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --accent-link: #3b82f6;
+  --accent-primary: #3b82f6;
+  --border: #e2e8f0;
+  --surface: #ffffff;
+
+  --ui-gap-xs: 0.25rem;
+  --ui-gap-sm: 0.4rem;
+  --ui-gap-md: 0.65rem;
+  --ui-gap-lg: 0.85rem;
+  --ui-card-pad: 0.75rem;
+  --ui-card-radius: 8px;
+  --ui-page-title: 1.25rem;
+  --ui-font-xs: 0.72rem;
+  --ui-font-sm: 0.8125rem;
+  --ui-row-h: 1.625rem;
+  --ui-toolbar-h: 2.25rem;
+  --ui-chrome-max: 4.5rem;
+  --gantt-bar-height-ratio: 0.7;
+
+  --badge-ok: #16a34a;
+  --badge-danger: #dc2626;
+  --badge-warn: #d97706;
+  --badge-muted: #94a3b8;
+}

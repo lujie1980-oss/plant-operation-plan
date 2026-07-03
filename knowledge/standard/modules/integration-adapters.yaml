@@ -1,0 +1,63 @@
+# 数据集成适配器注册表（ADP-*）
+# 写入 external_* staging；不 bypass 质检（RULE-MD-* / RULE-TX-*）
+
+adapters:
+  - id: ADP-ERP-SAP
+    name: ERP 适配器（SAP）
+    type: ERP
+    vendor: SAP
+    phase: 1
+    source_system_code: ERP_SAP
+    description: 对接 SAP ERP（RFC/BAPI/OData/IDoc 可插拔）；主数据 + 交易数据
+    supported_domains:
+      - master: [stocking_point, pisp, routing, resource, bom]
+      - transactional: [customer_order, work_order, inventory, purchase_order]
+    config_schema:
+      - connectionUrl
+      - client
+      - user
+      - credentialRef
+      - pollCron
+      - idocTypeMap
+    writes_to: external_*
+
+  - id: ADP-ERP-GENERIC
+    name: ERP 适配器（通用）
+    type: ERP
+    vendor: GENERIC
+    phase: 2
+    source_system_code: ERP_GENERIC
+    description: 非 SAP ERP 扩展槽；与 ADP-ERP-SAP 同 External 契约
+    extends: ADP-ERP-SAP
+    status: planned
+
+  - id: ADP-MES
+    name: MES 适配器
+    type: MES
+    phase: 1
+    source_system_code: MES_DEFAULT
+    description: 工单反馈、设备状态、SchedulerFeedback 产能占用等
+    supported_domains:
+      - transactional: [work_order, work_order_operation, scheduler_feedback]
+    config_schema:
+      - baseUrl
+      - credentialRef
+      - pollCron
+      - plantCode
+    writes_to: external_*
+
+  - id: ADP-EXCEL
+    name: Excel 数据适配器
+    type: FILE
+    phase: 1
+    source_system_code: EXCEL_IMPORT
+    description: 按 §11/§12 external_* 列模板从 Excel 导入；生成 import_batch_id
+    supported_domains:
+      - master: all
+      - transactional: all
+    config_schema:
+      - templateVersion
+      - sheetMapping
+      - validateOnly
+    writes_to: external_*
+    templates_path: knowledge/standard/integration/excel-templates/

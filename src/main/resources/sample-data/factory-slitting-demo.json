@@ -1,0 +1,740 @@
+{
+  "_meta": {
+    "workspace": "slitting-demo",
+    "description": "分切优化多场景演示数据",
+    "scenarios": [
+      "1600mm 宽母卷 + 多宽度子卷拼排（自动分切/锁定）",
+      "N83 离型纸 1500/1520/1555 多级 BOM 分切",
+      "1000mm 标准卷快速验证",
+      "同宽不同长、同长不同宽、多数量订单混合"
+    ]
+  },
+  "materials": [
+    {
+      "materialCode": "M69/305*600M/1R/深黄",
+      "materialName": "PE管美纹",
+      "materialType": "成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "M69/730mm/深黄/3M",
+      "materialName": "美纹半成品-深黄730",
+      "materialType": "半成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "M69/730mm/浅黄/3M",
+      "materialName": "美纹半成品-浅黄730",
+      "materialType": "半成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "M69/800mm/深黄/3M",
+      "materialName": "美纹半成品-深黄800",
+      "materialType": "半成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "L80H/1515mm/深黄/3M",
+      "materialName": "L80H半成品",
+      "materialType": "半成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "GL60D/1520mm/深黄/3M",
+      "materialName": "GL60D半成品",
+      "materialType": "半成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "E48/1555mm/深黄/3M",
+      "materialName": "E48半成品",
+      "materialType": "半成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "materialName": "N离型纸（预处理）",
+      "materialType": "半成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "N83/1520mm/深黄/反面淋硅/已处理",
+      "materialName": "N离型纸1520",
+      "materialType": "半成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "N83/1555mm/深黄/反面淋硅/已处理",
+      "materialName": "N离型纸1555",
+      "materialType": "半成品",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "N83/1500mm/深黄/反面淋硅",
+      "materialName": "N离型纸",
+      "materialType": "原材料",
+      "uomCode": "卷"
+    },
+    {
+      "materialCode": "空白箱",
+      "materialName": "空白箱",
+      "materialType": "包材",
+      "uomCode": "个"
+    },
+    {
+      "materialCode": "3寸PE管芯",
+      "materialName": "3寸PE管芯",
+      "materialType": "包材",
+      "uomCode": "个"
+    }
+  ],
+  "salesOrderLines": [
+    {
+      "salesOrderNo": "SD01",
+      "salesOrderLineNo": 10,
+      "customerCode": "DEMO",
+      "productCode": "M69/730mm/深黄/3M",
+      "orderQty": 126,
+      "dueDate": "2026-07-01",
+      "priority": 20,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "SD02",
+      "salesOrderLineNo": 10,
+      "customerCode": "DEMO",
+      "productCode": "M69/730mm/浅黄/3M",
+      "orderQty": 128,
+      "dueDate": "2026-07-02",
+      "priority": 19,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "SD03",
+      "salesOrderLineNo": 10,
+      "customerCode": "DEMO",
+      "productCode": "M69/800mm/深黄/3M",
+      "orderQty": 300,
+      "dueDate": "2026-07-03",
+      "priority": 18,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "SD04",
+      "salesOrderLineNo": 10,
+      "customerCode": "DEMO",
+      "productCode": "L80H/1515mm/深黄/3M",
+      "orderQty": 500,
+      "dueDate": "2026-07-05",
+      "priority": 17,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "SD05",
+      "salesOrderLineNo": 10,
+      "customerCode": "DEMO",
+      "productCode": "GL60D/1520mm/深黄/3M",
+      "orderQty": 98,
+      "dueDate": "2026-07-06",
+      "priority": 16,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "SD06",
+      "salesOrderLineNo": 10,
+      "customerCode": "DEMO",
+      "productCode": "E48/1555mm/深黄/3M",
+      "orderQty": 200,
+      "dueDate": "2026-07-07",
+      "priority": 15,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "SD07",
+      "salesOrderLineNo": 10,
+      "customerCode": "DEMO",
+      "productCode": "M69/730mm/深黄/3M",
+      "orderQty": 80,
+      "dueDate": "2026-07-08",
+      "priority": 14,
+      "status": "OPEN"
+    },
+    {
+      "salesOrderNo": "SD08",
+      "salesOrderLineNo": 10,
+      "customerCode": "DEMO",
+      "productCode": "M69/800mm/深黄/3M",
+      "orderQty": 60,
+      "dueDate": "2026-07-09",
+      "priority": 13,
+      "status": "OPEN"
+    }
+  ],
+  "bomComponents": [
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "M69/730mm/深黄/3M",
+      "componentQty": 1,
+      "isCriticalComponent": true
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "M69/730mm/浅黄/3M",
+      "componentQty": 1,
+      "isCriticalComponent": true
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "M69/800mm/深黄/3M",
+      "componentQty": 1,
+      "isCriticalComponent": true
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "L80H/1515mm/深黄/3M",
+      "componentQty": 1,
+      "isCriticalComponent": true
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "GL60D/1520mm/深黄/3M",
+      "componentQty": 1,
+      "isCriticalComponent": true
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "E48/1555mm/深黄/3M",
+      "componentQty": 1,
+      "isCriticalComponent": true
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/305*600M/1R/深黄",
+      "componentProductCode": "空白箱",
+      "componentQty": 1,
+      "isCriticalComponent": false
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "M69/730mm/深黄/3M",
+      "componentProductCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "componentQty": 1,
+      "isCriticalComponent": true
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "componentProductCode": "N83/1500mm/深黄/反面淋硅",
+      "componentQty": 1,
+      "isCriticalComponent": true
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "componentProductCode": "N83/1520mm/深黄/反面淋硅/已处理",
+      "componentQty": 1,
+      "isCriticalComponent": false
+    },
+    {
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "parentProductCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "componentProductCode": "N83/1555mm/深黄/反面淋硅/已处理",
+      "componentQty": 1,
+      "isCriticalComponent": false
+    }
+  ],
+  "inventory": [
+    {
+      "stockingPointCode": "WH-DEMO",
+      "productCode": "M69/305*600M/1R/深黄",
+      "onhandQty": 12,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-DEMO",
+      "productCode": "M69/730mm/深黄/3M",
+      "onhandQty": 50,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-DEMO",
+      "productCode": "M69/730mm/浅黄/3M",
+      "onhandQty": 40,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-DEMO",
+      "productCode": "M69/800mm/深黄/3M",
+      "onhandQty": 80,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-DEMO",
+      "productCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "onhandQty": 25,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-DEMO",
+      "productCode": "N83/1520mm/深黄/反面淋硅/已处理",
+      "onhandQty": 18,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-DEMO",
+      "productCode": "N83/1555mm/深黄/反面淋硅/已处理",
+      "onhandQty": 15,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-DEMO",
+      "productCode": "L80H/1515mm/深黄/3M",
+      "onhandQty": 30,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-DEMO",
+      "productCode": "GL60D/1520mm/深黄/3M",
+      "onhandQty": 22,
+      "reservedQty": 0
+    },
+    {
+      "stockingPointCode": "WH-DEMO",
+      "productCode": "E48/1555mm/深黄/3M",
+      "onhandQty": 20,
+      "reservedQty": 0
+    }
+  ],
+  "resources": [
+    {
+      "resourceId": "分条-开平",
+      "areaId": "美纹车间",
+      "bottleneck": false,
+      "runRatePerHour": 60
+    }
+  ],
+  "productResources": [
+    {
+      "productCode": "M69/305*600M/1R/深黄",
+      "resourceId": "分条-开平",
+      "setupTimeMinutes": 10,
+      "sequenceNo": 1,
+      "operationName": "分切",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "M69/730mm/深黄/3M",
+      "resourceId": "分条-开平",
+      "setupTimeMinutes": 10,
+      "sequenceNo": 1,
+      "operationName": "分切",
+      "processTimeSeconds": 60
+    },
+    {
+      "productCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "resourceId": "分条-开平",
+      "setupTimeMinutes": 10,
+      "sequenceNo": 1,
+      "operationName": "分切",
+      "processTimeSeconds": 60
+    }
+  ],
+  "lines": [
+    {
+      "lineId": "LINE-分条",
+      "areaId": "美纹车间",
+      "resourceId": "分条-开平",
+      "lineMinHeadcount": 2,
+      "lineCapacityPerShift": 480
+    }
+  ],
+  "changeoverMatrix": [],
+  "workOrders": [],
+  "masterRolls": [
+    {
+      "rollCode": "MR-DEMO-1600-A",
+      "widthMm": 1600,
+      "lengthMm": 600000,
+      "productCode": "M69/305*600M/1R/深黄",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "materialCode": "PE",
+      "kerfLongitudinalMm": 2,
+      "kerfTransverseMm": 2,
+      "status": "AVAILABLE"
+    },
+    {
+      "rollCode": "MR-DEMO-1600-B",
+      "widthMm": 1600,
+      "lengthMm": 600000,
+      "productCode": "M69/305*600M/1R/深黄",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "materialCode": "PE",
+      "kerfLongitudinalMm": 2,
+      "kerfTransverseMm": 2,
+      "status": "AVAILABLE"
+    },
+    {
+      "rollCode": "MR-DEMO-1000-ST",
+      "widthMm": 1000,
+      "lengthMm": 30000,
+      "productCode": "M69/305*600M/1R/深黄",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "materialCode": "PE",
+      "kerfLongitudinalMm": 2,
+      "kerfTransverseMm": 2,
+      "status": "AVAILABLE"
+    },
+    {
+      "rollCode": "MR-DEMO-1500-N83",
+      "widthMm": 1500,
+      "lengthMm": 600000,
+      "productCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "materialCode": "PE",
+      "kerfLongitudinalMm": 2,
+      "kerfTransverseMm": 2,
+      "status": "AVAILABLE"
+    },
+    {
+      "rollCode": "MR-DEMO-1520-N83",
+      "widthMm": 1520,
+      "lengthMm": 600000,
+      "productCode": "N83/1520mm/深黄/反面淋硅/已处理",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "materialCode": "PE",
+      "kerfLongitudinalMm": 2,
+      "kerfTransverseMm": 2,
+      "status": "AVAILABLE"
+    },
+    {
+      "rollCode": "MR-DEMO-1555-N83",
+      "widthMm": 1555,
+      "lengthMm": 600000,
+      "productCode": "N83/1555mm/深黄/反面淋硅/已处理",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "materialCode": "PE",
+      "kerfLongitudinalMm": 2,
+      "kerfTransverseMm": 2,
+      "status": "AVAILABLE"
+    },
+    {
+      "rollCode": "MR-DEMO-1515-L80H",
+      "widthMm": 1515,
+      "lengthMm": 600000,
+      "productCode": "L80H/1515mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "materialCode": "PE",
+      "kerfLongitudinalMm": 2,
+      "kerfTransverseMm": 2,
+      "status": "AVAILABLE"
+    },
+    {
+      "rollCode": "MR-DEMO-1520-GL60D",
+      "widthMm": 1520,
+      "lengthMm": 600000,
+      "productCode": "GL60D/1520mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "materialCode": "PE",
+      "kerfLongitudinalMm": 2,
+      "kerfTransverseMm": 2,
+      "status": "AVAILABLE"
+    }
+  ],
+  "childSlittingOrders": [
+    {
+      "orderCode": "CO-DEMO-730-1",
+      "widthMm": 730,
+      "lengthMm": 3000,
+      "quantity": 1,
+      "priority": 30,
+      "productCode": "M69/730mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN",
+      "salesOrderNo": "SD01",
+      "salesOrderLineNo": 10
+    },
+    {
+      "orderCode": "CO-DEMO-730-2",
+      "widthMm": 730,
+      "lengthMm": 5000,
+      "quantity": 1,
+      "priority": 29,
+      "productCode": "M69/730mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN",
+      "salesOrderNo": "SD07",
+      "salesOrderLineNo": 10
+    },
+    {
+      "orderCode": "CO-DEMO-730-3",
+      "widthMm": 730,
+      "lengthMm": 3000,
+      "quantity": 1,
+      "priority": 28,
+      "productCode": "M69/730mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-730-L1",
+      "widthMm": 730,
+      "lengthMm": 3000,
+      "quantity": 1,
+      "priority": 27,
+      "productCode": "M69/730mm/浅黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN",
+      "salesOrderNo": "SD02",
+      "salesOrderLineNo": 10
+    },
+    {
+      "orderCode": "CO-DEMO-730-L2",
+      "widthMm": 730,
+      "lengthMm": 4500,
+      "quantity": 1,
+      "priority": 26,
+      "productCode": "M69/730mm/浅黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-800-1",
+      "widthMm": 800,
+      "lengthMm": 3000,
+      "quantity": 1,
+      "priority": 25,
+      "productCode": "M69/800mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN",
+      "salesOrderNo": "SD03",
+      "salesOrderLineNo": 10
+    },
+    {
+      "orderCode": "CO-DEMO-800-2",
+      "widthMm": 800,
+      "lengthMm": 3000,
+      "quantity": 1,
+      "priority": 24,
+      "productCode": "M69/800mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN",
+      "salesOrderNo": "SD08",
+      "salesOrderLineNo": 10
+    },
+    {
+      "orderCode": "CO-DEMO-800-3",
+      "widthMm": 800,
+      "lengthMm": 6000,
+      "quantity": 1,
+      "priority": 23,
+      "productCode": "M69/800mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-350-1",
+      "widthMm": 350,
+      "lengthMm": 3000,
+      "quantity": 2,
+      "priority": 22,
+      "productCode": "M69/730mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-200-1",
+      "widthMm": 200,
+      "lengthMm": 3000,
+      "quantity": 2,
+      "priority": 21,
+      "productCode": "M69/730mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-280-1",
+      "widthMm": 280,
+      "lengthMm": 8000,
+      "quantity": 1,
+      "priority": 20,
+      "productCode": "M69/730mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-400-1",
+      "widthMm": 400,
+      "lengthMm": 4000,
+      "quantity": 1,
+      "priority": 19,
+      "productCode": "M69/730mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-N83-730",
+      "widthMm": 730,
+      "lengthMm": 6000,
+      "quantity": 1,
+      "priority": 18,
+      "productCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-N83-400",
+      "widthMm": 400,
+      "lengthMm": 6000,
+      "quantity": 1,
+      "priority": 17,
+      "productCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-N83-350",
+      "widthMm": 350,
+      "lengthMm": 6000,
+      "quantity": 1,
+      "priority": 16,
+      "productCode": "N83/1500mm/深黄/反面淋硅/已处理",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-L80H-1",
+      "widthMm": 1515,
+      "lengthMm": 3000,
+      "quantity": 1,
+      "priority": 15,
+      "productCode": "L80H/1515mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN",
+      "salesOrderNo": "SD04",
+      "salesOrderLineNo": 10
+    },
+    {
+      "orderCode": "CO-DEMO-GL60D-1",
+      "widthMm": 1520,
+      "lengthMm": 3000,
+      "quantity": 1,
+      "priority": 14,
+      "productCode": "GL60D/1520mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN",
+      "salesOrderNo": "SD05",
+      "salesOrderLineNo": 10
+    },
+    {
+      "orderCode": "CO-DEMO-E48-1",
+      "widthMm": 1555,
+      "lengthMm": 3000,
+      "quantity": 1,
+      "priority": 13,
+      "productCode": "E48/1555mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN",
+      "salesOrderNo": "SD06",
+      "salesOrderLineNo": 10
+    },
+    {
+      "orderCode": "CO-DEMO-ST-280",
+      "widthMm": 280,
+      "lengthMm": 1200,
+      "quantity": 1,
+      "priority": 12,
+      "productCode": "M69/730mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-ST-320",
+      "widthMm": 320,
+      "lengthMm": 1100,
+      "quantity": 1,
+      "priority": 11,
+      "productCode": "M69/730mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-ST-150",
+      "widthMm": 150,
+      "lengthMm": 800,
+      "quantity": 3,
+      "priority": 10,
+      "productCode": "M69/730mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    },
+    {
+      "orderCode": "CO-DEMO-ST-400",
+      "widthMm": 400,
+      "lengthMm": 2000,
+      "quantity": 1,
+      "priority": 9,
+      "productCode": "M69/730mm/深黄/3M",
+      "finishedProductCode": "M69/305*600M/1R/深黄",
+      "status": "OPEN"
+    }
+  ],
+  "slittingPlans": [
+    {
+      "planVersionId": "SLIT-DEMO-WIDE",
+      "name": "演示-1600宽母卷多订单",
+      "masterRollCodes": [
+        "MR-DEMO-1600-A",
+        "MR-DEMO-1600-B"
+      ],
+      "childOrderCodes": [
+        "CO-DEMO-730-1",
+        "CO-DEMO-730-2",
+        "CO-DEMO-730-3",
+        "CO-DEMO-730-L1",
+        "CO-DEMO-730-L2",
+        "CO-DEMO-800-1",
+        "CO-DEMO-800-2",
+        "CO-DEMO-800-3",
+        "CO-DEMO-350-1",
+        "CO-DEMO-200-1",
+        "CO-DEMO-280-1",
+        "CO-DEMO-400-1",
+        "CO-DEMO-ST-280",
+        "CO-DEMO-ST-320",
+        "CO-DEMO-ST-400"
+      ]
+    },
+    {
+      "planVersionId": "SLIT-DEMO-N83",
+      "name": "演示-N83离型纸分切",
+      "masterRollCodes": [
+        "MR-DEMO-1500-N83"
+      ],
+      "childOrderCodes": [
+        "CO-DEMO-N83-730",
+        "CO-DEMO-N83-400",
+        "CO-DEMO-N83-350"
+      ]
+    },
+    {
+      "planVersionId": "SLIT-DEMO-QUICK",
+      "name": "演示-1000标准卷快速验证",
+      "masterRollCodes": [
+        "MR-DEMO-1000-ST"
+      ],
+      "childOrderCodes": [
+        "CO-DEMO-ST-280",
+        "CO-DEMO-ST-320",
+        "CO-DEMO-ST-150",
+        "CO-DEMO-ST-400"
+      ]
+    }
+  ]
+}

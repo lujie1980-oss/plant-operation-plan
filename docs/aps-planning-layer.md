@@ -2,6 +2,8 @@
 
 本文描述 Plant Operation Plan 中 **确定性推演层** 与 **Timefold 选优层** 的分工，以及 S04 主计划 / S05 详细排程的代码落点。与流水线总览见 [architecture.md](./architecture.md)；BOM/MRP/工单见 [master-plan-bom-routing.md](./master-plan-bom-routing.md)。
 
+> **维护说明（2026-07-01 · TODO-27）：** S04 主计划已统一 **PATH-ONT**（ADR-08）；`GET .../master-plan/diagnostics/preview` 与 `GET .../detail-schedule/diagnostics/preview` **已移除**（ADR-03），请使用 `POST .../planning/master-plan/preview` / `POST .../planning/detail-schedule/preview`。槽位由 `PeriodTimeSlotDeriver` 从 leaf Period+SRP **DERIVE**；占用 SoT 为 **ENT-RCA**（TODO-22）。规范以 SDD §5 / §6 为准。
+
 ---
 
 ## 1. 设计原则
@@ -178,7 +180,7 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | 内存求解 | `solve=true` | Context → `DetailSchedule` → Timefold → 赋时；结果反写到同一批 `OperationAssignment` |
 | 正式排程 | `solve=true` & `persist=true` | 同上并落库，等价于 `POST .../detail-schedule/solve` |
 
-`GET .../detail-schedule/diagnostics/preview` 保留为轻量诊断；新接口返回 `DetailSchedulePlanningPreviewDto`（诊断 + 产线 + 工序 + 可选 score/版本号）。
+`GET .../detail-schedule/diagnostics/preview` **已移除**（ADR-03）。请使用 `POST .../planning/detail-schedule/preview`（`solve=false`）获取诊断 + 工序候选。
 
 前端入口：**主计划 → 推演诊断** 页「运行推演预览」。
 
@@ -192,7 +194,9 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | 内存求解 | `solve=true` | Context → `MasterPlanSchedule` → Timefold；结果反写到同一批 `OrderAllocation` |
 | 正式主计划 | `solve=true` & `persist=true` | 同上并落库，等价于 `POST .../master-plan/solve` |
 
-可选 `feedbackCutoff` 构建反馈产能 overlay（与滚动刷新主计划一致）。`GET .../master-plan/diagnostics/preview` 仍保留为轻量诊断。
+可选 `feedbackCutoff` 构建反馈产能 overlay（与滚动刷新主计划一致）。
+
+> ~~`GET .../master-plan/diagnostics/preview`~~ **已移除**（ADR-03）。诊断数据随 `POST .../planning/master-plan/preview` 响应中的 `diagnostics` 字段返回，或由 `PlanningOrchestrator` 写入 pipeline `diagnostics_json`。
 
 ### 5.6 SchedulingSession 与增量推演（已实现）
 
@@ -229,6 +233,46 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 增量模式从种子扩展：**工艺后继**、**并行配对**、**同产线队列后缀**，再 `LineChainTimingUtil.applyAllStartTimes`（全局收敛，返回 `recalculatedOperationIds`）。
 
 **前端**：**生产排程**页 Session 推演面板 + 甘特/列表「Session 推演」视图；**推演诊断**页保留预览入口。
+
+### 5.7 OTD 本体（PATH-ONT · M1~M4+）
+
+S04 已统一 **PATH-ONT**（ADR-08）：权威 **ENT-OG** → `OntologyToMasterPlanScheduleMapper` → `PlanningOptimizer` → 写回 **ENT-RCA + SRP rollup**（TODO-22）→ confirm 落 `ont_*` + legacy 边界。`TimeSlot` 由 **`PeriodTimeSlotDeriver`** 按需 DERIVE（TODO-23）；不再装载 `schedulingSlotsOrdered`。
+
+| 类 | 职责 |
+|----|------|
+| `OntologyGraph` | ENT-OG：供需、工序、FF、**ENT-RCA**、leaf **ENT-SRP**、Period 等 |
+| `PeriodSequenceSpec` / `PeriodExpander` / `PeriodIndex` | `ontology_period_sequence`（含 `NxMshift`）；混合桶展开 |
+| `PeriodTimeSlotDeriver` | leaf Period + SRP → solver `TimeSlot`（DERIVE） |
+| `WorkspaceAuthoritativeOntologyGraphService` | 场景读路径：Loader + `OntologyP0Overlay` |
+| `MasterPlanOntologySession` | Session 快照（图 + `RolEngine`，8h TTL） |
+| `MasterPlanOntologySessionService` | create / simulate / optimize / confirm（可选 `session-enabled` → `ont_*` WAL） |
+| `OntologyLoader` | legacy JPA 壳 + Period/SRP/供需装载；`@Deprecated` 对外路径 |
+| `OntologyRcaProjector` | ENT-RCA ↔ solver RCA / `TimeSlot` |
+| `PlanningResultApplicator` | optimize 写 ENT-RCA + ROL → SRP `reservedCapacity` |
+| `OntologyTimefoldMapper` | `ChangeSet` ↔ Operation planned 时间 |
+| `MasterPlanOntologyScheduleBuilder` | ENT-OG → `MasterPlanPlanningContext`（PATH-ONT 唯一入口） |
+
+**REST**（`MasterPlanSessionResource`）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/v1/master-plan/sessions` | 从 `planVersionId` 创建本体 Session |
+| GET | `/api/v1/master-plan/sessions/{sessionId}` | 查看 Session 与图摘要 |
+| GET | `/api/v1/master-plan/sessions/{sessionId}/pisps` | PISP 列表 |
+| GET | `/api/v1/master-plan/sessions/{sessionId}/pisps/{pispId}/periods` | PISPP 时段快照（库存曲线） |
+| GET | `/api/v1/master-plan/sessions/{sessionId}/resources` | **M3** — SRP 产能快照（`SrpSnapshotDto`） |
+| GET | `/api/v1/master-plan/sessions/{sessionId}/supply-orders/{supplyOrderId}/operations` | **M3** — Operation 链与时间窗（`OperationSnapshotDto`） |
+| POST | `/api/v1/master-plan/sessions/{sessionId}/simulate` | ROL-lite 字段变更 + 传播 |
+| POST | `/api/v1/master-plan/sessions/{sessionId}/optimize` | `PlanningOptimizer` 求解 → ENT-RCA + SRP rollup |
+| POST | `/api/v1/master-plan/sessions/{sessionId}/confirm` | promote `ont_*` revision + legacy 边界（`PlanVersionEntRcaOccupancy`） |
+
+**系统参数（M3）：** 工作区 `SystemParameterEntity` 键 `ontology_period_sequence`，格式 `"<count>x<length><unit>,..."`（`d`=日、`w`=周、`m`=月）；无效或空值回退 `28×1d`。
+
+**前端**：`/master-plan/ontology`（`MasterPlanOntologyPage`）— PISPP 曲线、simulate、optimize、confirm；**M3** 增加 `SrpCapacityTable` 资源产能表（optimize 后刷新）。
+
+映射与对象集详见 [otd-ontology-mapping.md](./otd-ontology-mapping.md)；直驱求解评估见 [otd-ontology-direct-solve-evaluation.md](./otd-ontology-direct-solve-evaluation.md)。
+
+与 §5.6 `SchedulingSession`（S05 细排）区分：本体 Session 操作 **供需时段图**，不直接改 `OrderAllocation` 槽位。
 
 ---
 
@@ -341,12 +385,12 @@ S05 额外：`masterPlanVersionId`（契约加载来源）。
 
 ```mermaid
 flowchart TB
-  API["GET .../diagnostics/preview"]
-  SVC["*Service.previewPlanningDiagnostics"]
-  BLDR["*PlanningContextBuilder.build"]
+  API["POST .../planning/*/preview"]
+  SVC["*Service.previewPlanning"]
+  BLDR["MasterPlanOntologyScheduleBuilder / DetailSchedulePlanningContextBuilder"]
   COLL["*PlanningDiagnosticsCollector"]
   CTX["*PlanningContext"]
-  DTO["*PlanningDiagnosticsDto"]
+  DTO["*PlanningPreviewDto + diagnostics"]
 
   API --> SVC --> BLDR
   BLDR --> COLL
@@ -406,22 +450,30 @@ feasible = base 中 slotAllowed(wo, slot)（最早可行下界）
 
 #### 8.3.7 REST API
 
+> **废止（ADR-03）：** ~~`GET /api/v1/planning/master-plan/diagnostics/preview`~~ · ~~`GET /api/v1/planning/detail-schedule/diagnostics/preview`~~ 已移除。与 [§6 API 契约](sdd/core/06-api-contracts.md) 一致。
+
 **主计划预览（不求解）：**
 
 ```http
-GET /api/v1/planning/master-plan/diagnostics/preview?strategyId={optional}
+POST /api/v1/planning/master-plan/preview
+Content-Type: application/json
+
+{ "strategyId": null, "solve": false, "persist": false, "feedbackCutoff": null }
 ```
 
 **详细排程预览：**
 
 ```http
-GET /api/v1/planning/detail-schedule/diagnostics/preview?masterPlanVersionId={optional}
+POST /api/v1/planning/detail-schedule/preview
+Content-Type: application/json
+
+{ "masterPlanVersionId": null, "solve": false, "persist": false, "seedInitialQueues": false }
 ```
 
 服务入口：
 
-- `MasterPlanService.previewPlanningDiagnostics(strategyId)` — 解析策略、延展日历、空 overlay 构建 context。
-- `DetailScheduleService.previewPlanningDiagnostics(masterPlanVersionId)` — 加载契约与开线决策后构建 context。
+- `MasterPlanService.previewPlanning(MasterPlanPlanningPreviewRequest)` — PATH-ONT：`MasterPlanOntologyScheduleBuilder` 构建 context。
+- `DetailScheduleService.previewPlanning(...)` — 加载契约与开线决策后构建 context。
 
 **响应示例（S04 片段）：**
 
@@ -461,7 +513,7 @@ GET /api/v1/planning/detail-schedule/diagnostics/preview?masterPlanVersionId={op
 #### 8.3.9 后续扩展
 
 - ~~将 `context.diagnostics()` 写入 `PlanningPipelineRun` 各 step 的 metadata~~（已实现：`diagnostics_json` + 运行日志摘要）
-- ~~反馈滚动场景：`preview` 增加 `feedbackCutoff` + overlay 参数~~（已实现：`GET .../diagnostics/preview?feedbackCutoff=`）
+- ~~反馈滚动场景：`preview` 增加 `feedbackCutoff` + overlay 参数~~（已实现：`POST .../planning/master-plan/preview` 请求体 `feedbackCutoff`）
 - ~~前端：`PlanningDiagnosticsPanel` 已接入 **计划运行** / **生产排程** / **计划分析** 页~~
 - ~~选优层约束 explain / score 分解（P4）~~（见 §8.3.10）
 
@@ -513,8 +565,6 @@ POST /api/v1/planning/order-chain/preview
 
 与 `FulfillmentPeggingService` 满足链的区别：时间窗来自 **推演 eligible 槽** 而非 lead-time 启发式；可选 `baselineMasterPlanVersionId` 与求解结果对比。
 
----
-
 ## 9. 关键文件索引
 
 | 主题 | 路径 |
@@ -536,6 +586,8 @@ POST /api/v1/planning/order-chain/preview
 | 推演诊断采集 | `scenario/planning/diagnostics/` |
 | 订单推演链 | `scenario/planning/OrderPlanningChainService.java` |
 | Session / 增量推演 | `scenario/DetailScheduleSessionService.java`, `scenario/planning/DetailScheduleSimulationEngine.java` |
+| OTD 本体 M1 Session | `scenario/planning/MasterPlanOntologySessionService.java`, `api/MasterPlanSessionResource.java` |
+| OTD 本体 M3 周期/Sandbox | `ontology/period/PeriodSequenceSpec.java`, `scenario/planning/sandbox/OntologySandboxStore.java` |
 | 生产任务 | `scenario/execution/ProductionTaskService.java`, `api/ScheduleSessionResource.java` |
 
 ---
@@ -548,3 +600,6 @@ POST /api/v1/planning/order-chain/preview
 | 2026-05-30 | §8.3 推演可观测性：Collector、API、reasonCode、解读工作流 |
 | 2026-05-30 | §8.3.10 选优层得分分解：SolutionManager explain API + 前端面板 |
 | 2026-06-02 | §5.6 Session + 增量推演 + 生产任务 RELEASED 发布 |
+| 2026-06-07 | §8.6 OTD 本体 M1：OntologyGraph Session API + 映射文档链接 |
+| 2026-06-09 | §5.7 OTD 本体 M2：供需聚合、optimize/confirm、PISPP GET、前端本体页 |
+| 2026-06-10 | §5.7 OTD 本体 M3：混合周期桶、SRP/Operation API、optimize 回写 SRP、Sandbox 统一、直驱评估链接 |

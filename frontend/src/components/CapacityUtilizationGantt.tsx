@@ -16,12 +16,15 @@ interface CapacityUtilizationGanttProps {
   buckets: LoadBucket[];
   selectedBucketId: string | null;
   onSelectBucket: (bucket: LoadBucket) => void;
+  /** UI-NAV-01: highlight row when deep-linked by resource */
+  focusResourceId?: string | null;
 }
 
 export function CapacityUtilizationGantt({
   buckets,
   selectedBucketId,
   onSelectBucket,
+  focusResourceId = null,
 }: CapacityUtilizationGanttProps) {
   const model = useMemo(() => buildCapacityGanttModel(buckets), [buckets]);
   const { resourceIds, columns, cellMap } = model;
@@ -60,10 +63,11 @@ export function CapacityUtilizationGantt({
           </div>
           {resourceIds.map((resId) => {
             const label = buckets.find((b) => b.resourceId === resId)?.resourceLabel ?? resId;
+            const focused = focusResourceId != null && resId === focusResourceId;
             return (
               <div
                 key={resId}
-                className="cap-gantt-body-row"
+                className={`cap-gantt-body-row ${focused ? 'is-focused' : ''}`.trim()}
                 style={{ gridTemplateColumns: `${LABEL_W}px repeat(${columns.length}, ${CELL_W}px)` }}
               >
                 <div className="cap-gantt-row-label" title={resId}>

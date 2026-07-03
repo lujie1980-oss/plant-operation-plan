@@ -204,6 +204,66 @@
 
 
 
+.bom-tree-scope-row {
+
+  background: #f1f5f9;
+
+  cursor: pointer;
+
+}
+
+
+
+.bom-tree-scope-row:hover {
+
+  background: #e2e8f0;
+
+}
+
+
+
+.bom-tree-scope-row.is-active {
+
+  background: #dbeafe;
+
+}
+
+
+
+.bom-tree-scope-cell {
+
+  font-size: 0.76rem;
+
+  font-weight: 600;
+
+  color: #334155;
+
+  padding: 0.4rem 0.5rem !important;
+
+}
+
+
+
+.bom-tree-scope-title {
+
+  margin-right: 0.5rem;
+
+}
+
+
+
+.bom-tree-scope-sub {
+
+  font-weight: 500;
+
+  color: #64748b;
+
+  font-size: 0.72rem;
+
+}
+
+
+
 .bom-tree-level {
 
   display: inline-block;

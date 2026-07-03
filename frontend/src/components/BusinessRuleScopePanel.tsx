@@ -59,7 +59,7 @@ export function BusinessRuleScopePanel({ ruleTypeId, scope, onScopeUpdated }: Pr
           disabled={saving}
           onChange={(e) => void save({ enableMasterPlan: e.target.checked })}
         />
-        主计划
+        订单协同计划
       </label>
       <label className="br-rule-scope-option">
         <input

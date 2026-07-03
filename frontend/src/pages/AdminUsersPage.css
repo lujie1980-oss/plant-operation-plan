@@ -1,0 +1,66 @@
+.admin-users-page,
+.admin-workspaces-page {
+  padding: 1rem 1.25rem 2rem;
+}
+
+.admin-nav {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+
+.admin-nav a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.admin-forbidden {
+  color: #b91c1c;
+}
+
+.admin-hint {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: #f0f9ff;
+  color: #0c4a6e;
+}
+
+.admin-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.admin-form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 420px;
+}
+
+.admin-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.admin-form input[type='text'],
+.admin-form input[type='password'],
+.admin-form input:not([type]) {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}
+
+.admin-checkbox {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem !important;
+}

@@ -609,7 +609,10 @@ public class MasterDataExcelService {
                     parseDateOrNull(cells.get("componentEffectiveTo")),
                     parseDecimalOrNull(cells.get("scrapRate")),
                     parseDecimalOrNull(cells.get("lotSize")),
-                    parseDecimalOrNull(cells.get("lotSizeMultiple"))));
+                    parseDecimalOrNull(cells.get("lotSizeMultiple")),
+                    null,
+                    null,
+                    null));
             case RESOURCES -> masterDataResource.upsertResource(new ResourceDto(
                     parseLong(cells.get("id")),
                     required(cells, "resourceId"),

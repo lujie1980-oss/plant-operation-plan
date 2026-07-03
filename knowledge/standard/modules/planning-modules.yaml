@@ -1,0 +1,4 @@
+# DEPRECATED — 使用 workspace-modules.yaml
+# 保留本文件仅为向后兼容引用；新规范见 docs/sdd/volumes/platform/18-19-workspace-platform.md
+
+extends: workspace-modules.yaml

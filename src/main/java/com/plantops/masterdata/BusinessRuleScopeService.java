@@ -15,8 +15,10 @@ import jakarta.transaction.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -39,6 +41,20 @@ public class BusinessRuleScopeService {
 
     public boolean isDetailScheduleEnabled(String ruleTypeId) {
         return findOrDefault(ruleTypeId).enableDetailSchedule;
+    }
+
+    /**
+     * 在请求线程上预加载所有详细排程启用的规则项快照，供 Timefold 求解线程使用（避免在
+     * 无 CDI 请求上下文/事务的 SolverManager 工作线程上访问 JPA）。
+     */
+    public Set<String> detailScheduleEnabledRuleTypeIds() {
+        Set<String> enabled = new LinkedHashSet<>();
+        for (String ruleTypeId : BusinessRuleTypeIds.ALL) {
+            if (isDetailScheduleEnabled(ruleTypeId)) {
+                enabled.add(ruleTypeId);
+            }
+        }
+        return enabled;
     }
 
     public List<BusinessRuleScopeDto> listAll() {
@@ -128,8 +144,8 @@ public class BusinessRuleScopeService {
             if (!existing.containsKey(ruleTypeId)) {
                 BusinessRuleScopeEntity row = new BusinessRuleScopeEntity();
                 row.ruleTypeId = ruleTypeId;
-                row.enableMasterPlan = true;
-                row.enableDetailSchedule = true;
+                row.enableMasterPlan = !isPhase3ExtensionRule(ruleTypeId);
+                row.enableDetailSchedule = !isPhase3ExtensionRule(ruleTypeId);
                 row.ensureWorkspace();
                 toPersist.add(row);
             }
@@ -137,6 +153,12 @@ public class BusinessRuleScopeService {
         for (BusinessRuleScopeEntity row : toPersist) {
             row.persist();
         }
+    }
+
+    private static boolean isPhase3ExtensionRule(String ruleTypeId) {
+        return BusinessRuleTypeIds.FACTORY_CALENDAR.equals(ruleTypeId)
+                || BusinessRuleTypeIds.FEEDBACK_FREEZE.equals(ruleTypeId)
+                || BusinessRuleTypeIds.BATCH_CONTINUOUS.equals(ruleTypeId);
     }
 
     private BusinessRuleScopeEntity findOrDefault(String ruleTypeId) {

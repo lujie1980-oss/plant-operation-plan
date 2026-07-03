@@ -8,7 +8,7 @@ import './ProductRoutingStepsPanel.css';
 import './table/FilterableTable.css';
 
 const ROUTING_HEAD_COLUMNS: TableHeadColumn[] = [
-  { key: 'toggle', header: '', width: 28, defaultWidth: 28, filterable: false, resizable: false },
+  { key: 'toggle', header: '', width: 28, defaultWidth: 28, filterable: false },
   { key: 'seq', header: '序号', width: 48, defaultWidth: 48, align: 'center' },
   { key: 'operationName', header: '工序名称', width: 100, defaultWidth: 100 },
   { key: 'refLabel', header: '设备组/产线', width: 100, defaultWidth: 100 },
@@ -170,7 +170,7 @@ export function ProductRoutingStepsPanel({
         <span className="routing-steps-count">{viewRows.length} 道工序</span>
       </p>
       <div className="routing-tree-wrap">
-        <table className="routing-tree-table ft-table data-table">
+        <table className="routing-tree-table ft-table data-table" data-table-id="product-routing-steps">
           <thead>
             <TableHead
               columns={ROUTING_HEAD_COLUMNS}

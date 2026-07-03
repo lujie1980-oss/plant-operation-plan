@@ -1,0 +1,53 @@
+# StandardKnowledge — 供需规则表默认值（KN-TYPE-PAR）
+# 完整列定义见 docs/sdd/volumes/knowledge/15-16-planning-knowledge.md §16
+
+demand_priority_rules:
+  default_dimensions:
+    - dimension: HEADER_PRIORITY
+      weight: 100
+      rank_from_field: customerOrder.priority
+    - dimension: CUSTOMER_GRADE
+      weight: 80
+      rank_map: { A: 1, B: 2, C: 3, default: 5 }
+    - dimension: REQUESTED_DATE
+      weight: 10
+      rank: earliest_first
+
+delivery_tolerance:
+  default_min_equals_target: true
+  default_max_equals_target: true
+
+delivery_date_strategy:
+  default_granularity: DAILY
+  default_early_allow_days: 0
+  default_late_allow_days: 3
+  default_late_penalty_tier: low_inside_allow_high_outside
+
+ppq_rules:
+  default_ppq: 1
+
+order_kitting:
+  default_kitting_enabled: false
+  default_kitting_granularity: SAME_WEEK
+  default_kitting_penalty_weight: medium
+
+supply_quantity_rules:
+  default_lot_size: 1
+  default_min_qty_strategy: PLAN_AT_MIN
+
+routing_step_timing:
+  default_pre_processing_minutes: 0
+  default_scheduling_space_minutes: 0
+  default_post_processing_minutes: 0
+  timing_merge_policy: max_with_transfer_time
+
+routing_step_resource:
+  default_resource_usage_type: SINGLE
+  default_batch_size: 1
+
+routing_step_yield:
+  default_yield_rate: 1.0
+
+resource_efficiency:
+  default_resource_efficiency: 1.0
+  feedback_policy: include_confirmed_detail_schedule

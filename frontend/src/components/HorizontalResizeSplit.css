@@ -72,6 +72,69 @@
   background: #3b82f6;
 }
 
+.horizontal-resize-left.is-collapsed {
+  flex-basis: auto !important;
+  flex-shrink: 0;
+  min-width: 0;
+  max-width: none;
+}
+
+.horizontal-resize-collapsed-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  padding: 0.35rem 0.25rem;
+  background: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  min-width: 2.25rem;
+  height: 100%;
+}
+
+.horizontal-resize-collapsed-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.horizontal-resize-toggle-btn {
+  padding: 0.12rem 0.35rem;
+  font-size: 0.68rem;
+}
+
+.horizontal-resize-split.is-left-collapsed .horizontal-resize-handle {
+  cursor: default;
+  width: 4px;
+  margin: 0 1px;
+}
+
+.horizontal-resize-collapse-btn {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.65rem;
+  line-height: 1.25;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.horizontal-resize-collapse-btn:hover {
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
 @media (max-width: 960px) {
   .horizontal-resize-split {
     flex-direction: column;

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { FilterableTable } from '../components/table/FilterableTable';
-import { PlanningDiagnosticsPanel } from '../components/PlanningDiagnosticsPanel';
+import { MasterPlanBusinessKpiPanel } from '../components/MasterPlanBusinessKpiPanel';
+import '../components/MasterPlanBusinessKpiPanel.css';
 import { usePlan } from '../context/PlanContext';
 import type { PipelineRunLogLine, PlanningPipelineRun, PlanningScenario, RuleSetVersion } from '../types/api';
 import {
@@ -53,9 +54,6 @@ export function PlanRunPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [includeDetailSchedule, setIncludeDetailSchedule] = useState(false);
   const [refreshAfterSchedule, setRefreshAfterSchedule] = useState(false);
-  const [showMpDiagnostics, setShowMpDiagnostics] = useState(false);
-  const [diagUseFeedbackOverlay, setDiagUseFeedbackOverlay] = useState(false);
-  const [diagFeedbackCutoff, setDiagFeedbackCutoff] = useState(() => new Date().toISOString().slice(0, 10));
 
   const loadPipelineRuns = useCallback(async () => {
     setPipelineRuns(await api.listPipelineRuns(30));
@@ -116,7 +114,6 @@ export function PlanRunPage() {
   }, [pipelineRuns, selectedRunId]);
 
   const selectedStrategy = strategies.find((s) => s.id === selectedStrategyId);
-  const selectedRun = pipelineRuns.find((r) => r.runId === selectedRunId);
   const runScenario = scenarios.find((s) => s.scenarioId === runScenarioId);
 
   const createScenario = async () => {
@@ -224,6 +221,7 @@ export function PlanRunPage() {
   return (
     <div className="dashboard-page">
       <PageHeader
+        variant={DECISION_PAGE_HEADER}
         title="计划运行"
         description="选择计划场景与策略后运行；每个场景仅保留当前与上一版主计划，最新版为分析生效版本。"
         actions={
@@ -303,14 +301,6 @@ export function PlanRunPage() {
           )}
           <button
             type="button"
-            className="btn"
-            onClick={() => setShowMpDiagnostics((v) => !v)}
-            disabled={!selectedStrategyId}
-          >
-            {showMpDiagnostics ? '收起推演诊断' : '推演诊断'}
-          </button>
-          <button
-            type="button"
             className="btn primary"
             onClick={() => void runPlanning()}
             disabled={loading || running || !selectedStrategyId}
@@ -318,37 +308,6 @@ export function PlanRunPage() {
             {running ? '运行中…' : '执行计划运行'}
           </button>
         </div>
-        {showMpDiagnostics && (
-          <section className="card dash-diagnostics-panel">
-            <h3 className="dash-diagnostics-title">主计划推演诊断（S04 实时预览）</h3>
-            <div className="dash-diagnostics-options">
-              <label className="dash-check">
-                <input
-                  type="checkbox"
-                  checked={diagUseFeedbackOverlay}
-                  onChange={(e) => setDiagUseFeedbackOverlay(e.target.checked)}
-                />
-                反馈 overlay 预览
-              </label>
-              <label className="dash-diagnostics-cutoff">
-                <span>反馈截止日</span>
-                <input
-                  type="date"
-                  className="input"
-                  value={diagFeedbackCutoff}
-                  onChange={(e) => setDiagFeedbackCutoff(e.target.value)}
-                  disabled={!diagUseFeedbackOverlay}
-                />
-              </label>
-            </div>
-            <PlanningDiagnosticsPanel
-              layer="master-plan"
-              contextId={selectedStrategyId}
-              feedbackCutoff={diagUseFeedbackOverlay ? diagFeedbackCutoff : null}
-              autoLoad
-            />
-          </section>
-        )}
         {showCreateScenario && (
           <div className="dash-create-scenario card">
             <h4>新建计划场景</h4>
@@ -378,7 +337,7 @@ export function PlanRunPage() {
                 </select>
               </label>
               <p className="dash-create-scenario-hint">
-                将使用上方所选主计划策略；规则版本可在 <Link to="/business-rules/capacity">业务规则</Link> 中维护。
+                将使用上方所选主计划策略；规则版本可在 <Link to="/master-plan/rules/capacity">产能规则</Link> 中维护。
               </p>
               <button type="button" className="btn primary" onClick={() => void createScenario()} disabled={loading}>
                 创建场景
@@ -427,6 +386,11 @@ export function PlanRunPage() {
             </span>
           )}
         </div>
+        <MasterPlanBusinessKpiPanel
+          className="plan-run-kpi-panel"
+          planVersionId={runScenario?.currentPlanVersionId ?? masterPlan?.planVersionId}
+          showBreakdown
+        />
         <FilterableTable
           tableId="plan-run-pipeline"
           wrapClassName="dash-detail-table-wrap ft-table-wrap"
@@ -494,27 +458,6 @@ export function PlanRunPage() {
             )}
           </div>
         </div>
-        {selectedRun?.diagnostics && (
-          <div className="dash-run-diagnostics">
-            <h4>推演诊断（运行记录）</h4>
-            {selectedRun.diagnostics.masterPlan && (
-              <PlanningDiagnosticsPanel
-                layer="master-plan"
-                snapshot={selectedRun.diagnostics.masterPlan}
-                readOnly
-                compact
-              />
-            )}
-            {selectedRun.diagnostics.detailSchedule && (
-              <PlanningDiagnosticsPanel
-                layer="detail-schedule"
-                snapshot={selectedRun.diagnostics.detailSchedule}
-                readOnly
-                compact
-              />
-            )}
-          </div>
-        )}
       </section>
     </div>
   );

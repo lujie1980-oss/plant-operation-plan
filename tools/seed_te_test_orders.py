@@ -48,7 +48,7 @@ def main() -> None:
             "salesOrderLineNo": line_no,
             "customerCode": "TE-CUST",
             "productCode": product,
-            "orderQty": 100 + i * 50,
+            "orderQty": (100 + i * 50) * 1000,
             "uom": "EA",
             "promiseDate": due.isoformat(),
             "dueDate": due.isoformat(),

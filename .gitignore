@@ -2,9 +2,10 @@
 target/
 frontend/node_modules/
 frontend/dist/
+.frontend/
 
-# Local database & imports
-data/
+# Local database & imports (root only; not docs/sdd/volumes/data/)
+/data/
 .import-tmp/
 
 # IDE / OS
@@ -20,6 +21,13 @@ Thumbs.db
 # Env / secrets
 .env
 .env.*
+!.env.example
+tools/acr.local.env
+tools/ecs.local.env
+
+# Local build / debug artifacts
+cp.txt
+boms_*.json
 
 # Large local extract outputs (regenerate via tools/)
 tools/dunan_extracted.json

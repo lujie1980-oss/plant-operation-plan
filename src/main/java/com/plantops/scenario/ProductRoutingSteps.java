@@ -89,12 +89,38 @@ public final class ProductRoutingSteps {
 
 
     public static List<Operation> operationsForProduct(String productCode) {
+        List<Integer> priorities = routingPathPrioritiesForProduct(productCode);
+        int pathPriority = priorities.isEmpty() ? 1 : priorities.get(0);
+        return operationsForProduct(productCode, pathPriority);
+    }
 
+    public static List<Integer> routingPathPrioritiesForProduct(String productCode) {
+        if (productCode == null || productCode.isBlank()) {
+            return List.of();
+        }
         List<ProductResourceEntity> rows = ProductResourceEntity.findByProductOrdered(productCode);
+        if (rows.isEmpty()) {
+            return List.of();
+        }
+        return rows.stream()
+                .map(r -> r.routingPathPriority != null ? r.routingPathPriority : 1)
+                .distinct()
+                .sorted()
+                .toList();
+    }
 
+    public static List<Operation> operationsForProduct(String productCode, int routingPathPriority) {
+        List<ProductResourceEntity> rows = ProductResourceEntity.findByProductOrdered(productCode);
+        rows = rows.stream()
+                .filter(r -> (r.routingPathPriority != null ? r.routingPathPriority : 1) == routingPathPriority)
+                .toList();
         if (rows.isEmpty()) {
 
             List<ProductRoutingCatalog.RoutingStep> fallback = ProductRoutingCatalog.stepsFor(productCode);
+
+            if (routingPathPriority != 1) {
+                return List.of();
+            }
 
             List<Operation> out = new ArrayList<>(fallback.size());
 
@@ -206,14 +232,17 @@ public final class ProductRoutingSteps {
      */
 
     public static int totalDurationMinutes(String productCode, BigDecimal quantity) {
+        return totalDurationMinutes(productCode, quantity, 1);
+    }
 
+    public static int totalDurationMinutes(String productCode, BigDecimal quantity, int routingPathPriority) {
         if (productCode == null || productCode.isBlank()) {
 
             return 60;
 
         }
 
-        List<Operation> operations = operationsForProduct(productCode);
+        List<Operation> operations = operationsForProduct(productCode, routingPathPriority);
 
         if (!operations.isEmpty()) {
 

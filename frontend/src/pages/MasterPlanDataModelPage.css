@@ -1,0 +1,118 @@
+.master-plan-data-model-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: 0.65rem;
+}
+
+.mpdm-main-split,
+.mpdm-detail-split,
+.mpdm-top-split,
+.mpdm-bottom-split,
+.mpdm-io-split {
+  flex: 1;
+  min-height: 0;
+}
+
+.mpdm-panel {
+  margin-bottom: 0;
+  padding: 0.6rem 0.65rem;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mpdm-panel .filterable-table-wrap,
+.mpdm-tree-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.mpdm-panel-title {
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.mpdm-tree-table {
+  font-size: 0.82rem;
+}
+
+.mpdm-tree-table tbody tr {
+  cursor: pointer;
+}
+
+.mpdm-tree-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.mpdm-tree-sp-row {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.mpdm-row-selected {
+  background: #eff6ff !important;
+}
+
+.mpdm-row-selected td {
+  box-shadow: inset 2px 0 0 #2563eb;
+}
+
+.mpdm-tree-toggle-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0;
+  width: 1.25rem;
+  line-height: 1;
+}
+
+.mpdm-tree-indent {
+  display: inline-block;
+  width: 1.25rem;
+}
+
+.mpdm-sp-label {
+  color: #64748b;
+  font-weight: 400;
+  font-size: 0.78rem;
+}
+
+.mpdm-muted {
+  color: #94a3b8;
+  font-size: 0.84rem;
+  margin: 0;
+}
+
+.mpdm-empty-hint {
+  color: #64748b;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.mpdm-tree-table-panel {
+  min-width: 0;
+}
+
+td.num {
+  text-align: right;
+}
+
+@media (max-width: 1100px) {
+  .mpdm-main-split.horizontal-resize-split {
+    flex-direction: column;
+  }
+}

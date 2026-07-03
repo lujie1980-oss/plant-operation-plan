@@ -153,6 +153,9 @@ python -X utf8 tools/parse_demo_excel.py
 
 | 文档 | 说明 |
 |------|------|
-| **[docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md)** | **完整项目文档**（业务蓝图、功能设计、技术方案、部署） |
-| [docs/architecture.md](docs/architecture.md) | 架构摘要 |
+| **[docs/SDD.md](docs/SDD.md)** | **详细设计（SDD）** — 规范驱动，分章见 [docs/sdd/](docs/sdd/) |
+| [docs/PDD.md](docs/PDD.md) | 产品说明（PDD） |
+| [docs/sdd/core/05-domain-model.md](docs/sdd/core/05-domain-model.md) | Plant Operation Ontology 领域模型（§5） |
+| [docs/docker-deploy.md](docs/docker-deploy.md) | 部署说明 |
+| [docs/archive/](docs/archive/) | 历史文档归档（只读） |
 | 工作区根目录 `工厂计划*.md` | 业务方法论文档（场景卡片） |

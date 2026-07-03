@@ -230,3 +230,9 @@
   opacity: 0.85;
   font-variant-numeric: tabular-nums;
 }
+
+.cap-gantt-body-row.is-focused .cap-gantt-row-label {
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #eff6ff;
+}

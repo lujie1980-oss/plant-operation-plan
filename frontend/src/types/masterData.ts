@@ -41,6 +41,9 @@ export interface BomMd extends MasterDataRecord {
   scrapRate: number | null;
   lotSize?: number | null;
   lotSizeMultiple?: number | null;
+  finishedMaterialId?: number | null;
+  parentMaterialId?: number | null;
+  componentMaterialId?: number | null;
 }
 
 export interface MaterialMd extends MasterDataRecord {
@@ -192,6 +195,56 @@ export interface SystemParameterMd extends MasterDataRecord {
   paramId: string;
   paramValue: string;
   description: string | null;
+}
+
+/** §16 delivery-date-strategy — RULE-DEM-03 交期策略 */
+export interface DeliveryDateStrategyMd extends MasterDataRecord {
+  customerCode: string;
+  productCode: string;
+  deliveryGranularity: 'DAILY' | 'WEEKLY';
+  earlyAllowDays: number;
+  lateAllowDays: number;
+  earlyPenaltyCoef: number;
+  latePenaltyCoef: number;
+}
+
+/** §16 supply-quantity-rules — RULE-SUP-01 供应批量规则 */
+export interface SupplyQuantityRuleMd extends MasterDataRecord {
+  productCode: string;
+  stockingPointCode: string;
+  lotSize: number;
+  minQuantity: number;
+  maxQuantity: number;
+  minQtyStrategy: 'SKIP' | 'PLAN_AT_MIN';
+}
+
+/** §16 resource-efficiency — RULE-SUP-05 资源效率 */
+export interface ResourceEfficiencyMd extends MasterDataRecord {
+  resourceId: string;
+  resourceGroupCode: string;
+  resourceEfficiency: number;
+  /** 只读：Σ 冻结 schedule_feedback（按 SR） */
+  schedulerFeedbackMinutes?: number;
+}
+
+/** §16 routing-step-timing — RULE-SUP-02 工序时间 */
+export interface RoutingStepTimingMd extends MasterDataRecord {
+  routingCode: string;
+  sequenceNo: number;
+  preProcessingMinutes: number;
+  schedulingSpaceMinutes: number;
+  productionMinutes: number;
+  postProcessingMinutes: number;
+}
+
+/** §16 routing-step-resource — RULE-SUP-03 工序资源 */
+export interface RoutingStepResourceMd extends MasterDataRecord {
+  standardResourceCode: string;
+  resourcePriority: number;
+  productionRate: number;
+  resourceUsageType: 'SINGLE' | 'BATCH';
+  batchSize: number;
+  batchDurationMinutes: number;
 }
 
 export type ValidationSeverity = 'ERROR' | 'WARNING';

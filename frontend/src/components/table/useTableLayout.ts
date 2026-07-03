@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { TableHeadColumn } from './types';
+import { useRegisterTableFilters } from './useRegisterTableFilters';
 
 const DEFAULT_WIDTH = 120;
 const MIN_COL_WIDTH = 56;
@@ -104,6 +105,16 @@ export function useTableLayout(tableId: string, columns: TableHeadColumn[]) {
   );
 
   const hasActiveFilters = Object.values(filters).some((v) => v.trim().length > 0);
+
+  const filterableKeys = useMemo(
+    () =>
+      columns
+        .filter((col) => col.filterable !== false && col.header.trim().length > 0)
+        .map((col) => col.key),
+    [columns],
+  );
+
+  useRegisterTableFilters(tableId, filters, setFilter, filterableKeys);
 
   return {
     filters,

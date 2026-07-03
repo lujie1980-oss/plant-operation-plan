@@ -31,6 +31,9 @@ export interface PendingScheduleBatchListProps {
   onScheduleBatch?: (batch: ProductionBatchKitting) => void;
   onPickBatchLine?: (batch: ProductionBatchKitting) => void;
   onCancelBatchPlan?: (batch: ProductionBatchKitting) => void;
+  /** UI-NAV-04: deep-link filter by work order */
+  workOrderNoFilter?: string | null;
+  onWorkOrderFilterMiss?: () => void;
 }
 
 export function PendingScheduleBatchList({
@@ -43,6 +46,8 @@ export function PendingScheduleBatchList({
   onScheduleBatch,
   onPickBatchLine,
   onCancelBatchPlan,
+  workOrderNoFilter = null,
+  onWorkOrderFilterMiss,
 }: PendingScheduleBatchListProps) {
   const [rows, setRows] = useState<ProductionBatchKitting[]>([]);
   const [productionTasks, setProductionTasks] = useState<ProductionTask[]>([]);
@@ -97,12 +102,34 @@ export function PendingScheduleBatchList({
     if (onlySchedulable) {
       list = list.filter((r) => r.pendingScheduleEligible !== false);
     }
+    if (workOrderNoFilter) {
+      list = list.filter((r) => r.workOrderNo === workOrderNoFilter);
+    }
     return [...list].sort((a, b) => {
       const wo = a.workOrderNo.localeCompare(b.workOrderNo, 'zh-CN');
       if (wo !== 0) return wo;
       return a.batchSeq - b.batchSeq;
     });
-  }, [rows, onlySchedulable]);
+  }, [rows, onlySchedulable, workOrderNoFilter]);
+
+  useEffect(() => {
+    if (!workOrderNoFilter || loading) return;
+    if (filtered.length === 0) {
+      onWorkOrderFilterMiss?.();
+      return;
+    }
+    const first = filtered[0];
+    if (selectedBatchNo !== first.batchNo) {
+      onSelectBatch(first);
+    }
+  }, [
+    filtered,
+    loading,
+    onSelectBatch,
+    onWorkOrderFilterMiss,
+    selectedBatchNo,
+    workOrderNoFilter,
+  ]);
 
   const toggleEligible = async (batchNo: string, eligible: boolean) => {
     try {

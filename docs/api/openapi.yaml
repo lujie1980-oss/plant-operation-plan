@@ -1,0 +1,1127 @@
+# Generated from docs/sdd/core/06-api-contracts.md — do not edit by hand.
+# Regenerate: ./mvnw -q exec:java -Dexec.mainClass=com.plantops.openapi.sdd.GenerateOpenApiFromSdd
+
+openapi: "3.0.3"
+info:
+  title: "Plant Operation Plan API"
+  version: "1.0.0-SNAPSHOT"
+  description: "Generated skeleton from docs/sdd/core/06-api-contracts.md (§6). Regenerate\
+    \ via com.plantops.openapi.sdd.GenerateOpenApiFromSdd — do not edit by hand."
+servers:
+- url: "/"
+  description: "Application root (paths include /api/v1)"
+tags:
+- name: "API-FC"
+  description: "§6 API-FC"
+- name: "API-DEM"
+  description: "§6 API-DEM"
+- name: "API-SES"
+  description: "§6 API-SES"
+- name: "API-MP"
+  description: "§6 API-MP"
+- name: "API-RT"
+  description: "§6 API-RT"
+- name: "API-MAT"
+  description: "§6 API-MAT"
+- name: "API-AUTH"
+  description: "§6 API-AUTH"
+- name: "API-IAM"
+  description: "§6 API-IAM"
+- name: "API-INT"
+  description: "§6 API-INT"
+- name: "API-ADM"
+  description: "§6 API-ADM"
+paths:
+  /api/v1/ontology/fulfillment/deliveries/{deliveryId}/fulfillment-chain:
+    get:
+      operationId: "API_FC_01_get"
+      tags:
+      - "API-FC"
+      summary: "交付满足链"
+      description: "Spec API-FC-01 · SCN-01c"
+      x-api-id: "API-FC-01"
+      parameters:
+      - name: "deliveryId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "masterPlanVersionId"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "OrderFulfillmentChainDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderFulfillmentChainDto"
+        "404":
+          description: "404：COLD 不存在"
+  /api/v1/ontology/fulfillment/deliveries:
+    get:
+      operationId: "API_FC_02_get"
+      tags:
+      - "API-FC"
+      summary: "交付列表"
+      description: "Spec API-FC-02"
+      x-api-id: "API-FC-02"
+      parameters:
+      - name: "masterPlanVersionId"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "CustomerOrderLineDelivery"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                description: "CustomerOrderLineDelivery"
+  /api/v1/demand/demand-pool/{salesOrderNo}/{salesOrderLineNo}/actions/{action}:
+    post:
+      operationId: "API_DEM_01_post"
+      tags:
+      - "API-DEM"
+      summary: "订单行 / 交付批次动作"
+      description: "Spec API-DEM-01 · SCN-01d~h"
+      x-api-id: "API-DEM-01"
+      parameters:
+      - name: "salesOrderNo"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "salesOrderLineNo"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "action"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "OrderDemandActionRequest"
+      responses:
+        "200":
+          description: "OrderDemandActionResult"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                description: "OrderDemandActionResult"
+  /api/v1/ontology/fulfillment/deliveries/{deliveryId}/actions/{action}:
+    post:
+      operationId: "API_DEM_01_post_2"
+      tags:
+      - "API-DEM"
+      summary: "订单行 / 交付批次动作"
+      description: "Spec API-DEM-01 · SCN-01d~h"
+      x-api-id: "API-DEM-01"
+      deprecated: true
+      parameters:
+      - name: "deliveryId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "action"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "OrderDemandActionRequest"
+      responses:
+        "200":
+          description: "OrderDemandActionResult"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                description: "OrderDemandActionResult"
+  /api/v1/master-plan/sessions:
+    post:
+      operationId: "API_SES_01_post"
+      tags:
+      - "API-SES"
+      summary: "创建 Session"
+      description: "Spec API-SES-01 · SCN-01b, SCN-01h, SCN-T02"
+      x-api-id: "API-SES-01"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "CreateMasterPlanSessionRequest"
+      responses:
+        "200":
+          description: "201 + MasterPlanSessionDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MasterPlanSessionDto"
+  /api/v1/master-plan/sessions/{sessionId}/simulate:
+    post:
+      operationId: "API_SES_02_post"
+      tags:
+      - "API-SES"
+      summary: "推演 simulate"
+      description: "Spec API-SES-02 · SCN-01a, SCN-03c, SCN-04c（ATP/试算 simulate）"
+      x-api-id: "API-SES-02"
+      parameters:
+      - name: "sessionId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "SimulateMasterPlanSessionRequest"
+      responses:
+        "200":
+          description: "MasterPlanSessionSimulateResultDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MasterPlanSessionSimulateResultDto"
+  /api/v1/master-plan/sessions/{sessionId}/optimize:
+    post:
+      operationId: "API_SES_03_post"
+      tags:
+      - "API-SES"
+      summary: "求解 optimize"
+      description: "Spec API-SES-03 · SCN-01b CTP, SCN-01h, SCN-T01"
+      x-api-id: "API-SES-03"
+      parameters:
+      - name: "sessionId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "MasterPlanSessionOptimizeResultDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MasterPlanSessionOptimizeResultDto"
+  /api/v1/master-plan/sessions/{sessionId}/confirm:
+    post:
+      operationId: "API_SES_04_post"
+      tags:
+      - "API-SES"
+      summary: "确认 confirm"
+      description: "Spec API-SES-04 · SCN-T02"
+      x-api-id: "API-SES-04"
+      parameters:
+      - name: "sessionId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "MasterPlanSessionConfirmResultDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MasterPlanSessionConfirmResultDto"
+  /api/v1/master-plan/sessions/{sessionId}/supply-orders/{supplyOrderId}/operations:
+    get:
+      operationId: "API_SES_05_get"
+      tags:
+      - "API-SES"
+      summary: "Session 快照"
+      description: "Spec API-SES-05"
+      x-api-id: "API-SES-05"
+      parameters:
+      - name: "sessionId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "supplyOrderId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "List<OperationSnapshotDto>"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationSnapshotDto"
+  /api/v1/planning/run-full-pipeline:
+    post:
+      operationId: "API_MP_01_post"
+      tags:
+      - "API-MP"
+      summary: "制定主计划（全流水线）"
+      description: "Spec API-MP-01 · SCN-06（PlanningRun）"
+      x-api-id: "API-MP-01"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "策略、步骤开关"
+      responses:
+        "200":
+          description: "pipeline run id + planVersionId"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                description: "pipeline run id + planVersionId"
+  /api/v1/planning/master-plan/solve:
+    post:
+      operationId: "API_MP_02_post"
+      tags:
+      - "API-MP"
+      summary: "主计划求解"
+      description: "Spec API-MP-02 · SCN-06（PlanningRun）"
+      x-api-id: "API-MP-02"
+      responses:
+        "200":
+          description: "planVersionId"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                description: "planVersionId"
+  /api/v1/planning/scenarios:
+    get:
+      operationId: "API_MP_03_get"
+      tags:
+      - "API-MP"
+      summary: "订单协同计划场景列表"
+      description: "Spec API-MP-03 · SCN-06b（VAL-06 场景对比）"
+      x-api-id: "API-MP-03"
+      parameters:
+      - name: "limit"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "PlanningScenarioDto[]"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlanningScenarioDto"
+  /api/v1/planning/scenarios/compare:
+    post:
+      operationId: "API_MP_04_post"
+      tags:
+      - "API-MP"
+      summary: "多场景 KPI 对比"
+      description: "Spec API-MP-04 · SCN-06b（VAL-06）"
+      x-api-id: "API-MP-04"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "{ \"planVersionIds\": [\"ENT-PV-…\"] }"
+      responses:
+        "200":
+          description: "ScenarioComparisonDto （ metrics[] 含 metricId / label / unit\
+            \ ； series[] 含每版本数值）"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioComparisonDto"
+  /api/v1/ontology/master-model/products/{productCode}/routing:
+    get:
+      operationId: "API_RT_01_get"
+      tags:
+      - "API-RT"
+      summary: "工艺主数据"
+      description: "Spec API-RT-01 · SCN-T04"
+      x-api-id: "API-RT-01"
+      parameters:
+      - name: "productCode"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "RoutingDto + RoutingStepDetailDto[] （含 RSOSR/RSIM/RSOM）"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoutingDto"
+  /api/v1/ontology/material-planning/balance:
+    get:
+      operationId: "API_MAT_01_get"
+      tags:
+      - "API-MAT"
+      summary: "供需平衡 / PISPP 表"
+      description: "Spec API-MAT-01 · SCN-07a, SCN-04b"
+      x-api-id: "API-MAT-01"
+      parameters:
+      - name: "masterPlanVersionId"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "MaterialRequirementReportDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaterialRequirementReportDto"
+  /api/v1/ontology/material-planning/pisps/{pispId}/routing-candidates:
+    get:
+      operationId: "API_MAT_02_get"
+      tags:
+      - "API-MAT"
+      summary: "供应路径候选与 EAT"
+      description: "Spec API-MAT-02 · SCN-07c, SCN-07d"
+      x-api-id: "API-MAT-02"
+      parameters:
+      - name: "pispId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "periodFrom"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      - name: "periodTo"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      - name: "quantity"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      - name: "masterPlanVersionId"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "SupplyRoutingCandidateDto[]"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplyRoutingCandidateDto"
+  /api/v1/ontology/material-planning/pisps/{pispId}/supply-plans:
+    post:
+      operationId: "API_MAT_03_post"
+      tags:
+      - "API-MAT"
+      summary: "创建供应计划"
+      description: "Spec API-MAT-03 · SCN-07b~d"
+      x-api-id: "API-MAT-03"
+      parameters:
+      - name: "pispId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "CreateSupplyPlanResultDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateSupplyPlanResultDto"
+  /api/v1/ontology/material-planning/pisps/{pispId}/period-demands:
+    get:
+      operationId: "API_MAT_04_get"
+      tags:
+      - "API-MAT"
+      summary: "创建供应计划"
+      description: "Spec API-MAT-04 · SCN-07e"
+      x-api-id: "API-MAT-04"
+      parameters:
+      - name: "pispId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "periodFrom"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      - name: "periodTo"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      - name: "masterPlanVersionId"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "PeriodDemandListDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PeriodDemandListDto"
+  /api/v1/ontology/material-planning/demands/{demandId}/eligible-supplies:
+    get:
+      operationId: "API_MAT_05_get"
+      tags:
+      - "API-MAT"
+      summary: "Demand 可匹配 Supply"
+      description: "Spec API-MAT-05 · SCN-07f"
+      x-api-id: "API-MAT-05"
+      parameters:
+      - name: "demandId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "masterPlanVersionId"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "EligibleSupplyListDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EligibleSupplyListDto"
+  /api/v1/ontology/material-planning/fulfillments:
+    post:
+      operationId: "API_MAT_06_post"
+      tags:
+      - "API-MAT"
+      summary: "手工创建 Fulfillment（拖拽预留）"
+      description: "Spec API-MAT-06 · SCN-07g"
+      x-api-id: "API-MAT-06"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "CreateFulfillmentRequest （demandId, supplyId, quantity,\
+                \ source= DRAG ）"
+      responses:
+        "200":
+          description: "FulfillmentDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FulfillmentDto"
+  /api/v1/ontology/material-planning/reservations/auto:
+    post:
+      operationId: "API_MAT_07_post"
+      tags:
+      - "API-MAT"
+      summary: "自动预留"
+      description: "Spec API-MAT-07 · SCN-07h, SCN-07i"
+      x-api-id: "API-MAT-07"
+      responses:
+        "200":
+          description: "AutoReservationResultDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutoReservationResultDto"
+  /api/v1/ontology/material-planning/pisps/{pispId}/reservation-alerts:
+    get:
+      operationId: "API_MAT_08_get"
+      tags:
+      - "API-MAT"
+      summary: "预留风险预警"
+      description: "Spec API-MAT-08 · SCN-07j"
+      x-api-id: "API-MAT-08"
+      parameters:
+      - name: "pispId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "periodFrom"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      - name: "periodTo"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      - name: "masterPlanVersionId"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "ReservationAlertDto[]"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationAlertDto"
+  /api/v1/auth/config:
+    get:
+      operationId: "API_AUTH_01_get"
+      tags:
+      - "API-AUTH"
+      summary: "认证配置与登录"
+      description: "Spec API-AUTH-01"
+      x-api-id: "API-AUTH-01"
+      responses:
+        "200":
+          description: "{ devMode, registrationEnabled, localLoginEnabled, oidc: {\
+            \ enabled, authorizationEndpoint, clientId } }"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                description: "{ devMode, registrationEnabled, localLoginEnabled, oidc:\
+                  \ { enabled, authorizationEndpoint, clientId } }"
+  /api/v1/auth/login:
+    post:
+      operationId: "API_AUTH_01_post"
+      tags:
+      - "API-AUTH"
+      summary: "认证配置与登录"
+      description: "Spec API-AUTH-01"
+      x-api-id: "API-AUTH-01"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "{ loginName, password }"
+      responses:
+        "200":
+          description: "AuthTokenDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenDto"
+  /api/v1/auth/register:
+    post:
+      operationId: "API_AUTH_01_post_2"
+      tags:
+      - "API-AUTH"
+      summary: "认证配置与登录"
+      description: "Spec API-AUTH-01"
+      x-api-id: "API-AUTH-01"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "{ loginName, password }"
+      responses:
+        "200":
+          description: "AuthTokenDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenDto"
+  /api/v1/auth/oidc/authorize:
+    get:
+      operationId: "API_AUTH_01_get_2"
+      tags:
+      - "API-AUTH"
+      summary: "认证配置与登录"
+      description: "Spec API-AUTH-01"
+      x-api-id: "API-AUTH-01"
+      responses:
+        "200":
+          description: "Success"
+  /api/v1/auth/oidc/exchange:
+    post:
+      operationId: "API_AUTH_01_post_3"
+      tags:
+      - "API-AUTH"
+      summary: "认证配置与登录"
+      description: "Spec API-AUTH-01"
+      x-api-id: "API-AUTH-01"
+      responses:
+        "200":
+          description: "Success"
+  /api/v1/iam/me:
+    get:
+      operationId: "API_IAM_01_get"
+      tags:
+      - "API-IAM"
+      summary: "当前用户"
+      description: "Spec API-IAM-01"
+      x-api-id: "API-IAM-01"
+      responses:
+        "200":
+          description: "CurrentUserDto"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUserDto"
+  /api/v1/iam/workspaces:
+    get:
+      operationId: "API_IAM_02_get"
+      tags:
+      - "API-IAM"
+      summary: "用户可访问 Workspace 列表"
+      description: "Spec API-IAM-02"
+      x-api-id: "API-IAM-02"
+      responses:
+        "200":
+          description: "WorkspaceMembershipDto[]"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceMembershipDto"
+  /api/v1/iam/workspaces/{workspaceId}/modules:
+    put:
+      operationId: "API_IAM_03_put"
+      tags:
+      - "API-IAM"
+      summary: "Workspace 模块配置"
+      description: "Spec API-IAM-03 · SCN-T06b · WS_ADMIN 或 OWNER；SUPER_ADMIN"
+      x-api-id: "API-IAM-03"
+      parameters:
+      - name: "workspaceId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "{ modules: [{ moduleId, enabled }] }"
+      responses:
+        "200":
+          description: "Success"
+  /api/v1/iam/workspaces/{workspaceId}/members/{userId}/permissions:
+    put:
+      operationId: "API_IAM_04_put"
+      tags:
+      - "API-IAM"
+      summary: "成员模块权限矩阵"
+      description: "Spec API-IAM-04 · WS_ADMIN 或 OWNER"
+      x-api-id: "API-IAM-04"
+      parameters:
+      - name: "workspaceId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "userId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Success"
+  /api/v1/admin/users:
+    get:
+      operationId: "API_IAM_05_get"
+      tags:
+      - "API-IAM"
+      summary: "平台用户管理（Super Admin）"
+      description: "Spec API-IAM-05 · SCN-T06c · SUPER_ADMIN"
+      x-api-id: "API-IAM-05"
+      responses:
+        "200":
+          description: "Success"
+    post:
+      operationId: "API_IAM_05_post"
+      tags:
+      - "API-IAM"
+      summary: "平台用户管理（Super Admin）"
+      description: "Spec API-IAM-05 · SCN-T06c · SUPER_ADMIN"
+      x-api-id: "API-IAM-05"
+      responses:
+        "200":
+          description: "Success"
+    patch:
+      operationId: "API_IAM_05_patch"
+      tags:
+      - "API-IAM"
+      summary: "平台用户管理（Super Admin）"
+      description: "Spec API-IAM-05 · SCN-T06c · SUPER_ADMIN"
+      x-api-id: "API-IAM-05"
+      responses:
+        "200":
+          description: "Success"
+  /api/v1/iam/workspaces/{workspaceId}/members:
+    post:
+      operationId: "API_IAM_06_post"
+      tags:
+      - "API-IAM"
+      summary: "Workspace 成员管理"
+      description: "Spec API-IAM-06 · WS_ADMIN 或 OWNER"
+      x-api-id: "API-IAM-06"
+      parameters:
+      - name: "workspaceId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Success"
+    delete:
+      operationId: "API_IAM_06_delete"
+      tags:
+      - "API-IAM"
+      summary: "Workspace 成员管理"
+      description: "Spec API-IAM-06 · WS_ADMIN 或 OWNER"
+      x-api-id: "API-IAM-06"
+      parameters:
+      - name: "workspaceId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Success"
+  /api/v1/integration/batches:
+    get:
+      operationId: "API_INT_01_get"
+      tags:
+      - "API-INT"
+      summary: "导入批次列表"
+      description: "Spec API-INT-01 · SCN-T07a"
+      x-api-id: "API-INT-01"
+      parameters:
+      - name: "limit"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "IntegrationBatchDto[]"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntegrationBatchDto"
+  /api/v1/integration/external/{domain}/tables:
+    get:
+      operationId: "API_INT_02_get"
+      tags:
+      - "API-INT"
+      summary: "External 表清单"
+      description: "Spec API-INT-02 · SCN-T07a"
+      x-api-id: "API-INT-02"
+      parameters:
+      - name: "domain"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "ExternalTableInfoDto[]"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExternalTableInfoDto"
+  /api/v1/integration/external/{domain}/{table}:
+    get:
+      operationId: "API_INT_03_get"
+      tags:
+      - "API-INT"
+      summary: "External 行分页"
+      description: "Spec API-INT-03 · SCN-T07a"
+      x-api-id: "API-INT-03"
+      parameters:
+      - name: "domain"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "table"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      - name: "page"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      - name: "size"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      - name: "importBatchId"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      - name: "qualityStatus"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "分页 external_* 行 + quality_issue_codes"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                description: "分页 external_* 行 + quality_issue_codes"
+  /api/v1/integration/adapters:
+    get:
+      operationId: "API_INT_04_get"
+      tags:
+      - "API-INT"
+      summary: "适配器状态"
+      description: "Spec API-INT-04 · SCN-T07b"
+      x-api-id: "API-INT-04"
+      responses:
+        "200":
+          description: "IntegrationAdapterStatusDto[]"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntegrationAdapterStatusDto"
+  /api/v1/integration/adapters/{adapterId}/run:
+    post:
+      operationId: "API_INT_05_post"
+      tags:
+      - "API-INT"
+      summary: "触发适配器同步"
+      description: "Spec API-INT-05 · SCN-T07b · SCN-T07c · MOD-DI · EDIT"
+      x-api-id: "API-INT-05"
+      parameters:
+      - name: "adapterId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "{ importBatchId?, status }"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                description: "{ importBatchId?, status }"
+  /api/v1/integration/adapters/{adapterId}/config:
+    put:
+      operationId: "API_INT_06_put"
+      tags:
+      - "API-INT"
+      summary: "适配器配置"
+      description: "Spec API-INT-06 · SCN-T07b · MOD-DI · EDIT；WS_ADMIN 推荐"
+      x-api-id: "API-INT-06"
+      parameters:
+      - name: "adapterId"
+        in: "path"
+        required: true
+        schema:
+          type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "config_schema"
+      responses:
+        "200":
+          description: "Success"
+  /api/v1/integration/adapters/excel/upload:
+    post:
+      operationId: "API_INT_07_post"
+      tags:
+      - "API-INT"
+      summary: "Excel 上传"
+      description: "Spec API-INT-07 · SCN-T07a"
+      x-api-id: "API-INT-07"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "multipart/form-data ： file ； validateOnly?"
+      responses:
+        "200":
+          description: "{ importBatchId, rowCount }"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                description: "{ importBatchId, rowCount }"
+  /api/v1/integration/quality:
+    get:
+      operationId: "API_INT_08_get"
+      tags:
+      - "API-INT"
+      summary: "质检报告"
+      description: "Spec API-INT-08 · SCN-T07a"
+      x-api-id: "API-INT-08"
+      parameters:
+      - name: "importBatchId"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      - name: "issueCode"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "批次/行级质检摘要"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                description: "批次/行级质检摘要"
+  /api/v1/admin/scale-sales-order-demand:
+    post:
+      operationId: "API_ADM_01_post"
+      tags:
+      - "API-ADM"
+      summary: "销售订单缩放"
+      description: "Spec API-ADM-01"
+      x-api-id: "API-ADM-01"
+      parameters:
+      - name: "divisor"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      - name: "replaceWorkOrders"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "Success"
+components:
+  securitySchemes:
+    workspaceHeader:
+      type: "apiKey"
+      in: "header"
+      name: "X-Workspace-Id"
+      description: "Required for business APIs (§6)"
+  schemas:
+    OrderFulfillmentChainDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    MasterPlanSessionDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    MasterPlanSessionSimulateResultDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    MasterPlanSessionOptimizeResultDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    MasterPlanSessionConfirmResultDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    OperationSnapshotDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    PlanningScenarioDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    ScenarioComparisonDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    RoutingDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    RoutingStepDetailDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    MaterialRequirementReportDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    SupplyRoutingCandidateDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    CreateSupplyPlanResultDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    PeriodDemandListDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    EligibleSupplyListDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    FulfillmentDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    AutoReservationResultDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    ReservationAlertDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    AuthTokenDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    CurrentUserDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    WorkspaceMembershipDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    IntegrationBatchDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    ExternalTableInfoDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    IntegrationAdapterStatusDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+security:
+- workspaceHeader: []

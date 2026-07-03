@@ -1,70 +1,30 @@
 .dashboard-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--ui-gap-md);
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.dashboard-page .dash-detail-panel {
+  flex: 1;
   min-height: 0;
 }
 
-.dash-kpi-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-@media (max-width: 960px) {
-  .dash-kpi-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-.dash-overview-bar {
-  display: flex;
-  align-items: flex-end;
-  gap: 24px;
-  height: 120px;
-  padding: 16px 20px 8px;
-}
-
-.dash-overview-bar-item {
-  flex: 1;
+.dashboard-page .dash-detail-panel.card {
+  padding: var(--ui-card-pad);
+  margin-bottom: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  height: 100%;
-  justify-content: flex-end;
-}
-
-.dash-overview-bar-col {
-  width: 100%;
-  max-width: 64px;
-  border-radius: 6px 6px 0 0;
-  min-height: 4px;
-  transition: height 0.3s ease;
-}
-
-.dash-overview-bar-label {
-  font-size: 12px;
-  color: #64748b;
-  text-align: center;
+  min-height: 0;
 }
 
 .dash-detail-panel {
   flex: 1;
-  min-height: 280px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-}
-
-.dash-detail-panel h3 {
-  margin: 0 0 12px;
-  font-size: 15px;
-}
-
-.dash-detail-meta {
-  font-size: 13px;
-  color: #64748b;
-  margin: 0 0 12px;
 }
 
 .dash-detail-table-wrap {
@@ -93,13 +53,16 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: var(--ui-gap-sm);
+  flex-shrink: 0;
 }
 
-.dash-tab-head h3 {
-  margin: 0;
-  font-size: 15px;
+.dash-tab-meta {
+  font-size: var(--ui-font-xs);
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
 }
 
 .dash-tabs {
@@ -114,8 +77,8 @@
 .dash-tab {
   border: none;
   background: transparent;
-  padding: 6px 12px;
-  font-size: 13px;
+  padding: 0.3rem 0.55rem;
+  font-size: var(--ui-font-sm);
   color: #64748b;
   border-radius: 6px;
   cursor: pointer;

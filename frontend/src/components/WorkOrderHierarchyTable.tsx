@@ -50,7 +50,7 @@ const TIMING_COLUMNS: TableHeadColumn[] = [
 ];
 
 const BASE_COLUMNS: TableHeadColumn[] = [
-  { key: 'check', header: '', width: 40, defaultWidth: 40, filterable: false, resizable: false },
+  { key: 'check', header: '', width: 40, defaultWidth: 40, filterable: false },
   { key: 'workOrderNo', header: '工单号', width: 200, defaultWidth: 200 },
   { key: 'source', header: '来源', width: 88, defaultWidth: 88, filterable: false },
   { key: 'productCode', header: '产品', width: 120, defaultWidth: 120 },
@@ -68,7 +68,6 @@ const TOGGLE_COLUMN: TableHeadColumn = {
   width: 28,
   defaultWidth: 28,
   filterable: false,
-  resizable: false,
 };
 
 function columnsForLayout(useTree: boolean): TableHeadColumn[] {
@@ -336,7 +335,7 @@ export function WorkOrderHierarchyTable({
 
   return (
     <div className="wo-tree-panel">
-      <table className="wo-tree-table pp-table ft-table data-table">
+      <table className="wo-tree-table pp-table ft-table data-table" data-table-id="production-plan-work-orders-v2">
         <thead>
           <TableHead
             columns={headColumns}

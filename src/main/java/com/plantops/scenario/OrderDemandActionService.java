@@ -1,15 +1,14 @@
 package com.plantops.scenario;
 
 import com.plantops.api.dto.OrderFulfillmentChainDto;
-import com.plantops.api.dto.WorkOrderGenerationResultDto;
 import com.plantops.api.dto.demand.OrderDemandActionRequest;
 import com.plantops.api.dto.demand.OrderDemandActionResult;
-import com.plantops.api.dto.planning.OrderPlanningChainDto;
-import com.plantops.api.dto.planning.OrderPlanningChainNodeDto;
-import com.plantops.api.dto.planning.OrderPlanningChainPreviewRequest;
+import com.plantops.api.dto.demand.PromiseDatePreviewDto;
 import com.plantops.config.MasterPlanStrategyConfigService;
+import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
-import com.plantops.scenario.planning.OrderPlanningChainService;
+import com.plantops.scenario.planning.delivery.DeliveryPlanningSandboxService;
+import com.plantops.workspace.WorkspaceResolver;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -17,24 +16,24 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
 
 @ApplicationScoped
 public class OrderDemandActionService {
 
     @Inject
-    DemandService demandService;
+    OntologyFulfillmentService ontologyFulfillmentService;
 
     @Inject
-    WorkOrderGenerationService workOrderGenerationService;
-
-    @Inject
-    OrderPlanningChainService orderPlanningChainService;
+    DeliveryPlanningSandboxService deliveryPlanningSandboxService;
 
     @Inject
     OrderDemandCancelPlanService orderDemandCancelPlanService;
+
+    @Inject
+    OrderDemandCancelPromiseService orderDemandCancelPromiseService;
+
+    @Inject
+    WorkspaceAuthoritativeOntologyGraphService authoritativeOntologyGraph;
 
     public OrderDemandActionResult execute(
             String salesOrderNo,
@@ -43,14 +42,29 @@ public class OrderDemandActionService {
             OrderDemandActionRequest body) {
         OrderDemandActionRequest req = body != null ? body : new OrderDemandActionRequest(null, null, null, null);
         return switch (action) {
-            case BUILD_UPSTREAM_CHAIN -> buildUpstreamChain(salesOrderNo, salesOrderLineNo, req);
-            case PLAN_UNCONSTRAINED -> planPreview(
-                    salesOrderNo, salesOrderLineNo, req, MasterPlanStrategyConfigService.UNCONSTRAINED_STRATEGY_ID);
-            case PLAN_FINITE -> planPreview(
-                    salesOrderNo, salesOrderLineNo, req, "finite-capacity");
+            case INFINITE_PLAN_JIT, BUILD_UPSTREAM_CHAIN -> infinitePlanJit(salesOrderNo, salesOrderLineNo, req);
+            case FINITE_PLAN, PLAN_FINITE -> finitePlanForDelivery(salesOrderNo, salesOrderLineNo, req);
+            case PLAN_UNCONSTRAINED -> unconstrainedPlanPreview(salesOrderNo, salesOrderLineNo, req);
             case CONFIRM_PROMISE_DATE -> confirmPromiseDate(salesOrderNo, salesOrderLineNo, req);
             case CANCEL_PLAN -> cancelPlan(salesOrderNo, salesOrderLineNo, req);
+            case CANCEL_PROMISE -> cancelPromise(salesOrderNo, salesOrderLineNo, req);
         };
+    }
+
+    public PromiseDatePreviewDto previewPromiseDate(
+            String salesOrderNo,
+            int salesOrderLineNo,
+            OrderDemandActionRequest req) {
+        OrderDemandActionRequest effective = req != null ? req : new OrderDemandActionRequest(null, null, null, null);
+        OrderFulfillmentChainDto chain = deliveryPlanningSandboxService.optimizeForDelivery(
+                salesOrderNo,
+                salesOrderLineNo,
+                "finite-capacity",
+                blankToNull(effective.masterPlanVersionId()),
+                effective.useFeedbackOverlay(),
+                effective.feedbackCutoff());
+        LocalDate suggested = FulfillmentChainPromiseDate.suggest(chain);
+        return new PromiseDatePreviewDto(chain, suggested, chain.overallStatus());
     }
 
     private OrderDemandActionResult cancelPlan(
@@ -59,14 +73,17 @@ public class OrderDemandActionService {
             OrderDemandActionRequest req) {
         OrderDemandCancelPlanService.CancelPlanSummary summary =
                 orderDemandCancelPlanService.cancelForOrderLine(salesOrderNo, salesOrderLineNo);
-        OrderFulfillmentChainDto chain = demandService.getFulfillmentChain(
-                salesOrderNo, salesOrderLineNo, blankToNull(req.masterPlanVersionId()));
+        String deliveryId = ontologyFulfillmentService.deliveryIdForOrderLine(salesOrderNo, salesOrderLineNo);
+        deliveryPlanningSandboxService.invalidateForDelivery(deliveryId);
+        authoritativeOntologyGraph.invalidate(
+                WorkspaceResolver.currentWorkspaceId(), blankToNull(req.masterPlanVersionId()));
+        OrderFulfillmentChainDto chain = ontologyFulfillmentService.fulfillmentChainFromDeliveryScoped(
+                deliveryId, blankToNull(req.masterPlanVersionId()));
         String message = buildCancelPlanMessage(summary);
         return new OrderDemandActionResult(
                 OrderDemandAction.CANCEL_PLAN.name(),
                 message,
                 chain,
-                null,
                 null,
                 null);
     }
@@ -85,40 +102,82 @@ public class OrderDemandActionService {
         return sb.toString();
     }
 
-    private OrderDemandActionResult buildUpstreamChain(
+    private OrderDemandActionResult cancelPromise(
             String salesOrderNo,
             int salesOrderLineNo,
             OrderDemandActionRequest req) {
-        WorkOrderGenerationResultDto generation = workOrderGenerationService.generateForOrderLine(
-                salesOrderNo, salesOrderLineNo, true);
-        OrderFulfillmentChainDto chain = demandService.getFulfillmentChain(
-                salesOrderNo, salesOrderLineNo, blankToNull(req.masterPlanVersionId()));
+        OrderDemandCancelPromiseService.CancelPromiseResult summary =
+                orderDemandCancelPromiseService.cancelForOrderLine(salesOrderNo, salesOrderLineNo);
+        String deliveryId = ontologyFulfillmentService.deliveryIdForOrderLine(salesOrderNo, salesOrderLineNo);
+        authoritativeOntologyGraph.invalidate(
+                WorkspaceResolver.currentWorkspaceId(), blankToNull(req.masterPlanVersionId()));
+        OrderFulfillmentChainDto chain = ontologyFulfillmentService.fulfillmentChainFromDeliveryScoped(
+                deliveryId, blankToNull(req.masterPlanVersionId()));
         return new OrderDemandActionResult(
-                OrderDemandAction.BUILD_UPSTREAM_CHAIN.name(),
-                "已刷新 MRP 合并工单并重建满足链（全场景重算）",
+                OrderDemandAction.CANCEL_PROMISE.name(),
+                summary.message(),
                 chain,
                 null,
-                null,
-                generation);
+                null);
     }
 
-    private OrderDemandActionResult planPreview(
+    private OrderDemandActionResult infinitePlanJit(
             String salesOrderNo,
             int salesOrderLineNo,
-            OrderDemandActionRequest req,
-            String strategyId) {
-        OrderPlanningChainDto planning = orderPlanningChainService.preview(previewRequest(
-                salesOrderNo, salesOrderLineNo, req, strategyId));
-        String label = MasterPlanStrategyConfigService.UNCONSTRAINED_STRATEGY_ID.equals(strategyId)
-                ? "无限能力"
-                : "有限能力";
+            OrderDemandActionRequest req) {
+        String deliveryId = ontologyFulfillmentService.deliveryIdForOrderLine(salesOrderNo, salesOrderLineNo);
+        deliveryPlanningSandboxService.invalidateForDelivery(deliveryId);
+        OrderFulfillmentChainDto chain = ontologyFulfillmentService.buildUpstreamChain(
+                deliveryId, blankToNull(req.masterPlanVersionId()));
+        long workOrderCount = chain.nodes().stream()
+                .filter(n -> "SUPPLY_ORDER".equals(n.nodeType()))
+                .count();
         return new OrderDemandActionResult(
-                strategyId.equals(MasterPlanStrategyConfigService.UNCONSTRAINED_STRATEGY_ID)
-                        ? OrderDemandAction.PLAN_UNCONSTRAINED.name()
-                        : OrderDemandAction.PLAN_FINITE.name(),
-                label + "推演完成",
+                OrderDemandAction.INFINITE_PLAN_JIT.name(),
+                "无限能力计划（JIT）完成：已按交期倒排并创建/挂接 " + workOrderCount + " 个上游 SupplyOrder",
+                chain,
                 null,
-                planning,
+                null);
+    }
+
+    private OrderDemandActionResult finitePlanForDelivery(
+            String salesOrderNo,
+            int salesOrderLineNo,
+            OrderDemandActionRequest req) {
+        deliveryPlanningSandboxService.invalidateForDelivery(
+                ontologyFulfillmentService.deliveryIdForOrderLine(salesOrderNo, salesOrderLineNo));
+        OrderFulfillmentChainDto chain = deliveryPlanningSandboxService.optimizeForDelivery(
+                salesOrderNo,
+                salesOrderLineNo,
+                "finite-capacity",
+                blankToNull(req.masterPlanVersionId()),
+                req.useFeedbackOverlay(),
+                req.feedbackCutoff());
+        return new OrderDemandActionResult(
+                OrderDemandAction.FINITE_PLAN.name(),
+                "有限能力计划完成（单交付优化，结果已写入满足链预览）",
+                chain,
+                null,
+                null);
+    }
+
+    private OrderDemandActionResult unconstrainedPlanPreview(
+            String salesOrderNo,
+            int salesOrderLineNo,
+            OrderDemandActionRequest req) {
+        deliveryPlanningSandboxService.invalidateForDelivery(
+                ontologyFulfillmentService.deliveryIdForOrderLine(salesOrderNo, salesOrderLineNo));
+        OrderFulfillmentChainDto chain = deliveryPlanningSandboxService.optimizeForDelivery(
+                salesOrderNo,
+                salesOrderLineNo,
+                MasterPlanStrategyConfigService.UNCONSTRAINED_STRATEGY_ID,
+                blankToNull(req.masterPlanVersionId()),
+                req.useFeedbackOverlay(),
+                req.feedbackCutoff());
+        return new OrderDemandActionResult(
+                OrderDemandAction.PLAN_UNCONSTRAINED.name(),
+                "无限能力推演完成",
+                chain,
                 null,
                 null);
     }
@@ -130,16 +189,21 @@ public class OrderDemandActionService {
             OrderDemandActionRequest req) {
         SalesOrderLineEntity order = requireOrder(salesOrderNo, salesOrderLineNo);
         LocalDate promiseDate = req.promiseDateOverride();
-        OrderPlanningChainDto planning = null;
+        OrderFulfillmentChainDto chain = null;
         if (promiseDate == null) {
-            planning = orderPlanningChainService.preview(previewRequest(
-                    salesOrderNo, salesOrderLineNo, req, "finite-capacity"));
-            promiseDate = suggestPromiseDate(planning);
+            chain = deliveryPlanningSandboxService.optimizeForDelivery(
+                    salesOrderNo,
+                    salesOrderLineNo,
+                    "finite-capacity",
+                    blankToNull(req.masterPlanVersionId()),
+                    req.useFeedbackOverlay(),
+                    req.feedbackCutoff());
+            promiseDate = FulfillmentChainPromiseDate.suggest(chain);
             if (promiseDate == null) {
-                throw new BadRequestException("无法从有限能力推演中推算承诺交期，请检查工单与工艺数据");
+                throw new BadRequestException("无法从满足链推算承诺交期，请先执行有限能力计划或检查工单与工艺数据");
             }
-            if ("BLOCKED".equals(planning.overallStatus())) {
-                throw new BadRequestException("订单推演状态为 BLOCKED，不宜自动确认承诺交期");
+            if ("BLOCKED".equals(chain.overallStatus())) {
+                throw new BadRequestException("满足链状态为 BLOCKED，不宜自动确认承诺交期");
             }
         }
         order.promiseDate = promiseDate;
@@ -150,36 +214,8 @@ public class OrderDemandActionService {
         return new OrderDemandActionResult(
                 OrderDemandAction.CONFIRM_PROMISE_DATE.name(),
                 message,
-                null,
-                planning,
+                chain,
                 promiseDate,
-                null);
-    }
-
-    static LocalDate suggestPromiseDate(OrderPlanningChainDto planning) {
-        if (planning == null || planning.nodes() == null) {
-            return null;
-        }
-        return planning.nodes().stream()
-                .filter(n -> "WORK_ORDER".equals(n.nodeType()) || "SALES_ORDER".equals(n.nodeType()))
-                .map(OrderPlanningChainNodeDto::windowEnd)
-                .filter(Objects::nonNull)
-                .max(Comparator.naturalOrder())
-                .orElse(null);
-    }
-
-    private static OrderPlanningChainPreviewRequest previewRequest(
-            String salesOrderNo,
-            int salesOrderLineNo,
-            OrderDemandActionRequest req,
-            String strategyId) {
-        return new OrderPlanningChainPreviewRequest(
-                salesOrderNo,
-                salesOrderLineNo,
-                strategyId,
-                req.useFeedbackOverlay(),
-                req.feedbackCutoff(),
-                blankToNull(req.masterPlanVersionId()),
                 null);
     }
 
@@ -193,5 +229,11 @@ public class OrderDemandActionService {
 
     private static String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value;
+    }
+
+    private OrderFulfillmentChainDto ontologyFulfillmentChain(
+            String salesOrderNo, int salesOrderLineNo, OrderDemandActionRequest req) {
+        return ontologyFulfillmentService.fulfillmentChainForOrderLine(
+                salesOrderNo, salesOrderLineNo, blankToNull(req.masterPlanVersionId()));
     }
 }

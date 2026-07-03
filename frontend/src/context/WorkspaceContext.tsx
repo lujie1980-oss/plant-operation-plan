@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Workspace, WorkspaceCreatePayload } from '../types/workspace';
+import { useAuth } from '../providers/AuthContext';
 
 const STORAGE_KEY = 'plantops.workspaceId';
 
@@ -24,44 +25,42 @@ type WorkspaceContextValue = {
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
-async function fetchWorkspaces(): Promise<Workspace[]> {
-  const res = await fetch('/api/v1/workspaces', { headers: { Accept: 'application/json' } });
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-  return res.json() as Promise<Workspace[]>;
+function mapToWorkspace(w: { workspaceId: string; name: string }): Workspace {
+  return {
+    workspaceId: w.workspaceId,
+    name: w.name,
+    description: null,
+    createdAt: '',
+    isDefault: false,
+  };
 }
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [workspaceId, setWorkspaceIdState] = useState(
-    () => localStorage.getItem(STORAGE_KEY) ?? 'default',
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { workspaces: authWorkspaces, refresh: refreshAuth } = useAuth();
 
-  const refreshWorkspaces = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const list = await fetchWorkspaces();
-      setWorkspaces(list);
-      const ids = new Set(list.map((w) => w.workspaceId));
-      if (!ids.has(workspaceId)) {
-        const fallback = list.find((w) => w.isDefault)?.workspaceId ?? 'default';
-        setWorkspaceIdState(fallback);
-        localStorage.setItem(STORAGE_KEY, fallback);
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
-    }
-  }, [workspaceId]);
+  const workspaceList = useMemo(
+    () => authWorkspaces.map(mapToWorkspace),
+    [authWorkspaces],
+  );
+
+  const [workspaceId, setWorkspaceIdState] = useState(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored && authWorkspaces.some((w) => w.workspaceId === stored)) return stored;
+    return authWorkspaces[0]?.workspaceId ?? '';
+  });
+
+  const [loading] = useState(false);
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
-    void refreshWorkspaces();
-  }, [refreshWorkspaces]);
+    if (!authWorkspaces.some((w) => w.workspaceId === workspaceId)) {
+      const next = authWorkspaces[0]?.workspaceId ?? '';
+      if (next) {
+        setWorkspaceIdState(next);
+        localStorage.setItem(STORAGE_KEY, next);
+      }
+    }
+  }, [authWorkspaces, workspaceId]);
 
   const setWorkspaceId = useCallback((id: string) => {
     setWorkspaceIdState(id);
@@ -69,41 +68,45 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     window.location.reload();
   }, []);
 
-  const createWorkspace = useCallback(async (payload: WorkspaceCreatePayload) => {
+  const refreshWorkspaces = useCallback(async () => {
+    await refreshAuth();
+  }, [refreshAuth]);
+
+  const createWorkspace = useCallback(async (payload: WorkspaceCreatePayload): Promise<Workspace> => {
     const res = await fetch('/api/v1/workspaces', {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) {
-      throw new Error(await res.text());
-    }
-    const created = (await res.json()) as Workspace;
-    await refreshWorkspaces();
+    if (!res.ok) throw new Error(await res.text());
+    const created = await res.json();
+    await refreshAuth();
+    setTimeout(() => {
+      setWorkspaceIdState(payload.id);
+      localStorage.setItem(STORAGE_KEY, payload.id);
+      window.location.reload();
+    }, 100);
     return created;
-  }, [refreshWorkspaces]);
+  }, [refreshAuth]);
 
-  const deleteWorkspace = useCallback(
-    async (id: string) => {
-      const res = await fetch(`/api/v1/workspaces/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok) {
-        throw new Error(await res.text());
+  const deleteWorkspace = useCallback(async (id: string) => {
+    const res = await fetch(`/api/v1/workspaces/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(await res.text());
+    await refreshAuth();
+    if (workspaceId === id) {
+      const fallback = authWorkspaces.find((w) => w.workspaceId !== id)?.workspaceId ?? '';
+      if (fallback) {
+        setWorkspaceIdState(fallback);
+        localStorage.setItem(STORAGE_KEY, fallback);
+        window.location.reload();
       }
-      await refreshWorkspaces();
-      if (workspaceId === id) {
-        const fallback = workspaces.find((w) => w.isDefault)?.workspaceId ?? 'default';
-        setWorkspaceId(fallback);
-      }
-    },
-    [refreshWorkspaces, setWorkspaceId, workspaceId, workspaces],
-  );
+    }
+  }, [refreshAuth, workspaceId, authWorkspaces]);
 
   const value = useMemo(
     () => ({
       workspaceId,
-      workspaces,
+      workspaces: workspaceList,
       loading,
       error,
       setWorkspaceId,
@@ -111,16 +114,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       createWorkspace,
       deleteWorkspace,
     }),
-    [
-      workspaceId,
-      workspaces,
-      loading,
-      error,
-      setWorkspaceId,
-      refreshWorkspaces,
-      createWorkspace,
-      deleteWorkspace,
-    ],
+    [workspaceId, workspaceList, loading, error, setWorkspaceId, refreshWorkspaces, createWorkspace, deleteWorkspace],
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
@@ -128,12 +122,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
 export function useWorkspace() {
   const ctx = useContext(WorkspaceContext);
-  if (!ctx) {
-    throw new Error('useWorkspace must be used within WorkspaceProvider');
-  }
+  if (!ctx) throw new Error('useWorkspace must be inside WorkspaceProvider');
   return ctx;
 }
 
 export function getStoredWorkspaceId(): string {
-  return localStorage.getItem(STORAGE_KEY) ?? 'default';
+  return localStorage.getItem(STORAGE_KEY) ?? '';
 }

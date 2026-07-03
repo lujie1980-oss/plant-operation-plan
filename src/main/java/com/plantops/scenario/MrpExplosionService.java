@@ -3,6 +3,7 @@ package com.plantops.scenario;
 import com.plantops.api.dto.WorkOrderGenerationBatchResultDto;
 import com.plantops.api.dto.WorkOrderGenerationResultDto;
 import com.plantops.domain.SalesOrderLineId;
+import com.plantops.ontology.persistence.OntologyLegacyMutationCoordinator;
 import com.plantops.persistence.entity.BomComponentEntity;
 import com.plantops.persistence.entity.ProductResourceEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
@@ -14,6 +15,7 @@ import com.plantops.scenario.mrp.MrpDemandBucket.Key;
 import com.plantops.scenario.mrp.MrpDemandBucket.PegLine;
 import com.plantops.scenario.mrp.MrpLotSizing;
 import com.plantops.scenario.mrp.MrpLotSizing.LotRule;
+import com.plantops.workspace.WorkspaceResolver;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -45,6 +47,9 @@ public class MrpExplosionService {
 
     @Inject
     RuleScopeHelper ruleScopeHelper;
+
+    @Inject
+    OntologyLegacyMutationCoordinator legacyMutationCoordinator;
 
     @Transactional(TxType.NOT_SUPPORTED)
     public WorkOrderGenerationBatchResultDto regenerateMergedWorkOrders(boolean replaceExisting) {
@@ -172,6 +177,10 @@ public class MrpExplosionService {
             levelBuckets = childAccum;
         }
 
+        if (woCount > 0) {
+            legacyMutationCoordinator.afterWorkOrdersChanged(WorkspaceResolver.currentWorkspaceId());
+        }
+
         return woCount;
     }
 
@@ -286,12 +295,29 @@ public class MrpExplosionService {
     /**
      * 生成唯一工单号：已存在且不可重建（如已下发）时递增序号，避免 UK_WORK_ORDER_WS 冲突。
      */
-    static String allocateUniqueWorkOrderNo(String productCode, LocalDate needDate, int preferredSeq) {
+    public static String allocateUniqueWorkOrderNo(String productCode, LocalDate needDate, int preferredSeq) {
         int seq = Math.max(1, preferredSeq);
         while (seq < 10_000) {
             String candidate = formatWorkOrderNo(productCode, needDate, seq);
             WorkOrderEntity existing = WorkOrderEntity.findByNo(candidate);
             if (existing == null || WorkOrderEntity.isMrpRegeneratable(existing)) {
+                return candidate;
+            }
+            seq++;
+        }
+        throw new IllegalStateException(
+                "无法为产品 " + productCode + " / " + needDate + " 分配唯一 MRP 工单号（序号已用尽）");
+    }
+
+    /**
+     * 基于已占用工单号集合分配（建链会话内快照 + 本次新建），避免逐号 {@code findByNo}。
+     */
+    public static String allocateUniqueWorkOrderNo(
+            String productCode, LocalDate needDate, Set<String> reservedWorkOrderNos) {
+        int seq = 1;
+        while (seq < 10_000) {
+            String candidate = formatWorkOrderNo(productCode, needDate, seq);
+            if (!reservedWorkOrderNos.contains(candidate)) {
                 return candidate;
             }
             seq++;

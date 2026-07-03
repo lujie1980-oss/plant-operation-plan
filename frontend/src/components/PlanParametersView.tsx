@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { EditableTable } from './EditableTable';
-import { PageHeader } from './PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from './PageHeader';
 import { StatusBanner } from './StatusBanner';
 import { parameterTab } from '../pages/businessRulesTabs';
 import {
@@ -25,6 +25,12 @@ type PlanParametersViewProps = {
   /** 自定义页签内容（key 为 group.id） */
   customGroupContent?: Record<string, ReactNode>;
   showScheduleVersionSelector?: boolean;
+  /** paramId 无库记录时展示占位行（保存时创建） */
+  paramDefaults?: Record<string, { paramValue: string; description: string }>;
+  /** 仅一组时隐藏左侧分组导航，直接展示表格 */
+  hideGroupNav?: boolean;
+  /** 参数 ID → 表格「参数」列显示名 */
+  paramLabels?: Record<string, string>;
 };
 
 export function PlanParametersView({
@@ -35,6 +41,9 @@ export function PlanParametersView({
   otherKnownParamIds,
   customGroupContent,
   showScheduleVersionSelector = false,
+  paramDefaults,
+  hideGroupNav = false,
+  paramLabels,
 }: PlanParametersViewProps) {
   const [rows, setRows] = useState<SystemParameterMd[]>([]);
   const [activeTabId, setActiveTabId] = useState(groups[0]?.id ?? '');
@@ -65,7 +74,24 @@ export function PlanParametersView({
     const byId = new Map(rows.map((r) => [r.paramId, r]));
     const result: ParamSection[] = groups.map((g) => ({
       ...g,
-      rows: g.paramIds.map((id) => byId.get(id)).filter((r): r is SystemParameterMd => r != null),
+      rows: g.paramIds
+        .map((id) => {
+          const existing = byId.get(id);
+          if (existing) {
+            return existing;
+          }
+          const seed = paramDefaults?.[id];
+          if (!seed) {
+            return null;
+          }
+          return {
+            id: null,
+            paramId: id,
+            paramValue: seed.paramValue,
+            description: seed.description,
+          } satisfies SystemParameterMd;
+        })
+        .filter((r): r is SystemParameterMd => r != null),
     }));
     if (showOtherGroup) {
       const other = rows.filter(
@@ -83,7 +109,7 @@ export function PlanParametersView({
       }
     }
     return result;
-  }, [rows, groups, showOtherGroup, otherKnownParamIds]);
+  }, [rows, groups, showOtherGroup, otherKnownParamIds, paramDefaults]);
 
   useEffect(() => {
     if (sections.length === 0) return;
@@ -93,6 +119,24 @@ export function PlanParametersView({
   }, [sections, activeTabId]);
 
   const activeSection = sections.find((s) => s.id === activeTabId) ?? sections[0];
+
+  const tableColumns = useMemo(() => {
+    if (!paramLabels) {
+      return parameterTab.columns;
+    }
+    return parameterTab.columns.map((col) => {
+      if (col.key === 'paramId') {
+        return {
+          ...col,
+          label: '参数',
+          editable: false,
+          format: (value: string | number | null) =>
+            paramLabels[String(value ?? '')] ?? String(value ?? ''),
+        };
+      }
+      return col;
+    });
+  }, [paramLabels]);
 
   const handleSave = async (row: SystemParameterMd) => {
     setSaving(true);
@@ -113,6 +157,7 @@ export function PlanParametersView({
   return (
     <div className="master-data-page plan-params-page">
       <PageHeader
+        variant={DECISION_PAGE_HEADER}
         title={title}
         description={description}
         showScheduleVersionSelector={showScheduleVersionSelector}
@@ -125,7 +170,8 @@ export function PlanParametersView({
       <StatusBanner loading={loading || saving} error={error} />
 
       {sections.length > 0 && (
-        <div className="br-rules-layout">
+        <div className={hideGroupNav ? 'plan-param-single' : 'br-rules-layout'}>
+          {!hideGroupNav && (
           <aside className="card br-rules-nav" aria-label="参数分组">
             <h3 className="br-rules-nav-title">参数分组</h3>
             <ul className="br-rules-nav-list" role="listbox">
@@ -147,6 +193,7 @@ export function PlanParametersView({
               ))}
             </ul>
           </aside>
+          )}
 
           <div className="card br-rules-main">
             {activeSection && (
@@ -164,7 +211,7 @@ export function PlanParametersView({
                     <EditableTable<SystemParameterMd>
                       tableId={`plan-params-${activeSection.id}`}
                       rows={activeSection.rows}
-                      columns={parameterTab.columns}
+                      columns={tableColumns}
                       rowKey={parameterTab.rowKey}
                       emptyRow={parameterTab.emptyRow}
                       onSave={handleSave}

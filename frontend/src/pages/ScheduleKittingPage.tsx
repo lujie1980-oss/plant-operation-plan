@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { HorizontalResizeSplit } from '../components/HorizontalResizeSplit';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
+import { PpToolbar, PpToolbarHint, PpToolbarRow } from '../components/PpToolbar';
 import { StatusBanner } from '../components/StatusBanner';
 import { FilterableTable } from '../components/table/FilterableTable';
 import { VerticalResizeSplit } from '../components/VerticalResizeSplit';
@@ -273,34 +274,39 @@ export function ScheduleKittingPage() {
   return (
     <div className="production-plan-page">
       <PageHeader
+        variant={DECISION_PAGE_HEADER}
         title="物料齐套"
         showScheduleVersionSelector
         description="待排批次的 BOM 关键件齐套与库存占用分析；工单号/产品/工单量为参考属性。"
       />
       <StatusBanner loading={loading || allocLoading} error={error} success={success} />
 
-      <div className="pp-toolbar card">
-        <div className="pp-filters">
-          <span className="pp-stat">
-            待排批次 <strong>{rows.length}</strong>
-          </span>
-          <span className="pp-filter-sep" aria-hidden />
-          <span className="pp-stat">
-            缺料批次 <strong>{shortageCount}</strong>
-          </span>
-        </div>
-        <div className="pp-toolbar-actions">
-          <button type="button" className="btn" onClick={() => void load()} disabled={loading}>
-            刷新
-          </button>
-          <button type="button" className="btn primary" onClick={() => void compute()} disabled={loading}>
-            齐套检查
-          </button>
-        </div>
-        <p className="pp-hint">
-          在 <Link to="/scheduling/batch-plan">批次计划</Link> 拆批后检查齐套；点击物料或库存行可联动查看批次占用。
-        </p>
-      </div>
+      <PpToolbar>
+        <PpToolbarRow>
+          <div className="pp-filters">
+            <span className="pp-stat">
+              待排批次 <strong>{rows.length}</strong>
+            </span>
+            <span className="pp-filter-sep" aria-hidden />
+            <span className="pp-stat">
+              缺料批次 <strong>{shortageCount}</strong>
+            </span>
+          </div>
+          <div className="pp-toolbar-actions">
+            <button type="button" className="btn" onClick={() => void load()} disabled={loading}>
+              刷新
+            </button>
+            <button type="button" className="btn primary" onClick={() => void compute()} disabled={loading}>
+              齐套检查
+            </button>
+          </div>
+        </PpToolbarRow>
+        <PpToolbarHint>
+          <p className="pp-hint">
+            在 <Link to="/scheduling/batch-plan">批次计划</Link> 拆批后检查齐套；点击物料或库存行可联动查看批次占用。
+          </p>
+        </PpToolbarHint>
+      </PpToolbar>
 
       {rows.length === 0 && !loading ? (
         <section className="card pp-chain-empty">

@@ -15,12 +15,60 @@
 
 .production-plan-page .pp-toolbar {
   display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: var(--ui-gap-sm);
+  padding: 0.35rem 0.55rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.pp-toolbar-row {
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-  padding: 10px 14px;
+  gap: 0.35rem 0.5rem;
+  min-height: var(--ui-toolbar-h);
+}
+
+.pp-hint-details {
+  flex-shrink: 0;
+}
+
+.pp-hint-summary {
+  font-size: var(--ui-font-xs);
+  color: #64748b;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  padding: 0.1rem 0;
+}
+
+.pp-hint-summary::-webkit-details-marker {
+  display: none;
+}
+
+.pp-hint-summary::before {
+  content: '▸ ';
+  color: #94a3b8;
+}
+
+.pp-hint-details[open] .pp-hint-summary::before {
+  content: '▾ ';
+}
+
+.pp-hint-body {
+  padding: 0.15rem 0 0.25rem;
+}
+
+.pp-hint-body .pp-hint {
+  margin: 0;
+  font-size: var(--ui-font-xs);
+  line-height: 1.45;
+  color: #64748b;
 }
 
 .pp-filters {
@@ -67,24 +115,18 @@
 }
 
 .pp-filter {
-  padding: 6px 12px;
+  padding: 0.25rem 0.55rem;
   border: 1px solid var(--border, #e2e8f0);
   border-radius: 6px;
   background: #fff;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--ui-font-sm);
 }
 
 .pp-filter.active {
   background: var(--accent, #2563eb);
   color: #fff;
   border-color: var(--accent, #2563eb);
-}
-
-.pp-hint {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-muted, #64748b);
 }
 
 .pp-last-dispatch {

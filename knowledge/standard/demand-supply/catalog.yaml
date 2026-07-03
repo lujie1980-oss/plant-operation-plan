@@ -1,0 +1,93 @@
+# 需求侧 + 供应侧 StandardKnowledge 规则注册表
+# 正文: docs/sdd/core/04-business-rules.md §4.1.2 · §4.5.1
+# 目录: docs/sdd/volumes/knowledge/15-16-planning-knowledge.md §16
+
+rules:
+  # --- 需求侧 DOM-FF ---
+  - id: RULE-DEM-01
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-FF
+    overridable: param
+    param_key: demand-priority-rules
+    scn: [SCN-01c, SCN-02a, SCN-06, SCN-07h]
+    val: [VAL-01]
+
+  - id: RULE-DEM-02
+    types: [KN-TYPE-INV]
+    domain: DOM-FF
+    overridable: none
+    scn: [SCN-01a, SCN-01c]
+    kpi: [KPI-MP-S02]
+
+  - id: RULE-DEM-03
+    types: [KN-TYPE-OPT, KN-TYPE-PAR]
+    domain: DOM-FF
+    overridable: soft
+    param_key: delivery-date-strategy
+    scn: [SCN-01b, SCN-06]
+    kpi: [KPI-MP-S01]
+
+  - id: RULE-DEM-04
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-FF
+    overridable: param
+    param_key: ppq-rules
+    scn: [SCN-01c, SCN-07b, SCN-07e]
+    kpi: [KPI-MP-C06]
+
+  - id: RULE-DEM-05
+    types: [KN-TYPE-OPT]
+    domain: DOM-FF
+    overridable: soft
+    scn: [SCN-01c, SCN-02a]
+    val: [VAL-01]
+
+  # --- 供应侧 ---
+  - id: RULE-SUP-01
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-MRP
+    overridable: param
+    param_key: supply-quantity-rules
+    scn: [SCN-06, SCN-07b]
+    kpi: [KPI-MP-C06]
+
+  - id: RULE-SUP-02
+    types: [KN-TYPE-INV, KN-TYPE-PAR, KN-TYPE-STR]
+    domain: DOM-RT
+    overridable: param
+    param_key: routing-step-timing
+    scn: [SCN-T04, SCN-06, SCN-T05]
+
+  - id: RULE-SUP-03
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-RT
+    overridable: param
+    param_key: routing-step-resource
+    scn: [SCN-T04, SCN-06]
+
+  - id: RULE-SUP-04
+    types: [KN-TYPE-INV, KN-TYPE-STR]
+    domain: DOM-RT
+    overridable: none
+    scn: [SCN-T04, SCN-06, SCN-07b]
+
+  - id: RULE-SUP-05
+    types: [KN-TYPE-INV, KN-TYPE-PAR]
+    domain: DOM-MP
+    overridable: param
+    scn: [SCN-03a, SCN-06]
+    val: [VAL-05]
+
+business_rules_tabs:
+  - id: demand-priority-rules
+    rules: [RULE-DEM-01]
+  - id: delivery-date-strategy
+    rules: [RULE-DEM-03]
+  - id: ppq-rules
+    rules: [RULE-DEM-04]
+  - id: supply-quantity-rules
+    rules: [RULE-SUP-01]
+  - id: routing-step-timing
+    rules: [RULE-SUP-02]
+  - id: routing-step-resource
+    rules: [RULE-SUP-03]

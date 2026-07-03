@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import type { TableHeadColumn } from './types';
+import type { TableHeadColumn, TableSortState } from './types';
 import './FilterableTable.css';
 
 interface TableHeadProps {
@@ -9,6 +9,8 @@ interface TableHeadProps {
   getColumnWidth: (col: TableHeadColumn) => number;
   onResizeStart: (key: string, event: React.MouseEvent) => void;
   trailingLabelCells?: React.ReactNode;
+  sort?: TableSortState;
+  onSortToggle?: (key: string) => void;
 }
 
 type DropdownPos = { top: number; left: number; minWidth: number };
@@ -23,6 +25,8 @@ function ColumnHeaderCell({
   onCloseDropdown,
   setFilter,
   onResizeStart,
+  sort,
+  onSortToggle,
 }: {
   col: TableHeadColumn;
   width: number;
@@ -33,13 +37,26 @@ function ColumnHeaderCell({
   onCloseDropdown: () => void;
   setFilter: (key: string, value: string) => void;
   onResizeStart: (key: string, event: React.MouseEvent) => void;
+  sort?: TableSortState;
+  onSortToggle?: (key: string) => void;
 }) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [dropdownPos, setDropdownPos] = useState<DropdownPos | null>(null);
 
   const alignClass =
     col.align === 'right' ? 'ft-align-right' : col.align === 'center' ? 'ft-align-center' : '';
-  const filterable = col.filterable !== false && col.header.trim().length > 0;
+  const labelText = col.ariaLabel ?? col.header;
+  const hasTextHeader = col.header.trim().length > 0;
+  const filterable = col.filterable !== false && hasTextHeader;
+  const sortable = col.sortable === true && hasTextHeader;
+  const labelContent = (
+    <>
+      {col.headerNode ?? col.header}
+      {col.required && <span className="md-required">*</span>}
+    </>
+  );
+  const sortActive = sort?.key === col.key;
+  const sortIcon = sortActive ? (sort!.dir === 'asc' ? '↑' : '↓') : '↕';
 
   useEffect(() => {
     if (!dropdownOpen || !triggerRef.current) {
@@ -77,30 +94,51 @@ function ColumnHeaderCell({
     <th
       className={`ft-th ${alignClass} ${col.className ?? ''} ${filterActive ? 'is-filter-active' : ''}`.trim()}
       style={{ width, minWidth: width, maxWidth: width }}
+      data-col-key={col.key}
     >
       <div className="ft-th-inner">
         {filterable ? (
+          <>
+            <button
+              ref={triggerRef}
+              type="button"
+              className={`ft-th-filter-trigger ${dropdownOpen ? 'is-open' : ''} ${filterActive ? 'is-active' : ''}`}
+              aria-expanded={dropdownOpen}
+              aria-haspopup="dialog"
+              aria-label={`${labelText} 列筛选`}
+              onClick={onToggleDropdown}
+            >
+              <span className="ft-th-label">{labelContent}</span>
+              <span className="ft-th-filter-icon" aria-hidden>
+                {filterActive ? '●' : '▾'}
+              </span>
+            </button>
+            {sortable && onSortToggle ? (
+              <button
+                type="button"
+                className={`ft-th-sort-btn ${sortActive ? 'is-active' : ''}`}
+                aria-label={`${labelText} 排序`}
+                onClick={() => onSortToggle(col.key)}
+              >
+                {sortIcon}
+              </button>
+            ) : null}
+          </>
+        ) : sortable && onSortToggle ? (
           <button
-            ref={triggerRef}
             type="button"
-            className={`ft-th-filter-trigger ${dropdownOpen ? 'is-open' : ''} ${filterActive ? 'is-active' : ''}`}
-            aria-expanded={dropdownOpen}
-            aria-haspopup="dialog"
-            aria-label={`${col.header} 列筛选`}
-            onClick={onToggleDropdown}
+            className={`ft-th-sort-trigger ${sortActive ? 'is-active' : ''}`}
+            aria-label={`${labelText} 排序`}
+            onClick={() => onSortToggle(col.key)}
           >
-            <span className="ft-th-label">
-              {col.header}
-              {col.required && <span className="md-required">*</span>}
-            </span>
-            <span className="ft-th-filter-icon" aria-hidden>
-              {filterActive ? '●' : '▾'}
+            <span className="ft-th-label">{labelContent}</span>
+            <span className="ft-th-sort-icon" aria-hidden>
+              {sortIcon}
             </span>
           </button>
         ) : (
-          <span className="ft-th-label">
-            {col.header}
-            {col.required && <span className="md-required">*</span>}
+          <span className={`ft-th-label ${col.headerNode ? 'ft-th-label--icon' : ''}`.trim()}>
+            {labelContent}
           </span>
         )}
 
@@ -109,7 +147,7 @@ function ColumnHeaderCell({
             className="ft-col-resize"
             role="separator"
             aria-orientation="vertical"
-            aria-label={`调整 ${col.header || col.key} 列宽`}
+            aria-label={`调整 ${labelText || col.key} 列宽`}
             onMouseDown={(e) => onResizeStart(col.key, e)}
           />
         )}
@@ -120,18 +158,18 @@ function ColumnHeaderCell({
           className="ft-filter-dropdown ft-filter-dropdown-fixed"
           style={dropdownStyle}
           role="dialog"
-          aria-label={`${col.header} 筛选`}
+          aria-label={`${labelText} 筛选`}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          <label className="ft-filter-dropdown-label">{col.header}</label>
+          <label className="ft-filter-dropdown-label">{labelText}</label>
           <input
             type="search"
             className="ft-filter-input"
-            placeholder={`查询 ${col.header}`}
+            placeholder={`查询 ${labelText}`}
             value={filterValue}
             autoFocus
             onChange={(e) => setFilter(col.key, e.target.value)}
-            aria-label={`查询 ${col.header}`}
+            aria-label={`查询 ${labelText}`}
           />
           <div className="ft-filter-dropdown-actions">
             {filterActive && (
@@ -156,6 +194,8 @@ export function TableHead({
   getColumnWidth,
   onResizeStart,
   trailingLabelCells,
+  sort,
+  onSortToggle,
 }: TableHeadProps) {
   const [openFilterKey, setOpenFilterKey] = useState<string | null>(null);
   const headRef = useRef<HTMLTableRowElement>(null);
@@ -200,6 +240,8 @@ export function TableHead({
             onCloseDropdown={() => setOpenFilterKey(null)}
             setFilter={setFilter}
             onResizeStart={onResizeStart}
+            sort={sort}
+            onSortToggle={onSortToggle}
           />
         );
       })}

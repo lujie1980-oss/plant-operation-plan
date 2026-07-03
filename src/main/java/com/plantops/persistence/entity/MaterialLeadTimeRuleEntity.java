@@ -7,7 +7,7 @@ import jakarta.persistence.UniqueConstraint;
 
 import java.util.List;
 
-/** 物料采购提前期规则：缺料时按该提前期推算可到货日（天）。 */
+/** 物料最长采购周期（天）。productCode={@code *} 为 RULE-MRP-04 默认最长采购周期。 */
 @Entity
 @Table(name = "material_lead_time_rule", uniqueConstraints = @UniqueConstraint(columnNames = {
         "workspace_id", "product_code"

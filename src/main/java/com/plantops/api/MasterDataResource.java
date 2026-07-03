@@ -19,6 +19,11 @@ import com.plantops.api.dto.masterdata.MasterDataDtos.ResourceCalendarDto;
 import com.plantops.api.dto.masterdata.MasterDataDtos.ResourceDto;
 import com.plantops.api.dto.masterdata.MasterDataDtos.SalesOrderDto;
 import com.plantops.api.dto.masterdata.MasterDataDtos.ShiftHeadcountDto;
+import com.plantops.api.dto.masterdata.MasterDataDtos.DeliveryDateStrategyDto;
+import com.plantops.api.dto.masterdata.MasterDataDtos.ResourceEfficiencyDto;
+import com.plantops.api.dto.masterdata.MasterDataDtos.RoutingStepResourceDto;
+import com.plantops.api.dto.masterdata.MasterDataDtos.RoutingStepTimingDto;
+import com.plantops.api.dto.masterdata.MasterDataDtos.SupplyQuantityRuleDto;
 import com.plantops.api.dto.masterdata.MasterDataDtos.BusinessRuleScopeDto;
 import com.plantops.api.dto.masterdata.MasterDataDtos.SystemParameterDto;
 import com.plantops.api.dto.masterdata.MasterDataValidationDtos;
@@ -44,7 +49,13 @@ import com.plantops.persistence.entity.ProductionLineEntity;
 import com.plantops.persistence.entity.ProductionResourceEntity;
 import com.plantops.persistence.entity.ResourceCalendarEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
+import com.plantops.persistence.entity.DeliveryDateStrategyEntity;
+import com.plantops.persistence.entity.RoutingStepResourceRuleEntity;
+import com.plantops.persistence.entity.RoutingStepTimingRuleEntity;
+import com.plantops.persistence.entity.ScheduleFeedbackEntity;
+import com.plantops.persistence.entity.ScheduleFeedbackScope;
 import com.plantops.persistence.entity.ShiftHeadcountEntity;
+import com.plantops.persistence.entity.SupplyQuantityRuleEntity;
 import com.plantops.persistence.entity.SystemParameterEntity;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -61,9 +72,12 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * ?????????? / ?? / ?? / ???? * ?????????????DTO ??id ??null ?????? */
@@ -229,11 +243,13 @@ public class MasterDataResource {
     @GET
     @Path("/boms")
     public List<BomDto> listBoms() {
+        var materialByCode = MaterialEntity.listInWorkspace().stream()
+                .collect(java.util.stream.Collectors.toMap(m -> m.materialCode, m -> m, (a, b) -> a));
         return BomComponentEntity.listInWorkspace().stream()
                 .sorted(Comparator
                         .comparing((BomComponentEntity e) -> e.parentProductCode)
                         .thenComparing(e -> e.componentProductCode))
-                .map(MasterDataResource::toBomDto)
+                .map(e -> toBomDto(e, materialByCode))
                 .toList();
     }
 
@@ -274,6 +290,15 @@ public class MasterDataResource {
     }
 
     private static BomDto toBomDto(BomComponentEntity e) {
+        var materialByCode = MaterialEntity.listInWorkspace().stream()
+                .collect(java.util.stream.Collectors.toMap(m -> m.materialCode, m -> m, (a, b) -> a));
+        return toBomDto(e, materialByCode);
+    }
+
+    static BomDto toBomDto(BomComponentEntity e, java.util.Map<String, MaterialEntity> materialByCode) {
+        MaterialEntity finished = lookupMaterial(materialByCode, e.finishedProductCode);
+        MaterialEntity parent = lookupMaterial(materialByCode, e.parentProductCode);
+        MaterialEntity component = lookupMaterial(materialByCode, e.componentProductCode);
         return new BomDto(
                 e.id,
                 e.finishedProductCode,
@@ -289,7 +314,18 @@ public class MasterDataResource {
                 e.componentEffectiveTo,
                 e.scrapRate,
                 e.lotSize,
-                e.lotSizeMultiple);
+                e.lotSizeMultiple,
+                finished != null ? finished.id : null,
+                parent != null ? parent.id : null,
+                component != null ? component.id : null);
+    }
+
+    private static MaterialEntity lookupMaterial(
+            java.util.Map<String, MaterialEntity> materialByCode, String materialCode) {
+        if (materialCode == null || materialCode.isBlank()) {
+            return null;
+        }
+        return materialByCode.get(materialCode);
     }
 
     // -------------------------- 物料主数据 --------------------------
@@ -995,7 +1031,9 @@ public class MasterDataResource {
     @Path("/material-lead-time")
     public List<MaterialLeadTimeRuleDto> listMaterialLeadTime() {
         return MaterialLeadTimeRuleEntity.listInWorkspace().stream()
-                .sorted(Comparator.comparing((MaterialLeadTimeRuleEntity e) -> e.productCode))
+                .sorted(Comparator
+                        .comparing((MaterialLeadTimeRuleEntity e) -> !"*".equals(e.productCode))
+                        .thenComparing(e -> e.productCode))
                 .map(MasterDataResource::toMaterialLeadTimeDto)
                 .toList();
     }
@@ -1004,12 +1042,12 @@ public class MasterDataResource {
     @Path("/material-lead-time")
     @Transactional
     public MaterialLeadTimeRuleDto upsertMaterialLeadTime(MaterialLeadTimeRuleDto dto) {
-        String productCode = requiredText(dto.productCode(), "物料");
+        String productCode = requiredText(dto.productCode(), "物料编码");
         if (dto.leadTimeDays() < 0) {
-            throw new IllegalArgumentException("采购提前期不能为负");
+            throw new IllegalArgumentException("最长采购周期(天)不能为负");
         }
         MaterialLeadTimeRuleEntity e = dto.id() != null
-                ? findRequired(MaterialLeadTimeRuleEntity.findById(dto.id()), "采购提前期规则不存在")
+                ? findRequired(MaterialLeadTimeRuleEntity.findById(dto.id()), "最长采购周期规则不存在")
                 : MaterialLeadTimeRuleEntity.findByProduct(productCode);
         if (e == null) {
             e = new MaterialLeadTimeRuleEntity();
@@ -1031,6 +1069,288 @@ public class MasterDataResource {
 
     private static MaterialLeadTimeRuleDto toMaterialLeadTimeDto(MaterialLeadTimeRuleEntity e) {
         return new MaterialLeadTimeRuleDto(e.id, e.productCode, e.leadTimeDays);
+    }
+
+    // -------------------------- §16 供需知识（TODO-17） --------------------------
+
+    @GET
+    @Path("/delivery-date-strategy")
+    public List<DeliveryDateStrategyDto> listDeliveryDateStrategy() {
+        return DeliveryDateStrategyEntity.listInWorkspace().stream()
+                .sorted(Comparator
+                        .comparing((DeliveryDateStrategyEntity e) -> e.customerCode)
+                        .thenComparing(e -> e.productCode))
+                .map(MasterDataResource::toDeliveryDateStrategyDto)
+                .toList();
+    }
+
+    @POST
+    @Path("/delivery-date-strategy")
+    @Transactional
+    public DeliveryDateStrategyDto upsertDeliveryDateStrategy(DeliveryDateStrategyDto dto) {
+        String customerCode = requiredText(dto.customerCode(), "客户");
+        String productCode = requiredText(dto.productCode(), "产品");
+        DeliveryDateStrategyEntity e = dto.id() != null
+                ? findRequired(DeliveryDateStrategyEntity.findById(dto.id()), "交期策略不存在")
+                : DeliveryDateStrategyEntity.findByKey(customerCode, productCode);
+        if (e == null) {
+            e = new DeliveryDateStrategyEntity();
+            e.ensureWorkspace();
+        }
+        e.customerCode = customerCode;
+        e.productCode = productCode;
+        e.deliveryGranularity = requiredText(dto.deliveryGranularity(), "交付粒度");
+        e.earlyAllowDays = Math.max(0, dto.earlyAllowDays());
+        e.lateAllowDays = Math.max(0, dto.lateAllowDays());
+        e.earlyPenaltyCoef = nz(dto.earlyPenaltyCoef());
+        e.latePenaltyCoef = nz(dto.latePenaltyCoef());
+        e.persist();
+        return toDeliveryDateStrategyDto(e);
+    }
+
+    @DELETE
+    @Path("/delivery-date-strategy/{id}")
+    @Transactional
+    public Response deleteDeliveryDateStrategy(@PathParam("id") Long id) {
+        boolean deleted = DeliveryDateStrategyEntity.deleteById(id);
+        return deleted ? Response.noContent().build() : Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    @GET
+    @Path("/supply-quantity-rules")
+    public List<SupplyQuantityRuleDto> listSupplyQuantityRules() {
+        return SupplyQuantityRuleEntity.listInWorkspace().stream()
+                .sorted(Comparator
+                        .comparing((SupplyQuantityRuleEntity e) -> e.productCode)
+                        .thenComparing(e -> e.stockingPointCode))
+                .map(MasterDataResource::toSupplyQuantityRuleDto)
+                .toList();
+    }
+
+    @POST
+    @Path("/supply-quantity-rules")
+    @Transactional
+    public SupplyQuantityRuleDto upsertSupplyQuantityRule(SupplyQuantityRuleDto dto) {
+        String productCode = requiredText(dto.productCode(), "产品");
+        String stockingPointCode = requiredText(dto.stockingPointCode(), "库存点");
+        SupplyQuantityRuleEntity e = dto.id() != null
+                ? findRequired(SupplyQuantityRuleEntity.findById(dto.id()), "供应批量规则不存在")
+                : SupplyQuantityRuleEntity.findByKey(productCode, stockingPointCode);
+        if (e == null) {
+            e = new SupplyQuantityRuleEntity();
+            e.ensureWorkspace();
+        }
+        e.productCode = productCode;
+        e.stockingPointCode = stockingPointCode;
+        e.lotSize = Math.max(1, dto.lotSize());
+        e.minQuantity = Math.max(0, dto.minQuantity());
+        e.maxQuantity = Math.max(e.minQuantity, dto.maxQuantity());
+        e.minQtyStrategy = requiredText(dto.minQtyStrategy(), "缺量策略");
+        e.persist();
+        return toSupplyQuantityRuleDto(e);
+    }
+
+    @DELETE
+    @Path("/supply-quantity-rules/{id}")
+    @Transactional
+    public Response deleteSupplyQuantityRule(@PathParam("id") Long id) {
+        boolean deleted = SupplyQuantityRuleEntity.deleteById(id);
+        return deleted ? Response.noContent().build() : Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    @GET
+    @Path("/resource-efficiency")
+    public List<ResourceEfficiencyDto> listResourceEfficiency() {
+        Map<String, Integer> frozenByResource = frozenFeedbackMinutesByResource();
+        return ProductionResourceEntity.listInWorkspace().stream()
+                .sorted(Comparator.comparing((ProductionResourceEntity e) -> e.resourceId))
+                .map(e -> toResourceEfficiencyDto(e, frozenByResource))
+                .toList();
+    }
+
+    @POST
+    @Path("/resource-efficiency")
+    @Transactional
+    public ResourceEfficiencyDto upsertResourceEfficiency(ResourceEfficiencyDto dto) {
+        String resourceId = requiredText(dto.resourceId(), "资源 ID");
+        ProductionResourceEntity e = dto.id() != null
+                ? findRequired(ProductionResourceEntity.findById(dto.id()), "生产资源不存在")
+                : ProductionResourceEntity.findByResourceId(resourceId);
+        if (e == null) {
+            badRequest("资源不存在，请先在主数据维护生产资源: " + resourceId);
+        }
+        BigDecimal efficiency = nz(dto.resourceEfficiency());
+        if (efficiency.compareTo(BigDecimal.ZERO) <= 0 || efficiency.compareTo(BigDecimal.ONE) > 0) {
+            badRequest("资源效率系数须在 (0, 1] 范围内");
+        }
+        e.resourceEfficiency = efficiency;
+        Map<String, Integer> frozenByResource = frozenFeedbackMinutesByResource();
+        return toResourceEfficiencyDto(e, frozenByResource);
+    }
+
+    @DELETE
+    @Path("/resource-efficiency/{id}")
+    @Transactional
+    public Response deleteResourceEfficiency(@PathParam("id") Long id) {
+        ProductionResourceEntity e = ProductionResourceEntity.findById(id);
+        if (e == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        e.resourceEfficiency = BigDecimal.ONE;
+        return Response.noContent().build();
+    }
+
+    @GET
+    @Path("/routing-step-timing")
+    public List<RoutingStepTimingDto> listRoutingStepTiming() {
+        return RoutingStepTimingRuleEntity.listInWorkspace().stream()
+                .sorted(Comparator
+                        .comparing((RoutingStepTimingRuleEntity e) -> e.routingCode)
+                        .thenComparing(e -> e.sequenceNo))
+                .map(MasterDataResource::toRoutingStepTimingDto)
+                .toList();
+    }
+
+    @POST
+    @Path("/routing-step-timing")
+    @Transactional
+    public RoutingStepTimingDto upsertRoutingStepTiming(RoutingStepTimingDto dto) {
+        String routingCode = requiredText(dto.routingCode(), "工艺路线");
+        if (dto.sequenceNo() <= 0) {
+            badRequest("工序序号须 > 0");
+        }
+        RoutingStepTimingRuleEntity e = dto.id() != null
+                ? findRequired(RoutingStepTimingRuleEntity.findById(dto.id()), "工序时间规则不存在")
+                : RoutingStepTimingRuleEntity.findByKey(routingCode, dto.sequenceNo());
+        if (e == null) {
+            e = new RoutingStepTimingRuleEntity();
+            e.ensureWorkspace();
+        }
+        e.routingCode = routingCode;
+        e.sequenceNo = dto.sequenceNo();
+        e.preProcessingMinutes = Math.max(0, dto.preProcessingMinutes());
+        e.schedulingSpaceMinutes = Math.max(0, dto.schedulingSpaceMinutes());
+        e.productionMinutes = Math.max(0, dto.productionMinutes());
+        e.postProcessingMinutes = Math.max(0, dto.postProcessingMinutes());
+        e.persist();
+        return toRoutingStepTimingDto(e);
+    }
+
+    @DELETE
+    @Path("/routing-step-timing/{id}")
+    @Transactional
+    public Response deleteRoutingStepTiming(@PathParam("id") Long id) {
+        boolean deleted = RoutingStepTimingRuleEntity.deleteById(id);
+        return deleted ? Response.noContent().build() : Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    @GET
+    @Path("/routing-step-resource")
+    public List<RoutingStepResourceDto> listRoutingStepResource() {
+        return RoutingStepResourceRuleEntity.listInWorkspace().stream()
+                .sorted(Comparator.comparing((RoutingStepResourceRuleEntity e) -> e.standardResourceCode))
+                .map(MasterDataResource::toRoutingStepResourceDto)
+                .toList();
+    }
+
+    @POST
+    @Path("/routing-step-resource")
+    @Transactional
+    public RoutingStepResourceDto upsertRoutingStepResource(RoutingStepResourceDto dto) {
+        String resourceCode = requiredText(dto.standardResourceCode(), "标准资源");
+        RoutingStepResourceRuleEntity e = dto.id() != null
+                ? findRequired(RoutingStepResourceRuleEntity.findById(dto.id()), "工序资源规则不存在")
+                : RoutingStepResourceRuleEntity.findByResourceCode(resourceCode);
+        if (e == null) {
+            e = new RoutingStepResourceRuleEntity();
+            e.ensureWorkspace();
+        }
+        e.standardResourceCode = resourceCode;
+        e.resourcePriority = Math.max(1, dto.resourcePriority());
+        e.productionRate = nz(dto.productionRate());
+        e.resourceUsageType = requiredText(dto.resourceUsageType(), "资源类型");
+        e.batchSize = Math.max(1, dto.batchSize());
+        e.batchDurationMinutes = Math.max(0, dto.batchDurationMinutes());
+        e.persist();
+        return toRoutingStepResourceDto(e);
+    }
+
+    @DELETE
+    @Path("/routing-step-resource/{id}")
+    @Transactional
+    public Response deleteRoutingStepResource(@PathParam("id") Long id) {
+        boolean deleted = RoutingStepResourceRuleEntity.deleteById(id);
+        return deleted ? Response.noContent().build() : Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    private static Map<String, Integer> frozenFeedbackMinutesByResource() {
+        Map<String, Integer> byResource = new HashMap<>();
+        LocalDate cutoff = LocalDate.now().plusYears(2);
+        for (ScheduleFeedbackEntity fb : ScheduleFeedbackEntity.listFrozenUpTo(cutoff)) {
+            if (fb.resourceId == null || fb.durationMinutes <= 0) {
+                continue;
+            }
+            if (!ScheduleFeedbackScope.FROZEN.name().equals(fb.scope)) {
+                continue;
+            }
+            byResource.merge(fb.resourceId, fb.durationMinutes, Integer::sum);
+        }
+        return byResource;
+    }
+
+    private static DeliveryDateStrategyDto toDeliveryDateStrategyDto(DeliveryDateStrategyEntity e) {
+        return new DeliveryDateStrategyDto(
+                e.id,
+                e.customerCode,
+                e.productCode,
+                e.deliveryGranularity,
+                e.earlyAllowDays,
+                e.lateAllowDays,
+                e.earlyPenaltyCoef,
+                e.latePenaltyCoef);
+    }
+
+    private static SupplyQuantityRuleDto toSupplyQuantityRuleDto(SupplyQuantityRuleEntity e) {
+        return new SupplyQuantityRuleDto(
+                e.id,
+                e.productCode,
+                e.stockingPointCode,
+                e.lotSize,
+                e.minQuantity,
+                e.maxQuantity,
+                e.minQtyStrategy);
+    }
+
+    private static ResourceEfficiencyDto toResourceEfficiencyDto(
+            ProductionResourceEntity e, Map<String, Integer> frozenByResource) {
+        return new ResourceEfficiencyDto(
+                e.id,
+                e.resourceId,
+                e.resourceGroup,
+                e.resourceEfficiency != null ? e.resourceEfficiency : BigDecimal.ONE,
+                frozenByResource.getOrDefault(e.resourceId, 0));
+    }
+
+    private static RoutingStepTimingDto toRoutingStepTimingDto(RoutingStepTimingRuleEntity e) {
+        return new RoutingStepTimingDto(
+                e.id,
+                e.routingCode,
+                e.sequenceNo,
+                e.preProcessingMinutes,
+                e.schedulingSpaceMinutes,
+                e.productionMinutes,
+                e.postProcessingMinutes);
+    }
+
+    private static RoutingStepResourceDto toRoutingStepResourceDto(RoutingStepResourceRuleEntity e) {
+        return new RoutingStepResourceDto(
+                e.id,
+                e.standardResourceCode,
+                e.resourcePriority,
+                e.productionRate,
+                e.resourceUsageType,
+                e.batchSize,
+                e.batchDurationMinutes);
     }
 
     // -------------------------- 连续生产 --------------------------
@@ -1120,6 +1440,7 @@ public class MasterDataResource {
     @GET
     @Path("/parameters")
     public List<SystemParameterDto> listParameters() {
+        parameterRegistry.ensureDefaults();
         return SystemParameterEntity.listInWorkspace().stream()
                 .sorted(Comparator.comparing((SystemParameterEntity e) -> e.paramId))
                 .map(MasterDataResource::toParameterDto)

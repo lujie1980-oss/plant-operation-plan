@@ -1,6 +1,6 @@
 import type { BlockedSalesOrderLineMd, ValidationIssueMd } from '../types/masterData';
-import { ruleCategoryId } from '../pages/businessRuleCategories';
-import type { MasterDataFocusPage, MasterDataTableFocus } from './masterDataFocus';
+import { rulesFocusPageForTab, rulesRouteForTab } from '../pages/businessRuleCategories';
+import type { MasterDataFocusPage, LegacyBusinessRulesFocusPage, MasterDataTableFocus } from './masterDataFocus';
 
 export type HealthCategoryId =
   | 'materials'
@@ -217,27 +217,50 @@ export function resolveIssueNavigation(issue: ValidationIssueMd): MasterDataTabl
       return buildFocus('business-data', 'sales-orders', issue.entityKey, issue.entityKey.replace(':', '#'));
     }
     case 'ChangeoverMatrix':
-      return buildFocus('business-rules', 'changeover', issue.entityKey.replace(/\|/g, ' '));
+      return buildFocus(
+        rulesFocusPageForTab('changeover'),
+        'changeover',
+        issue.entityKey.replace(/\|/g, ' '),
+      );
     case 'ParallelOperationRule': {
       const lineId = strField(f, 'lineId');
       const first = strField(f, 'firstProductCode');
       const second = strField(f, 'secondProductCode');
       if (lineId && first && second) {
         const rowKey = `${lineId}|${first}+${second}`;
-        return buildFocus('business-rules', 'parallel-operations', `${lineId} ${first} ${second}`, rowKey);
+        return buildFocus(
+          rulesFocusPageForTab('parallel-operations'),
+          'parallel-operations',
+          `${lineId} ${first} ${second}`,
+          rowKey,
+        );
       }
       const product = strField(f, 'productCode');
-      return buildFocus('business-rules', 'parallel-operations', product ?? issue.entityKey);
+      return buildFocus(
+        rulesFocusPageForTab('parallel-operations'),
+        'parallel-operations',
+        product ?? issue.entityKey,
+      );
     }
     case 'OperationTransferTimeRule': {
       const product = strField(f, 'productCode') ?? issue.entityKey.split('|')[0];
       const rowKey = issue.entityKey.includes('|') ? issue.entityKey : undefined;
-      return buildFocus('business-rules', 'operation-transfer-time', product ?? issue.entityKey, rowKey);
+      return buildFocus(
+        rulesFocusPageForTab('operation-transfer-time'),
+        'operation-transfer-time',
+        product ?? issue.entityKey,
+        rowKey,
+      );
     }
     case 'ContinuousProductionRule': {
       const lineId = strField(f, 'lineId');
       const rowKey = issue.entityKey.includes('|') ? issue.entityKey : undefined;
-      return buildFocus('business-rules', 'continuous-production', lineId ?? issue.entityKey, rowKey);
+      return buildFocus(
+        rulesFocusPageForTab('continuous-production'),
+        'continuous-production',
+        lineId ?? issue.entityKey,
+        rowKey,
+      );
     }
     default:
       return null;
@@ -310,16 +333,30 @@ export function buildCategoryCounts(
 export const MASTER_DATA_ROUTE = '/master-data';
 export const BUSINESS_DATA_ROUTE = '/business-data';
 
-export function routeForFocusPage(page: MasterDataFocusPage, tabId?: string): string {
+export function routeForFocusPage(
+  page: MasterDataFocusPage | LegacyBusinessRulesFocusPage,
+  tabId?: string,
+): string {
+  if (page === 'business-rules') {
+    if (tabId) {
+      return rulesRouteForTab(tabId);
+    }
+    return '/master-plan/rules/demand';
+  }
   switch (page) {
     case 'master-data':
       return MASTER_DATA_ROUTE;
     case 'business-data':
       return BUSINESS_DATA_ROUTE;
-    case 'business-rules':
+    case 'master-plan-rules':
       if (tabId) {
-        return `/business-rules/${ruleCategoryId(tabId)}`;
+        return rulesRouteForTab(tabId);
       }
-      return '/business-rules/capacity';
+      return '/master-plan/rules/demand';
+    case 'scheduling-rules':
+      if (tabId) {
+        return rulesRouteForTab(tabId);
+      }
+      return '/scheduling/rules/production';
   }
 }

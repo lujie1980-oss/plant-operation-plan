@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import { api } from '../api/client';
-import { PlanningDiagnosticsPanel } from './PlanningDiagnosticsPanel';
 import type { MasterPlanPlanningPreview } from '../types/masterPlanPlanningPreview';
 import './DetailSchedulePlanningPreviewPanel.css';
 
@@ -84,15 +83,6 @@ export function MasterPlanPlanningPreviewPanel({
           )}
           {preview.solveDurationMs != null && <span>耗时 {preview.solveDurationMs} ms</span>}
         </div>
-      )}
-      {preview?.diagnostics && (
-        <PlanningDiagnosticsPanel
-          layer="master-plan"
-          contextId={strategyId}
-          snapshot={preview.diagnostics}
-          readOnly
-          compact
-        />
       )}
       {scheduled.length > 0 && (
         <div className="ds-planning-preview-gantt card">

@@ -104,7 +104,8 @@ export function PipelinePage() {
           ))}
         </div>
         <p className="hint">
-          完成后可在 <Link to="/master-plan">主计划</Link> 与 <Link to="/detail-schedule">详细排程</Link> 页面继续操作。
+          完成后可在 <Link to="/master-plan/plan-run">订单协同计划</Link> 与{' '}
+          <Link to="/scheduling/detail-schedule">详细排程</Link> 页面继续操作。
         </p>
       </section>
       {masterGantt.length > 0 && <GanttPanel tasks={masterGantt} title="主计划甘特（全链路结果）" />}

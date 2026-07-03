@@ -43,6 +43,10 @@ public class SystemParameterEntity extends WorkspaceScopedEntity {
     public static java.util.List<SystemParameterEntity> listInWorkspace() {
         return list("workspaceId", ws());
     }
+
+    public static java.util.List<SystemParameterEntity> listInWorkspace(String workspaceId) {
+        return list("workspaceId", workspaceId);
+    }
 }
 
 

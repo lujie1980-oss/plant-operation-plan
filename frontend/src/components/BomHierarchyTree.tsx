@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import type { BomTreeNode } from '../utils/bomTree';
 import { TableHead } from './table/TableHead';
 import type { TableHeadColumn } from './table/types';
@@ -7,7 +7,7 @@ import './BomHierarchyTree.css';
 import './table/FilterableTable.css';
 
 const BOM_HEAD_COLUMNS: TableHeadColumn[] = [
-  { key: 'toggle', header: '', width: 28, defaultWidth: 28, filterable: false, resizable: false },
+  { key: 'toggle', header: '', width: 28, defaultWidth: 28, filterable: false },
   { key: 'level', header: '层级', width: 56, defaultWidth: 56 },
   { key: 'productCode', header: '产品代码', width: 120, defaultWidth: 120 },
   { key: 'productName', header: '产品名称', width: 120, defaultWidth: 120 },
@@ -92,6 +92,17 @@ interface BomHierarchyTreeProps {
   root: BomTreeNode | null;
   selectedProductCode: string | null;
   onSelect: (productCode: string) => void;
+  /** 精简列（分切 BOM 工作台） */
+  compact?: boolean;
+  /** 初始展开的最大深度；-1 表示全部展开 */
+  initialExpandDepth?: number;
+}
+
+function collectCollapsePaths(node: BomTreeNode, path: string, maxDepth: number, depth = 0): string[] {
+  if (depth >= maxDepth) return [path];
+  return node.children.flatMap((child) =>
+    collectCollapsePaths(child, `${path}/${child.productCode}`, maxDepth, depth + 1),
+  );
 }
 
 function BomTreeTableRow({
@@ -101,6 +112,7 @@ function BomTreeTableRow({
   selectedProductCode,
   collapsed,
   filters,
+  compact,
   onToggleCollapse,
   onSelect,
 }: {
@@ -110,6 +122,7 @@ function BomTreeTableRow({
   selectedProductCode: string | null;
   collapsed: Set<string>;
   filters: Record<string, string>;
+  compact?: boolean;
   onToggleCollapse: (path: string) => void;
   onSelect: (productCode: string) => void;
 }) {
@@ -145,23 +158,36 @@ function BomTreeTableRow({
         <td className="bom-tree-td">
           <span className="bom-tree-level">{bomLevelLabel(depth)}</span>
         </td>
-        <td className="bom-tree-td bom-tree-td-code">{node.productCode}</td>
+        <td
+          className="bom-tree-td bom-tree-td-code"
+          style={{ paddingLeft: `calc(0.35rem + ${depth} * 1rem)` }}
+        >
+          {node.productCode}
+        </td>
         <td className="bom-tree-td">{node.productName ?? '—'}</td>
-        <td className="bom-tree-td">{node.materialType ?? '—'}</td>
-        <td className="bom-tree-td">{node.uomCode ?? '—'}</td>
+        {!compact ? (
+          <>
+            <td className="bom-tree-td">{node.materialType ?? '—'}</td>
+            <td className="bom-tree-td">{node.uomCode ?? '—'}</td>
+          </>
+        ) : null}
         <td className="bom-tree-td bom-tree-td-num">{depth > 0 ? fmtQty(node.qty) : '—'}</td>
         <td className="bom-tree-td bom-tree-td-center">
           {depth > 0 ? (node.isCritical ? '是' : '否') : '—'}
         </td>
-        <td className="bom-tree-td bom-tree-td-num">
-          {node.scrapRate != null && node.scrapRate > 0
-            ? `${(node.scrapRate * 100).toFixed(1)}%`
-            : '—'}
-        </td>
-        <td className="bom-tree-td">{node.bomId ?? '—'}</td>
-        <td className="bom-tree-td">{node.bomVersion ?? '—'}</td>
-        <td className="bom-tree-td bom-tree-td-date">{fmtDate(node.componentEffectiveFrom)}</td>
-        <td className="bom-tree-td bom-tree-td-date">{fmtDate(node.componentEffectiveTo)}</td>
+        {!compact ? (
+          <>
+            <td className="bom-tree-td bom-tree-td-num">
+              {node.scrapRate != null && node.scrapRate > 0
+                ? `${(node.scrapRate * 100).toFixed(1)}%`
+                : '—'}
+            </td>
+            <td className="bom-tree-td">{node.bomId ?? '—'}</td>
+            <td className="bom-tree-td">{node.bomVersion ?? '—'}</td>
+            <td className="bom-tree-td bom-tree-td-date">{fmtDate(node.componentEffectiveFrom)}</td>
+            <td className="bom-tree-td bom-tree-td-date">{fmtDate(node.componentEffectiveTo)}</td>
+          </>
+        ) : null}
       </tr>
       {hasChildren &&
         !isCollapsed &&
@@ -174,6 +200,7 @@ function BomTreeTableRow({
             selectedProductCode={selectedProductCode}
             collapsed={collapsed}
             filters={filters}
+            compact={compact}
             onToggleCollapse={onToggleCollapse}
             onSelect={onSelect}
           />
@@ -182,16 +209,145 @@ function BomTreeTableRow({
   );
 }
 
-export function BomHierarchyTree({ root, selectedProductCode, onSelect }: BomHierarchyTreeProps) {
+const BOM_HEAD_COLUMNS_COMPACT: TableHeadColumn[] = [
+  { key: 'toggle', header: '', width: 28, defaultWidth: 28, filterable: false },
+  { key: 'level', header: '层级', width: 56, defaultWidth: 56 },
+  { key: 'productCode', header: '产品代码', width: 160, defaultWidth: 160 },
+  { key: 'productName', header: '产品名称', width: 120, defaultWidth: 120 },
+  { key: 'qty', header: '用量', width: 64, defaultWidth: 64, align: 'right' },
+  { key: 'isCritical', header: '关键件', width: 64, defaultWidth: 64, align: 'center' },
+];
+
+export type BomForestSection = {
+  key: string;
+  title: string;
+  subtitle?: string | null;
+  root: BomTreeNode;
+};
+
+export function BomHierarchyForest({
+  sections,
+  selectedProductCode,
+  selectedSectionKey,
+  onSelect,
+  compact = true,
+  initialExpandDepth = -1,
+}: {
+  sections: BomForestSection[];
+  selectedProductCode: string | null;
+  selectedSectionKey: string | null;
+  onSelect: (sectionKey: string, productCode: string) => void;
+  compact?: boolean;
+  initialExpandDepth?: number;
+}) {
+  const headColumns = compact ? BOM_HEAD_COLUMNS_COMPACT : BOM_HEAD_COLUMNS;
+  const colSpan = headColumns.length;
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const { filters, setFilter, getColumnWidth, onResizeStart } = useTableLayout(
-    'bom-hierarchy-tree',
-    BOM_HEAD_COLUMNS,
+    'bom-hierarchy-forest',
+    headColumns,
   );
 
   useEffect(() => {
-    setCollapsed(new Set());
-  }, [root?.productCode]);
+    if (initialExpandDepth < 0) {
+      setCollapsed(new Set());
+      return;
+    }
+    const paths: string[] = [];
+    for (const section of sections) {
+      paths.push(
+        ...collectCollapsePaths(section.root, `${section.key}/${section.root.productCode}`, initialExpandDepth),
+      );
+    }
+    setCollapsed(new Set(paths));
+  }, [sections, initialExpandDepth]);
+
+  const onToggleCollapse = (path: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+  };
+
+  if (sections.length === 0) {
+    return <p className="md-summary-empty">暂无 BOM 结构</p>;
+  }
+
+  return (
+    <div className="bom-tree-panel">
+      <table
+        className={`bom-tree-table ft-table data-table${compact ? ' bom-tree-table-compact' : ''}`}
+        data-table-id="bom-hierarchy-forest"
+      >
+        <thead>
+          <TableHead
+            columns={headColumns}
+            filters={filters}
+            setFilter={setFilter}
+            getColumnWidth={getColumnWidth}
+            onResizeStart={onResizeStart}
+          />
+        </thead>
+        <tbody>
+          {sections.map((section) => (
+            <Fragment key={section.key}>
+              <tr
+                className={`bom-tree-scope-row${selectedSectionKey === section.key ? ' is-active' : ''}`}
+                onClick={() => onSelect(section.key, section.root.productCode)}
+              >
+                <td className="bom-tree-td bom-tree-scope-cell" colSpan={colSpan}>
+                  <span className="bom-tree-scope-title">{section.title}</span>
+                  {section.subtitle ? (
+                    <span className="bom-tree-scope-sub">根料号 {section.subtitle}</span>
+                  ) : null}
+                </td>
+              </tr>
+              <BomTreeTableRow
+                node={section.root}
+                depth={0}
+                nodePath={`${section.key}/${section.root.productCode}`}
+                selectedProductCode={selectedSectionKey === section.key ? selectedProductCode : null}
+                collapsed={collapsed}
+                filters={filters}
+                compact={compact}
+                onToggleCollapse={onToggleCollapse}
+                onSelect={(code) => onSelect(section.key, code)}
+              />
+            </Fragment>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export function BomHierarchyTree({
+  root,
+  selectedProductCode,
+  onSelect,
+  compact = false,
+  initialExpandDepth = -1,
+}: BomHierarchyTreeProps) {
+  const headColumns = compact ? BOM_HEAD_COLUMNS_COMPACT : BOM_HEAD_COLUMNS;
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  const { filters, setFilter, getColumnWidth, onResizeStart } = useTableLayout(
+    compact ? 'bom-hierarchy-tree-compact' : 'bom-hierarchy-tree',
+    headColumns,
+  );
+
+  useEffect(() => {
+    if (!root) {
+      setCollapsed(new Set());
+      return;
+    }
+    if (initialExpandDepth < 0) {
+      setCollapsed(new Set());
+      return;
+    }
+    setCollapsed(new Set(collectCollapsePaths(root, root.productCode, initialExpandDepth)));
+  }, [root?.productCode, initialExpandDepth]);
 
   const onToggleCollapse = (path: string) => {
     setCollapsed((prev) => {
@@ -208,10 +364,13 @@ export function BomHierarchyTree({ root, selectedProductCode, onSelect }: BomHie
 
   return (
     <div className="bom-tree-panel">
-      <table className="bom-tree-table ft-table data-table">
+      <table
+        className={`bom-tree-table ft-table data-table${compact ? ' bom-tree-table-compact' : ''}`}
+        data-table-id={compact ? 'bom-hierarchy-tree-compact' : 'bom-hierarchy-tree'}
+      >
         <thead>
           <TableHead
-            columns={BOM_HEAD_COLUMNS}
+            columns={headColumns}
             filters={filters}
             setFilter={setFilter}
             getColumnWidth={getColumnWidth}
@@ -226,6 +385,7 @@ export function BomHierarchyTree({ root, selectedProductCode, onSelect }: BomHie
             selectedProductCode={selectedProductCode}
             collapsed={collapsed}
             filters={filters}
+            compact={compact}
             onToggleCollapse={onToggleCollapse}
             onSelect={onSelect}
           />

@@ -1,6 +1,7 @@
 import { api } from '../api/client';
 import type {
   BomMd,
+  DeliveryDateStrategyMd,
   InventoryMd,
   MasterDataRecord,
   MaterialMd,
@@ -8,9 +9,11 @@ import type {
   ProductResourceMd,
   ProductionLineMd,
   ResourceCalendarMd,
+  ResourceEfficiencyMd,
   ResourceMd,
   SalesOrderMd,
   ShiftHeadcountMd,
+  SupplyQuantityRuleMd,
 } from '../types/masterData';
 import type { TabConfig } from '../components/MasterDataTabBody';
 
@@ -51,10 +54,12 @@ function salesOrderBomWarning(row: SalesOrderMd, context: unknown): string | nul
 
 export const salesOrderTab: TabConfig<SalesOrderMd> = {
   id: 'sales-orders',
+  validationEntityType: 'SalesOrderLine',
   label: '销售订单',
   description: '销售订单行（驱动需求满足与主计划求解）；无 BOM 的物料将显示预警',
   api: api.masterData.salesOrders,
   rowKey: (r) => `${r.salesOrderNo}#${r.salesOrderLineNo}`,
+  validationEntityKey: (r) => `${r.salesOrderNo}:${r.salesOrderLineNo}`,
   search: (r) => `${r.salesOrderNo} ${r.productCode} ${r.customerCode ?? ''}`,
   warningContext: loadBomParentProductCodes,
   rowWarning: salesOrderBomWarning,
@@ -91,6 +96,7 @@ export const salesOrderTab: TabConfig<SalesOrderMd> = {
 
 export const materialTab: TabConfig<MaterialMd> = {
   id: 'materials',
+  validationEntityType: 'Material',
   label: '物料主数据',
   description: '物料编码、名称、单位与类型；扩展属性由当前 workspace 字段目录配置',
   fieldSchemaEntityType: 'MATERIAL',
@@ -118,10 +124,12 @@ export const materialTab: TabConfig<MaterialMd> = {
 
 export const bomTab: TabConfig<BomMd> = {
   id: 'boms',
+  validationEntityType: 'BomComponent',
   label: '物料清单 BOM',
   description: '成品料号、父项/组件结构、生效日期与损耗率（用于齐套与多级工单展开）',
   api: api.masterData.boms,
   rowKey: (r) => `${r.finishedProductCode ?? ''}|${r.parentProductCode}->${r.componentProductCode}`,
+  validationEntityKey: (r) => `${r.parentProductCode}->${r.componentProductCode}`,
   search: (r) =>
     `${r.finishedProductCode ?? ''} ${r.parentProductCode} ${r.componentProductCode} ${r.bomId}`,
   emptyRow: () => ({
@@ -157,6 +165,8 @@ export const bomTab: TabConfig<BomMd> = {
 
 export const inventoryTab: TabConfig<InventoryMd> = {
   id: 'inventory',
+  validationEntityType: 'Inventory',
+  validationEntityKey: (r) => `${r.stockingPointCode}|${r.productCode}`,
   label: '库存',
   description: '在库 / 在途 / 占用 / 质量持有 数量',
   api: api.masterData.inventory,
@@ -183,6 +193,8 @@ export const inventoryTab: TabConfig<InventoryMd> = {
 
 export const resourceTab: TabConfig<ResourceMd> = {
   id: 'resources',
+  validationEntityType: 'ProductionResource',
+  validationEntityKey: (r) => r.resourceId,
   label: '生产资源',
   description: '机台/工位的产能与瓶颈属性',
   api: api.masterData.resources,
@@ -207,6 +219,8 @@ export const resourceTab: TabConfig<ResourceMd> = {
 
 export const productResourceTab: TabConfig<ProductResourceMd> = {
   id: 'product-resources',
+  validationEntityType: 'ProductResource',
+  validationEntityKey: (r) => `${r.productCode}->${r.resourceId}`,
   label: '产品工艺',
   description: '工序、设备组、制造 CT（基础字段）及 workspace 扩展属性（线材/关键物料等，来自字段目录）',
   fieldSchemaEntityType: 'PRODUCT_RESOURCE',
@@ -244,6 +258,8 @@ export const productResourceTab: TabConfig<ProductResourceMd> = {
 
 export const lineTab: TabConfig<ProductionLineMd> = {
   id: 'lines',
+  validationEntityType: 'ProductionLine',
+  validationEntityKey: (r) => r.lineId,
   label: '产线',
   description: '产线编制与每班次产能',
   api: api.masterData.lines,
@@ -268,6 +284,8 @@ export const lineTab: TabConfig<ProductionLineMd> = {
 
 export const calendarTab: TabConfig<ResourceCalendarMd> = {
   id: 'calendar',
+  validationEntityType: 'ResourceCalendar',
+  validationEntityKey: (r) => `${r.resourceId}|${r.shiftId}|${r.calendarDate}`,
   label: '资源日历',
   description:
     '资源在日期/班次的可用产能。同一生产资源下有多条产线时，请用产线 ID 作为「资源」列维护各产线日历，主计划自动按产线日历之和汇总到该生产资源。',
@@ -328,8 +346,6 @@ export const BUSINESS_DATA_TABS: TabConfig<MasterDataRecord>[] = [
   inventoryTab,
 ] as unknown as TabConfig<MasterDataRecord>[];
 
-export { CAPACITY_RULE_TABS } from './businessRulesTabs';
-
 export const LABOR_RULE_TABS: TabConfig<MasterDataRecord>[] = [
   {
     ...headcountTab,
@@ -343,7 +359,8 @@ export const materialLeadTimeTab: TabConfig<MaterialLeadTimeMd> = {
   id: 'material-lead-time',
   label: '采购提前期',
   description:
-    '物料采购提前期（天）：缺料时按该提前期推算可到货日。物料填 * 表示所有物料的默认提前期；优先取精确物料规则，其次 * 规则，最后系统默认参数。最早可行开始对多个缺料件取“最迟到货”（并行备料）。',
+    '维护各物料最长采购周期。物料填 * 的一行表示「默认最长采购周期」，供 RULE-MRP-04 / RULE-PLAN-01 在物料短缺时推算最晚可用 Supply 日期；精确物料行优先于 * 行。',
+  showDescription: false,
   api: api.masterData.materialLeadTime,
   rowKey: (r) => r.productCode,
   search: (r) => r.productCode,
@@ -352,9 +369,72 @@ export const materialLeadTimeTab: TabConfig<MaterialLeadTimeMd> = {
     productCode: '',
     leadTimeDays: 7,
   }),
+  warningContext: async () => {
+    const list = await api.masterData.materialLeadTime.list();
+    const wildcardCount = list.filter((r) => r.productCode.trim() === '*').length;
+    return { wildcardCount };
+  },
+  rowWarning: (row, ctx) => {
+    const { wildcardCount } = ctx as { wildcardCount: number };
+    if (row.productCode.trim() === '*' && wildcardCount > 1) {
+      return '默认最长采购周期（物料 *）应仅保留一行';
+    }
+    return null;
+  },
+  getRowClassName: (row) => (row.productCode.trim() === '*' ? 'br-mlt-default-row' : undefined),
   columns: [
-    { key: 'productCode', label: '物料', type: 'text', required: true, width: 180 },
-    { key: 'leadTimeDays', label: '采购提前期(天)', type: 'integer', required: true, width: 140 },
+    {
+      key: 'productCode',
+      label: '物料编码',
+      type: 'text',
+      required: true,
+      width: 200,
+    },
+    {
+      key: 'leadTimeDays',
+      label: '最长采购周期(天)',
+      type: 'integer',
+      required: true,
+      width: 160,
+    },
+  ],
+};
+
+const MIN_QTY_STRATEGY_OPTIONS = [
+  { value: 'SKIP', label: '跳过（不下单）' },
+  { value: 'PLAN_AT_MIN', label: '按最小量下单' },
+];
+
+const supplyQuantityRulesTab: TabConfig<SupplyQuantityRuleMd> = {
+  id: 'supply-quantity-rules',
+  label: '供应批量规则',
+  description: '物料规则：产品×库存点的批量、最小/最大工单量与缺量策略（RULE-SUP-01）',
+  api: api.masterData.supplyQuantityRules,
+  rowKey: (r) => `${r.productCode}|${r.stockingPointCode}`,
+  search: (r) => `${r.productCode} ${r.stockingPointCode}`,
+  emptyRow: () => ({
+    id: null,
+    productCode: '',
+    stockingPointCode: 'DEFAULT-FG',
+    lotSize: 1,
+    minQuantity: 1,
+    maxQuantity: 99999,
+    minQtyStrategy: 'PLAN_AT_MIN',
+  }),
+  columns: [
+    { key: 'productCode', label: '产品', type: 'text', required: true, width: 150 },
+    { key: 'stockingPointCode', label: '库存点', type: 'text', required: true, width: 120 },
+    { key: 'lotSize', label: '批量倍数', type: 'integer', required: true, width: 100 },
+    { key: 'minQuantity', label: '最小工单量', type: 'integer', required: true, width: 110 },
+    { key: 'maxQuantity', label: '最大工单量', type: 'integer', required: true, width: 110 },
+    {
+      key: 'minQtyStrategy',
+      label: '缺量策略',
+      type: 'select',
+      options: MIN_QTY_STRATEGY_OPTIONS,
+      required: true,
+      width: 150,
+    },
   ],
 };
 
@@ -376,7 +456,101 @@ export const MATERIAL_RULE_TABS: TabConfig<MasterDataRecord>[] = [
     ),
   } as unknown as TabConfig<MasterDataRecord>,
   materialLeadTimeTab as unknown as TabConfig<MasterDataRecord>,
+  supplyQuantityRulesTab as unknown as TabConfig<MasterDataRecord>,
 ];
+
+const resourceEfficiencyTab: TabConfig<ResourceEfficiencyMd> = {
+  id: 'resource-efficiency',
+  label: '资源效率',
+  description:
+    '产能规则：资源效率系数与细排反馈占用（RULE-SUP-05）。有效产能 = (日历 − 停机 − 排程反馈) × 效率。',
+  api: api.masterData.resourceEfficiency,
+  rowKey: (r) => r.resourceId,
+  search: (r) => `${r.resourceId} ${r.resourceGroupCode}`,
+  emptyRow: () => ({
+    id: null,
+    resourceId: '',
+    resourceGroupCode: '',
+    resourceEfficiency: 1.0,
+    schedulerFeedbackMinutes: 0,
+  }),
+  columns: [
+    { key: 'resourceId', label: '资源 ID', type: 'text', required: true, width: 140 },
+    { key: 'resourceGroupCode', label: '资源组', type: 'text', width: 120 },
+    { key: 'resourceEfficiency', label: '效率系数 (0,1]', type: 'number', required: true, width: 130 },
+    {
+      key: 'schedulerFeedbackMinutes',
+      label: '细排反馈占用(分)',
+      type: 'integer',
+      width: 150,
+    },
+  ],
+};
+
+const schedulerFeedbackTab: TabConfig<{ id: null }> = {
+  id: 'scheduler-feedback',
+  label: '细排反馈占用',
+  description:
+    '产能规则：S05 冻结细排反馈（txn schedule_feedback），占用 rollup 至 PRP/SRP（RULE-SUP-05）。本页只读。',
+  api: {
+    list: async () => [],
+    save: async () => {
+      throw new Error('细排反馈为交易数据，不可在此编辑');
+    },
+    delete: async () => {
+      throw new Error('细排反馈为交易数据，不可删除');
+    },
+  },
+  rowKey: () => 'scheduler-feedback',
+  search: () => '',
+  emptyRow: () => ({ id: null }),
+  columns: [],
+};
+
+export const CAPACITY_RULE_TABS: TabConfig<MasterDataRecord>[] = [
+  resourceEfficiencyTab as unknown as TabConfig<MasterDataRecord>,
+  schedulerFeedbackTab as unknown as TabConfig<MasterDataRecord>,
+];
+
+const DELIVERY_GRANULARITY_OPTIONS = [
+  { value: 'DAILY', label: '日交付' },
+  { value: 'WEEKLY', label: '周交付' },
+];
+
+const deliveryDateStrategyTab: TabConfig<DeliveryDateStrategyMd> = {
+  id: 'delivery-date-strategy',
+  label: '交期策略',
+  description: '需求规则：提前/延后容忍窗口与分段惩罚系数（RULE-DEM-03 → KPI-MP-S01）',
+  api: api.masterData.deliveryDateStrategy,
+  rowKey: (r) => `${r.customerCode}|${r.productCode}`,
+  search: (r) => `${r.customerCode} ${r.productCode}`,
+  emptyRow: () => ({
+    id: null,
+    customerCode: '*',
+    productCode: '*',
+    deliveryGranularity: 'DAILY',
+    earlyAllowDays: 1,
+    lateAllowDays: 3,
+    earlyPenaltyCoef: 1.0,
+    latePenaltyCoef: 2.0,
+  }),
+  columns: [
+    { key: 'customerCode', label: '客户', type: 'text', required: true, width: 120 },
+    { key: 'productCode', label: '产品', type: 'text', required: true, width: 140 },
+    {
+      key: 'deliveryGranularity',
+      label: '交付粒度',
+      type: 'select',
+      options: DELIVERY_GRANULARITY_OPTIONS,
+      required: true,
+      width: 110,
+    },
+    { key: 'earlyAllowDays', label: '允许提前(天)', type: 'integer', required: true, width: 120 },
+    { key: 'lateAllowDays', label: '允许延后(天)', type: 'integer', required: true, width: 120 },
+    { key: 'earlyPenaltyCoef', label: '提前惩罚系数', type: 'number', width: 120 },
+    { key: 'latePenaltyCoef', label: '延后惩罚系数', type: 'number', width: 120 },
+  ],
+};
 
 export const DEMAND_RULE_TABS: TabConfig<MasterDataRecord>[] = [
   {
@@ -390,4 +564,5 @@ export const DEMAND_RULE_TABS: TabConfig<MasterDataRecord>[] = [
       ),
     ),
   } as unknown as TabConfig<MasterDataRecord>,
+  deliveryDateStrategyTab as unknown as TabConfig<MasterDataRecord>,
 ];

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { DashboardKpiCard, type DashboardKpiId } from '../components/DashboardKpiCard';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { FilterableTable } from '../components/table/FilterableTable';
 import type { DashboardSummary, DemandPoolEntry } from '../types/api';
@@ -49,20 +49,22 @@ export function DashboardPage() {
 
   const capacityBuckets = summary?.highUtilizationBuckets ?? [];
 
-  const tabTitle = useMemo(() => {
+  const tabMeta = useMemo(() => {
+    if (!summary) return '';
     switch (tab) {
       case 'fulfillment':
-        return '需求满足预警';
+        return `未满足 ${summary.unfulfilledCount} 条`;
       case 'capacity':
-        return '产能预警';
+        return `高负荷区间 ${capacityBuckets.length} 个 · 均利用 ${summary.capacityUtilizationPct.toFixed(1)}%`;
       case 'material':
-        return '物料预警';
+        return `缺料风险 ${summary.shortageCount} 条`;
     }
-  }, [tab]);
+  }, [tab, summary, capacityBuckets.length]);
 
   return (
     <div className="dashboard-page">
       <PageHeader
+        variant={DECISION_PAGE_HEADER}
         title="首页"
         description="核心 KPI 一览 · 点击 KPI 卡片或 Tab 查看对应预警明细"
         actions={
@@ -75,7 +77,7 @@ export function DashboardPage() {
 
       {summary && (
         <>
-          <div className="dash-kpi-row">
+          <div className="dash-kpi-strip" role="group" aria-label="核心 KPI">
             <DashboardKpiCard
               id="fulfillment"
               label="需求满足率"
@@ -107,7 +109,6 @@ export function DashboardPage() {
 
           <section className="card dash-detail-panel">
             <div className="dash-tab-head">
-              <h3>{tabTitle}</h3>
               <div className="dash-tabs" role="tablist">
                 <button
                   type="button"
@@ -134,13 +135,11 @@ export function DashboardPage() {
                   物料预警
                 </button>
               </div>
+              <span className="dash-tab-meta">{tabMeta}</span>
             </div>
 
             {tab === 'fulfillment' && (
               <div className="dash-tab-body">
-                <p className="dash-detail-meta">
-                  共 {summary.unfulfilledCount} 条需求未满足（状态非 ON_TRACK / PLANNED）
-                </p>
                 <FilterableTable
                   tableId="dashboard-unfulfilled"
                   wrapClassName="dash-detail-table-wrap ft-table-wrap"
@@ -178,9 +177,6 @@ export function DashboardPage() {
 
             {tab === 'capacity' && (
               <div className="dash-tab-body">
-                <p className="dash-detail-meta">
-                  平均利用率 {summary.capacityUtilizationPct.toFixed(1)}%，以下为利用率 ≥80% 或超负荷的区间
-                </p>
                 <FilterableTable
                   tableId="dashboard-capacity"
                   wrapClassName="dash-detail-table-wrap ft-table-wrap"
@@ -210,7 +206,6 @@ export function DashboardPage() {
 
             {tab === 'material' && (
               <div className="dash-tab-body">
-                <p className="dash-detail-meta">共 {summary.shortageCount} 条订单存在缺料风险（齐套 SHORTAGE）</p>
                 <FilterableTable
                   tableId="dashboard-shortage"
                   wrapClassName="dash-detail-table-wrap ft-table-wrap"

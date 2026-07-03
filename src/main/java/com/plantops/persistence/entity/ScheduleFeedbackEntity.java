@@ -31,6 +31,9 @@ public class ScheduleFeedbackEntity extends WorkspaceScopedEntity {
 
     public String resourceId;
 
+    /** ENT-PR（产线 lineId）；细排反馈按 PR 扣减 PRP 可用产能（TODO-24 P5）。 */
+    public String physicalResourceId;
+
     public LocalDateTime plannedStart;
 
     public LocalDateTime plannedEnd;

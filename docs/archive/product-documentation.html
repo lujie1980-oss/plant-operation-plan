@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plant Operation Plan — 产品文档</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-soft: #eff6ff;
+      --accent: #0f766e;
+      --code-bg: #f1f5f9;
+      --sidebar-w: 280px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--text);
+      background: var(--bg);
+    }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .layout { display: flex; min-height: 100vh; }
+    nav.sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.25rem 1rem 2rem;
+    }
+    nav.sidebar h1 {
+      font-size: 1rem;
+      margin: 0 0 .25rem;
+      line-height: 1.3;
+    }
+    nav.sidebar .meta {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    nav.sidebar ul { list-style: none; padding: 0; margin: 0; }
+    nav.sidebar li { margin: .15rem 0; }
+    nav.sidebar a {
+      display: block;
+      padding: .35rem .5rem;
+      border-radius: 6px;
+      font-size: .85rem;
+      color: var(--text);
+    }
+    nav.sidebar a:hover { background: var(--primary-soft); text-decoration: none; }
+    nav.sidebar .nav-group {
+      font-size: .7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--muted);
+      margin: 1rem 0 .35rem .5rem;
+    }
+    main {
+      flex: 1;
+      max-width: 960px;
+      padding: 2rem 2.5rem 4rem;
+    }
+    h2 {
+      font-size: 1.75rem;
+      margin: 2.5rem 0 1rem;
+      padding-bottom: .5rem;
+      border-bottom: 2px solid var(--primary);
+    }
+    h2:first-child { margin-top: 0; }
+    h3 { font-size: 1.25rem; margin: 1.75rem 0 .75rem; color: #0f172a; }
+    h4 { font-size: 1.05rem; margin: 1.25rem 0 .5rem; color: #334155; }
+    p { margin: .65rem 0; }
+    .lead {
+      font-size: 1.05rem;
+      color: #334155;
+      border-left: 4px solid var(--primary);
+      padding: .75rem 1rem;
+      background: var(--primary-soft);
+      border-radius: 0 8px 8px 0;
+      margin: 1rem 0 1.5rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: .9rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: .55rem .75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th { background: #f1f5f9; font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    code, pre {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: .85em;
+    }
+    code {
+      background: var(--code-bg);
+      padding: .15em .35em;
+      border-radius: 4px;
+    }
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 1rem 1.15rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      line-height: 1.5;
+      margin: 1rem 0;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+    }
+    .card h4 { margin-top: 0; font-size: .95rem; }
+    .card p { font-size: .85rem; color: var(--muted); margin: 0; }
+    .badge {
+      display: inline-block;
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .15em .5em;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      margin-right: .35rem;
+    }
+    .badge.teal { background: #ccfbf1; color: var(--accent); }
+    .badge.gray { background: #f1f5f9; color: #475569; }
+    .diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: Consolas, monospace;
+      font-size: .8rem;
+      white-space: pre;
+      overflow-x: auto;
+      line-height: 1.45;
+      color: #334155;
+    }
+    .toc-part {
+      background: linear-gradient(135deg, #1e40af 0%, #0f766e 100%);
+      color: #fff;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+    .toc-part h2 { color: #fff; border-color: rgba(255,255,255,.3); margin-top: 0; }
+    .toc-part ol { margin: .5rem 0 0 1.25rem; }
+    .toc-part li { margin: .35rem 0; }
+    .toc-part a { color: #bfdbfe; }
+    ul, ol { padding-left: 1.35rem; }
+    li { margin: .25rem 0; }
+    hr.section {
+      border: none;
+      border-top: 3px solid var(--border);
+      margin: 3rem 0;
+    }
+    @media print {
+      nav.sidebar { display: none; }
+      main { max-width: none; padding: 1rem; }
+    }
+    @media (max-width: 900px) {
+      .layout { flex-direction: column; }
+      nav.sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      main { padding: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <h1>Plant Operation Plan</h1>
+    <div class="meta">版本 1.0.0-SNAPSHOT<br/>文档日期 2026-06-10<br/>
+      <a href="PDD.md">PDD</a> · <a href="SDD.md">SDD</a>
+    </div>
+    <div class="nav-group">总览</div>
+    <ul>
+      <li><a href="#overview">文档说明</a></li>
+    </ul>
+    <div class="nav-group">第一部分 · 产品功能介绍</div>
+    <ul>
+      <li><a href="#part1">1. 产品定位</a></li>
+      <li><a href="#p1-scenarios">2. 业务场景</a></li>
+      <li><a href="#p1-capabilities">3. 核心能力</a></li>
+      <li><a href="#p1-users">4. 用户与界面</a></li>
+      <li><a href="#p1-boundary">5. 范围边界</a></li>
+    </ul>
+    <div class="nav-group">第二部分 · 产品设计</div>
+    <ul>
+      <li><a href="#part2">1. 架构概览</a></li>
+      <li><a href="#p2-pipeline">2. 计划流水线 S01–S07</a></li>
+      <li><a href="#p2-master">3. 主计划设计</a></li>
+      <li><a href="#p2-scheduling">4. 生产排程设计</a></li>
+      <li><a href="#p2-masterdata">5. 主数据与规则</a></li>
+      <li><a href="#p2-workspace">6. Workspace 数据集</a></li>
+      <li><a href="#p2-api">7. API 与集成</a></li>
+    </ul>
+    <div class="nav-group">第三部分 · 详细设计</div>
+    <ul>
+      <li><a href="#part3">1. 技术栈与分层</a></li>
+      <li><a href="#p3-s01">2. S01 需求满足</a></li>
+      <li><a href="#p3-s02">3. S02/S03 齐套与产能</a></li>
+      <li><a href="#p3-s04">4. S04 主计划推演与求解</a></li>
+      <li><a href="#p3-batch">5. 批次拆解</a></li>
+      <li><a href="#p3-s05">6. S05 Session 与推演</a></li>
+      <li><a href="#p3-simulation">7. 推演规则管道</a></li>
+      <li><a href="#p3-s06">8. S06 执行与反馈</a></li>
+      <li><a href="#p3-frontend">9. 前端实现</a></li>
+      <li><a href="#p3-data">10. 数据模型</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <div style="background:#fef3c7;border:1px solid #d97706;padding:1rem;border-radius:8px;margin-bottom:1.5rem;font-size:.9rem">
+      <strong>已归档（2026-06-10）</strong> — 本页已停用。请使用
+      <a href="../SDD.md">SDD.md</a>、<a href="../sdd/README.md">sdd/</a> 分章与 <a href="../PDD.md">PDD.md</a>。
+    </div>
+    <section id="overview">
+      <div class="toc-part">
+        <h2>工厂运营计划系统 — 产品文档</h2>
+        <p style="margin:0;opacity:.9">面向单工厂 APS 的完整业务与技术说明。</p>
+        <p style="margin:.75rem 0 0;opacity:.85;font-size:.9rem">
+          <strong>推荐阅读（2026-06-10 更新）：</strong>
+          <a href="PDD.md">产品说明文档 PDD</a> ·
+          <a href="SDD.md">详细设计 SDD</a> ·
+          <a href="sdd/README.md">SDD 规范分章</a> ·
+          <a href="ontology-domain-model.md">本体领域模型</a>
+        </p>
+        <ol>
+          <li><a href="#part1"><strong>产品功能介绍</strong></a> — 业务场景、目标用户、能力边界</li>
+          <li><a href="#part2"><strong>产品设计文档</strong></a> — 功能模块、流程、界面与 API 设计</li>
+          <li><a href="#part3"><strong>详细设计文档</strong></a> — 各功能的实现逻辑、类职责与算法</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ========== PART 1 ========== -->
+    <h2 id="part1">第一部分 · 产品功能介绍</h2>
+
+    <h3 id="p1-position">1. 产品定位</h3>
+    <p class="lead">
+      <strong>Plant Operation Plan</strong> 是一套面向<strong>单工厂</strong>的高级计划与排程（APS）系统，
+      将销售需求、物料齐套、粗能力平衡、主计划、详细排程、执行反馈与 KPI 串联为一条可运行的计划链路。
+      核心优化能力由 <strong>Timefold Solver</strong> 提供；日常排程交互以<strong>确定性推演</strong>为主，求解器为可选增强。
+    </p>
+
+    <div class="card-grid">
+      <div class="card"><h4>计划员</h4><p>运行主计划、分析需求满足与产能、对比多场景策略</p></div>
+      <div class="card"><h4>排程员</h4><p>批次拆解、产线甘特排程、手动调整与推演确认</p></div>
+      <div class="card"><h4>物料计划</h4><p>齐套分析、物料需求滚算、缺料追溯</p></div>
+      <div class="card"><h4>生产主管</h4><p>产能负荷、工单下发、执行冲突监控</p></div>
+    </div>
+
+    <h3 id="p1-scenarios">2. 典型业务场景</h3>
+
+    <h4>场景 A：从订单到主计划</h4>
+    <p>销售订单进入需求池后，计划员需要回答：哪些订单能按时交付？瓶颈资源如何分配？不同策略（无限产能 vs 有限产能、延期最小化 vs 产能均衡）对结果有何影响？</p>
+    <ul>
+      <li>导入或维护销售订单 → 自动生成多级 BOM 工单</li>
+      <li>运行齐套分析，过滤缺料订单</li>
+      <li>选择<strong>主计划策略</strong>执行求解，得到资源×时间槽分配</li>
+      <li>在需求满足、产能平衡、物料需求、生产工单等结果页切换<strong>计划场景</strong>对比</li>
+    </ul>
+
+    <h4>场景 B：从工单到产线排程</h4>
+    <p>主计划完成后，生产排程以<strong>批次</strong>为最小排程单位。排程员在甘特图上拖拽、指定产线、全量/增量推演，确认后发布为排程版本与生产任务。</p>
+    <ul>
+      <li>已下发工单拆分为生产批次（固定批量 / 齐套拆批 / 手工）</li>
+      <li>排程齐套按批次量消耗库存池</li>
+      <li>创建 Scheduling Session，种子入队 + 链式赋时</li>
+      <li>手动改序 → simulate → 查看违背 → confirm 落库</li>
+    </ul>
+
+    <h4>场景 C：计划变更与闭环</h4>
+    <p>MES 反馈设备停机、缺料、加急等事件，系统按 R0–R3 级别决定是否重算主计划或详细排程；排程反馈可冻结 cutoff 前的工序计划时间。</p>
+
+    <h4>场景 D：多数据集并行验证</h4>
+    <p>通过 <strong>Workspace</strong> 隔离不同工厂/项目/演示数据集（如 default、te），切换后主数据、计划、排程完全独立，便于 POC 与回归测试。</p>
+
+    <h3 id="p1-capabilities">3. 核心能力一览</h3>
+    <table>
+      <thead>
+        <tr><th>能力域</th><th>说明</th><th>典型入口</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge">S01</span>需求满足</td>
+          <td>订单 KPI、满足链追溯（库存/工单/缺料 pegging）</td>
+          <td>主计划 · 计划分析 · 需求满足</td>
+        </tr>
+        <tr>
+          <td><span class="badge">S02</span>齐套分析</td>
+          <td>订单行/工单级关键料齐套，KITTING_OK / SHORTAGE</td>
+          <td>主计划 · 物料需求；排程 · 齐套</td>
+        </tr>
+        <tr>
+          <td><span class="badge">S03</span>产能平衡</td>
+          <td>资源×日期负荷、利用率、超载标记</td>
+          <td>主计划 · 产能平衡</td>
+        </tr>
+        <tr>
+          <td><span class="badge">S04</span>主计划</td>
+          <td>工序级时间槽分配（Timefold），策略可配置</td>
+          <td>主计划 · 计划运行</td>
+        </tr>
+        <tr>
+          <td><span class="badge teal">批次</span>批次拆解</td>
+          <td>已下发工单拆批，S05 以批次为最小单位</td>
+          <td>生产排程 · 批次计划</td>
+        </tr>
+        <tr>
+          <td><span class="badge">S05</span>详细排程</td>
+          <td>Session 推演 + 可选 Timefold 选优，产线甘特</td>
+          <td>生产排程 · 详细排程</td>
+        </tr>
+        <tr>
+          <td><span class="badge">S06</span>执行闭环</td>
+          <td>下发 MES、生产任务状态、事件驱动重排</td>
+          <td>生产工单、需求跟踪</td>
+        </tr>
+        <tr>
+          <td><span class="badge">S07</span>KPI</td>
+          <td>OTIF、利用率、计划版本对比</td>
+          <td>需求跟踪、场景对比</td>
+        </tr>
+        <tr>
+          <td><span class="badge gray">扩展</span>订单推演链</td>
+          <td>单订单从需求到 eligible 槽的可视化推演</td>
+          <td>主计划 · 订单推演</td>
+        </tr>
+        <tr>
+          <td><span class="badge gray">扩展</span>推演规则</td>
+          <td>可插拔 Timing/Validation/Closure 规则 + SimulationProfile</td>
+          <td>业务规则页 + API</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="p1-users">4. 用户界面地图</h3>
+    <table>
+      <thead><tr><th>导航分组</th><th>路由</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td>首页</td><td><code>/#/</code></td><td>总览入口</td></tr>
+        <tr><td>主数据管理</td><td><code>/#/master-data</code></td><td>物料、BOM、工艺、资源、产线、日历</td></tr>
+        <tr><td>业务数据</td><td><code>/#/business-data</code></td><td>销售订单、库存、工单</td></tr>
+        <tr><td>数据集</td><td><code>/#/workspaces</code></td><td>Workspace 创建/删除/切换</td></tr>
+        <tr><td>主计划 · 配置</td><td>parameters / objectives / business-rules / plan-run</td><td>参数、策略、规则、运行</td></tr>
+        <tr><td>主计划 · 分析</td><td>analysis/demand · capacity · material · work-orders · diagnostics · order-chain</td><td>S01–S04 结果与诊断</td></tr>
+        <tr><td>生产排程</td><td>scheduling/parameters · batch-plan · kitting · detail-schedule · version-comparison</td><td>批次、齐套、甘特排程</td></tr>
+        <tr><td>工厂日历</td><td><code>/#/factory-calendar</code></td><td>班次策略与资源日历同步</td></tr>
+        <tr><td>需求跟踪</td><td><code>/#/demand-tracking</code></td><td>交付跟踪与 KPI</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="p1-boundary">5. 范围边界</h3>
+    <table>
+      <thead><tr><th>在范围内</th><th>不在范围内（当前版本）</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>单工厂、多产线、多 Workspace 数据集</td>
+          <td>多工厂网络计划、多租户 RBAC</td>
+        </tr>
+        <tr>
+          <td>H2 文件库 + Flyway 迁移（可扩展 PostgreSQL）</td>
+          <td>生产级高可用数据库集群</td>
+        </tr>
+        <tr>
+          <td>ERP/MES Mock 集成端口</td>
+          <td>真实 SAP/MES 连接器（可替换 Mock）</td>
+        </tr>
+        <tr>
+          <td>React Web 前端（HashRouter）</td>
+          <td>移动端原生应用</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr class="section" />
+
+    <!-- ========== PART 2 ========== -->
+    <h2 id="part2">第二部分 · 产品设计文档</h2>
+
+    <h3 id="p2-arch">1. 架构概览</h3>
+    <p>系统采用<strong>推演层 + 选优层</strong>分离架构：确定性计算（MRP、齐套、可行域、链式赋时）在 <code>com.plantops.scenario.planning</code> 完成；Timefold 仅在 S04 槽位分配与 S05 产线/顺序选优时调用。</p>
+    <div class="diagram">┌─────────────┐     REST/JSON      ┌──────────────────────────────────────┐
+│  React SPA  │ ◄────────────────► │  JAX-RS API (com.plantops.api)       │
+└─────────────┘                    └──────────────────┬───────────────────┘
+                                                      │
+                    ┌─────────────────────────────────┼─────────────────────────┐
+                    │         应用层 scenario          │                         │
+                    │  Demand / Kitting / Capacity     │                         │
+                    │  MasterPlan / DetailSchedule     │                         │
+                    │  Session / Orchestrator / KPI    │                         │
+                    └──────────────┬───────────────────┴──────────────┬──────────┘
+                                   │                                   │
+                    ┌──────────────▼──────────────┐    ┌───────────────▼────────────┐
+                    │  推演层 *PlanningContext     │    │  选优层 Timefold Solver     │
+                    │  P0–P4 确定性准备            │───►│  MasterPlanSchedule         │
+                    │  SimulationPipeline 赋时/校验 │    │  DetailSchedule             │
+                    └──────────────┬──────────────┘    └────────────────────────────┘
+                                   │
+                    ┌──────────────▼──────────────┐
+                    │  H2 + Flyway + Panache JPA   │
+                    │  Workspace 行级隔离          │
+                    └─────────────────────────────┘</div>
+
+    <h3 id="p2-pipeline">2. 计划流水线 S01–S07</h3>
+    <div class="diagram">ERP 销售订单
+    │
+    ▼
+S01 需求满足 ──► S02 齐套 ──► S03 产能平衡 ──► S04 主计划 (Timefold)
+                                                    │
+                                                    ▼
+                              工单下发 ──► 批次拆解 ──► 排程齐套 ──► S05 详细排程
+                                                    │
+                                                    ▼
+                              S06 下发 MES / 事件反馈 ◄──► S07 KPI</div>
+
+    <table>
+      <thead><tr><th>步骤</th><th>输入</th><th>输出</th><th>持久化</th></tr></thead>
+      <tbody>
+        <tr><td>S01</td><td>销售订单行</td><td>需求池、满足链、KPI 汇总</td><td>内存计算 + 工单关联</td></tr>
+        <tr><td>S02</td><td>BOM + 库存</td><td>齐套报告 KITTING_OK / SHORTAGE</td><td><code>kitting_result</code></td></tr>
+        <tr><td>S03</td><td>主计划版本（可选）</td><td>资源×班次负荷热力</td><td>实时计算</td></tr>
+        <tr><td>S04</td><td>齐套通过工单 + 策略</td><td>planVersionId、槽位分配、得分</td><td><code>plan_version</code>, <code>master_plan_allocation</code></td></tr>
+        <tr><td>批次</td><td>已下发工单</td><td>production_batch 列表</td><td><code>production_batch</code></td></tr>
+        <tr><td>S05</td><td>主计划版本 + 批次</td><td>排程版本、工序 start/end</td><td><code>detail_schedule_operation</code></td></tr>
+        <tr><td>S06</td><td>排程版本</td><td>MES 下发、生产任务 RELEASED</td><td><code>plan_dispatch</code>, <code>production_task</code></td></tr>
+        <tr><td>S07</td><td>计划版本</td><td>OTIF、利用率、对比摘要</td><td>实时聚合</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="p2-master">3. 主计划设计</h3>
+
+    <h4>3.1 主计划策略（Master Plan Strategy）</h4>
+    <p>「优化目标」页管理可命名、可复用的策略包，运行时在计划运行页选用。</p>
+    <table>
+      <thead><tr><th>字段</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>capacityStrategy</code></td><td><code>UNCONSTRAINED</code> 无限产能；<code>FINITE_CAPACITY</code> 按日产能拆段</td></tr>
+        <tr><td><code>objectives[]</code></td><td>软目标：最小化延期、高优先级靠前、锁定订单靠前、相邻槽位产能均衡</td></tr>
+        <tr><td><code>isDefault</code></td><td>未指定策略时使用默认</td></tr>
+      </tbody>
+    </table>
+    <p>持久化于 <code>system_parameter.param_id = 'master_plan_strategies'</code>；每次求解写入 <code>plan_version.strategy_id/name</code>。</p>
+
+    <h4>3.2 计划场景（Scenario）</h4>
+    <p>一次主计划求解产生一个 <code>planVersionId</code> 场景。场景选择器（<code>ScenarioSelector</code>）通过 <code>PlanContext</code> 在四个分析结果页共享选中场景，切换后联动重载 API。</p>
+
+    <h4>3.3 推演 vs 求解</h4>
+    <table>
+      <thead><tr><th>阶段</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td>P0 事实装载</td><td>规划窗、TimeSlot、MRP 物料、BOM 边、最早可行下界</td></tr>
+        <tr><td>P1 工单筛选</td><td>可排程、冻结窗、工艺非空、优先级</td></tr>
+        <tr><td>P2 工序展开</td><td><code>product_resource</code> → OrderAllocation；有限产能拆段</td></tr>
+        <tr><td>P3 可行域</td><td>eligibleTimeSlots：资源匹配 + 反馈 overlay</td></tr>
+        <tr><td>P4 Timefold</td><td>槽位分配 + 硬/软约束得分</td></tr>
+      </tbody>
+    </table>
+
+    <h4>3.4 满足链（Fulfillment Pegging）</h4>
+    <p>满足链是<strong>供应追溯</strong>（非时间表）：销售订单 ← 成品库存 / 根工单 ← BOM 子件 ← 子工单 / 原材料库存 / 缺料。前端甘特仅展示业务节点与 peg 依赖边。</p>
+
+    <h3 id="p2-scheduling">4. 生产排程设计</h3>
+
+    <h4>4.1 域边界</h4>
+    <ul>
+      <li>MRP 仍产出<strong>整张工单</strong>；批次仅在工单 <code>dispatch_status = DISPATCHED</code> 后创建</li>
+      <li>已拆批工单：<code>pending_schedule_eligible = false</code>，仅 ACTIVE 批次进入 S05</li>
+      <li>S05 最小排程单位 = <strong>批次</strong>（每批次独立占设备）</li>
+    </ul>
+
+    <h4>4.2 Scheduling Session 交互模型</h4>
+    <div class="diagram">POST create  → 内存 Session（8h TTL）+ preview
+     │
+     ├─ PATCH steps / POST simulate  → 改队列 + 链式赋时 + 校验
+     │
+     ├─ [可选] POST optimize  → Timefold 选优 + 赋时
+     │
+     └─ POST confirm  → 持久化排程版本 + ProductionTask RELEASED</div>
+    <p><strong>默认工作流</strong>：patch → simulate（不调用 Timefold）→ 查看 violations → confirm。Timefold 为可选增强。</p>
+
+    <h4>4.3 批次拆解策略参数</h4>
+    <table>
+      <thead><tr><th>参数</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>batch_split_mode</code></td><td>NONE / FIXED_QTY / KITTING / AUTO</td></tr>
+        <tr><td><code>batch_fixed_qty</code></td><td>固定拆批量</td></tr>
+        <tr><td><code>batch_remainder_mode</code></td><td>FLOOR / CEIL / SEPARATE_TAIL / MERGE_TAIL</td></tr>
+        <tr><td><code>batch_kitting_create_short_batch</code></td><td>齐套拆批时是否为剩余量建 SHORT 批次</td></tr>
+      </tbody>
+    </table>
+
+    <h4>4.4 业务规则与 SimulationProfile</h4>
+    <p>业务规则页按 <code>ruleTypeId</code> 控制规则在主计划/详细排程是否启用。推演层另支持 <code>SimulationProfile</code>（<code>config_json</code>）与 simulate 请求级 <code>ruleOverrides</code>，二者与业务规则范围<strong>同时满足</strong>才启用规则。</p>
+    <table>
+      <thead><tr><th>ruleTypeId</th><th>类型</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>changeover</code></td><td>数据+Timing</td><td>换型矩阵，赋时 cursor 间隙</td></tr>
+        <tr><td><code>operation-transfer-time</code></td><td>数据+Timing+Closure</td><td>工序衔接模式（同时开工/延迟/同时完工等）</td></tr>
+        <tr><td><code>parallel-operations</code></td><td>Binding+Validation</td><td>并行工序对同线同起同止</td></tr>
+        <tr><td><code>continuous-production</code></td><td>Binding+Validation</td><td>连续生产组队列内不得被其它料号隔开</td></tr>
+        <tr><td><code>factory-calendar</code></td><td>Timing（Phase 3）</td><td>开工 snap 到资源日历/班次窗口</td></tr>
+        <tr><td><code>feedback-freeze</code></td><td>Timing+Validation（Phase 3）</td><td>feedbackCutoff 前冻结反馈工序计划时间</td></tr>
+        <tr><td><code>batch-continuous</code></td><td>Closure+Validation（Phase 3）</td><td>同批次同线增量闭包；校验批次不被穿插</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="p2-masterdata">5. 主数据与规则设计</h3>
+    <table>
+      <thead><tr><th>实体</th><th>关键字段/语义</th></tr></thead>
+      <tbody>
+        <tr><td>material</td><td>物料主数据；<code>site_code</code> 基地代码（一 Workspace 可含多基地）</td></tr>
+        <tr><td>bom_component</td><td><code>finished_product_code</code> 成品料号；<code>parent</code>=产品代码；生效/失效、损耗率</td></tr>
+        <tr><td>product_resource</td><td>工艺路线：设备组、工序、制造 CT（秒）、A/B 料阶层、线材/关键物料、制造人力</td></tr>
+        <tr><td>production_resource</td><td>设备组；资源日历决定日可用产能</td></tr>
+        <tr><td>production_line</td><td>产线（lineId）映射 resourceId；S05 排程粒度</td></tr>
+        <tr><td>resource_calendar</td><td>资源×日期可用分钟；主计划 TimeSlot 与 factory-calendar 规则共用</td></tr>
+      </tbody>
+    </table>
+    <p>支持系统内置 Excel 模板与外部中文模板（物料主数据 / 物料 BOM / 工艺 BOM）识别导入；<code>replace=true</code> 可覆盖导入。</p>
+
+    <h3 id="p2-workspace">6. Workspace 多数据集设计</h3>
+    <ul>
+      <li>一个 Workspace = 一套完整、互不可见的业务数据（约 20+ 业务表带 <code>workspace_id</code>）</li>
+      <li>HTTP Header <code>X-Workspace-Id</code> 传递；前端 <code>localStorage.plantops.workspaceId</code> 持久化</li>
+      <li>唯一约束均为 <code>(workspace_id, …)</code> 组合；不同空间可用相同订单号/工单号</li>
+      <li>新建 Workspace 时自动 <code>ensureDefaults()</code> 系统参数与业务规则默认行</li>
+    </ul>
+
+    <h3 id="p2-api">7. API 与集成设计</h3>
+    <table>
+      <thead><tr><th>资源前缀</th><th>职责</th></tr></thead>
+      <tbody>
+        <tr><td><code>/api/v1/demand</code></td><td>需求池、满足链、订单导入、工单生成</td></tr>
+        <tr><td><code>/api/v1/planning/*</code></td><td>齐套、产能、主计划/排程求解、流水线、场景对比、反馈</td></tr>
+        <tr><td><code>/api/v1/planning/schedule-sessions</code></td><td>Session create/simulate/optimize/confirm</td></tr>
+        <tr><td><code>/api/v1/planning/simulation-profiles</code></td><td>推演规则场景配置 CRUD</td></tr>
+        <tr><td><code>/api/v1/scheduling/batches</code></td><td>批次拆/齐套/路由</td></tr>
+        <tr><td><code>/api/v1/master-data/*</code></td><td>主数据 CRUD + Excel 导入导出</td></tr>
+        <tr><td><code>/api/v1/workspaces</code></td><td>数据集管理</td></tr>
+        <tr><td><code>/api/v1/integration/*</code></td><td>ERP/MES Mock</td></tr>
+      </tbody>
+    </table>
+    <p>集成采用六边形端口：<code>ErpPort</code>、<code>MesPort</code>，Mock 实现可被 CDI 替换为真实适配器。</p>
+
+    <hr class="section" />
+
+    <!-- ========== PART 3 ========== -->
+    <h2 id="part3">第三部分 · 详细设计文档</h2>
+
+    <h3 id="p3-stack">1. 技术栈与分层</h3>
+    <table>
+      <thead><tr><th>层级</th><th>技术/包</th><th>职责</th></tr></thead>
+      <tbody>
+        <tr><td>表现层</td><td>React 18 + Vite + TypeScript</td><td>HashRouter SPA；<code>PlanContext</code> / <code>WorkspaceContext</code></td></tr>
+        <tr><td>API 层</td><td><code>com.plantops.api</code></td><td>JAX-RS 资源，DTO 为 Java record，无业务逻辑</td></tr>
+        <tr><td>应用层</td><td><code>com.plantops.scenario</code></td><td>用例服务、事务边界、编排</td></tr>
+        <tr><td>推演层</td><td><code>com.plantops.scenario.planning</code></td><td>P0–P4 Context、SimulationPipeline、Session</td></tr>
+        <tr><td>求解层</td><td><code>com.plantops.solver.*</code></td><td>Timefold @PlanningSolution / ConstraintProvider</td></tr>
+        <tr><td>持久层</td><td>Panache + Flyway + H2</td><td>实体 <code>WorkspaceScopedEntity</code> 基类</td></tr>
+        <tr><td>配置</td><td><code>SolverProducers</code></td><td>双 SolverManager（主计划 + 详细排程，因 Quarkus 扩展仅支持单 Solution）</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="p3-s01">2. S01 需求满足 — 实现逻辑</h3>
+    <h4>核心类</h4>
+    <ul>
+      <li><code>DemandService</code> — 需求池加载、KPI 汇总</li>
+      <li><code>FulfillmentPeggingService</code> — 满足链构建</li>
+      <li><code>WorkOrderGenerationService</code> — 销售订单 → 多级 BOM 工单</li>
+    </ul>
+    <h4>满足链算法（<code>pegDemand</code>）</h4>
+    <pre>1. 创建销售订单节点 (depth=0)
+2. 对需求量 product/qty：
+   a. 扣减可用库存 → 创建 INVENTORY 节点 + INVENTORY_PEG 边
+   b. 剩余需求 → 解析根工单（SO）或 parentWorkOrderNo 子工单（WO）
+   c. 展开工单 BOM 关键子件，对每个子件递归 pegDemand
+   d. 无法满足 → SHORTAGE 节点 + SHORTAGE_PEG 边
+3. 内存维护库存扣减池，避免重复分配</pre>
+    <p><strong>API</strong>：<code>GET /api/v1/demand/demand-pool</code>、<code>.../fulfillment-chain</code></p>
+
+    <h3 id="p3-s02">3. S02/S03 齐套与产能 — 实现逻辑</h3>
+    <h4>S02 KittingService</h4>
+    <ul>
+      <li>按 BOM 关键料与可用库存（扣减预留）逐单计算</li>
+      <li>输出 <code>KITTING_OK</code> / <code>SHORTAGE</code>，持久化 <code>kitting_result</code></li>
+      <li>S04 过滤不可排订单；S05 P2 按批次量消耗齐套池，设置 <code>earliestStartMinute</code></li>
+    </ul>
+    <h4>S03 CapacityService</h4>
+    <ul>
+      <li>按 resourceId × calendarDate × shift 聚合需求分钟与 <code>resource_calendar.availableCapacityMinutes</code></li>
+      <li><code>analyzeForMasterPlan(versionId)</code> 绑定选中主计划场景</li>
+      <li>主计划负荷按工艺 CT（<code>processTimeSeconds</code>）计算工单工时，而非 <code>runRatePerHour</code></li>
+    </ul>
+
+    <h3 id="p3-s04">4. S04 主计划 — 推演与求解</h3>
+    <h4>规划实体 OrderAllocation</h4>
+    <p>一条记录 = 工单 × 工序 ×（可选）拆段。ID 格式：<code>{workOrderNo}@OP{seq}_{ordinal}#{segmentIndex}</code></p>
+    <h4>关键类链</h4>
+    <pre>MasterPlanPlanningContextBuilder.build()     // P0–P4
+  → MasterPlanProblemMapper.toSchedule()       // Context → MasterPlanSchedule
+  → MasterPlanService.solve()                  // Timefold
+  → persist plan_version + master_plan_allocation</pre>
+    <h4>约束（MasterPlanConstraintProvider）</h4>
+    <ul>
+      <li>硬约束：槽位容量（FINITE 模式）、资源匹配</li>
+      <li>软约束：延期天数、优先级、锁定靠前、相邻槽位负荷均衡（权重来自 ResolvedStrategy）</li>
+    </ul>
+    <h4>物料 MRP（MaterialFeasibilityService）</h4>
+    <p>P0 阶段预计算物料闭合库存与 BOM 依赖边，作为 Problem Fact 注入求解器；齐套损耗率叠加在 MRP 需求计算中。</p>
+
+    <h3 id="p3-batch">5. 批次拆解 — 实现逻辑</h3>
+    <h4>SchedulingBatchResource / BatchSplitService</h4>
+    <pre>固定数量拆批：
+  Q=工单量, B=批量, R=Q mod B
+  FLOOR: floor(Q/B) 个整批
+  CEIL: 最后不足 B 也成批
+  SEPARATE_TAIL: 整批 + 尾批 R
+  MERGE_TAIL: 最后一批 = B+R
+
+齐套拆批：
+  1. KittingService 计算 kittingEligibleQty
+  2. 可齐套部分 → KITTED 批次
+  3. 剩余 → SHORT 批次（参数控制）或留父工单</pre>
+    <p>数量守恒：<code>sum(ACTIVE batch.quantity) ≤ work_order.quantity</code>。拆批后父工单 <code>batch_split_status = SPLIT|PARTIAL</code>，退出待排队列。</p>
+
+    <h3 id="p3-s05">6. S05 Session 与链式赋时</h3>
+    <h4>DetailSchedulePlanningContextBuilder（P0–P4）</h4>
+    <table>
+      <thead><tr><th>阶段</th><th>实现</th></tr></thead>
+      <tbody>
+        <tr><td>P0</td><td><code>MasterPlanContractLoader</code> — 工序窗口 + 目标资源软契约</td></tr>
+        <tr><td>P1</td><td><code>ScheduleLine</code> 列表，开线/产能</td></tr>
+        <tr><td>P2</td><td><code>KittingService</code> — kittingEligible、earliestStartMinute</td></tr>
+        <tr><td>P3</td><td><code>DetailScheduleAssignmentBuilder</code> — 批次→OperationAssignment</td></tr>
+        <tr><td>P4</td><td>并行对、连续生产组绑定</td></tr>
+      </tbody>
+    </table>
+
+    <h4>产线队列模型（list-variable）</h4>
+    <p>每条 <code>ScheduleLine.assignedOperations</code> 为有序 list；工序是否已排以 list 成员关系为准。Timefold 决策变量为产线/顺序；Session 路径通过 patch 改 list 后直接链式赋时。</p>
+
+    <h4>DetailScheduleSessionMutation</h4>
+    <pre>SessionStepPatchDto:
+  stepId      → operationId（必填）
+  lineId      → 非空：移到该线并插入；空串：从所有线移除
+  sequenceOnLine → 1-based 目标位置
+  pinned      → 锁定标记
+
+处理：pinned → 改线/改序（从全线移除再插入）→ 返回 touched stepIds 作为增量种子</pre>
+
+    <h4>DetailScheduleTimingKernel（链式赋时核心）</h4>
+    <pre>FOR iter = 1..16:
+    applyLineQueuesOnce()           // 按产线 list 顺序扫 cursor 赋 start
+    IF NOT bumpEarliestFromRoutingPredecessors(): BREAK
+
+clampAssignedStartsToRoutingChain()
+applyLineQueuesOnce()
+
+单工序 start = max(
+  cursor + changeover(前产品→今产品),
+  earliestStartMinute,
+  contractStartMinuteFloor,
+  routingChainFloorStart
+)
+
+工艺链 OperationLinkMode:
+  STANDARD         → predStart + predDuration + minGap
+  SIMULTANEOUS_START → predStart
+  DELAYED_START    → predStart + delayStart
+  SIMULTANEOUS_END → predEnd - succDuration</pre>
+    <p><code>LineChainTimingUtil.applyAllStartTimes</code> 为静态门面，Timefold 求解后 <code>DetailScheduleService.assignStartTimes</code> 共用同一内核（Phase 4 对齐 Shadow 变量逻辑）。</p>
+
+    <h3 id="p3-simulation">7. 推演规则管道 — 实现逻辑</h3>
+    <h4>SimulationPipeline 阶段</h4>
+    <pre>Phase 1  ApplyMutations     DetailScheduleSessionMutation.applyPatches
+Phase 2  ResolveMode        FULL | INCREMENTAL（闭包扩展 seeds）
+Phase 3  ApplyTiming        DetailScheduleTimingKernel（TimingRule 插件链）
+Phase 4  Validate           ValidationPipeline（ValidationRule 插件链）</pre>
+
+    <h4>SimulationRuleRegistry</h4>
+    <p>CDI 发现 <code>TimingRule</code>、<code>ValidationRule</code>、<code>AffectedClosureRule</code> 实现；按 <code>BusinessRuleScopeService</code>（详细排程启用）∩ <code>SimulationProfile</code>（config_json 启用）决定是否参与。</p>
+
+    <h4>增量闭包（SimulationClosureExpander）</h4>
+    <ul>
+      <li><code>RoutingSuccessorClosureRule</code> — 工艺后继（operation-transfer-time）</li>
+      <li><code>ParallelMateClosureRule</code> — 并行配对工序</li>
+      <li><code>SameLineSuffixClosureRule</code> — 同线队列后缀</li>
+      <li><code>BatchContinuousClosureRule</code> — 同批次同线（batch-continuous，Phase 3）</li>
+    </ul>
+    <p><strong>重要</strong>：闭包仅标记 <code>recalculatedOperationIds</code>；赋时仍全局重算以保证时间一致。</p>
+
+    <h4>校验 ruleCode</h4>
+    <table>
+      <thead><tr><th>ruleCode</th><th>Level</th><th>条件</th></tr></thead>
+      <tbody>
+        <tr><td>UNASSIGNED_KITTED</td><td>MEDIUM</td><td>齐套但未分配产线</td></tr>
+        <tr><td>LINE_NOT_OPENED</td><td>HARD</td><td>产线未开</td></tr>
+        <tr><td>RESOURCE_MISMATCH</td><td>HARD</td><td>!acceptsLine(line)</td></tr>
+        <tr><td>EARLIEST_START_VIOLATION</td><td>MEDIUM</td><td>start &lt; earliestStart</td></tr>
+        <tr><td>ROUTING_PRECEDENCE</td><td>HARD</td><td>工艺链违背</td></tr>
+        <tr><td>PARALLEL_*</td><td>HARD</td><td>并行对完整性/同线/同时</td></tr>
+        <tr><td>CONTINUOUS_INTERLEAVED</td><td>HARD</td><td>连续组被穿插</td></tr>
+      </tbody>
+    </table>
+
+    <h4>SimulateScheduleSessionRequest</h4>
+    <table>
+      <thead><tr><th>字段</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>stepPatches</code></td><td>手动调整列表</td></tr>
+        <tr><td><code>affectedOperationIds</code></td><td>无 patch 时的增量种子</td></tr>
+        <tr><td><code>fullReschedule</code></td><td>true 强制 FULL 推演</td></tr>
+        <tr><td><code>simulationProfileId</code></td><td>覆盖 Session 快照 Profile</td></tr>
+        <tr><td><code>ruleOverrides</code></td><td>单次 simulate 规则开关</td></tr>
+        <tr><td><code>feedbackCutoff</code></td><td>feedback-freeze 规则 cutoff 时间</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="p3-s06">8. S06 执行与反馈</h3>
+    <h4>confirm 发布流程</h4>
+    <pre>DetailScheduleSessionService.confirm(sessionId):
+  1. persistSchedule("DS-" + uuid, schedule)
+  2. 筛选 line!=null && startMinute!=null 的工序
+  3. ProductionTaskService.releaseFromSchedule → RELEASED
+     - RUNNING 任务不覆盖计划时间
+     - 不一致 → planning_conflict (RUNNING_SCHEDULE_MISMATCH)
+  4. sessionStore.remove(sessionId)</pre>
+
+    <h4>事件驱动重排（ExecutionService）</h4>
+    <table>
+      <thead><tr><th>级别</th><th>典型事件</th><th>行为</th></tr></thead>
+      <tbody>
+        <tr><td>R0/R1</td><td>小延误</td><td>记录影响，不自动重算</td></tr>
+        <tr><td>R2</td><td>设备停机、缺料</td><td>保留主计划，重算详细排程</td></tr>
+        <tr><td>R3</td><td>订单加急</td><td>重算齐套 + 主计划 + 详细排程</td></tr>
+      </tbody>
+    </table>
+
+    <h4>ScheduleFeedbackService</h4>
+    <p><code>POST /planning/schedule-feedback/apply-from-detail-schedule/{versionId}</code> 将排程结果写回反馈表；配合 <code>feedback-freeze</code> 规则在 cutoff 前保持 <code>plannedStart</code>。</p>
+
+    <h3 id="p3-frontend">9. 前端实现要点</h3>
+    <table>
+      <thead><tr><th>模块</th><th>文件/机制</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>API 客户端</td><td><code>frontend/src/api/client.ts</code></td><td>自动带 X-Workspace-Id；Vite 代理 /api → :8080</td></tr>
+        <tr><td>场景状态</td><td><code>PlanContext</code></td><td>scenarios、selectedScenarioId、localStorage</td></tr>
+        <tr><td>Session 排程</td><td><code>useScheduleSession.ts</code></td><td>create(seedInitialQueues) → simulate patches</td></tr>
+        <tr><td>甘特 patch</td><td><code>scheduleSessionInsert.ts</code></td><td>批次/单工序插位 → stepPatches → 增量 simulate</td></tr>
+        <tr><td>甘特组件</td><td>gantt-task-react</td><td>满足链用 dependencies 表示 pegging</td></tr>
+        <tr><td>生产构建</td><td>npm run build</td><td>输出至 META-INF/resources</td></tr>
+      </tbody>
+    </table>
+
+    <h4>DetailSchedulePage 操作映射</h4>
+    <table>
+      <thead><tr><th>用户操作</th><th>API 行为</th></tr></thead>
+      <tbody>
+        <tr><td>工具栏「全量推演」</td><td><code>fullReschedule: true</code></td></tr>
+        <tr><td>拖入甘特 / 指定产线 / 改序</td><td><code>stepPatches</code> + 增量 simulate</td></tr>
+        <tr><td>优化</td><td><code>POST .../optimize</code>（Timefold）</td></tr>
+        <tr><td>确认发布</td><td><code>POST .../confirm</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="p3-data">10. 数据模型与迁移</h3>
+    <h4>核心 ER 关系</h4>
+    <pre>sales_order_line ──► work_order (SO line)
+work_order ──► work_order (parent_work_order_no, BOM 层级)
+work_order ──► production_batch (拆批后)
+production_batch ──► detail_schedule_operation (S05 工序)
+plan_version ──► master_plan_allocation | detail_schedule_operation
+bom_component ──► material (parent/component/finished_product_code)
+product_resource ──► production_resource (resourceId)</pre>
+
+    <h4>Workspace 隔离</h4>
+    <p>所有业务实体继承 <code>WorkspaceScopedEntity</code>；<code>WorkspaceRequestFilter</code> 解析 Header 写入 <code>WorkspaceContext</code>；Panache 查询自动限定 <code>workspaceId</code>。</p>
+
+    <h4>关键配置项</h4>
+    <table>
+      <thead><tr><th>键</th><th>默认</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>quarkus.http.port</code></td><td>8080</td><td>HTTP 端口</td></tr>
+        <tr><td><code>quarkus.datasource.jdbc.url</code></td><td>H2 file</td><td>jdbc:h2:file:./data/plantops</td></tr>
+        <tr><td><code>plantops.sample-data.enabled</code></td><td>true</td><td>启动加载 factory-demo.json</td></tr>
+        <tr><td>Session TTL</td><td>8 小时</td><td>SchedulingSessionStore.DEFAULT_TTL</td></tr>
+      </tbody>
+    </table>
+
+    <h4>源码索引（快速定位）</h4>
+    <table>
+      <thead><tr><th>主题</th><th>路径</th></tr></thead>
+      <tbody>
+        <tr><td>流水线编排</td><td><code>scenario/PlanningOrchestrator.java</code></td></tr>
+        <tr><td>S04 推演</td><td><code>scenario/planning/MasterPlanPlanningContextBuilder.java</code></td></tr>
+        <tr><td>S05 推演</td><td><code>scenario/planning/DetailSchedulePlanningContextBuilder.java</code></td></tr>
+        <tr><td>Session 服务</td><td><code>scenario/DetailScheduleSessionService.java</code></td></tr>
+        <tr><td>推演管道</td><td><code>scenario/planning/simulation/SimulationPipeline.java</code></td></tr>
+        <tr><td>赋时内核</td><td><code>scenario/planning/simulation/DetailScheduleTimingKernel.java</code></td></tr>
+        <tr><td>满足链</td><td><code>scenario/FulfillmentPeggingService.java</code></td></tr>
+        <tr><td>批次</td><td><code>api/SchedulingBatchResource.java</code></td></tr>
+        <tr><td>REST 计划</td><td><code>api/PlanningResource.java</code></td></tr>
+        <tr><td>设计规格</td><td><code>docs/superpowers/specs/</code></td></tr>
+      </tbody>
+    </table>
+
+    <hr class="section" />
+    <p style="color:var(--muted);font-size:.85rem">
+      本文档基于仓库当前实现（含 Phase 1–4 推演规则、批次拆解、Workspace 隔离）生成。
+      若与代码不一致，以 <code>plant-operation-plan/</code> 源码及 <code>docs/</code> 下设计规格为准。
+      生成日期：2026-06-02。
+    </p>
+  </main>
+</div>
+</body>
+</html>

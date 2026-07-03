@@ -14,6 +14,12 @@ public final class BusinessRuleTypeIds {
     public static final String MATERIAL_LEAD_TIME = "material-lead-time";
     public static final String SHIFT_HEADCOUNT_RULES = "shift-headcount-rules";
     public static final String DEMAND_PRIORITY_RULES = "demand-priority-rules";
+    public static final String DELIVERY_DATE_STRATEGY = "delivery-date-strategy";
+    public static final String SUPPLY_QUANTITY_RULES = "supply-quantity-rules";
+    public static final String RESOURCE_EFFICIENCY = "resource-efficiency";
+    public static final String SCHEDULER_FEEDBACK = "scheduler-feedback";
+    public static final String ROUTING_STEP_TIMING = "routing-step-timing";
+    public static final String ROUTING_STEP_RESOURCE = "routing-step-resource";
     /** Phase 3：班次日历赋时（跳过非开工窗口）。 */
     public static final String FACTORY_CALENDAR = "factory-calendar";
     /** Phase 3：排程反馈冻结窗口内工序保持计划时间。 */
@@ -31,6 +37,12 @@ public final class BusinessRuleTypeIds {
             MATERIAL_LEAD_TIME,
             SHIFT_HEADCOUNT_RULES,
             DEMAND_PRIORITY_RULES,
+            DELIVERY_DATE_STRATEGY,
+            SUPPLY_QUANTITY_RULES,
+            RESOURCE_EFFICIENCY,
+            SCHEDULER_FEEDBACK,
+            ROUTING_STEP_TIMING,
+            ROUTING_STEP_RESOURCE,
             FACTORY_CALENDAR,
             FEEDBACK_FREEZE,
             BATCH_CONTINUOUS);
@@ -46,9 +58,15 @@ public final class BusinessRuleTypeIds {
             case CONTINUOUS_PRODUCTION -> "连续生产";
             case OPERATION_POST_PROCESSING -> "工序后处理时间";
             case BOM_RULES -> "BOM 关键件";
-            case MATERIAL_LEAD_TIME -> "采购提前期";
+            case MATERIAL_LEAD_TIME -> "最长采购周期";
             case SHIFT_HEADCOUNT_RULES -> "班次人员";
             case DEMAND_PRIORITY_RULES -> "订单优先级";
+            case DELIVERY_DATE_STRATEGY -> "交期策略";
+            case SUPPLY_QUANTITY_RULES -> "供应批量规则";
+            case RESOURCE_EFFICIENCY -> "资源效率";
+            case SCHEDULER_FEEDBACK -> "细排反馈占用";
+            case ROUTING_STEP_TIMING -> "工序时间规则";
+            case ROUTING_STEP_RESOURCE -> "工序资源规则";
             case FACTORY_CALENDAR -> "班次日历赋时";
             case FEEDBACK_FREEZE -> "反馈冻结窗口";
             case BATCH_CONTINUOUS -> "批次连续排产";
@@ -70,9 +88,17 @@ public final class BusinessRuleTypeIds {
                     "末工序结束到工单可交付之间的后处理时间（分钟）；工序名填 * 表示该产品默认末工序后处理。";
             case BOM_RULES -> "物料规则：关键件标记影响齐套与 MRP 可行性判定";
             case MATERIAL_LEAD_TIME ->
-                    "物料采购提前期（天）：缺料时按该提前期推算可到货日。物料填 * 表示所有物料的默认提前期；优先取精确物料规则，其次 * 规则，最后系统默认参数。最早可行开始对多个缺料件取“最迟到货”（并行备料）。";
+                    "最长采购周期（天）：物料短缺时推算 Supply 最晚可用日（RULE-MRP-04）。物料填 * 的一行表示「默认最长采购周期」；优先精确物料，其次 * 行，最后系统参数 default_procurement_lead_time_days。";
             case SHIFT_HEADCOUNT_RULES -> "各区域/班次的可用人员数，影响排程人力约束。";
             case DEMAND_PRIORITY_RULES -> "需求规则：优先级、加急等级与排程锁定";
+            case DELIVERY_DATE_STRATEGY -> "需求规则：提前/延后容忍窗口与分段惩罚系数（RULE-DEM-03）";
+            case SUPPLY_QUANTITY_RULES -> "物料规则：产品×库存点的批量、最小/最大工单量与缺量策略（RULE-SUP-01）";
+            case RESOURCE_EFFICIENCY ->
+                    "产能规则：资源效率系数（RULE-SUP-05）；有效产能 = (日历 − 停机 − 细排反馈) × 效率";
+            case SCHEDULER_FEEDBACK ->
+                    "产能规则：S05 冻结细排反馈占用分钟（txn schedule_feedback），rollup 至 PRP/SRP";
+            case ROUTING_STEP_TIMING -> "工序前处理/调度缓冲/基准生产/后处理时间（RULE-SUP-02）";
+            case ROUTING_STEP_RESOURCE -> "工序×资源优先级、生产速度、单件/批次（RULE-SUP-03）";
             case FACTORY_CALENDAR ->
                     "按资源日历与工厂班次策略，将工序开工时间对齐到可用班次窗口（非 24h 连续分钟）。";
             case FEEDBACK_FREEZE ->

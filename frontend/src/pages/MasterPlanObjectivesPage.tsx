@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import { FilterableTable } from '../components/table/FilterableTable';
 import type { MasterPlanCapacityStrategy } from '../types/api';
@@ -281,6 +281,7 @@ export function MasterPlanObjectivesPage() {
   return (
     <div className="master-data-page plan-objectives-page">
       <PageHeader
+        variant={DECISION_PAGE_HEADER}
         title="优化目标"
         description="定义主计划运行策略：每个策略包含产能模式（无限/有限）与软优化目标权重；计划运行时选择策略。"
         actions={
@@ -404,7 +405,6 @@ export function MasterPlanObjectivesPage() {
                         key: 'enabled',
                         header: '启用',
                         filterable: false,
-                        resizable: false,
                         className: 'col-enable',
                         render: (row) => (
                           <input

@@ -1,10 +1,17 @@
 /** 跨页主数据表格定位（sessionStorage，消费后清除） */
 export const MASTER_DATA_FOCUS_KEY = 'plantops.masterDataFocus';
 
-export type MasterDataFocusPage = 'master-data' | 'business-data' | 'business-rules';
+export type MasterDataFocusPage =
+  | 'master-data'
+  | 'business-data'
+  | 'master-plan-rules'
+  | 'scheduling-rules';
+
+/** @deprecated 旧全局业务规则页；消费时仍兼容 */
+export type LegacyBusinessRulesFocusPage = 'business-rules';
 
 export interface MasterDataTableFocus {
-  page: MasterDataFocusPage;
+  page: MasterDataFocusPage | LegacyBusinessRulesFocusPage;
   tabId: string;
   /** 填入表格搜索框，缩小可见行 */
   searchQuery: string;
@@ -26,7 +33,9 @@ export function peekMasterDataTableFocus(): MasterDataTableFocus | null {
   }
 }
 
-export function consumeMasterDataTableFocus(expectedPage?: MasterDataFocusPage): MasterDataTableFocus | null {
+export function consumeMasterDataTableFocus(
+  expectedPage?: MasterDataFocusPage | LegacyBusinessRulesFocusPage,
+): MasterDataTableFocus | null {
   const focus = peekMasterDataTableFocus();
   if (!focus) return null;
   if (expectedPage && focus.page !== expectedPage) return null;

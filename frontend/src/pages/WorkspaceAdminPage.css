@@ -70,3 +70,10 @@
   color: #b91c1c;
   border-color: #fecaca;
 }
+
+.workspace-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}

@@ -13,6 +13,7 @@ interface DashboardKpiCardProps {
   onSelect: (id: DashboardKpiId) => void;
 }
 
+/** 首页紧凑 KPI：数字 + 细进度条，无圆环/副图表 */
 export function DashboardKpiCard({
   id,
   label,
@@ -23,38 +24,21 @@ export function DashboardKpiCard({
   onSelect,
 }: DashboardKpiCardProps) {
   const pct = Math.min(100, Math.max(0, valuePct));
-  const rest = 100 - pct;
 
   return (
     <button
       type="button"
-      className={`dash-kpi-card ${active ? 'is-active' : ''}`}
+      className={`dash-kpi-strip-item ${active ? 'is-active' : ''}`}
       onClick={() => onSelect(id)}
       style={{ '--kpi-color': color } as CSSProperties}
+      title={`${label} ${pct.toFixed(1)}% · ${subLabel}`}
     >
-      <div className="dash-kpi-head">
-        <span className="dash-kpi-label">{label}</span>
-        <span className="dash-kpi-value">{pct.toFixed(1)}%</span>
-      </div>
-      <div className="dash-kpi-charts">
-        <div
-          className="dash-kpi-donut"
-          style={{
-            background: `conic-gradient(${color} 0 ${pct}%, #e2e8f0 ${pct}% 100%)`,
-          }}
-          title={`${label} ${pct}%`}
-        />
-        <div className="dash-kpi-bars" aria-hidden>
-          <div className="dash-kpi-bar-track">
-            <div className="dash-kpi-bar-fill" style={{ width: `${pct}%`, background: color }} />
-          </div>
-          <div className="dash-kpi-bar-legend">
-            <span style={{ color }}>达成 {pct}%</span>
-            <span className="muted">缺口 {rest.toFixed(0)}%</span>
-          </div>
-        </div>
-      </div>
-      <p className="dash-kpi-sub">{subLabel}</p>
+      <span className="dash-kpi-strip-label">{label}</span>
+      <span className="dash-kpi-strip-value">{pct.toFixed(1)}%</span>
+      <span className="dash-kpi-strip-bar" aria-hidden>
+        <span className="dash-kpi-strip-bar-fill" style={{ width: `${pct}%` }} />
+      </span>
+      <span className="dash-kpi-strip-sub">{subLabel}</span>
     </button>
   );
 }

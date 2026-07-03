@@ -1,5 +1,4 @@
 import type { PlanningPipelineRunDiagnostics } from './planningDiagnostics';
-
 export interface DemandPoolEntry {
   salesOrderNo: string;
   salesOrderLineNo: number;
@@ -11,6 +10,22 @@ export interface DemandPoolEntry {
   expediteLevel: number;
   status: string;
   scheduleLockFlag: boolean;
+  kittingStatus: string;
+  fulfillmentStatus: string;
+}
+
+export interface CustomerOrderLineDeliveryListItem {
+  deliveryId: string;
+  customerOrderLineId: string;
+  salesOrderNo: string;
+  salesOrderLineNo: number;
+  productCode: string;
+  deliveryQty: number;
+  requestedDate: string | null;
+  latestDesiredDate: string | null;
+  promiseDate: string | null;
+  priority: number;
+  status: string;
   kittingStatus: string;
   fulfillmentStatus: string;
 }
@@ -36,6 +51,10 @@ export interface FulfillmentOperation {
   endTs: string;
   durationMinutes: number;
   utilizationPct: number;
+  planUnitId?: string | null;
+  planUnitSequenceNr?: number | null;
+  earliestPossibleStartTotal?: string | null;
+  latestDesiredEnd?: string | null;
 }
 
 export interface UtilizationBucket {
@@ -58,8 +77,25 @@ export interface FulfillmentChainNode {
   quantity: number;
   startTs: string;
   endTs: string;
-  attributes: Record<string, unknown>;
+  /** 含 trialRevision、solverEngine、planningSignals、plannedStartTs/plannedEndTs 等 */
+  attributes: FulfillmentChainNodeAttributes;
   operations: FulfillmentOperation[];
+}
+
+export interface PlanningSignal {
+  severity: string;
+  reasonCode: string;
+  message: string;
+  entityId: string | null;
+}
+
+export interface FulfillmentChainNodeAttributes extends Record<string, unknown> {
+  trialRevision?: number;
+  solverEngine?: string;
+  planningLayer?: string;
+  planningSignals?: PlanningSignal[];
+  plannedStartTs?: string;
+  plannedEndTs?: string;
 }
 
 export interface FulfillmentPegEdge {
@@ -80,6 +116,7 @@ export interface OrderFulfillmentChain {
   nodes: FulfillmentChainNode[];
   edges: FulfillmentPegEdge[];
   utilizationBuckets: UtilizationBucket[];
+  deliveryId?: string | null;
 }
 
 export interface KittingResult {
@@ -98,11 +135,30 @@ export interface MaterialBalanceDay {
   shortageQty: number;
 }
 
+export interface MaterialBalancePeriod {
+  periodId: string;
+  openingQty: number;
+  demandQty: number;
+  supplyQty: number;
+  closingQty: number;
+  shortageQty: number;
+}
+
+export interface MaterialPeriodHeader {
+  periodId: string;
+  sequenceNr: number;
+  startDate: string;
+  endDate: string;
+  label: string;
+}
+
 export interface MaterialBalanceRow {
   productCode: string;
+  pispId: string | null;
   critical: boolean;
   totalShortageQty: number;
   days: MaterialBalanceDay[];
+  periods: MaterialBalancePeriod[];
 }
 
 export interface MaterialRequirementReport {
@@ -110,8 +166,117 @@ export interface MaterialRequirementReport {
   horizonStart: string;
   horizonEnd: string;
   dates: string[];
+  periodHeaders: MaterialPeriodHeader[];
   materials: MaterialBalanceRow[];
   kittingResults: KittingResult[];
+}
+
+export interface SupplyRoutingStepSummary {
+  sequenceNo: number;
+  operationName: string;
+  primaryResourceId: string | null;
+}
+
+export interface SupplyRoutingCandidate {
+  routingId: string;
+  pathPriority: number;
+  routingName: string;
+  stepCount: number;
+  steps: SupplyRoutingStepSummary[];
+  earliestAchievableTime: string;
+}
+
+export interface CreateSupplyPlanRequest {
+  mode: 'AUTO' | 'MANUAL' | 'OPTIMIZE';
+  periodFrom: string;
+  periodTo: string;
+  quantity?: number;
+  routingId?: string;
+  needDate?: string;
+}
+
+export interface SupplyPlanOrderSummary {
+  supplyOrderId: string;
+  productCode: string;
+  quantity: number;
+  needDate: string;
+}
+
+export interface CreateSupplyPlanResult {
+  supplyOrderIds: SupplyPlanOrderSummary[];
+  routingId: string;
+  earliestAchievableTime: string;
+  updatedPisppSummary: MaterialBalancePeriod | null;
+  optimizeScoreSummary?: string | null;
+}
+
+export interface PeriodDemandRow {
+  demandId: string;
+  sourceType: string;
+  needDate: string;
+  quantity: number;
+  peggedQty: number;
+  unpeggedQty: number;
+  pispId: string;
+  periodId: string;
+}
+
+export interface PeriodDemandList {
+  pispId: string;
+  periodFrom: string;
+  periodTo: string;
+  demands: PeriodDemandRow[];
+}
+
+export interface EligibleSupplyRow {
+  supplyId: string;
+  supplyType: string;
+  availableDate: string;
+  availableQty: number;
+  peggedQty: number;
+  unpeggedQty: number;
+}
+
+export interface EligibleSupplyList {
+  demandId: string;
+  supplies: EligibleSupplyRow[];
+}
+
+export interface CreateFulfillmentRequest {
+  demandId: string;
+  supplyId: string;
+  quantity?: number;
+  source?: string;
+}
+
+export interface FulfillmentResult {
+  fulfillmentId: string;
+  demandId: string;
+  supplyId: string;
+  quantity: number;
+  type: string;
+  demandUnpeggedQty: number;
+  supplyUnpeggedQty: number;
+}
+
+export interface AutoReservationRequest {
+  anchorType: 'DEMAND' | 'SUPPLY';
+  anchorId: string;
+  maxQty?: number;
+}
+
+export interface AutoReservationResult {
+  fulfillments: FulfillmentResult[];
+  reservedQty: number;
+  remainingUnpeggedQty: number;
+}
+
+export interface ReservationAlert {
+  alertType: string;
+  demandId: string | null;
+  supplyId: string | null;
+  periodId: string | null;
+  message: string;
 }
 
 export interface MaterialDemandUsage {
@@ -192,6 +357,26 @@ export interface CapacityAnalysis {
   kpis: DemandPoolKpi[];
   loadBuckets: LoadBucket[];
   lineOpeningSuggestions: LineOpeningSuggestion[];
+  /** 计划期首日（与产能分析时栅一致） */
+  horizonStart: string;
+  /** 计划期末日（含） */
+  horizonEnd: string;
+}
+
+/** 本体 StandardResourcePeriod 展开的日粒度产能格 */
+export interface SrpCapacityCell {
+  resourceId: string;
+  date: string;
+  availableMinutes: number;
+  reservedMinutes: number;
+  utilizationPct: number;
+  overloaded: boolean;
+}
+
+export interface SrpCapacityGantt {
+  horizonStart: string;
+  horizonEnd: string;
+  cells: SrpCapacityCell[];
 }
 
 /** EXTERNAL=成品工单（订单层根工单）；REPLENISH=组件工单（BOM 子件） */
@@ -351,6 +536,7 @@ export interface ScheduleFeedback {
   operationSeq: number;
   operationId: string;
   resourceId: string;
+  physicalResourceId?: string | null;
   plannedStart: string;
   plannedEnd: string;
   slotDate: string;

@@ -1,6 +1,6 @@
 import type { FulfillmentChainNode, FulfillmentPegEdge } from '../types/api';
 
-export const FULFILLMENT_GANTT_NODE_TYPES = new Set(['SALES_ORDER', 'WORK_ORDER']);
+export const FULFILLMENT_GANTT_NODE_TYPES = new Set(['SALES_ORDER', 'WORK_ORDER', 'SUPPLY_ORDER']);
 
 export function isMaterialNodeType(nodeType: string): boolean {
   return nodeType === 'INVENTORY' || nodeType === 'SHORTAGE';
@@ -26,7 +26,10 @@ export function resolveDemanderNodeId(
     return direct.nodeId;
   }
   for (const n of nodes) {
-    if (n.nodeType === 'WORK_ORDER' && taskId.startsWith(`${n.nodeId}-`)) {
+    if (
+      (n.nodeType === 'WORK_ORDER' || n.nodeType === 'SUPPLY_ORDER') &&
+      taskId.startsWith(`${n.nodeId}-`)
+    ) {
       return n.nodeId;
     }
   }

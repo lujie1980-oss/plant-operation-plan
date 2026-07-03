@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
-import { PageHeader } from '../components/PageHeader';
+import { DECISION_PAGE_HEADER, PageHeader } from '../components/PageHeader';
 import { StatusBanner } from '../components/StatusBanner';
 import type {
   FactoryCalendarDay,
@@ -180,6 +180,7 @@ export function FactoryCalendarPage() {
   return (
     <div className="factory-calendar-page">
       <PageHeader
+        variant={DECISION_PAGE_HEADER}
         title="工厂日历"
         description="配置工厂默认开班模式，并在自然日历上逐日调整各班次是否开工。保存后按产线「单班产能 × 开班班次数」写入资源日历，供主计划计算可用产能。"
       />

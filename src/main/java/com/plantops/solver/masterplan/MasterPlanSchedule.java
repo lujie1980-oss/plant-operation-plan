@@ -22,6 +22,11 @@ public class MasterPlanSchedule {
     @PlanningEntityCollectionProperty
     private List<OrderAllocation> orderAllocations;
 
+    /** 多机台拆分：工序×机台×日段产能流量（Phase 1 OR-Tools）。 */
+    private List<ResourceCapacityAssignment> resourceCapacityAssignments;
+
+    private List<OperationPrecedenceFact> operationPrecedenceFacts;
+
     @PlanningScore
     private HardSoftScore score;
 
@@ -186,6 +191,32 @@ public class MasterPlanSchedule {
         this.changeoverRuleIndex = changeoverRuleIndex != null
                 ? changeoverRuleIndex
                 : ChangeoverRuleIndex.fromWorkspace();
+        this.resourceCapacityAssignments = new ArrayList<>();
+        this.operationPrecedenceFacts = List.of();
+    }
+
+    public List<ResourceCapacityAssignment> getResourceCapacityAssignments() {
+        return resourceCapacityAssignments;
+    }
+
+    public void setResourceCapacityAssignments(List<ResourceCapacityAssignment> resourceCapacityAssignments) {
+        this.resourceCapacityAssignments = resourceCapacityAssignments != null
+                ? resourceCapacityAssignments
+                : new ArrayList<>();
+    }
+
+    public boolean hasResourceCapacityAssignments() {
+        return resourceCapacityAssignments != null && !resourceCapacityAssignments.isEmpty();
+    }
+
+    public List<OperationPrecedenceFact> getOperationPrecedenceFacts() {
+        return operationPrecedenceFacts;
+    }
+
+    public void setOperationPrecedenceFacts(List<OperationPrecedenceFact> operationPrecedenceFacts) {
+        this.operationPrecedenceFacts = operationPrecedenceFacts != null
+                ? operationPrecedenceFacts
+                : List.of();
     }
 
     public List<TimeSlot> getTimeSlotRange() {
@@ -307,6 +338,8 @@ public class MasterPlanSchedule {
         s.orderAllocations = new ArrayList<>();
         s.bomDependencyEdges = new ArrayList<>();
         s.operationPrecedenceEdges = new ArrayList<>();
+        s.resourceCapacityAssignments = new ArrayList<>();
+        s.operationPrecedenceFacts = List.of();
         s.changeoverRuleIndex = new ChangeoverRuleIndex(List.of());
         return s;
     }

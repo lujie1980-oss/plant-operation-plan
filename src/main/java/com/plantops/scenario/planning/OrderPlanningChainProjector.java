@@ -21,6 +21,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
+/**
+ * @deprecated M5 Phase 2 — 计划时间已并入 {@link com.plantops.ontology.fulfillment.OntologyFulfillmentChainProjector}。
+ */
+@Deprecated(since = "1.0", forRemoval = true)
 public class OrderPlanningChainProjector {
 
     private static final LocalTime WORKDAY_START = LocalTime.of(8, 0);

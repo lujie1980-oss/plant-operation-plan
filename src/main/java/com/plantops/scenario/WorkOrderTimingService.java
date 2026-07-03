@@ -6,7 +6,7 @@ import com.plantops.masterdata.BusinessRuleScopeService;
 import com.plantops.masterdata.BusinessRuleTypeIds;
 import com.plantops.persistence.entity.BomComponentEntity;
 import com.plantops.persistence.entity.InventoryEntity;
-import com.plantops.persistence.entity.MaterialLeadTimeRuleEntity;
+import com.plantops.knowledge.MaterialLeadTimeKnowledgeService;
 import com.plantops.persistence.entity.OperationPostProcessingRuleEntity;
 import com.plantops.persistence.entity.ProductResourceEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
@@ -41,23 +41,11 @@ public class WorkOrderTimingService {
     @Inject
     BusinessRuleScopeService ruleScope;
 
-    /**
-     * 缺料件按采购提前期规则推算可到货日：
-     * 优先取该物料精确规则 → 通配符 {@code *} 规则 → 默认提前期参数。
-     */
+    @Inject
+    MaterialLeadTimeKnowledgeService materialLeadTimeKnowledge;
+
     private int procurementLeadTimeDays(String productCode) {
-        if (!ruleScope.isMasterPlanEnabled(BusinessRuleTypeIds.MATERIAL_LEAD_TIME)) {
-            return Math.max(0, parameters.getInt("default_procurement_lead_time_days", 7));
-        }
-        MaterialLeadTimeRuleEntity exact = MaterialLeadTimeRuleEntity.findByProduct(productCode);
-        if (exact != null) {
-            return Math.max(0, exact.leadTimeDays);
-        }
-        MaterialLeadTimeRuleEntity wildcard = MaterialLeadTimeRuleEntity.findByProduct("*");
-        if (wildcard != null) {
-            return Math.max(0, wildcard.leadTimeDays);
-        }
-        return Math.max(0, parameters.getInt("default_procurement_lead_time_days", 7));
+        return materialLeadTimeKnowledge.leadTimeDaysForProduct(productCode);
     }
 
     public WorkOrderTimingWindowDto compute(String workOrderNo, String masterPlanVersionId) {

@@ -1,9 +1,11 @@
 package com.plantops.workspace;
 
+import com.plantops.config.LegacySchemaSupport;
 import com.plantops.persistence.entity.WorkspaceEntity;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,7 +18,14 @@ public class WorkspaceRegistry {
 
     private final Set<String> knownIds = ConcurrentHashMap.newKeySet();
 
+    @Inject
+    LegacySchemaSupport legacySchemaSupport;
+
     void onStart(@Observes StartupEvent event) {
+        if (!legacySchemaSupport.isLegacySchemaEnabled()) {
+            knownIds.add(WorkspaceConstants.DEFAULT_ID);
+            return;
+        }
         reloadFromDatabase();
     }
 

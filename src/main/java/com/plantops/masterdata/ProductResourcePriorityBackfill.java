@@ -1,5 +1,6 @@
 package com.plantops.masterdata;
 
+import com.plantops.config.LegacySchemaSupport;
 import com.plantops.persistence.entity.ProductResourceEntity;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -20,7 +21,13 @@ public class ProductResourcePriorityBackfill {
     @Inject
     Instance<ProductResourcePriorityBackfill> self;
 
+    @Inject
+    LegacySchemaSupport legacySchemaSupport;
+
     void onStart(@Observes StartupEvent event) {
+        if (!legacySchemaSupport.isLegacySchemaEnabled()) {
+            return;
+        }
         try {
             int updated = self.get().backfillNullPriorities();
             if (updated > 0) {

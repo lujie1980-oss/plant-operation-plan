@@ -1,0 +1,63 @@
+.col-vis-menu {
+  position: relative;
+}
+
+.col-vis-trigger {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.45rem;
+}
+
+.col-vis-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 50;
+  min-width: 10rem;
+  max-height: 16rem;
+  overflow: auto;
+  padding: 0.45rem 0.55rem;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.col-vis-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.col-vis-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.col-vis-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  padding: 0.2rem 0;
+  cursor: pointer;
+}
+
+.col-vis-reset {
+  margin-top: 0.4rem;
+  width: 100%;
+  font-size: 0.72rem;
+  padding: 0.25rem;
+  border: none;
+  background: #f1f5f9;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #475569;
+}
+
+.col-vis-reset:hover {
+  background: #e2e8f0;
+}

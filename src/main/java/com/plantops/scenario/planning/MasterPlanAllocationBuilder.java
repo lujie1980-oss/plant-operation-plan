@@ -29,7 +29,22 @@ final class MasterPlanAllocationBuilder {
             boolean capacityConstrained,
             boolean locked,
             BusinessRuleScopeService businessRuleScopeService) {
-        int fallbackWorkOrderDuration = ProductRoutingSteps.totalDurationMinutes(wo.productCode, wo.quantity);
+        return buildForWorkOrder(
+                wo, scheduleCtx, operations, slots, capacityConstrained, locked, businessRuleScopeService, 1.0);
+    }
+
+    static List<OrderAllocation> buildForWorkOrder(
+            WorkOrderEntity wo,
+            WorkOrderScheduleContext scheduleCtx,
+            List<ProductRoutingSteps.Operation> operations,
+            List<TimeSlot> slots,
+            boolean capacityConstrained,
+            boolean locked,
+            BusinessRuleScopeService businessRuleScopeService,
+            double demandScale) {
+        int fallbackWorkOrderDuration = MasterPlanDemandScaler.scaleMinutes(
+                ProductRoutingSteps.totalDurationMinutes(wo.productCode, wo.quantity),
+                demandScale);
         List<OrderAllocation> out = new ArrayList<>();
         int globalSegment = 0;
         for (int i = 0; i < operations.size(); i++) {
@@ -38,7 +53,9 @@ final class MasterPlanAllocationBuilder {
             if (primaryResourceId == null || primaryResourceId.isBlank()) {
                 continue;
             }
-            int stepDuration = ProductRoutingSteps.durationMinutesForOperation(operation, wo.quantity);
+            int stepDuration = MasterPlanDemandScaler.scaleMinutes(
+                    ProductRoutingSteps.durationMinutesForOperation(operation, wo.quantity),
+                    demandScale);
             int maxCap = maxSlotCapacityForResource(primaryResourceId, slots);
             List<OrderAllocation> segments = capacityConstrained
                     ? splitOperationAllocations(

@@ -400,7 +400,13 @@ public class MaterialRequirementService {
                 materialsWithGap++;
             }
             totalShortage = totalShortage.add(rowShortage);
-            rows.add(new MaterialBalanceRowDto(productCode, critical, rowShortage, days));
+            rows.add(new MaterialBalanceRowDto(
+                    productCode,
+                    null,
+                    critical,
+                    rowShortage,
+                    days,
+                    List.of()));
         }
 
         rows.sort(Comparator
@@ -419,6 +425,7 @@ public class MaterialRequirementService {
                 horizonStart,
                 horizonEnd,
                 dates,
+                List.of(),
                 rows,
                 kittingResults);
     }

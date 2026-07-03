@@ -1,5 +1,5 @@
-import { reasonLabel } from '../utils/planningDiagnosticsModel';
-import type { PlanningSignal } from '../types/orderPlanningChain';
+import { reasonLabel } from '../utils/planningReasonLabels';
+import type { PlanningSignal } from '../types/api';
 import './PlanningSignalBadge.css';
 
 export function PlanningSignalBadge({ signal }: { signal: PlanningSignal }) {

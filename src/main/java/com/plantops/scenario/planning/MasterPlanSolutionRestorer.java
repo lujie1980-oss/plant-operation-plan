@@ -9,6 +9,7 @@ import com.plantops.scenario.MasterPlanService;
 import com.plantops.solver.masterplan.MasterPlanCapacityOverlay;
 import com.plantops.solver.masterplan.MasterPlanSchedule;
 import com.plantops.solver.masterplan.OrderAllocation;
+import com.plantops.solver.masterplan.ResourceCapacityAssignment;
 import com.plantops.solver.masterplan.TimeSlot;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -29,10 +30,10 @@ public class MasterPlanSolutionRestorer {
     MasterPlanStrategyConfigService strategyConfigService;
 
     @Inject
-    MasterPlanService masterPlanService;
+    MasterPlanOntologyScheduleBuilder ontologyScheduleBuilder;
 
     @Inject
-    MasterPlanProblemMapper problemMapper;
+    MasterPlanService masterPlanService;
 
     @Inject
     SampleDataLoader sampleDataLoader;
@@ -46,13 +47,20 @@ public class MasterPlanSolutionRestorer {
         MasterPlanStrategyConfigService.ResolvedStrategy resolved = strategyConfigService.resolve(
                 version.strategyId != null && !version.strategyId.isBlank() ? version.strategyId : null);
         MasterPlanCapacityOverlay overlay = overlayForVersion(version);
-        MasterPlanPlanningContext context = masterPlanService.buildPlanningContext(resolved, overlay);
-        MasterPlanSchedule schedule = problemMapper.toSchedule(context);
+        MasterPlanSchedule schedule = ontologyScheduleBuilder.buildSchedule(resolved, overlay, planVersionId, null);
         applyPersistedAssignments(schedule, planVersionId);
         return schedule;
     }
 
     static void applyPersistedAssignments(MasterPlanSchedule schedule, String planVersionId) {
+        if (schedule.hasResourceCapacityAssignments()) {
+            applyPersistedResourceCapacityAssignments(schedule, planVersionId);
+            return;
+        }
+        applyPersistedOrderAllocations(schedule, planVersionId);
+    }
+
+    static void applyPersistedOrderAllocations(MasterPlanSchedule schedule, String planVersionId) {
         List<MasterPlanAllocationEntity> rows = MasterPlanAllocationEntity
                 .find("planVersionId = ?1", planVersionId)
                 .list();
@@ -72,6 +80,34 @@ public class MasterPlanSolutionRestorer {
             TimeSlot slot = findMatchingSlot(slots, row);
             if (slot != null) {
                 allocation.setTimeSlot(slot);
+            }
+        }
+    }
+
+    static void applyPersistedResourceCapacityAssignments(MasterPlanSchedule schedule, String planVersionId) {
+        List<MasterPlanAllocationEntity> rows = MasterPlanAllocationEntity
+                .find("planVersionId = ?1", planVersionId)
+                .list();
+        Map<String, MasterPlanAllocationEntity> byAllocationId = new HashMap<>();
+        for (MasterPlanAllocationEntity row : rows) {
+            if (row.allocationId == null || row.allocationId.startsWith("FB-")) {
+                continue;
+            }
+            byAllocationId.put(row.allocationId, row);
+        }
+        List<TimeSlot> slots = schedule.getTimeSlotRange();
+        for (ResourceCapacityAssignment assignment : schedule.getResourceCapacityAssignments()) {
+            MasterPlanAllocationEntity row = byAllocationId.get(assignment.getId());
+            if (row == null) {
+                continue;
+            }
+            TimeSlot slot = findMatchingSlot(slots, row);
+            if (slot != null) {
+                assignment.setTimeSlot(slot);
+                assignment.setAssignedMinutes(
+                        row.durationMinutes != null && row.durationMinutes > 0
+                                ? row.durationMinutes
+                                : assignment.getSlotCapacityMinutes());
             }
         }
     }

@@ -9,10 +9,53 @@
   flex-shrink: 0;
 }
 
+.detail-schedule-page-v2 .ds-diagnostics-details {
+  flex-shrink: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  margin-bottom: var(--ui-gap-sm);
+}
+
+.detail-schedule-page-v2 .ds-diagnostics-details summary {
+  padding: 0.3rem 0.55rem;
+  font-size: var(--ui-font-sm);
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  list-style: none;
+}
+
+.detail-schedule-page-v2 .ds-diagnostics-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.detail-schedule-page-v2 .ds-diagnostics-details summary::before {
+  content: '▸ ';
+  color: #94a3b8;
+}
+
+.detail-schedule-page-v2 .ds-diagnostics-details[open] summary::before {
+  content: '▾ ';
+}
+
 .detail-schedule-page-v2 .ds-diagnostics-panel {
   flex-shrink: 0;
-  margin-bottom: 0.5rem;
-  padding: 0.75rem 1rem;
+  margin: 0;
+  padding: 0.5rem 0.65rem 0.65rem;
+  border: none;
+  box-shadow: none;
+  max-height: min(36vh, 280px);
+  overflow: auto;
+}
+
+.detail-schedule-page-v2 .pp-toolbar.ds-toolbar-compact .pp-toolbar-row {
+  width: 100%;
+}
+
+.detail-schedule-page-v2 .ds-toolbar-filters {
+  flex: 1;
+  min-width: 0;
 }
 
 .detail-schedule-page-v2 .ds-layout-split {

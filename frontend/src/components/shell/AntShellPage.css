@@ -1,0 +1,54 @@
+.ant-shell-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-gap-md);
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  padding: 0.25rem 0.125rem 1rem;
+}
+
+.ant-shell-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.ant-shell-page__title {
+  margin: 0 !important;
+  font-size: var(--ui-page-title) !important;
+}
+
+.ant-shell-page__desc {
+  margin: 0.25rem 0 0 !important;
+  font-size: var(--ui-font-sm) !important;
+}
+
+.ant-shell-page__extra {
+  flex-shrink: 0;
+}
+
+.integration-subnav {
+  margin-bottom: var(--ui-gap-sm);
+  flex-shrink: 0;
+}
+
+.integration-subnav .ant-tabs-nav {
+  margin-bottom: 0 !important;
+}
+
+.integration-module {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.integration-module__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}

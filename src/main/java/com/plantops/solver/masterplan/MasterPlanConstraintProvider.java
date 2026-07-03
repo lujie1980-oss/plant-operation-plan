@@ -43,7 +43,9 @@ public class MasterPlanConstraintProvider implements ConstraintProvider {
     private Constraint materialFeasibleOnSlot(ConstraintFactory factory) {
         return factory.forEach(OrderAllocation.class)
                 .join(MaterialFeasibilityContext.class)
-                .filter((a, ctx) -> a.getTimeSlot() != null
+                .join(MasterPlanSettings.class)
+                .filter((a, ctx, settings) -> settings.isMaterialConstraintEnabled()
+                        && a.getTimeSlot() != null
                         && a.getWorkOrderQuantity() != null
                         && !isMaterialFeasible(a, ctx))
                 .penalize(HardSoftScore.ONE_HARD)
@@ -122,10 +124,22 @@ public class MasterPlanConstraintProvider implements ConstraintProvider {
                         Joiners.filtering((edge, child, parent) -> edge.parentWorkOrderNo().equals(parent.getWorkOrderNo())
                                 && parent.getSegmentIndex() == 0
                                 && parent.getTimeSlot() != null))
-                .filter((edge, child, parent) -> child.getTimeSlot().getIndex() >= parent.getTimeSlot().getIndex())
+                .filter((edge, child, parent) -> violatesBomPlanningDayOrder(child, parent))
                 .penalize(HardSoftScore.ONE_HARD,
-                        (edge, child, parent) -> child.getTimeSlot().getIndex() - parent.getTimeSlot().getIndex() + 1)
+                        (edge, child, parent) -> MasterPlanCalendarMoments.violationDays(
+                                child.getTimeSlot().getDate(),
+                                parent.getTimeSlot().getDate()))
                 .asConstraint("Upstream before parent work order");
+    }
+
+    /** 子件末段计划日不得晚于父件首段计划日（DAY 粒度；同日合法）。 */
+    private static boolean violatesBomPlanningDayOrder(OrderAllocation child, OrderAllocation parent) {
+        if (child.getTimeSlot() == null || parent.getTimeSlot() == null) {
+            return false;
+        }
+        return MasterPlanCalendarMoments.violatesPlanningDayOrder(
+                child.getTimeSlot().getDate(),
+                parent.getTimeSlot().getDate());
     }
 
     /** 工序串行：后继槽位 index 不得早于前驱（前道工序末段 → 后道工序首段）。 */
@@ -138,11 +152,23 @@ public class MasterPlanConstraintProvider implements ConstraintProvider {
                         Joiners.filtering((edge, predecessor, successor) ->
                                 edge.successorAllocationId().equals(successor.getId())))
                 .filter((edge, predecessor, successor) -> successor.getTimeSlot() != null
-                        && successor.getTimeSlot().getIndex() < predecessor.getTimeSlot().getIndex())
+                        && violatesOperationSerialPlanningDayOrder(predecessor, successor))
                 .penalize(HardSoftScore.ONE_HARD,
-                        (edge, predecessor, successor) ->
-                                predecessor.getTimeSlot().getIndex() - successor.getTimeSlot().getIndex())
+                        (edge, predecessor, successor) -> MasterPlanCalendarMoments.violationDays(
+                                predecessor.getTimeSlot().getDate(),
+                                successor.getTimeSlot().getDate()))
                 .asConstraint("Operation serial precedence");
+    }
+
+    private static boolean violatesOperationSerialPlanningDayOrder(
+            OrderAllocation predecessor,
+            OrderAllocation successor) {
+        if (predecessor.getTimeSlot() == null || successor.getTimeSlot() == null) {
+            return false;
+        }
+        return MasterPlanCalendarMoments.violatesPlanningDayOrder(
+                predecessor.getTimeSlot().getDate(),
+                successor.getTimeSlot().getDate());
     }
 
     /** 并行工序组：配对分配须在同一规划槽位（同槽开工）。 */
@@ -151,9 +177,11 @@ public class MasterPlanConstraintProvider implements ConstraintProvider {
                         Joiners.equal(OrderAllocation::getParallelGroupId))
                 .filter((a, b) -> a.getParallelGroupId() != null && !a.getParallelGroupId().isBlank())
                 .filter((a, b) -> a.getTimeSlot() != null && b.getTimeSlot() != null)
-                .filter((a, b) -> a.getTimeSlot().getIndex() != b.getTimeSlot().getIndex())
+                .filter((a, b) -> !MasterPlanCalendarMoments.sameCalendarStart(a.getTimeSlot(), b.getTimeSlot()))
                 .penalize(HardSoftScore.ONE_HARD,
-                        (a, b) -> Math.abs(a.getTimeSlot().getIndex() - b.getTimeSlot().getIndex()))
+                        (a, b) -> MasterPlanCalendarMoments.violationDays(
+                                a.getTimeSlot().getDate(),
+                                b.getTimeSlot().getDate()))
                 .asConstraint("Parallel operations same start slot");
     }
 
@@ -165,7 +193,7 @@ public class MasterPlanConstraintProvider implements ConstraintProvider {
                 .join(MasterPlanCapacityOverlay.class)
                 .filter((slot, total, settings, overlay) -> settings.isCapacityConstrained()
                         && total + overlay.fixedMinutesForSlot(slot.getId()) > slot.getCapacityMinutes())
-                .penalize(HardSoftScore.ONE_HARD,
+                .penalize(HardSoftScore.ONE_SOFT,
                         (slot, total, settings, overlay) ->
                                 total + overlay.fixedMinutesForSlot(slot.getId()) - slot.getCapacityMinutes())
                 .asConstraint("Slot capacity");
@@ -177,15 +205,18 @@ public class MasterPlanConstraintProvider implements ConstraintProvider {
                         Joiners.equal(OrderAllocation::getWorkOrderNo))
                 .filter((earlier, later) -> earlier.getSegmentIndex() < later.getSegmentIndex())
                 .filter((earlier, later) -> earlier.getTimeSlot() != null && later.getTimeSlot() != null)
-                .filter((earlier, later) -> earlier.getTimeSlot().getIndex() > later.getTimeSlot().getIndex())
+                .filter((earlier, later) -> MasterPlanCalendarMoments.slotDayOrdinal(earlier.getTimeSlot())
+                        > MasterPlanCalendarMoments.slotDayOrdinal(later.getTimeSlot()))
                 .penalize(HardSoftScore.ONE_HARD,
-                        (earlier, later) -> earlier.getTimeSlot().getIndex() - later.getTimeSlot().getIndex())
+                        (earlier, later) -> MasterPlanCalendarMoments.violationDays(
+                                earlier.getTimeSlot().getDate(),
+                                later.getTimeSlot().getDate()))
                 .asConstraint("Segment order across days");
     }
 
     /**
      * 现阶段 locked 仅表示“更希望靠前排”，但由于缺少“原始已锁定槽位”信息，
-     * 不能用 Hard 约束强制到某一天，否则会与产能 Hard 约束产生不可满足冲突。
+     * 不能用 Hard 约束强制到某一天，否则会与超负荷软约束产生不可满足冲突。
      */
     private Constraint lockedOrdersPreferEarlier(ConstraintFactory factory) {
         return factory.forEach(OrderAllocation.class)
