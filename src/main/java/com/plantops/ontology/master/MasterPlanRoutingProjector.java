@@ -7,20 +7,14 @@ import com.plantops.api.dto.masterplan.MasterPlanDataModelDtos.RoutingStepOnStan
 import com.plantops.api.dto.masterplan.MasterPlanDataModelDtos.RoutingStepOutputMaterialDto;
 import com.plantops.ontology.OntologyIds;
 import com.plantops.masterdata.internal.MdRoutingReadService;
-import com.plantops.persistence.entity.BomComponentEntity;
-import com.plantops.persistence.entity.MaterialEntity;
 import com.plantops.persistence.entity.MdRoutingStepImEntity;
-import com.plantops.persistence.entity.ProductResourceEntity;
 import com.plantops.scenario.ProductRoutingSteps;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 从 {@code md_*}（优先）或 legacy {@code MaterialEntity} + {@code ProductResourceEntity} + {@code BomComponentEntity}
- * 投影主计划 Routing 主数据模型。
- */
+/** 从 {@code md_*} 投影主计划 Routing 主数据模型（TODO-13 M5 · AC-MD-05）。 */
 @ApplicationScoped
 public class MasterPlanRoutingProjector {
 
@@ -34,10 +28,7 @@ public class MasterPlanRoutingProjector {
     }
 
     private List<Integer> routingPathPriorities(String productCode) {
-        if (mdRouting.hasRouting(productCode)) {
-            return mdRouting.routingPathPrioritiesForProduct(productCode);
-        }
-        return ProductRoutingSteps.routingPathPrioritiesForProduct(productCode);
+        return mdRouting.routingPathPrioritiesForProduct(productCode);
     }
 
     public RoutingDto projectRoutingHeader(String pispId, String productCode, int pathPriority) {
@@ -125,87 +116,48 @@ public class MasterPlanRoutingProjector {
         return steps;
     }
 
-    /** Legacy static entry; prefer {@link #hasRoutingForProduct(String)} when injected. */
+    /** @deprecated 使用 {@link #hasRoutingForProduct(String)}（M5 后仅读 md_*）。 */
+    @Deprecated
     public static boolean hasRouting(String productCode) {
-        return ProductResourceEntity.hasRouting(productCode);
-    }
-
-    public boolean hasRoutingForProduct(String productCode) {
         if (productCode == null || productCode.isBlank()) {
             return false;
         }
-        if (mdRouting.hasRouting(productCode)) {
-            return true;
-        }
-        return ProductResourceEntity.hasRouting(productCode);
+        return com.plantops.persistence.entity.MdRoutingEntity.listInWorkspace().stream()
+                .anyMatch(r -> productCode.equals(r.productCode));
+    }
+
+    public boolean hasRoutingForProduct(String productCode) {
+        return mdRouting.hasRouting(productCode);
     }
 
     private List<ProductRoutingSteps.Operation> masterDataOperations(String productCode, int pathPriority) {
         if (productCode == null || productCode.isBlank()) {
             return List.of();
         }
-        if (mdRouting.hasRouting(productCode)) {
-            List<ProductRoutingSteps.Operation> mdOps = mdRouting.operationsForProduct(productCode, pathPriority);
-            if (!mdOps.isEmpty()) {
-                return mdOps;
-            }
-        }
-        if (ProductResourceEntity.findByProductOrdered(productCode).isEmpty()) {
-            return List.of();
-        }
-        return ProductRoutingSteps.operationsForProduct(productCode, pathPriority);
+        return mdRouting.operationsForProduct(productCode, pathPriority);
     }
 
     private List<RoutingStepInputMaterialDto> projectInputMaterials(
             String stepId, String productCode, int pathPriority) {
-        if (mdRouting.hasRouting(productCode)) {
-            List<MdRoutingStepImEntity> mdInputs = mdRouting.inputMaterialsForFirstStep(productCode, pathPriority);
-            if (!mdInputs.isEmpty()) {
-                List<RoutingStepInputMaterialDto> inputs = new ArrayList<>(mdInputs.size());
-                for (MdRoutingStepImEntity im : mdInputs) {
-                    double qty = im.componentQty != null ? im.componentQty.doubleValue() : 1.0;
-                    inputs.add(new RoutingStepInputMaterialDto(
-                            OntologyIds.routingStepInputMaterialId(stepId, im.componentProductCode),
-                            stepId,
-                            im.componentProductCode,
-                            qty,
-                            false));
-                }
-                return inputs;
-            }
-        }
-        List<BomComponentEntity> components = BomComponentEntity.findChildren(productCode, productCode);
-        if (components.isEmpty()) {
+        List<MdRoutingStepImEntity> mdInputs = mdRouting.inputMaterialsForFirstStep(productCode, pathPriority);
+        if (mdInputs.isEmpty()) {
             return List.of();
         }
-        List<RoutingStepInputMaterialDto> inputs = new ArrayList<>(components.size());
-        for (BomComponentEntity bom : components) {
-            double qty = bom.componentQty != null ? bom.componentQty.doubleValue() : 1.0;
+        List<RoutingStepInputMaterialDto> inputs = new ArrayList<>(mdInputs.size());
+        for (MdRoutingStepImEntity im : mdInputs) {
+            double qty = im.componentQty != null ? im.componentQty.doubleValue() : 1.0;
             inputs.add(new RoutingStepInputMaterialDto(
-                    OntologyIds.routingStepInputMaterialId(stepId, bom.componentProductCode),
+                    OntologyIds.routingStepInputMaterialId(stepId, im.componentProductCode),
                     stepId,
-                    bom.componentProductCode,
+                    im.componentProductCode,
                     qty,
-                    bom.isCriticalComponent));
+                    false));
         }
         return inputs;
     }
 
     private String resolveRoutingName(String productCode, int pathPriority) {
-        if (mdRouting.hasRouting(productCode)) {
-            String base = mdRouting.routingName(productCode, pathPriority);
-            if (pathPriority > 1) {
-                return base + " · 路径 " + pathPriority;
-            }
-            return base;
-        }
-        MaterialEntity material = MaterialEntity.findByCode(productCode);
-        String base;
-        if (material != null && material.materialName != null && !material.materialName.isBlank()) {
-            base = material.materialName + " 工艺";
-        } else {
-            base = productCode + " 工艺";
-        }
+        String base = mdRouting.routingName(productCode, pathPriority);
         if (pathPriority > 1) {
             return base + " · 路径 " + pathPriority;
         }

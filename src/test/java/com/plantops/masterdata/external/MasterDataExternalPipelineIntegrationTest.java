@@ -71,7 +71,9 @@ class MasterDataExternalPipelineIntegrationTest {
 
         assertTrue(MdRoutingEntity.listInWorkspace().stream().anyMatch(r -> PRODUCT.equals(r.productCode)));
 
-        ProductResourceEntity.find("productCode", PRODUCT).list().forEach(pr -> pr.delete());
+        long legacyPrCount =
+                ProductResourceEntity.find("productCode", PRODUCT).count();
+        assertEquals(0, legacyPrCount, "M5: sync must not write legacy product_resource");
 
         assertTrue(routingProjector.hasRoutingForProduct(PRODUCT));
         String pispId = OntologyIds.pispId(PRODUCT, StockingPoint.FG);

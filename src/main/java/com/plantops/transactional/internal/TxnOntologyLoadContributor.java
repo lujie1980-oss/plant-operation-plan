@@ -47,40 +47,68 @@ public class TxnOntologyLoadContributor {
                         col -> col.customerOrderNo + "|" + col.lineNo, col -> col, (a, b) -> a));
 
         for (TxnCustomerOrderLineDeliveryEntity cold : TxnCustomerOrderLineDeliveryEntity.listInWorkspace()) {
-            if ("CANCELLED".equals(cold.status)) {
-                continue;
-            }
-            TxnCustomerOrderLineEntity col = colsByKey.get(cold.customerOrderNo + "|" + cold.lineNo);
-            if (col == null || col.productCode == null || col.productCode.isBlank()) {
-                continue;
-            }
-            String colId = OntologyIds.customerOrderLineId(cold.customerOrderNo, cold.lineNo);
-            double orderQty = col.orderQty != null ? col.orderQty.doubleValue() : 0.0;
-            builder.customerOrderLine(new CustomerOrderLine(
-                    colId, cold.customerOrderNo, cold.lineNo, null, col.productCode, orderQty));
+            addCustomerDeliveryFromTxn(builder, cold, colsByKey);
+        }
+    }
 
-            String coldId = OntologyIds.customerOrderLineDeliveryId(
-                    cold.customerOrderNo, cold.lineNo, cold.deliverySeq);
-            double deliveryQty = cold.deliveryQty != null ? cold.deliveryQty.doubleValue() : orderQty;
-            builder.customerOrderLineDelivery(new CustomerOrderLineDelivery(
-                    coldId, colId, deliveryQty, cold.confirmedDate, cold.requestedDate, cold.status));
+    public void loadSingleCustomerDelivery(
+            OntologyGraph.Builder builder, OntologyIds.CustomerOrderLineDeliveryKey deliveryKey) {
+        if (deliveryKey == null) {
+            return;
+        }
+        TxnCustomerOrderLineDeliveryEntity cold = TxnCustomerOrderLineDeliveryEntity.find(
+                        "workspaceId = ?1 and customerOrderNo = ?2 and lineNo = ?3 and deliverySeq = ?4",
+                        TxnCustomerOrderLineDeliveryEntity.ws(),
+                        deliveryKey.salesOrderNo(),
+                        deliveryKey.salesOrderLineNo(),
+                        deliveryKey.deliverySeq())
+                .firstResult();
+        if (cold == null) {
+            return;
+        }
+        Map<String, TxnCustomerOrderLineEntity> colsByKey = TxnCustomerOrderLineEntity.listInWorkspace().stream()
+                .collect(Collectors.toMap(
+                        col -> col.customerOrderNo + "|" + col.lineNo, col -> col, (a, b) -> a));
+        addCustomerDeliveryFromTxn(builder, cold, colsByKey);
+    }
 
-            TxnDemandEntity txnDemand = TxnDemandEntity.find(
-                            "workspaceId = ?1 and sourceId = ?2",
-                            TxnDemandEntity.ws(),
-                            coldId)
-                    .firstResult();
-            if (txnDemand != null) {
-                builder.demand(new Demand(
-                        txnDemand.demandId,
-                        txnDemand.productCode,
-                        OntologyIds.pispId(txnDemand.productCode),
-                        txnDemand.quantity != null ? txnDemand.quantity.doubleValue() : deliveryQty,
-                        txnDemand.needDate,
-                        txnDemand.priority != null ? txnDemand.priority : 5,
-                        DemandSourceType.CUSTOMER_DELIVERY,
-                        coldId));
-            }
+    private static void addCustomerDeliveryFromTxn(
+            OntologyGraph.Builder builder,
+            TxnCustomerOrderLineDeliveryEntity cold,
+            Map<String, TxnCustomerOrderLineEntity> colsByKey) {
+        if ("CANCELLED".equals(cold.status)) {
+            return;
+        }
+        TxnCustomerOrderLineEntity col = colsByKey.get(cold.customerOrderNo + "|" + cold.lineNo);
+        if (col == null || col.productCode == null || col.productCode.isBlank()) {
+            return;
+        }
+        String colId = OntologyIds.customerOrderLineId(cold.customerOrderNo, cold.lineNo);
+        double orderQty = col.orderQty != null ? col.orderQty.doubleValue() : 0.0;
+        builder.customerOrderLine(new CustomerOrderLine(
+                colId, cold.customerOrderNo, cold.lineNo, null, col.productCode, orderQty));
+
+        String coldId = OntologyIds.customerOrderLineDeliveryId(
+                cold.customerOrderNo, cold.lineNo, cold.deliverySeq);
+        double deliveryQty = cold.deliveryQty != null ? cold.deliveryQty.doubleValue() : orderQty;
+        builder.customerOrderLineDelivery(new CustomerOrderLineDelivery(
+                coldId, colId, deliveryQty, cold.confirmedDate, cold.requestedDate, cold.status));
+
+        TxnDemandEntity txnDemand = TxnDemandEntity.find(
+                        "workspaceId = ?1 and sourceId = ?2",
+                        TxnDemandEntity.ws(),
+                        coldId)
+                .firstResult();
+        if (txnDemand != null) {
+            builder.demand(new Demand(
+                    txnDemand.demandId,
+                    txnDemand.productCode,
+                    OntologyIds.pispId(txnDemand.productCode),
+                    txnDemand.quantity != null ? txnDemand.quantity.doubleValue() : deliveryQty,
+                    txnDemand.needDate,
+                    txnDemand.priority != null ? txnDemand.priority : 5,
+                    DemandSourceType.CUSTOMER_DELIVERY,
+                    coldId));
         }
     }
 

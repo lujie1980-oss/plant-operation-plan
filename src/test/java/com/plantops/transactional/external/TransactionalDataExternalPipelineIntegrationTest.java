@@ -20,9 +20,11 @@ import com.plantops.api.dto.integration.IntegrationDtos.StockingPointRow;
 import com.plantops.masterdata.quality.MasterDataQualityService;
 import com.plantops.masterdata.sync.MasterDataSyncService;
 import com.plantops.ontology.OntologyGraph;
-import com.plantops.persistence.entity.MdPispEntity;
+import com.plantops.persistence.entity.SalesOrderLineEntity;
+import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.persistence.entity.TxnDemandEntity;
 import com.plantops.persistence.entity.TxnSupplyOrderEntity;
+import com.plantops.persistence.entity.MdPispEntity;
 import com.plantops.transactional.internal.TxnOntologyLoadContributor;
 import com.plantops.transactional.quality.TransactionalDataQualityService;
 import com.plantops.transactional.sync.TransactionalDataSyncService;
@@ -42,6 +44,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
@@ -98,6 +101,9 @@ class TransactionalDataExternalPipelineIntegrationTest {
                 .firstResult();
         assertTrue(demand != null);
         assertEquals("CUSTOMER_DELIVERY", demand.sourceType);
+
+        assertNull(SalesOrderLineEntity.findByKey(SO, 1), "T5: sync must not write legacy sales_order_line");
+        assertNull(WorkOrderEntity.findByNo(WO), "T5: sync must not write legacy work_order");
 
         assertTrue(txnOntologyLoadContributor.hasTransactionalDemands());
         OntologyGraph.Builder builder = OntologyGraph.builder();

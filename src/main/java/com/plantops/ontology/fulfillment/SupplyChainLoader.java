@@ -57,6 +57,10 @@ public class SupplyChainLoader {
         if (deliveryKey == null) {
             return;
         }
+        if (txnOntologyLoadContributor.hasTransactionalDemands()) {
+            txnOntologyLoadContributor.loadSingleCustomerDelivery(builder, deliveryKey);
+            return;
+        }
         SalesOrderLineEntity line =
                 SalesOrderLineEntity.findByKey(deliveryKey.salesOrderNo(), deliveryKey.salesOrderLineNo());
         if (line == null || "CANCELLED".equals(line.status) || line.productCode == null || line.productCode.isBlank()) {

@@ -21,7 +21,6 @@ import com.plantops.persistence.entity.TxnPlanUnitEntity;
 import com.plantops.persistence.entity.TxnPurchaseOrderEntity;
 import com.plantops.persistence.entity.TxnSupplyOrderEntity;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
@@ -31,9 +30,6 @@ import java.util.List;
 /** §12.4 · TODO-14 T3：PASSED external_* → txn_*（AC-TX-03）。 */
 @ApplicationScoped
 public class TransactionalDataSyncService {
-
-    @Inject
-    TransactionalDataLegacyBridge legacyBridge;
 
     public record SyncReport(String importBatchId, int syncedRows, int skippedRows) {}
 
@@ -112,7 +108,6 @@ public class TransactionalDataSyncService {
             }
         }
 
-        legacyBridge.syncFromTxn();
         return new SyncReport(importBatchId, synced, skipped);
     }
 

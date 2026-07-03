@@ -21,7 +21,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/** §11 legacy 过渡：md_* sync 后 upsert legacy 表供未迁移读路径使用（TODO-13 M5 前）。 */
+/**
+ * §11 legacy 过渡：md_* sync 后 upsert legacy 表（已退役 · TODO-13 M5）。
+ *
+ * @deprecated M5 后主计划读路径仅使用 md_*；保留类供历史对照与手工迁移。
+ */
+@Deprecated
 @ApplicationScoped
 public class MasterDataLegacyBridge {
 

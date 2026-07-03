@@ -13,7 +13,12 @@ import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
 
-/** §12 legacy 过渡：txn_* sync 后 upsert legacy 表（TODO-14 T5 前）。 */
+/**
+ * §12 legacy 过渡：txn_* sync 后 upsert legacy 表（已退役 · TODO-14 T5）。
+ *
+ * @deprecated T5 后 OG 装载仅使用 txn_*；保留类供历史对照与手工迁移。
+ */
+@Deprecated
 @ApplicationScoped
 public class TransactionalDataLegacyBridge {
 

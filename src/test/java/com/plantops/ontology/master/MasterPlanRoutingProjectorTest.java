@@ -1,8 +1,9 @@
 package com.plantops.ontology.master;
 
-import com.plantops.persistence.entity.BomComponentEntity;
-import com.plantops.persistence.entity.MaterialEntity;
-import com.plantops.persistence.entity.ProductResourceEntity;
+import com.plantops.persistence.entity.MdRoutingEntity;
+import com.plantops.persistence.entity.MdRoutingStepEntity;
+import com.plantops.persistence.entity.MdRoutingStepImEntity;
+import com.plantops.persistence.entity.MdRoutingStepOsrEntity;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -19,6 +20,8 @@ class MasterPlanRoutingProjectorTest {
 
     private static final String PRODUCT = "FG-MPDM-TEST";
     private static final String COMP = "RM-MPDM-TEST";
+    private static final String ROUTING = "RT-MPDM-TEST";
+    private static final String ROUTING_ALT = "RT-MPDM-ALT";
 
     @Inject
     MasterPlanRoutingProjector projector;
@@ -28,7 +31,7 @@ class MasterPlanRoutingProjectorTest {
     void projectsRoutingStepsWithResourcesAndMaterials() {
         ensureFixture();
 
-        String pispId = com.plantops.ontology.OntologyIds.pispId(PRODUCT, com.plantops.ontology.master.StockingPoint.FG);
+        String pispId = com.plantops.ontology.OntologyIds.pispId(PRODUCT, StockingPoint.FG);
         var routing = projector.projectRoutingHeader(pispId, PRODUCT);
         var steps = projector.projectRoutingSteps(pispId, PRODUCT);
 
@@ -44,18 +47,10 @@ class MasterPlanRoutingProjectorTest {
 
     @Test
     @TestTransaction
-    void doesNotFabricateRoutingFromCatalogForUnknownProduct() {
+    void doesNotFabricateRoutingForUnknownProduct() {
         String raw = "RAW-MPDM-NO-ROUTING";
-        if (MaterialEntity.findByCode(raw) == null) {
-            MaterialEntity m = new MaterialEntity();
-            m.materialCode = raw;
-            m.materialName = "Raw without routing";
-            m.materialType = "原材料";
-            m.stampWorkspace();
-            m.persist();
-        }
-        String pispId = com.plantops.ontology.OntologyIds.pispId(raw, com.plantops.ontology.master.StockingPoint.RAW);
-        assertFalse(MasterPlanRoutingProjector.hasRouting(raw));
+        String pispId = com.plantops.ontology.OntologyIds.pispId(raw, StockingPoint.RAW);
+        assertFalse(projector.hasRoutingForProduct(raw));
         assertEquals(0, projector.projectRoutingHeader(pispId, raw).stepCount());
         assertTrue(projector.projectRoutingSteps(pispId, raw).isEmpty());
     }
@@ -66,7 +61,7 @@ class MasterPlanRoutingProjectorTest {
         ensureFixture();
         ensureAlternatePath();
 
-        String pispId = com.plantops.ontology.OntologyIds.pispId(PRODUCT, com.plantops.ontology.master.StockingPoint.FG);
+        String pispId = com.plantops.ontology.OntologyIds.pispId(PRODUCT, StockingPoint.FG);
         var routings = projector.listRoutingsForPisp(pispId, PRODUCT);
         assertEquals(2, routings.size());
         assertEquals(1, routings.get(0).pathPriority());
@@ -76,66 +71,91 @@ class MasterPlanRoutingProjectorTest {
     }
 
     private static void ensureAlternatePath() {
-        if (ProductResourceEntity.findByProductAndResource(PRODUCT, "RES-MPDM-FAST") != null) {
+        if (MdRoutingEntity.find("workspaceId = ?1 and routingCode = ?2", MdRoutingEntity.ws(), ROUTING_ALT)
+                .firstResult() != null) {
             return;
         }
-        ProductResourceEntity fast = new ProductResourceEntity();
-        fast.productCode = PRODUCT;
-        fast.resourceId = "RES-MPDM-FAST";
-        fast.operationName = "OP-FAST";
-        fast.sequenceNo = 1;
-        fast.routingPathPriority = 2;
-        fast.processTimeSeconds = new BigDecimal("600");
-        fast.stampWorkspace();
-        fast.persist();
+        MdRoutingEntity routing = new MdRoutingEntity();
+        routing.routingCode = ROUTING_ALT;
+        routing.productCode = PRODUCT;
+        routing.stockingPointCode = "FG";
+        routing.pathPriority = 2;
+        routing.name = "Fast path";
+        routing.ensureWorkspace();
+        routing.persist();
+
+        MdRoutingStepEntity step = new MdRoutingStepEntity();
+        step.routingCode = ROUTING_ALT;
+        step.sequenceNo = 1;
+        step.operationName = "OP-FAST";
+        step.ensureWorkspace();
+        step.persist();
+
+        MdRoutingStepOsrEntity osr = new MdRoutingStepOsrEntity();
+        osr.routingCode = ROUTING_ALT;
+        osr.sequenceNo = 1;
+        osr.standardResourceCode = "RES-MPDM-FAST";
+        osr.resourcePriority = 1;
+        osr.resourceUsageType = "SINGLE";
+        osr.processTimeSeconds = BigDecimal.valueOf(600);
+        osr.ensureWorkspace();
+        osr.persist();
     }
 
     private static void ensureFixture() {
-        if (MaterialEntity.findByCode(PRODUCT) == null) {
-            MaterialEntity fg = new MaterialEntity();
-            fg.materialCode = PRODUCT;
-            fg.materialName = "Test FG";
-            fg.stampWorkspace();
-            fg.persist();
+        if (MdRoutingEntity.find("workspaceId = ?1 and routingCode = ?2", MdRoutingEntity.ws(), ROUTING)
+                .firstResult() != null) {
+            return;
         }
-        if (MaterialEntity.findByCode(COMP) == null) {
-            MaterialEntity rm = new MaterialEntity();
-            rm.materialCode = COMP;
-            rm.materialName = "Test RM";
-            rm.stampWorkspace();
-            rm.persist();
-        }
-        if (ProductResourceEntity.findByProductAndResource(PRODUCT, "RES-MPDM-A") == null) {
-            ProductResourceEntity step1 = new ProductResourceEntity();
-            step1.productCode = PRODUCT;
-            step1.resourceId = "RES-MPDM-A";
-            step1.operationName = "OP-1";
-            step1.sequenceNo = 1;
-            step1.processTimeSeconds = new BigDecimal("3600");
-            step1.stampWorkspace();
-            step1.persist();
-        }
-        if (ProductResourceEntity.findByProductAndResource(PRODUCT, "RES-MPDM-B") == null) {
-            ProductResourceEntity step2 = new ProductResourceEntity();
-            step2.productCode = PRODUCT;
-            step2.resourceId = "RES-MPDM-B";
-            step2.operationName = "OP-2";
-            step2.sequenceNo = 2;
-            step2.processTimeSeconds = new BigDecimal("1800");
-            step2.stampWorkspace();
-            step2.persist();
-        }
-        if (BomComponentEntity.findByParent(PRODUCT).isEmpty()) {
-            BomComponentEntity bom = new BomComponentEntity();
-            bom.bomId = "BOM-MPDM";
-            bom.bomVersion = "1";
-            bom.finishedProductCode = PRODUCT;
-            bom.parentProductCode = PRODUCT;
-            bom.componentProductCode = COMP;
-            bom.componentQty = BigDecimal.ONE;
-            bom.isCriticalComponent = true;
-            bom.stampWorkspace();
-            bom.persist();
-        }
+        MdRoutingEntity routing = new MdRoutingEntity();
+        routing.routingCode = ROUTING;
+        routing.productCode = PRODUCT;
+        routing.stockingPointCode = "FG";
+        routing.pathPriority = 1;
+        routing.name = "Test FG 工艺";
+        routing.ensureWorkspace();
+        routing.persist();
+
+        MdRoutingStepEntity step1 = new MdRoutingStepEntity();
+        step1.routingCode = ROUTING;
+        step1.sequenceNo = 1;
+        step1.operationName = "OP-1";
+        step1.ensureWorkspace();
+        step1.persist();
+
+        MdRoutingStepOsrEntity osr1 = new MdRoutingStepOsrEntity();
+        osr1.routingCode = ROUTING;
+        osr1.sequenceNo = 1;
+        osr1.standardResourceCode = "RES-MPDM-A";
+        osr1.resourcePriority = 1;
+        osr1.resourceUsageType = "SINGLE";
+        osr1.processTimeSeconds = BigDecimal.valueOf(3600);
+        osr1.ensureWorkspace();
+        osr1.persist();
+
+        MdRoutingStepEntity step2 = new MdRoutingStepEntity();
+        step2.routingCode = ROUTING;
+        step2.sequenceNo = 2;
+        step2.operationName = "OP-2";
+        step2.ensureWorkspace();
+        step2.persist();
+
+        MdRoutingStepOsrEntity osr2 = new MdRoutingStepOsrEntity();
+        osr2.routingCode = ROUTING;
+        osr2.sequenceNo = 2;
+        osr2.standardResourceCode = "RES-MPDM-B";
+        osr2.resourcePriority = 1;
+        osr2.resourceUsageType = "SINGLE";
+        osr2.processTimeSeconds = BigDecimal.valueOf(1800);
+        osr2.ensureWorkspace();
+        osr2.persist();
+
+        MdRoutingStepImEntity im = new MdRoutingStepImEntity();
+        im.routingCode = ROUTING;
+        im.sequenceNo = 1;
+        im.componentProductCode = COMP;
+        im.componentQty = BigDecimal.ONE;
+        im.ensureWorkspace();
+        im.persist();
     }
 }

@@ -22,7 +22,6 @@ import com.plantops.persistence.entity.MdRoutingStepOsrEntity;
 import com.plantops.persistence.entity.MdStandardResourceEntity;
 import com.plantops.persistence.entity.MdStockingPointEntity;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
@@ -31,9 +30,6 @@ import java.util.List;
 /** §11 · TODO-13 M3：PASSED external_* → md_*（AC-MD-03）。 */
 @ApplicationScoped
 public class MasterDataSyncService {
-
-    @Inject
-    MasterDataLegacyBridge legacyBridge;
 
     public record SyncReport(String importBatchId, int syncedRows, int skippedRows) {}
 
@@ -127,7 +123,6 @@ public class MasterDataSyncService {
             }
         }
 
-        legacyBridge.syncFromMd();
         return new SyncReport(importBatchId, synced, skipped);
     }
 
