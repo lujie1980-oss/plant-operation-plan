@@ -25,6 +25,8 @@ function formatValue(metricId: string, value: number, unit: string): string {
   if (unit === '%') return `${value.toFixed(1)}%`;
   if (metricId.startsWith('mp_score')) return String(Math.round(value));
   if (unit === '秒') return `${value.toFixed(1)}s`;
+  if (unit === 'ms') return `${Math.round(value)}ms`;
+  if (unit === '天') return `${value.toFixed(1)} 天`;
   return `${Math.round(value)} ${unit}`;
 }
 
@@ -32,6 +34,8 @@ function formatDelta(metricId: string, delta: number, unit: string): string {
   if (unit === '%') return `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}%`;
   if (metricId.startsWith('mp_score')) return `${delta >= 0 ? '+' : ''}${Math.round(delta)}`;
   if (unit === '秒') return `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}s`;
+  if (unit === 'ms') return `${delta >= 0 ? '+' : ''}${Math.round(delta)}ms`;
+  if (unit === '天') return `${delta >= 0 ? '+' : ''}${delta.toFixed(1)} 天`;
   return `${delta >= 0 ? '+' : ''}${Math.round(delta)} ${unit}`;
 }
 
@@ -148,7 +152,7 @@ function GroupedColumnChart({
 
 export function ScenarioComparisonPage({
   title = '场景对比',
-  description = '勾选多个订单协同计划场景，对比 Score、产能与排产关键 KPI',
+  description = '勾选多个订单协同计划场景，对比 Score、COLD 交付、§15 B01~B10、产能与排产 KPI',
   emptyHint = '暂无订单协同计划场景，请先在「计划运行」执行计划运行',
 }: {
   title?: string;
@@ -216,11 +220,16 @@ export function ScenarioComparisonPage({
   };
 
   const scoreMetrics = comparison?.metrics.filter((m) => m.metricId.includes('score')) ?? [];
+  const deliveryMetrics = comparison?.metrics.filter((m) => m.metricId.startsWith('cold_')) ?? [];
+  const businessMetrics = comparison?.metrics.filter((m) => m.metricId.startsWith('mp_b')) ?? [];
   const capacityMetrics =
     comparison?.metrics.filter((m) => m.metricId.startsWith('cap_')) ?? [];
   const planMetrics =
     comparison?.metrics.filter(
-      (m) => m.metricId.startsWith('mp_') && !m.metricId.includes('score'),
+      (m) =>
+        m.metricId === 'mp_total_wo'
+        || m.metricId === 'mp_total_load'
+        || m.metricId === 'solve_duration',
     ) ?? [];
 
   const baselineId = selectedIds[0];
@@ -338,13 +347,41 @@ export function ScenarioComparisonPage({
               </div>
 
               <details className="scn-charts-details">
-                <summary>图表对比（Score / 产能 / 排产）</summary>
+                <summary>图表对比（Score / COLD 交付 / §15 业务 / 产能 / 排产）</summary>
                 <div className="scn-charts-details-body">
                   <div className="scn-chart-section">
                     <h4>Score</h4>
                     <div className="scn-chart-grid scn-chart-grid--compact">
                       {scoreMetrics.map((m) => (
                         <GroupedColumnChart
+                          key={m.metricId}
+                          metric={m}
+                          comparison={comparison}
+                          selectedIds={selectedIds}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="scn-chart-section">
+                    <h4>COLD 交付 KPI</h4>
+                    <div className="scn-chart-grid scn-chart-grid--compact">
+                      {deliveryMetrics.map((m) => (
+                        <BarChart
+                          key={m.metricId}
+                          metric={m}
+                          comparison={comparison}
+                          selectedIds={selectedIds}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="scn-chart-section">
+                    <h4>§15 业务 KPI（B01~B10）</h4>
+                    <div className="scn-chart-grid scn-chart-grid--compact">
+                      {businessMetrics.map((m) => (
+                        <BarChart
                           key={m.metricId}
                           metric={m}
                           comparison={comparison}
@@ -371,15 +408,17 @@ export function ScenarioComparisonPage({
                   <div className="scn-chart-section">
                     <h4>订单协同计划排产</h4>
                     <div className="scn-chart-grid scn-chart-grid--compact">
-                      {planMetrics.map((m) => (
-                        <BarChart
-                          key={m.metricId}
-                          metric={m}
-                          comparison={comparison}
-                          selectedIds={selectedIds}
-                        />
-                      ))}
-                      {comparison.metrics
+                      {planMetrics
+                        .filter((m) => m.metricId !== 'solve_duration')
+                        .map((m) => (
+                          <BarChart
+                            key={m.metricId}
+                            metric={m}
+                            comparison={comparison}
+                            selectedIds={selectedIds}
+                          />
+                        ))}
+                      {planMetrics
                         .filter((m) => m.metricId === 'solve_duration')
                         .map((m) => (
                           <GroupedColumnChart

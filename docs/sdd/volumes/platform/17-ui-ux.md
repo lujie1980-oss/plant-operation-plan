@@ -176,7 +176,7 @@ flowchart LR
 | **UI-COMP-04** | `FulfillmentChainTreePanel` | DTO-FC 树 + peg 类型 | SCN-01c |
 | **UI-COMP-05** | `FulfillmentMaterialDrawer` | 工序物料 / 预齐套 | SCN-02b |
 | **UI-COMP-06** | `DashboardKpiCard` | 首页 KPI 卡片 | VAL-* |
-| **UI-COMP-07** | `ScenarioComparisonPage` | 多 ENT-PV 并排 | VAL-06 · TODO-03 |
+| **UI-COMP-07** | `ScenarioComparisonPage` | 多 ENT-PV 并排 · COLD + B01~B10 | VAL-06 · SCN-06b |
 | **UI-COMP-08** | `PispPeriodInventoryTable` | PISPP 期间表（过渡） | SCN-04 · SCN-07a `[GAP]` 专页 |
 
 **表格子系统（`components/table/`）：** `useTableLayout` 持久化列宽/筛选；`TableRowHoverTip` 行摘要；`TableCellContextMenu` 单元格菜单。
@@ -367,7 +367,7 @@ BusinessRules 页 **内嵌于计划模块**；**不得** 再使用全局 `/busin
 | §16 六 tab | BusinessRules | **已实现 2026-07-02**（TODO-17） | — |
 | **IAM** | §18 · SCN-T06 | 登录/RBAC/MOD 过滤/Super Admin **已落地** | — |
 | **数据集成 MOD-DI** | §19 · SCN-T07 | `/integration` 骨架已建；API/ADP 待建 | **TODO-19** |
-| VAL-06 场景对比 | SCN | 页面已有 | 深度 KPI 待 §15 TODO-16 |
+| VAL-06 场景对比 | SCN-06b | COLD + §15 B01~B10 对比 | **已完成 2026-07-03**（TODO-03） |
 
 ---
 

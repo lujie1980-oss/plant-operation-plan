@@ -85,7 +85,7 @@
 |------|------|----------|
 | **计划制定效率** | SCN-01a ATP / SCN-01b CTP / SCN-01d 确认 / SCN-01g~h 手工建链；simulate 与 optimize 分层 | SCN-01a~h · ADR-01 |
 | **风险可视化** | SCN-02 需求满足分析；SCN-07j 预留预警；DTO-FC 根因（物料/产能/工单） | SCN-02a~b · SCN-07j · DTO-FC |
-| **决策可视化** | 多 ENT-PV 并排对比 | TODO-03 / 场景对比 API |
+| **决策可视化** | 多 ENT-PV 并排对比 | SCN-06b · 场景对比 API · UI-COMP-07 |
 
 | KPI | Baseline | Target | 度量方式 | 支柱 |
 |-----|----------|--------|----------|------|

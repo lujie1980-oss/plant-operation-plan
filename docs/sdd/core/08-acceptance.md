@@ -435,4 +435,12 @@
 
 ---
 
+## AC-VAL-06：场景决策对比（TODO-03）
+
+| ID | 陈述 | 自动化 |
+|----|------|--------|
+| AC-VAL-06-01 | `POST scenarios/compare` 指标定义含 `cold_*` 与 `mp_b01`~`mp_b10` | `ScenarioComparisonServiceTest` |
+
+---
+
 **回指：** [03-scenarios.md](./03-scenarios.md) · [04-business-rules.md](./04-business-rules.md) · [06-api-contracts.md](./06-api-contracts.md#api-int-01-导入批次列表) · [17-ui-ux.md](../volumes/platform/17-ui-ux.md) · [18-identity-access-management.md](../volumes/platform/18-19-workspace-platform.md) · [19-workspace-modules-and-adapters.md](../volumes/platform/18-19-workspace-platform.md)

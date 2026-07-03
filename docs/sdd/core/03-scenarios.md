@@ -484,6 +484,21 @@ When S04 optimize
 Then 仍产出 planVersion（软约束允许延期）；hard = 0；延期工单可识别
 ```
 
+### SCN-06b 多场景决策对比
+
+**价值：** VAL-06（决策可视化）  
+**角色：** 计划员 · **标签：** `[STD][COMMON]`  
+**页面：** `ScenarioComparisonPage`（UI-COMP-07）· API `POST .../planning/scenarios/compare`
+
+**说明：** 勾选 ≥2 个 ENT-PV，并排对比 **Score**、**COLD 交付汇总**（齐套/缺料/逾期等）、**§15 KPI-MP-B01~B10**、产能与排产指标；首列为基线，其余列显示差值。
+
+```gherkin
+Given Workspace 存在 ≥2 个已完成 PlanningRun 的 ENT-PV
+When 在场景对比页勾选多个 planVersionId
+Then 对比 API 返回 cold_* 与 mp_b01~mp_b10 指标序列
+  And KPI 表与图表展示各场景差异
+```
+
 ---
 
 ## 7. 供需平衡

@@ -251,7 +251,7 @@
 |----|-----|--------|
 | TODO-01 | 为现有测试补 `@SpecRef(AC-xx)` | 开发 | **已完成 2026-07-03** · `@SpecRef` 注解 · `SpecRefCoverageTest` · 核心 AC 集成测试已标注 |
 | TODO-02 | OpenAPI 从 §6 生成契约骨架 | 开发 | **已完成 2026-07-03** · `SddApiContractParser` · `docs/api/openapi.yaml` · `OpenApiSpecCoverageTest` |
-| TODO-03 | 多 COLD 批次场景 SCN 扩展 | 产品 |
+| TODO-03 | 多 COLD 批次场景 SCN 扩展 | 产品 | **已完成 2026-07-03** · SCN-06b · `ScenarioComparisonService` cold_* + mp_b01~b10 · UI-COMP-07 |
 | TODO-04 | ~~直驱默认签字~~ → 并入 TODO-08（ADR-08 废止 PATH-ENT） | PO |
 | TODO-05 | 重生成演练：仅凭规范盲重建模块 | 架构 |
 | TODO-06 | ~~对齐 ADR-07~~（2026-06-20 已实现） | 开发 |
