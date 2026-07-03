@@ -1,5 +1,6 @@
 package com.plantops.integration;
 
+import com.plantops.testsupport.SpecRef;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
@@ -13,6 +14,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
 
 @QuarkusTest
+@SpecRef({"AC-INT-01", "AC-INT-02", "AC-INT-03"})
 class IntegrationApiIntegrationTest {
 
     private static final String WORKSPACE = "default";

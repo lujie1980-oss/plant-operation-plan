@@ -30,6 +30,7 @@ import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.scenario.planning.MasterPlanPlanningContext;
 import com.plantops.scenario.planning.MaterialPlanningContext;
+import com.plantops.scenario.planning.MasterPlanKpiService;
 import com.plantops.scenario.planning.MasterPlanOntologyScheduleBuilder;
 import com.plantops.scenario.planning.MasterPlanProblemMapper;
 import com.plantops.solver.masterplan.MasterPlanCapacityStrategy;
@@ -174,6 +175,9 @@ public class MasterPlanService {
 
     @Inject
     JitResourceCapacitySeeder jitResourceCapacitySeeder;
+
+    @Inject
+    MasterPlanKpiService masterPlanKpiService;
 
     public MasterPlanResultDto solve() throws ExecutionException, InterruptedException {
         return solveWithStrategy(null);
@@ -439,6 +443,9 @@ public class MasterPlanService {
                 v.capacityStrategy != null ? v.capacityStrategy : MasterPlanCapacityStrategy.UNCONSTRAINED.name(),
                 v.strategyId,
                 v.strategyName,
+                masterPlanKpiService.readTotalKpi(v),
+                masterPlanKpiService.readScoreSummary(v),
+                masterPlanKpiService.readBreakdown(v),
                 buildKpis(v.score, allocations),
                 allocations,
                 openings);
@@ -879,6 +886,7 @@ public class MasterPlanService {
             persistAllocationRows(
                     versionId,
                     ResourceCapacityResultProjector.toAllocationDtos(solution.getResourceCapacityAssignments()));
+            masterPlanKpiService.persistFromSchedule(versionId, solution);
             return;
         }
 
@@ -901,6 +909,7 @@ public class MasterPlanService {
             row.stampWorkspace();
             row.persist();
         }
+        masterPlanKpiService.persistFromSchedule(versionId, solution);
     }
 
     @Transactional(Transactional.TxType.REQUIRES_NEW)

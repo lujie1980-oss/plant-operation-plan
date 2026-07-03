@@ -10,6 +10,7 @@ import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.WorkOrderBomDependencyEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.persistence.entity.WorkOrderPeggingEntity;
+import com.plantops.testsupport.SpecRef;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
+@SpecRef({"AC-14", "AC-15", "AC-16"})
 class OrderDemandActionOntologyChainTest {
 
     private static final String SALES_ORDER_NO = "SO-SC-ACTION-ONT";

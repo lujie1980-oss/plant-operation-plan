@@ -3,6 +3,7 @@ package com.plantops.knowledge;
 import com.plantops.persistence.entity.KnowledgeOverlayEntity;
 import com.plantops.persistence.entity.WorkspaceEntity;
 import com.plantops.workspace.WorkspaceContext;
+import com.plantops.testsupport.SpecRef;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -17,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
+@SpecRef("AC-KN-02")
 class KnowledgeResolverIntegrationTest {
 
     @Inject

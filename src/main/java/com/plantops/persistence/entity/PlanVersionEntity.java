@@ -40,6 +40,13 @@ public class PlanVersionEntity extends WorkspaceScopedEntity {
 
     public String score;
 
+    /** KPI-MP-TOT scalar (hard + soft). */
+    public Integer totalKpi;
+
+    /** JSON snapshot of §15 kpiBreakdown. */
+    @jakarta.persistence.Column(columnDefinition = "CLOB")
+    public String kpiBreakdownJson;
+
     /** 主计划产能策略：UNCONSTRAINED | FINITE_CAPACITY */
 
     public String capacityStrategy;

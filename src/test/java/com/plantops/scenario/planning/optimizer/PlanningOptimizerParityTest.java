@@ -1,5 +1,6 @@
 package com.plantops.scenario.planning.optimizer;
 
+import com.plantops.testsupport.SpecRef;
 import com.plantops.api.dto.MasterPlanAllocationDto;
 import com.plantops.config.MasterPlanStrategyConfigService;
 import com.plantops.ontology.WorkspaceAuthoritativeOntologyGraphService;
@@ -33,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Timefold vs OR-Tools 对等性（D40）：hard 可行 + assignment 键 Jaccard ≥ 0.95。
  */
 @QuarkusTest
+@SpecRef("AC-05")
 class PlanningOptimizerParityTest {
 
     private static final String SALES_ORDER_NO = "SO-OPT-PARITY";

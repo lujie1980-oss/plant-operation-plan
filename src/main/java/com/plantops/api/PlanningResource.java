@@ -9,6 +9,7 @@ import com.plantops.api.dto.planning.DetailScheduleVersionSummaryDto;
 import com.plantops.api.dto.planning.OrderPlanningChainDto;
 import com.plantops.api.dto.planning.OrderPlanningChainPreviewRequest;
 import com.plantops.api.dto.planning.PlanningScoreExplanationDto;
+import com.plantops.scenario.planning.MasterPlanKpiService;
 import com.plantops.scenario.planning.OrderPlanningChainService;
 import com.plantops.config.MasterPlanStrategyConfigService;
 import com.plantops.scenario.*;
@@ -77,6 +78,9 @@ public class PlanningResource {
 
     @Inject
     PlanningScoreExplainService planningScoreExplainService;
+
+    @Inject
+    MasterPlanKpiService masterPlanKpiService;
 
     @Inject
     OrderPlanningChainService orderPlanningChainService;
@@ -164,6 +168,13 @@ public class PlanningResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public OrderPlanningChainDto previewOrderPlanningChain(OrderPlanningChainPreviewRequest request) {
         return orderPlanningChainService.preview(request);
+    }
+
+    @GET
+    @Path("/planning/master-plan/kpis/{versionId}")
+    public com.plantops.api.dto.planning.MasterPlanKpiDtos.MasterPlanKpisResponseDto masterPlanKpis(
+            @PathParam("versionId") String versionId) {
+        return masterPlanKpiService.getKpis(versionId);
     }
 
     @GET

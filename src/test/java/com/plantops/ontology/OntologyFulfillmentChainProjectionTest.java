@@ -1,5 +1,6 @@
 package com.plantops.ontology;
 
+import com.plantops.testsupport.SpecRef;
 import com.plantops.api.dto.CustomerOrderLineDeliveryListItemDto;
 import com.plantops.api.dto.FulfillmentChainNodeDto;
 import com.plantops.api.dto.OrderFulfillmentChainDto;
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
+@SpecRef("AC-01")
 class OntologyFulfillmentChainProjectionTest {
 
     private static final String SALES_ORDER_NO = "SO-SC-FF-TEST";

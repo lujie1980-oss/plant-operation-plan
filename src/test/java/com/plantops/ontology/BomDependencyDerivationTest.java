@@ -9,6 +9,7 @@ import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.WorkOrderBomDependencyEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.solver.masterplan.BomDependencyEdge;
+import com.plantops.testsupport.SpecRef;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -24,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
+@SpecRef("AC-10")
 class BomDependencyDerivationTest {
 
     private static final String PARENT_WO = "WO-SC-BOM-PARENT";

@@ -1189,4 +1189,26 @@ stateDiagram-v2
 
 ---
 
+## 5.21 Ontology 范围扩展路线图（TODO-20）
+
+> **现行：** ENT-OG **仅覆盖 MOD-OCP / PROC-S04**（§5 正文实体与 `ont_*` P0~P5）。  
+> **后续：** MOD-SCH（PROC-S05）、MOD-SLT（PROC-SLT）纳入本体前保持独立 JPA；代码登记见 `OntologyScopeRegistry`。
+
+| 模块 | PROC | ENT-OG 现状 | 目标态 `ont_*` | 现行持久化 |
+|------|------|-------------|----------------|------------|
+| **MOD-OCP** | PROC-S04 | **已纳入** COLD/SO/OP/RCA/SRP/PRP/PISPP/SES/PV | `ont_*` P0~P5 | `plan_version` + `master_plan_allocation`（并行） |
+| **MOD-SCH** | PROC-S05 | **未纳入**；细排分钟级 | `ont_operation_schedule` 等（待定） | `detail_schedule_operation` · `schedule_session` |
+| **MOD-SLT** | PROC-SLT | **未纳入** | `ont_slitting_*`（待定） | `slitting_plan_*` |
+
+**阶段（与 TODO-07 求解插件化协同）：**
+
+1. **SCH-P0** — 规范 ENT-OP-SCH / ENT-RCA-SCH 字段目录；loader 只读投影自 legacy 表  
+2. **SCH-P1** — `ont_*` 表族 + Restorer；Session confirm 双写  
+3. **SLT-P0** — 分切 roll/assignment 实体目录；与 MOD-SLT API 对齐  
+4. **退役** — legacy JPA 写路径在 parity AC 绿后关闭  
+
+**闸口：** 各阶段须独立 AC 与 `@SpecRef`；**不得**阻塞 MOD-OCP 基线发布。
+
+---
+
 **回指：** [02-glossary.md](./02-glossary.md) · [04-business-rules.md](./04-business-rules.md) · [06-api-contracts.md](./06-api-contracts.md) · [10-decisions-risks.md](./10-decisions-risks.md) ADR-09 · [05-domain-model-appendix-fields.md](./05-domain-model-appendix-fields.md)

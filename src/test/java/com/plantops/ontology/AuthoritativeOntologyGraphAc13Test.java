@@ -1,5 +1,6 @@
 package com.plantops.ontology;
 
+import com.plantops.testsupport.SpecRef;
 import com.plantops.api.dto.planning.CreateMasterPlanSessionRequest;
 import com.plantops.api.dto.planning.MasterPlanSessionDto;
 import com.plantops.api.dto.planning.SimulateMasterPlanSessionRequest;
@@ -33,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * AC-13 / ADR-07：ENT-SES 与 ENT-SBX 共享同一权威 ENT-OG。
  */
 @QuarkusTest
+@SpecRef("AC-13")
 class AuthoritativeOntologyGraphAc13Test {
 
     private static final String PLAN_VERSION_ID = "MPV-AC13-AUTH-OG";

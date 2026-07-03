@@ -1,5 +1,6 @@
 package com.plantops.ontology.master;
 
+import com.plantops.testsupport.SpecRef;
 import com.plantops.persistence.entity.MdRoutingEntity;
 import com.plantops.persistence.entity.MdRoutingStepEntity;
 import com.plantops.persistence.entity.MdRoutingStepImEntity;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
+@SpecRef("AC-09")
 class MasterPlanRoutingProjectorTest {
 
     private static final String PRODUCT = "FG-MPDM-TEST";

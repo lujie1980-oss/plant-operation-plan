@@ -1,5 +1,6 @@
 package com.plantops.ontology;
 
+import com.plantops.testsupport.SpecRef;
 import com.plantops.api.dto.MaterialRequirementReportDto;
 import com.plantops.ontology.material.OntologyMaterialBalanceProjector;
 import com.plantops.ontology.persistence.OntologyPersistencePort;
@@ -24,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
+@SpecRef("AC-17")
 class OntologyMaterialPlanningProjectionTest {
 
     private static final String SALES_ORDER_NO = "SO-MP-PROJ";

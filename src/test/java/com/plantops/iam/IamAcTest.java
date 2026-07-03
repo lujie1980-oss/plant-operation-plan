@@ -7,6 +7,7 @@ import com.plantops.iam.entity.WorkspaceMemberEntity;
 import com.plantops.iam.entity.WorkspaceMemberModuleEntity;
 import com.plantops.iam.service.JwtTokenService;
 import com.plantops.persistence.entity.WorkspaceEntity;
+import com.plantops.testsupport.SpecRef;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
@@ -19,9 +20,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 
 /**
- * Automated checks for AC-IAM-01 ~ AC-IAM-05 (§8 · ADR-13).
+ * Automated checks for AC-IAM-01 ~ AC-IAM-06 (§8 · ADR-13).
  */
 @QuarkusTest
+@SpecRef({"AC-IAM-01", "AC-IAM-02", "AC-IAM-03", "AC-IAM-04", "AC-IAM-05", "AC-IAM-06"})
 class IamAcTest {
 
     private static final String JINGHUA = "jinghua";
@@ -163,6 +165,21 @@ class IamAcTest {
                     "dev", "CREATE_USER", "USER", newId);
             org.junit.jupiter.api.Assertions.assertTrue(count >= 1);
         });
+    }
+
+    @Test
+    void acIam06_unknownModuleIdRejected() {
+        given()
+            .header("Authorization", bearer("dev", true))
+            .header("X-Workspace-Id", JINGHUA)
+            .contentType(ContentType.JSON)
+            .body("""
+                {"modules":[{"moduleId":"MOD-UNREGISTERED","enabled":true}]}
+                """)
+            .when()
+            .put("/api/v1/iam/workspaces/" + JINGHUA + "/modules")
+            .then()
+            .statusCode(400);
     }
 
     @Test

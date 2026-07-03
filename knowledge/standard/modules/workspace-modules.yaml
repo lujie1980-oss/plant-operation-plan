@@ -22,6 +22,9 @@ modules:
     api_path_prefixes:
       - /api/v1/integration
       - /api/v1/external
+      - /api/v1/master-data
+      - /api/v1/business-data
+      - /api/v1/transactional-data
       - /api/v1/master-data/quality
       - /api/v1/transactional-data/quality
     default_enabled: true
@@ -54,6 +57,10 @@ modules:
       - /api/v1/master-plan
       - /api/v1/planning
       - /api/v1/ontology
+      - /api/v1/knowledge
+      - /api/v1/demand
+      - /api/v1/work-orders
+      - /api/v1/material-requirements
       - /api/v1/business-rules
     default_enabled: true
     menu_ref: Layout.MASTER_PLAN_GROUP
@@ -71,8 +78,11 @@ modules:
     route_prefixes:
       - /scheduling
     api_path_prefixes:
-      - /api/v1/detail-schedule
+      - /api/v1/planning/detail-schedule
+      - /api/v1/planning/schedule-feedback
+      - /api/v1/planning/schedule-sessions
       - /api/v1/scheduling
+      - /api/v1/production-tasks
       - /api/v1/business-rules
     default_enabled: true
     menu_ref: Layout.SCHEDULING_GROUP

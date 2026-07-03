@@ -249,7 +249,7 @@
 
 | ID | 项 | 负责人 |
 |----|-----|--------|
-| TODO-01 | 为现有测试补 `@SpecRef(AC-xx)` | 开发 |
+| TODO-01 | 为现有测试补 `@SpecRef(AC-xx)` | 开发 | **已完成 2026-07-03** · `@SpecRef` 注解 · `SpecRefCoverageTest` · 核心 AC 集成测试已标注 |
 | TODO-02 | OpenAPI 从 §6 生成契约骨架 | 开发 |
 | TODO-03 | 多 COLD 批次场景 SCN 扩展 | 产品 |
 | TODO-04 | ~~直驱默认签字~~ → 并入 TODO-08（ADR-08 废止 PATH-ENT） | PO |
@@ -264,19 +264,19 @@
 | TODO-13 | **ADR-10 External_* 主数据**：staging、质检、sync、md_*、Projector 切读 | 架构+开发 · **M0–M5 已完成 2026-07-03** |
 | TODO-14 | **ADR-11 外部交易数据**：external_* / txn_*、Firm WO 同步、质检、OG 装载切读 | 架构+开发 · **T0–T5 已完成 2026-07-03** |
 | TODO-15 | **ADR-12 业务知识三层**：KnowledgeContext、Industry pack、overlay 表、引擎接 Effective | 架构+产品 · **K0–K4 已完成 2026-07-03** |
-| TODO-16 | **§15 主计划 KPI 结构化**：`kpiBreakdown` API、求解器域分、B01~B10 面板 | 开发+产品 |
+| TODO-16 | **§15 主计划 KPI 结构化**：`kpiBreakdown` API、求解器域分、B01~B10 面板 | 开发+产品 | **已完成 2026-06-28** · `GET /api/v1/planning/master-plan/kpis/{versionId}` · `MasterPlanKpiService` · V77 |
 | TODO-17 | ~~**§16 供需知识 UI**~~ **已收口 2026-07-02**：BusinessRules 六 tab + 细排反馈只读页；`delivery-date-strategy` / `supply-quantity-rules` / `resource-efficiency` / `routing-step-*` API | — |
 | TODO-18 | ~~ADR-13 IAM~~：**已完成 2026-06** — M0–M4（Filter、JWT、OIDC 联调、Super Admin UI、侧栏 MOD） | 架构+前后端 |
 | TODO-19 | **ADR-14 数据集成**：MOD-DI UI、ADP-ERP-SAP/MES/Excel SPI、external 浏览 API | 架构+前后端 · **API-INT-01~08 + ADP SPI 已完成 2026-07-03** |
-| TODO-20 | **§5 Ontology 范围扩展**：现行 ENT-OG **仅覆盖订单协同计划**（原主计划 · **MOD-OCP** / PROC-S04）；**MOD-SCH 作业排程**、**MOD-SLT 分切排样** 的领域实体、装载路径与 `ont_*` 表族 **后续完善**（与 TODO-07 求解插件化协同，不阻塞当前 OCP 基线） | 架构+产品 |
+| TODO-20 | **§5 Ontology 范围扩展**：现行 ENT-OG **仅覆盖订单协同计划**（原主计划 · **MOD-OCP** / PROC-S04）；**MOD-SCH 作业排程**、**MOD-SLT 分切排样** 的领域实体、装载路径与 `ont_*` 表族 **后续完善**（与 TODO-07 求解插件化协同，不阻塞当前 OCP 基线） | 架构+产品 | **P0 已完成 2026-07-03** · §5.21 路线图 · `OntologyScopeRegistry` |
 | TODO-21 | ~~**§5 领域模型细化**~~ **已收口 2026-07-01**：§5.0/§5.19/§5.20 · `05-ont-schema` P0+V67 `ont_period` · Mapper/Restorer 持久化 | — |
 | TODO-22 | ~~**ADR-15 ENT-RCA 本体化**~~ **已收口 2026-07-01**（R0~R5）：ENT-RCA SoT · `ont_resource_capacity_assignment` · `OntologyRcaProjector` | — |
 | TODO-23 | ~~**ADR-16 Shift 级 Period**~~ **已收口 2026-07-01**（S0~S5）：shift-Period · leaf SRP/RCA · `PeriodTimeSlotDeriver` · ENT-SS 废止 | — |
 | TODO-24 | ~~**ADR-17 PR/PRP 产能聚合**~~ **已收口 2026-06-28**（P0~P5）：ENT-PRP · 日历挂 ENT-PR · SRP=Σ PRP · 细排反馈写 PRP | — |
 | TODO-25 | ~~IAM 规范残余~~ **已决策 2026-06**：v1 **首登手动建 WS**（改规范 · §18.3.1 / RULE-IAM-02）；`%prod` `dev-mode=false` 验收 | — |
-| TODO-26 | **模块注册表一致性（§19 · AC-IAM-06）**：`workspace-modules.yaml` ↔ `WorkspaceModuleCatalog` 同步/校验（含 API 前缀漂移）；MOD-EXT / ADP-EXT 扩展契约机械化 | 架构+开发 |
+| TODO-26 | **模块注册表一致性（§19 · AC-IAM-06）**：`workspace-modules.yaml` ↔ `WorkspaceModuleCatalog` 同步/校验（含 API 前缀漂移）；MOD-EXT / ADP-EXT 扩展契约机械化 | 架构+开发 | **已完成 2026-07-03** · `WorkspaceModuleRegistryValidator` · `WorkspaceModuleCatalogSyncTest` |
 | TODO-27 | ~~**SDD 文档债同步（RSK-02）**~~ **已收口 2026-07-01**：AC-17 API 路径 · UI-NAV 深链 `[GAP]` 标注 · `aps-planning-layer` 废止 diagnostics preview · §18 `local-login-enabled` · TODO-22/23 主表关闭 | — |
-| TODO-28 | **CI 与 AC 测试基建**：Flyway demo 种子 vs Hibernate `*_SEQ` 基线（`db/test-migration`）；`@QuarkusTest` IAM 配置清单；补 AC-IAM-06 / AC-UI-* 自动化（配合 TODO-01 `@SpecRef`） | 开发 |
+| TODO-28 | **CI 与 AC 测试基建**：Flyway demo 种子 vs Hibernate `*_SEQ` 基线（`db/test-migration`）；`@QuarkusTest` IAM 配置清单；补 AC-IAM-06 / AC-UI-* 自动化（配合 TODO-01 `@SpecRef`） | 开发 | **已完成 2026-07-03** · `docs/testing/quarkus-test-checklist.md` · `SpecRefCoverageTest` · `IamAcTest#acIam06` |
 
 ### 偏差 → TODO 映射（2026-06-29 审查）
 
@@ -296,14 +296,14 @@
 | D-23 | ~~Shift-Period / ENT-SS 双轨~~ | ~~TODO-23~~ | **已解决 2026-07-01**（S0~S5） |
 | D-24 | ~~无 ENT-PRP / SRP≠Σ PRP~~ | ~~**TODO-24**~~ **已收口 2026-06-28** | — |
 | D-CONFIRM | ~~confirm 非 ont revision~~ | ~~TODO-12~~ | **已解决 2026-06-30**：`OntologyConfirmIntegrationTest` · `MasterPlanOntologySessionPersistenceIntegrationTest` |
-| D-TRACE | 无 `@SpecRef` | **TODO-01** | TODO-28 补 CI 清单 |
+| D-TRACE | 无 `@SpecRef` | **TODO-01** | **已缓解 2026-07-03** · `SpecRefCoverageTest` |
 | D-IAM-01 | 注册无自动 PERSONAL WS | ~~TODO-18~~ | **已决策**：v1 手动建 WS · `IamAcTest#acIam01` |
 | D-IAM-prod | 默认 dev-mode=true | ~~TODO-18~~ M4 | `%prod` 已 false；生产部署验收 |
-| D-IAM-06 | MOD-EXT 未机械化 | — | **TODO-26** |
-| D-YAML | YAML 与 Catalog API 前缀不一致 | — | **TODO-26** |
+| D-IAM-06 | MOD-EXT 未机械化 | — | **已解决 2026-07-03** · `WorkspaceModuleRegistryValidator` |
+| D-YAML | YAML 与 Catalog API 前缀不一致 | — | **已解决 2026-07-03** · YAML 同步 + 校验测试 |
 | D-DOC | ~~§8/§17/aps 文档与实现不一致~~ | ~~TODO-27~~ | **已解决 2026-07-01**（本轮同步）；后续 PR 仍须规范联动（RSK-02） |
-| D-CI-SEQ | Flyway 种子 id 与 `*_SEQ` 冲突 | — | **TODO-28**（已实现 test-migration，待规范化） |
-| D-CI-IAM | QuarkusTest 缺 IAM 配置致套件不可跑 | — | **TODO-28** |
+| D-CI-SEQ | Flyway 种子 id 与 `*_SEQ` 冲突 | — | **已缓解** · `V1000__test_sequences_after_seed.sql` + checklist |
+| D-CI-IAM | QuarkusTest 缺 IAM 配置致套件不可跑 | — | **已缓解** · `application.properties` 清单 |
 | AC-23 | COLD 计划覆盖标记 | 分散 | 随 TODO-11/OCP 迭代补测（暂不单独 TODO） |
 | AC-05 | 迁移期 PATH 对等 | **TODO-08** 后废止 | **已废止 2026-07-01** |
 

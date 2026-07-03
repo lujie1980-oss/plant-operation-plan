@@ -400,7 +400,7 @@
 | AC-IAM-03 | 关闭 MOD-SLT 后侧栏无分切入口且 slitting API 403 | RULE-IAM-03 | `IamAcTest#acIam03_*` · 侧栏手工 |
 | AC-IAM-04 | MOD-OCP=VIEW 用户 optimize → 403 MODULE_FORBIDDEN | RULE-IAM-04 · SCN-T06b | `IamAcTest#acIam04_*` |
 | AC-IAM-05 | SUPER_ADMIN 可管理任意用户；操作有 audit | RULE-IAM-05 · SCN-T06c | `IamAcTest#acIam05_*` |
-| AC-IAM-06 | 新增计划能力未注册 MOD-* 不得单独上线模块开关 | RULE-IAM-06 | — |
+| AC-IAM-06 | 新增计划能力未注册 MOD-* 不得单独上线模块开关 | RULE-IAM-06 | `WorkspaceModuleCatalogSyncTest` · `IamAcTest#acIam06_*` |
 
 **P1 联调：** [iam-p1-runbook.md](../../iam-p1-runbook.md) · OIDC 可选 `OidcLiveIntegrationTest`（Keycloak :8081）
 
@@ -413,7 +413,24 @@
 | AC-INT-01 | Excel 导入仅写 external_*，初始 PENDING | SCN-T07a · RULE-MD-02 · **API-INT-07** |
 | AC-INT-02 | ERP SAP adapter 写入 source_system=ERP_SAP | SCN-T07b · **API-INT-05** |
 | AC-INT-03 | 计划路径不读 external_* 直驱 | RULE-MD-01 · SCN-T07b · **API-INT-03** |
-| AC-INT-04 | 关闭 MOD-DI 后 /integration 403 | RULE-IAM-03 |
+| AC-INT-04 | 关闭 MOD-DI 后 /integration 403 | RULE-IAM-03 | `IntegrationApiIntegrationTest`（间接） |
+
+---
+
+## AC-KN：业务知识（§13~14 · ADR-12）
+
+| ID | 陈述 | 自动化 |
+|----|------|--------|
+| AC-KN-01 | Effective 知识合并后引擎读取 overlay 参数 | `KnowledgeEffectiveEngineIntegrationTest` |
+| AC-KN-02 | Industry pack install API 写入 workspace overlay | `KnowledgeResolverIntegrationTest` |
+
+---
+
+## AC-MP-KPI：主计划 KPI（§15 · TODO-16）
+
+| ID | 陈述 | 自动化 |
+|----|------|--------|
+| AC-MP-KPI-01 | `GET master-plan/kpis/{versionId}` 返回 B01~B10 与 kpiBreakdown | `MasterPlanKpiServiceIntegrationTest` · `MasterPlanKpiBreakdownBuilderTest` |
 
 ---
 

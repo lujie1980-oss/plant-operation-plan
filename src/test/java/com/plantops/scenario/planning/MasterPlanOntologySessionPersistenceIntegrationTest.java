@@ -24,6 +24,7 @@ import com.plantops.persistence.entity.ProductResourceEntity;
 import com.plantops.persistence.entity.SalesOrderLineEntity;
 import com.plantops.persistence.entity.WorkOrderEntity;
 import com.plantops.workspace.WorkspaceResolver;
+import com.plantops.testsupport.SpecRef;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -42,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * promotes HEAD, and keeps legacy allocation + work_order alignment.
  */
 @QuarkusTest
+@SpecRef("AC-PERS-03")
 class MasterPlanOntologySessionPersistenceIntegrationTest {
 
     private static final String PLAN_VERSION_ID = "MPV-OTD-PERS-P4";

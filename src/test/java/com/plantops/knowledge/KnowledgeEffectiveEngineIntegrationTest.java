@@ -1,5 +1,6 @@
 package com.plantops.knowledge;
 
+import com.plantops.testsupport.SpecRef;
 import com.plantops.persistence.entity.MaterialLeadTimeRuleEntity;
 import com.plantops.persistence.entity.WorkspaceEntity;
 import com.plantops.workspace.WorkspaceContext;
@@ -14,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
+@SpecRef("AC-KN-01")
 class KnowledgeEffectiveEngineIntegrationTest {
 
     @Inject

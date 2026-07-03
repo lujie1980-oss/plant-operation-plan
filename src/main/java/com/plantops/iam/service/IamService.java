@@ -102,7 +102,7 @@ public class IamService {
         }
         for (UpdateModulesRequest.ModuleToggleRequest item : request.modules()) {
             if (!WorkspaceModuleCatalog.KNOWN_MODULE_IDS.contains(item.moduleId())) {
-                throw new IllegalArgumentException("unknown moduleId: " + item.moduleId());
+                throw new BadRequestException("unknown moduleId: " + item.moduleId());
             }
             upsertModule(workspaceId, item.moduleId(), item.enabled());
         }
@@ -117,7 +117,7 @@ public class IamService {
         }
         for (UpdateAdaptersRequest.AdapterToggleRequest item : request.adapters()) {
             if (!WorkspaceModuleCatalog.KNOWN_ADAPTER_IDS.contains(item.adapterId())) {
-                throw new IllegalArgumentException("unknown adapterId: " + item.adapterId());
+                throw new BadRequestException("unknown adapterId: " + item.adapterId());
             }
             upsertAdapter(workspaceId, item.adapterId(), item.enabled());
         }
