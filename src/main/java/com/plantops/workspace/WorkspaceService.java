@@ -79,6 +79,9 @@ public class WorkspaceService {
         if (userId != null) {
             e.ownerUserId = userId;
         }
+        if (req.industryId() != null && !req.industryId().isBlank()) {
+            e.industryId = req.industryId().trim();
+        }
         e.persist();
         // IAM M1: 三合一创建 — member OWNER + 默认模块 + 默认适配器
         if (userId != null) {
@@ -159,8 +162,16 @@ public class WorkspaceService {
     }
 
     private WorkspaceDto toDto(WorkspaceEntity e) {
-        return new WorkspaceDto(e.workspaceId, e.name, e.description, e.createdAt, e.isDefault,
-                e.ownerUserId, e.workspaceType);
+        return new WorkspaceDto(
+                e.workspaceId,
+                e.name,
+                e.description,
+                e.createdAt,
+                e.isDefault,
+                e.ownerUserId,
+                e.workspaceType,
+                e.industryId,
+                e.knowledgePackVersion);
     }
 
     private void ensureDefaultModulesForWorkspace(String workspaceId) {

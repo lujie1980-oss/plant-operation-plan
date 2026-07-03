@@ -1,5 +1,6 @@
 package com.plantops.config;
 
+import com.plantops.knowledge.KnowledgeContext;
 import com.plantops.persistence.entity.SystemParameterEntity;
 import com.plantops.workspace.WorkspaceContext;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -73,6 +74,9 @@ public class ParameterRegistry {
     @Inject
     WorkspaceContext workspaceContext;
 
+    @Inject
+    KnowledgeContext knowledgeContext;
+
     public boolean getBoolean(String paramId, boolean defaultValue) {
         String v = get(paramId);
         if (v == null || v.isBlank()) {
@@ -108,9 +112,9 @@ public class ParameterRegistry {
     public String get(String paramId) {
         String cacheKey = cacheKey(paramId);
         return cache.computeIfAbsent(cacheKey, key -> {
-            SystemParameterEntity e = SystemParameterEntity.findByParamId(paramId);
-            if (e != null) {
-                return e.paramValue;
+            String effective = knowledgeContext.getParameter(paramId);
+            if (effective != null && !effective.isBlank()) {
+                return effective;
             }
             return DEFAULTS.get(paramId);
         });
@@ -137,15 +141,18 @@ public class ParameterRegistry {
             }
         });
         cache.clear();
+        knowledgeContext.invalidate(workspaceContext.getWorkspaceId());
     }
 
     public void invalidate(String paramId) {
         if (paramId == null) {
             cache.clear();
+            knowledgeContext.invalidate(workspaceContext.getWorkspaceId());
             return;
         }
         String prefix = workspaceContext.getWorkspaceId() + "|";
         cache.remove(prefix + paramId);
+        knowledgeContext.invalidate(workspaceContext.getWorkspaceId());
     }
 
     private String cacheKey(String paramId) {

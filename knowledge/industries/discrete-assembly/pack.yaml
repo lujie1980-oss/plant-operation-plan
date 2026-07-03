@@ -1,0 +1,14 @@
+# IndustryKnowledgePack — 离散装配（TODO-15 K1）
+industry_id: DISCRETE_ASSEMBLY
+version: 1.0.0
+extends: plantops-standard-v1
+description: 多阶 BOM、Firm WO、SCN-07 预留等行业默认
+
+parameters:
+  default_procurement_lead_time_days: 10
+  capacity_overload_threshold_pct: 105
+  master_plan_material_constraint_enabled: true
+
+business_rules_tabs:
+  material-lead-time:
+    default_lead_time_days: 10

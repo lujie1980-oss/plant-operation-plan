@@ -263,13 +263,13 @@ Customized：**DB** `knowledge_overlay` + 现有 BusinessRules 表（不随 git 
 
 ## 13.11 实施路线（TODO-15）
 
-| 阶段 | 交付 |
-|------|------|
-| **K0** | `KnowledgeContext` 读 Standard defaults + BusinessRules（= Custom CFG） |
-| **K1** | `Workspace.industry_id` + 1 个 Industry pack（discrete-assembly） |
-| **K2** | `knowledge_overlay` 表 + 导入校验（KN validator） |
-| **K3** | Optimizer / FF-06 / MRP-04 全改读 Effective |
-| **K4** | Industry pack 安装 CLI + AC-KN-* |
+| 阶段 | 交付 | 状态 |
+|------|------|------|
+| **K0** | `KnowledgeContext` 读 Standard defaults + BusinessRules（= Custom CFG） | **已完成** · `KnowledgeResolver` · `ParameterRegistry` 接 Effective |
+| **K1** | `Workspace.industry_id` + 1 个 Industry pack（discrete-assembly） | **已完成** · `V75` · `DISCRETE_ASSEMBLY` |
+| **K2** | `knowledge_overlay` 表 + 导入校验（KN validator） | **已完成** · `KnowledgeOverlayService` · `GET/POST /api/v1/knowledge/*` |
+| **K3** | Optimizer / FF-06 / MRP-04 全改读 Effective | 待办 |
+| **K4** | Industry pack 安装 CLI + AC-KN-* | 待办 |
 
 ---
 

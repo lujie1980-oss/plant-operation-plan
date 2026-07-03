@@ -263,7 +263,7 @@
 | TODO-12 | ~~**ADR-09 全量 Ontology 持久化**~~ **已收口 2026-07-01**（P0~P5 + Sprint 6A~6D）；loader 内部化文档化 · 后续扩展见 **TODO-24**（PRP）· **TODO-21**（`ont_period` DDL） | — |
 | TODO-13 | **ADR-10 External_* 主数据**：staging、质检、sync、md_*、Projector 切读 | 架构+开发 · **M0–M5 已完成 2026-07-03** |
 | TODO-14 | **ADR-11 外部交易数据**：external_* / txn_*、Firm WO 同步、质检、OG 装载切读 | 架构+开发 · **T0–T5 已完成 2026-07-03** |
-| TODO-15 | **ADR-12 业务知识三层**：KnowledgeContext、Industry pack、overlay 表、引擎接 Effective | 架构+产品 |
+| TODO-15 | **ADR-12 业务知识三层**：KnowledgeContext、Industry pack、overlay 表、引擎接 Effective | 架构+产品 · **K0–K2 已完成 2026-07-03** · K3/K4 待办 |
 | TODO-16 | **§15 主计划 KPI 结构化**：`kpiBreakdown` API、求解器域分、B01~B10 面板 | 开发+产品 |
 | TODO-17 | ~~**§16 供需知识 UI**~~ **已收口 2026-07-02**：BusinessRules 六 tab + 细排反馈只读页；`delivery-date-strategy` / `supply-quantity-rules` / `resource-efficiency` / `routing-step-*` API | — |
 | TODO-18 | ~~ADR-13 IAM~~：**已完成 2026-06** — M0–M4（Filter、JWT、OIDC 联调、Super Admin UI、侧栏 MOD） | 架构+前后端 |
@@ -290,7 +290,7 @@
 | D-10 | ~~无 `CANCEL_PROMISE`~~ | ~~TODO-10~~ | **已解决 2026-07-02** |
 | D-11 | ~~API-MAT-02~08 / SCN-07e~j~~ | ~~TODO-11~~ | **已解决 2026-07-02** |
 | D-12 | 无 external/md/txn | ~~TODO-13/14~~ **已落地 2026-07-03**（V73/V74 · M0–M5 · T0–T5） | — |
-| D-15 | 无 KnowledgeResolver | **TODO-15** | — |
+| D-15 | 无 KnowledgeResolver | ~~TODO-15~~ **K0–K2 已落地 2026-07-03** | K3 引擎全量切读 |
 | D-19 | MOD-DI mock，无 staging | **TODO-19** | — |
 | D-22 | ~~ENT-RCA 未本体化~~ | ~~TODO-22~~ | **已解决 2026-07-01**（R0~R5） |
 | D-23 | ~~Shift-Period / ENT-SS 双轨~~ | ~~TODO-23~~ | **已解决 2026-07-01**（S0~S5） |

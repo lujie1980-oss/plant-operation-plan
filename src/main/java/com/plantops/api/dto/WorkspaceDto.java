@@ -9,5 +9,7 @@ public record WorkspaceDto(
         LocalDateTime createdAt,
         boolean isDefault,
         String ownerUserId,
-        String workspaceType) {
+        String workspaceType,
+        String industryId,
+        String knowledgePackVersion) {
 }

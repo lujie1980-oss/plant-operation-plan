@@ -38,6 +38,12 @@ public class WorkspaceEntity extends PanacheEntityBase {
     @Column(name = "workspace_type", length = 20)
     public String workspaceType = "SHARED";
 
+    @Column(name = "industry_id", length = 64)
+    public String industryId;
+
+    @Column(name = "knowledge_pack_version", length = 32)
+    public String knowledgePackVersion;
+
     public static WorkspaceEntity findByWorkspaceId(String workspaceId) {
         return findById(workspaceId);
     }
