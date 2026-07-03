@@ -40,6 +40,8 @@
 | AC-PERS-03~04 | `MasterPlanOntologySessionPersistenceIntegrationTest` |
 | AC-KN-* | `KnowledgeEffectiveEngineIntegrationTest` |
 | AC-API-01 | `OpenApiSpecCoverageTest` · `SddApiContractParserTest` |
+| AC-BR-01 | `BlindRebuildGateSuiteTest` |
+| AC-BR-02 | `BlindRebuildPilot01SessionTest` |
 
 ## OpenAPI skeleton (TODO-02)
 
@@ -49,6 +51,16 @@
 
 ```bash
 ./mvnw -q "-Dskip.frontend.build=true" compile exec:java
+```
+
+## Blind rebuild gates (TODO-05)
+
+- Runbook: `docs/testing/blind-rebuild-exercise.md`
+- Pack registry: `BlindRebuildRegistry` · integrity test `BlindRebuildGateSuiteTest` (AC-BR-01)
+- Example module gate:
+
+```bash
+.\mvnw.cmd test "-Dtest=SpecRefCoverageTest,OpenApiSpecCoverageTest,BlindRebuildGateSuiteTest,com.plantops.ontology.scheduling.DetailScheduleLegacyProjectorTest"
 ```
 
 ## CI command (local)

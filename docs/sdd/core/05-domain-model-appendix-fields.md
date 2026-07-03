@@ -191,8 +191,8 @@
 | `endMinute` | int | Y | legacy / solver | — | implemented |
 | `durationMinutes` | int | Y | derived | — | implemented |
 | `planningAnchorDate` | date | Y | legacy / derived | 反馈或版本日 | implemented |
-| `plannedStartTs` | datetime | Y | derived | ScheduleTimingUtil | implemented |
-| `plannedEndTs` | datetime | Y | derived | — | implemented |
+| `plannedStartTs` | datetime | Y | derived | §5.22 锚点+startMinute | implemented |
+| `plannedEndTs` | datetime | Y | derived | §5.22 | implemented |
 | `pinned` | boolean | Y | legacy | 冻结 | implemented |
 
 ---

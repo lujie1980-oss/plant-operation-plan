@@ -151,6 +151,33 @@
 
 ---
 
+## API-MP-03 订单协同计划场景列表
+
+| 项 | 值 |
+|----|-----|
+| **ID** | API-MP-03 |
+| **场景** | SCN-06b（VAL-06 场景对比） |
+| **方法** | `GET` |
+| **路径** | `/api/v1/planning/scenarios` |
+| **Query** | `limit`（默认 50） |
+| **响应** | `PlanningScenarioDto[]`（scenarioId, name, planVersionId, score, strategyName, capacityStrategy） |
+
+---
+
+## API-MP-04 多场景 KPI 对比
+
+| 项 | 值 |
+|----|-----|
+| **ID** | API-MP-04 |
+| **场景** | SCN-06b（VAL-06） |
+| **方法** | `POST` |
+| **路径** | `/api/v1/planning/scenarios/compare` |
+| **Body** | `{ "planVersionIds": ["ENT-PV-…"] }` |
+| **响应** | `ScenarioComparisonDto`（`metrics[]` 含 `metricId`/`label`/`unit`；`series[]` 含每版本数值） |
+| **说明** | 指标组须含 `mp_score_*`、`cold_*`、`mp_b01`~`mp_b10`、`cap_*`、`mp_total_wo`、`mp_total_load`、`solve_duration`（AC-VAL-06-01） |
+
+---
+
 ## API-RT-01 工艺主数据
 
 | 项 | 值 |

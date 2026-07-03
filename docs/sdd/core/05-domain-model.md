@@ -1220,6 +1220,17 @@ stateDiagram-v2
 
 **legacy 映射：** `detail_schedule_operation` + `PlanVersionEntity`（`DETAIL_SCHEDULE`）→ `DetailScheduleLegacyProjector`；锚点取自 `schedule_feedback.planning_anchor_date` 或 `plan_generated_ts`。
 
+**分钟→日历时间（SCH-P0 投影必实现）：**
+
+| 派生字段 | 规则 |
+|----------|------|
+| `durationMinutes` | `max(1, endMinute − startMinute)` |
+| `plannedStartTs` | `planningAnchorDate` 当日 `00:00` + `startMinute` 自然分钟 |
+| `plannedEndTs` | 锚点 `00:00` + `startMinute` + `durationMinutes` |
+| `slotDate` | `plannedEndTs` 的日历日（ENT-RCA-SCH · PRP 对齐） |
+
+> 与 `scheduling-domain-model.md` 中 `planningAnchor` 一致；**不**使用班次产能切片。
+
 ---
 
 **回指：** [02-glossary.md](./02-glossary.md) · [04-business-rules.md](./04-business-rules.md) · [06-api-contracts.md](./06-api-contracts.md) · [10-decisions-risks.md](./10-decisions-risks.md) ADR-09 · [05-domain-model-appendix-fields.md](./05-domain-model-appendix-fields.md)

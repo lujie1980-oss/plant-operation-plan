@@ -118,6 +118,7 @@
 | 2026-07-01 | 1.0.0-SNAPSHOT | **TODO-27**：SDD 与实现对齐（TODO-22/23 关闭 · AC-17 API 路径 · UI-NAV 深链标注 · `aps-planning-layer` 废止 diagnostics preview · §18 `local-login-enabled`） |
 | 2026-07-02 | 1.0.0-SNAPSHOT | **TODO-10**：`CANCEL_PROMISE` 动作；`CANCEL_PLAN` 与承诺交期解耦（RULE-FF-03） |
 | 2026-07-03 | 1.0.0-SNAPSHOT | **TODO-20 SCH-P0**：ENT-OP-SCH / ENT-RCA-SCH 字段目录 · `DetailScheduleLegacyProjector` · `DetailScheduleOntologyLoader` |
+| 2026-07-03 | 1.0.0-SNAPSHOT | **TODO-05 M0**：盲重建演练框架 · pilot packs · `BlindRebuildGateSuiteTest`（AC-BR-01） |
 
 ## 治理约定
 

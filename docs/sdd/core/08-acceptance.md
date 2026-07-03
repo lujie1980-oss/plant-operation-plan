@@ -451,4 +451,13 @@
 
 ---
 
+## AC-BR：盲重建演练闸（TODO-05）
+
+| ID | 陈述 | 自动化 |
+|----|------|--------|
+| AC-BR-01 | 盲重建 module pack 引用的 SDD 锚点、AC id、gate 测试类均有效 | `BlindRebuildGateSuiteTest` |
+| AC-BR-02 | Pilot `sch-p0-projection` 闸命令含全局 + 模块 gate 测试 | `BlindRebuildPilot01SessionTest` |
+
+---
+
 **回指：** [03-scenarios.md](./03-scenarios.md) · [04-business-rules.md](./04-business-rules.md) · [06-api-contracts.md](./06-api-contracts.md#api-int-01-导入批次列表) · [17-ui-ux.md](../volumes/platform/17-ui-ux.md) · [18-identity-access-management.md](../volumes/platform/18-19-workspace-platform.md) · [19-workspace-modules-and-adapters.md](../volumes/platform/18-19-workspace-platform.md)

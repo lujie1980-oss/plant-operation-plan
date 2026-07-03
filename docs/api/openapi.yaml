@@ -313,6 +313,50 @@ paths:
               schema:
                 type: "object"
                 description: "planVersionId"
+  /api/v1/planning/scenarios:
+    get:
+      operationId: "API_MP_03_get"
+      tags:
+      - "API-MP"
+      summary: "订单协同计划场景列表"
+      description: "Spec API-MP-03 · SCN-06b（VAL-06 场景对比）"
+      x-api-id: "API-MP-03"
+      parameters:
+      - name: "limit"
+        in: "query"
+        required: false
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "PlanningScenarioDto[]"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlanningScenarioDto"
+  /api/v1/planning/scenarios/compare:
+    post:
+      operationId: "API_MP_04_post"
+      tags:
+      - "API-MP"
+      summary: "多场景 KPI 对比"
+      description: "Spec API-MP-04 · SCN-06b（VAL-06）"
+      x-api-id: "API-MP-04"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              description: "{ \"planVersionIds\": [\"ENT-PV-…\"] }"
+      responses:
+        "200":
+          description: "ScenarioComparisonDto （ metrics[] 含 metricId / label / unit\
+            \ ； series[] 含每版本数值）"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioComparisonDto"
   /api/v1/ontology/master-model/products/{productCode}/routing:
     get:
       operationId: "API_RT_01_get"
@@ -1023,6 +1067,12 @@ components:
       type: "object"
       description: "§6 placeholder — implement in com.plantops.api.dto"
     OperationSnapshotDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    PlanningScenarioDto:
+      type: "object"
+      description: "§6 placeholder — implement in com.plantops.api.dto"
+    ScenarioComparisonDto:
       type: "object"
       description: "§6 placeholder — implement in com.plantops.api.dto"
     RoutingDto:
