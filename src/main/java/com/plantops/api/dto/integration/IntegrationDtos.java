@@ -85,4 +85,69 @@ public final class IntegrationDtos {
             String componentProductCode,
             BigDecimal componentQty,
             String issueStockingPointCode) {}
+
+    public record TransactionalBundleImport(
+            String sourceSystem,
+            List<CustomerOrderRow> customerOrders,
+            List<CustomerOrderLineRow> customerOrderLines,
+            List<CustomerOrderLineDeliveryRow> customerOrderLineDeliveries,
+            List<WorkOrderRow> workOrders,
+            List<WorkOrderOperationRow> workOrderOperations,
+            List<WorkOrderOperationResourceRow> workOrderOperationResources,
+            List<InventoryRow> inventories,
+            List<PurchaseOrderRow> purchaseOrders) {}
+
+    public record CustomerOrderRow(
+            String customerOrderNo,
+            String customerCode,
+            java.time.LocalDate orderDate,
+            String orderStatus,
+            Integer priority) {}
+
+    public record CustomerOrderLineRow(
+            String customerOrderNo, int lineNo, String productCode, BigDecimal orderQty, String uomCode) {}
+
+    public record CustomerOrderLineDeliveryRow(
+            String customerOrderNo,
+            int lineNo,
+            int deliverySeq,
+            BigDecimal deliveryQty,
+            java.time.LocalDate requestedDate,
+            String lineStatus) {}
+
+    public record WorkOrderRow(
+            String workOrderNo,
+            String productCode,
+            BigDecimal quantity,
+            java.time.LocalDate needDate,
+            boolean firmFlag,
+            String dispatchStatus) {}
+
+    public record WorkOrderOperationRow(
+            String workOrderNo, int operationSeq, String operationCode, String operationName) {}
+
+    public record WorkOrderOperationResourceRow(
+            String workOrderNo,
+            int operationSeq,
+            String standardResourceCode,
+            int resourcePriority,
+            int setupTimeMinutes,
+            BigDecimal processTimeSeconds) {}
+
+    public record InventoryRow(
+            String productCode,
+            String stockingPointCode,
+            BigDecimal onHandQty,
+            BigDecimal availableQty,
+            java.time.LocalDate asOfDate) {}
+
+    public record PurchaseOrderRow(
+            String purchaseOrderNo,
+            int lineNo,
+            String productCode,
+            String stockingPointCode,
+            BigDecimal orderQty,
+            BigDecimal openQty,
+            java.time.LocalDate promisedDate,
+            String poStatus) {}
 }

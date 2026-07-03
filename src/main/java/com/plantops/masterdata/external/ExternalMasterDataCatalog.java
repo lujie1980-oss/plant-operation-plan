@@ -59,6 +59,6 @@ public final class ExternalMasterDataCatalog {
     }
 
     public static List<ExternalTableInfoDto> transactionalTables() {
-        return List.of();
+        return com.plantops.transactional.external.ExternalTransactionalCatalog.transactionalTables();
     }
 }

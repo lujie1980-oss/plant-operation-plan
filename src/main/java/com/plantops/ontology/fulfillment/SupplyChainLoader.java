@@ -31,6 +31,9 @@ public class SupplyChainLoader {
     @Inject
     BomDependencyDerivation bomDependencyDerivation;
 
+    @Inject
+    com.plantops.transactional.internal.TxnOntologyLoadContributor txnOntologyLoadContributor;
+
     public void expand(OntologyGraph.Builder builder, List<SupplyOrder> supplyOrders) {
         expandDemandsAndStructureOnly(builder, supplyOrders);
         fulfillmentLoader.load(builder);
@@ -91,6 +94,16 @@ public class SupplyChainLoader {
     }
 
     private void loadIndependentDemands(OntologyGraph.Builder builder) {
+        if (txnOntologyLoadContributor.hasTransactionalDemands()) {
+            txnOntologyLoadContributor.loadDemandsFromTxn(builder);
+            loadForecastDemands(builder);
+            return;
+        }
+        loadLegacySalesOrderDemands(builder);
+        loadForecastDemands(builder);
+    }
+
+    private static void loadLegacySalesOrderDemands(OntologyGraph.Builder builder) {
         for (SalesOrderLineEntity line : SalesOrderLineEntity.listInWorkspace()) {
             if ("CANCELLED".equals(line.status)) {
                 continue;
@@ -129,7 +142,9 @@ public class SupplyChainLoader {
                     DemandSourceType.CUSTOMER_DELIVERY,
                     coldId));
         }
+    }
 
+    private static void loadForecastDemands(OntologyGraph.Builder builder) {
         for (ForecastDemandEntity row : ForecastDemandEntity.listInWorkspace()) {
             if (row.productCode == null || row.productCode.isBlank()) {
                 continue;

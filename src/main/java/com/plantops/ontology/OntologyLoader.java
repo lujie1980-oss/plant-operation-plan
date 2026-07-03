@@ -85,6 +85,9 @@ public class OntologyLoader {
     @Inject
     RuleScopeHelper ruleScopeHelper;
 
+    @Inject
+    com.plantops.transactional.internal.TxnOntologyLoadContributor txnOntologyLoadContributor;
+
     /**
      * @deprecated P4 迁移期：规范读路径为 {@link WorkspaceAuthoritativeOntologyGraphService}
      *             + {@link com.plantops.ontology.persistence.OntologyRestorer}；本方法仅作 legacy 装载边界。
@@ -321,12 +324,19 @@ public class OntologyLoader {
         }
 
         List<SupplyOrder> supplyOrders = loadOpenSupplyOrders(builder);
-        loadOperations(builder, supplyOrders);
+        if (txnOntologyLoadContributor.hasTransactionalSupplyOrders()) {
+            txnOntologyLoadContributor.loadOperationsFromTxn(builder, supplyOrders);
+        } else {
+            loadOperations(builder, supplyOrders);
+        }
         supplyChainLoader.expandDemandsAndStructureOnly(builder, supplyOrders);
         return builder;
     }
 
-    private static List<SupplyOrder> loadOpenSupplyOrders(OntologyGraph.Builder builder) {
+    private List<SupplyOrder> loadOpenSupplyOrders(OntologyGraph.Builder builder) {
+        if (txnOntologyLoadContributor.hasTransactionalSupplyOrders()) {
+            return txnOntologyLoadContributor.loadFirmSupplyOrdersFromTxn(builder);
+        }
         List<SupplyOrder> supplyOrders = new ArrayList<>();
         for (WorkOrderEntity wo : WorkOrderEntity.listInWorkspace()) {
             if (!isOpenWorkOrder(wo)) {

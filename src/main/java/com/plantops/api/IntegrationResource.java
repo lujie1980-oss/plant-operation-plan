@@ -12,6 +12,10 @@ import com.plantops.masterdata.external.ExternalMasterDataCatalog;
 import com.plantops.masterdata.external.MasterDataExternalImportService;
 import com.plantops.masterdata.quality.MasterDataQualityService;
 import com.plantops.masterdata.sync.MasterDataSyncService;
+import com.plantops.transactional.external.TransactionalDataExternalImportService;
+import com.plantops.transactional.quality.TransactionalDataQualityService;
+import com.plantops.transactional.sync.TransactionalDataSyncService;
+import com.plantops.api.dto.integration.IntegrationDtos.TransactionalBundleImport;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -43,6 +47,15 @@ public class IntegrationResource {
     @Inject
     MasterDataSyncService syncService;
 
+    @Inject
+    TransactionalDataExternalImportService transactionalImportService;
+
+    @Inject
+    TransactionalDataQualityService transactionalQualityService;
+
+    @Inject
+    TransactionalDataSyncService transactionalSyncService;
+
     @GET
     @Path("/erp/orders")
     public Object erpOrders() {
@@ -58,10 +71,11 @@ public class IntegrationResource {
     @GET
     @Path("/external/{domain}/tables")
     public List<?> listExternalTables(@PathParam("domain") String domain) {
-        if (!"master".equals(domain)) {
-            throw new NotFoundException("Unknown external domain: " + domain);
-        }
-        return ExternalMasterDataCatalog.masterTables();
+        return switch (domain) {
+            case "master" -> ExternalMasterDataCatalog.masterTables();
+            case "transactional" -> ExternalMasterDataCatalog.transactionalTables();
+            default -> throw new NotFoundException("Unknown external domain: " + domain);
+        };
     }
 
     @POST
@@ -89,6 +103,36 @@ public class IntegrationResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public SyncResult syncMasterData(SyncRequest request) {
         MasterDataSyncService.SyncReport report = syncService.syncPassedBatch(request.importBatchId());
+        return new SyncResult(report.importBatchId(), report.syncedRows(), report.skippedRows());
+    }
+
+    @POST
+    @Path("/transactional-data/import")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public ImportBatchResult importTransactionalBundle(TransactionalBundleImport bundle) {
+        return transactionalImportService.importBundle(bundle);
+    }
+
+    @POST
+    @Path("/transactional-data/quality/check")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public QualityCheckResult checkTransactionalQuality(QualityCheckRequest request) {
+        TransactionalDataQualityService.QualityReport report =
+                transactionalQualityService.checkBatch(request.importBatchId());
+        return new QualityCheckResult(
+                report.importBatchId(),
+                report.pendingCount(),
+                report.passedCount(),
+                report.failedCount(),
+                report.warningCount());
+    }
+
+    @POST
+    @Path("/transactional-data/sync")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public SyncResult syncTransactionalData(SyncRequest request) {
+        TransactionalDataSyncService.SyncReport report =
+                transactionalSyncService.syncPassedBatch(request.importBatchId());
         return new SyncResult(report.importBatchId(), report.syncedRows(), report.skippedRows());
     }
 }
