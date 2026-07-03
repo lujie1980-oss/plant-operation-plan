@@ -178,7 +178,7 @@ erDiagram
 | `ontology.supply` | 供应 / 制造 | `SupplyOrder`, `Operation`, `ResourceCapacityAssignment`, `Supply` |
 | `ontology.fulfillment` | 供需挂接 | `Fulfillment`, `SupplyChainLoader` |
 | `ontology.period` | 时间桶 / MRP / 产能 | `Period`, `ProductInStockingPointPeriod`, `StandardResourcePeriod` |
-| `ontology.scheduling` | 规划槽位 | `SchedulingSlot` |
+| `ontology.scheduling` | 规划槽位 · MOD-SCH 投影 | `SchedulingSlot`, `OperationSchedule`, `DetailScheduleLegacyProjector` |
 | `ontology.planning` | 求解配置 | `MasterPlanSolveProfile` |
 | 根 | 图 / ID / 装载 | `OntologyGraph`, `OntologyIds`, `WorkspaceAuthoritativeOntologyGraphService`, `OntologyLoader`（@Deprecated 内部壳） |
 
@@ -1197,17 +1197,28 @@ stateDiagram-v2
 | 模块 | PROC | ENT-OG 现状 | 目标态 `ont_*` | 现行持久化 |
 |------|------|-------------|----------------|------------|
 | **MOD-OCP** | PROC-S04 | **已纳入** COLD/SO/OP/RCA/SRP/PRP/PISPP/SES/PV | `ont_*` P0~P5 | `plan_version` + `master_plan_allocation`（并行） |
-| **MOD-SCH** | PROC-S05 | **未纳入**；细排分钟级 | `ont_operation_schedule` 等（待定） | `detail_schedule_operation` · `schedule_session` |
+| **MOD-SCH** | PROC-S05 | **SCH-P0 投影**（ENT-OP-SCH / ENT-RCA-SCH 只读）；未入 ENT-OG | `ont_operation_schedule` 等（待定） | `detail_schedule_operation` · `schedule_session` |
 | **MOD-SLT** | PROC-SLT | **未纳入** | `ont_slitting_*`（待定） | `slitting_plan_*` |
 
 **阶段（与 TODO-07 求解插件化协同）：**
 
-1. **SCH-P0** — 规范 ENT-OP-SCH / ENT-RCA-SCH 字段目录；loader 只读投影自 legacy 表  
+1. **SCH-P0** — 规范 ENT-OP-SCH / ENT-RCA-SCH 字段目录；loader 只读投影自 legacy 表 · **已完成 2026-07-03**（`DetailScheduleLegacyProjector` · `DetailScheduleOntologyLoader`）
 2. **SCH-P1** — `ont_*` 表族 + Restorer；Session confirm 双写  
 3. **SLT-P0** — 分切 roll/assignment 实体目录；与 MOD-SLT API 对齐  
 4. **退役** — legacy JPA 写路径在 parity AC 绿后关闭  
 
 **闸口：** 各阶段须独立 AC 与 `@SpecRef`；**不得**阻塞 MOD-OCP 基线发布。
+
+### 5.22 MOD-SCH 细排实体（SCH-P0）
+
+> **Java：** `com.plantops.ontology.scheduling` · **装载：** `DetailScheduleOntologyLoader`（只读，不写入 `OntologyGraph`）。
+
+| 实体 | 说明 | 与 ENT-OP / ENT-RCA 区别 |
+|------|------|--------------------------|
+| **ENT-OP-SCH** | `OperationSchedule` · 分钟级工序排程 | ENT-OP 为日级 OCP；SCH 含 `startMinute`/`sequenceIndex`/`batchNo` |
+| **ENT-RCA-SCH** | `PhysicalResourceCapacityAssignmentSchedule` | ENT-RCA 挂 ENT-SRP；SCH 挂 **ENT-PR**（`lineId`）与 `slotDate` |
+
+**legacy 映射：** `detail_schedule_operation` + `PlanVersionEntity`（`DETAIL_SCHEDULE`）→ `DetailScheduleLegacyProjector`；锚点取自 `schedule_feedback.planning_anchor_date` 或 `plan_generated_ts`。
 
 ---
 

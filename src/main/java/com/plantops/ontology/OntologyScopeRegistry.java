@@ -6,6 +6,7 @@ import java.util.Set;
 /**
  * §5.21 ENT-OG scope boundary (TODO-20): MOD-OCP in ontology today;
  * MOD-SCH / MOD-SLT remain legacy JPA until phased into {@code ont_*}.
+ * SCH-P0 read-only projection: {@link com.plantops.ontology.scheduling.DetailScheduleOntologyLoader}.
  */
 public final class OntologyScopeRegistry {
 

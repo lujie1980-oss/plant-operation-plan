@@ -166,3 +166,52 @@
 | `sequenceNo` | int | Y | md_* | RULE-MP-06 | implemented |
 | `operationName` | String | Y | md_* | — | implemented |
 | `yieldRate` | double | N | md_* | RULE-SUP-04 | **spec-only**（Java 类未含；见 md_routing_step） |
+
+---
+
+## ENT-OP-SCH（OperationSchedule · MOD-SCH）
+
+**Java：** `com.plantops.ontology.scheduling.OperationSchedule` · **表（目标）：** `ont_operation_schedule`（SCH-P1）  
+**legacy：** `detail_schedule_operation` · **投影：** `DetailScheduleLegacyProjector`（SCH-P0 · **implemented**）
+
+| 属性 | 类型 | 必填 | 来源 | RULE/SCN | 现状 |
+|------|------|------|------|----------|------|
+| `id` | String | Y | derived | `OPS-SCH-{version}-{opId}` | implemented |
+| `detailScheduleVersionId` | String | Y | legacy | ENT-PV · PROC-S05 | implemented |
+| `operationId` | String | Y | legacy | 同 solver OP id | implemented |
+| `workOrderNo` | String | Y | legacy | ENT-SO | implemented |
+| `batchNo` | String | N | legacy | 拆批 | implemented |
+| `physicalResourceId` | String | Y | legacy | ENT-PR · `lineId` | implemented |
+| `standardResourceId` | String | Y | legacy / derived | ENT-SR | implemented |
+| `sequenceIndex` | int | Y | legacy | 产线队列序 | implemented |
+| `operationSeq` | int | Y | derived | 工艺序 | implemented |
+| `operationName` | String | N | md_* | — | implemented |
+| `productCode` | String | N | txn_* | — | implemented |
+| `startMinute` | int | Y | legacy / solver | 锚点分钟 | implemented |
+| `endMinute` | int | Y | legacy / solver | — | implemented |
+| `durationMinutes` | int | Y | derived | — | implemented |
+| `planningAnchorDate` | date | Y | legacy / derived | 反馈或版本日 | implemented |
+| `plannedStartTs` | datetime | Y | derived | ScheduleTimingUtil | implemented |
+| `plannedEndTs` | datetime | Y | derived | — | implemented |
+| `pinned` | boolean | Y | legacy | 冻结 | implemented |
+
+---
+
+## ENT-RCA-SCH（PhysicalResourceCapacityAssignmentSchedule · MOD-SCH）
+
+**Java：** `com.plantops.ontology.scheduling.PhysicalResourceCapacityAssignmentSchedule` · **表（目标）：** `ont_pr_capacity_assignment`（SCH-P1 · 待定）  
+**legacy：** 由 `detail_schedule_operation` 投影 · **对齐：** S05 → ENT-PRP 反馈（ADR-17）
+
+| 属性 | 类型 | 必填 | 来源 | RULE/SCN | 现状 |
+|------|------|------|------|----------|------|
+| `id` | String | Y | derived | `RCAS-{opId}-{prId}` | implemented |
+| `operationScheduleId` | String | Y | derived | ENT-OP-SCH | implemented |
+| `operationId` | String | Y | legacy | — | implemented |
+| `physicalResourceId` | String | Y | legacy | ENT-PR | implemented |
+| `standardResourceId` | String | Y | legacy | ENT-SR | implemented |
+| `assignedMinutes` | int | Y | derived | 占用分钟 | implemented |
+| `operationTotalMinutes` | int | Y | derived | — | implemented |
+| `locked` | boolean | Y | legacy | `pinned` | implemented |
+| `slotDate` | date | Y | derived | 完工日 · PRP 对齐 | implemented |
+| `plannedStartTs` | datetime | Y | derived | — | implemented |
+| `plannedEndTs` | datetime | Y | derived | — | implemented |

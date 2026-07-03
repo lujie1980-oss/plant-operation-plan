@@ -102,6 +102,8 @@
 | **ENT-SBX** | DeliveryPlanningSandbox | 单 COLD **scope** 的 trial 会话；**引用**与 ENT-SES 相同的权威 ENT-OG，非独立装载图 | 交付沙盘、单订单图 · **§5.19.3** |
 | **PROC-S01** | 需求满足 | 展示 COLD 满足链与 KPI | 需求池 |
 | **PROC-S05** | 详细排程 | 产线分钟级排程 | 细排、detail schedule |
+| **ENT-OP-SCH** | OperationSchedule | MOD-SCH 分钟级工序排程；SCH-P0 只读投影自 `detail_schedule_operation` | 细排工序 |
+| **ENT-RCA-SCH** | PhysicalResourceCapacityAssignmentSchedule | MOD-SCH 物理资源分钟占用；挂 ENT-PR 非 ENT-SRP | 细排 RCA |
 | **PEG-INV** | INVENTORY_PEG | Fulfillment 类型：库存优先满足 | 库存 peg |
 | **PEG-WO** | WORK_ORDER_PEG | Fulfillment 类型：工单产出满足 | 工单 peg |
 | **PEG-SH** | SHORTAGE_PEG | Fulfillment 类型：缺口 | 缺料 peg |

@@ -443,4 +443,12 @@
 
 ---
 
+## AC-SCH-P0：MOD-SCH 只读本体投影（TODO-20）
+
+| ID | 陈述 | 自动化 |
+|----|------|--------|
+| AC-SCH-P0-01 | `DetailScheduleLegacyProjector` 将 legacy DTO 映射为 ENT-OP-SCH / ENT-RCA-SCH | `DetailScheduleLegacyProjectorTest` |
+
+---
+
 **回指：** [03-scenarios.md](./03-scenarios.md) · [04-business-rules.md](./04-business-rules.md) · [06-api-contracts.md](./06-api-contracts.md#api-int-01-导入批次列表) · [17-ui-ux.md](../volumes/platform/17-ui-ux.md) · [18-identity-access-management.md](../volumes/platform/18-19-workspace-platform.md) · [19-workspace-modules-and-adapters.md](../volumes/platform/18-19-workspace-platform.md)
