@@ -267,7 +267,7 @@
 | TODO-16 | **§15 主计划 KPI 结构化**：`kpiBreakdown` API、求解器域分、B01~B10 面板 | 开发+产品 |
 | TODO-17 | ~~**§16 供需知识 UI**~~ **已收口 2026-07-02**：BusinessRules 六 tab + 细排反馈只读页；`delivery-date-strategy` / `supply-quantity-rules` / `resource-efficiency` / `routing-step-*` API | — |
 | TODO-18 | ~~ADR-13 IAM~~：**已完成 2026-06** — M0–M4（Filter、JWT、OIDC 联调、Super Admin UI、侧栏 MOD） | 架构+前后端 |
-| TODO-19 | **ADR-14 数据集成**：MOD-DI UI、ADP-ERP-SAP/MES/Excel SPI、external 浏览 API | 架构+前后端 |
+| TODO-19 | **ADR-14 数据集成**：MOD-DI UI、ADP-ERP-SAP/MES/Excel SPI、external 浏览 API | 架构+前后端 · **API-INT-01~08 + ADP SPI 已完成 2026-07-03** |
 | TODO-20 | **§5 Ontology 范围扩展**：现行 ENT-OG **仅覆盖订单协同计划**（原主计划 · **MOD-OCP** / PROC-S04）；**MOD-SCH 作业排程**、**MOD-SLT 分切排样** 的领域实体、装载路径与 `ont_*` 表族 **后续完善**（与 TODO-07 求解插件化协同，不阻塞当前 OCP 基线） | 架构+产品 |
 | TODO-21 | ~~**§5 领域模型细化**~~ **已收口 2026-07-01**：§5.0/§5.19/§5.20 · `05-ont-schema` P0+V67 `ont_period` · Mapper/Restorer 持久化 | — |
 | TODO-22 | ~~**ADR-15 ENT-RCA 本体化**~~ **已收口 2026-07-01**（R0~R5）：ENT-RCA SoT · `ont_resource_capacity_assignment` · `OntologyRcaProjector` | — |
@@ -291,7 +291,7 @@
 | D-11 | ~~API-MAT-02~08 / SCN-07e~j~~ | ~~TODO-11~~ | **已解决 2026-07-02** |
 | D-12 | 无 external/md/txn | ~~TODO-13/14~~ **已落地 2026-07-03**（V73/V74 · M0–M5 · T0–T5） | — |
 | D-15 | 无 KnowledgeResolver | ~~TODO-15~~ **K0–K2 已落地 2026-07-03** | K3 引擎全量切读 |
-| D-19 | MOD-DI mock，无 staging | **TODO-19** | — |
+| D-19 | MOD-DI mock，无 staging | ~~TODO-19~~ **已落地 2026-07-03**（API-INT-01~08 · ADP SPI） | — |
 | D-22 | ~~ENT-RCA 未本体化~~ | ~~TODO-22~~ | **已解决 2026-07-01**（R0~R5） |
 | D-23 | ~~Shift-Period / ENT-SS 双轨~~ | ~~TODO-23~~ | **已解决 2026-07-01**（S0~S5） |
 | D-24 | ~~无 ENT-PRP / SRP≠Σ PRP~~ | ~~**TODO-24**~~ **已收口 2026-06-28** | — |

@@ -150,4 +150,48 @@ public final class IntegrationDtos {
             BigDecimal openQty,
             java.time.LocalDate promisedDate,
             String poStatus) {}
+
+    public record IntegrationBatchDto(
+            String importBatchId,
+            String adapterId,
+            String sourceSystem,
+            int rowCount,
+            int pendingCount,
+            int errorCount,
+            String qualityStatus,
+            java.time.LocalDateTime createdAt) {}
+
+    public record IntegrationAdapterStatusDto(
+            String adapterId,
+            String name,
+            boolean enabled,
+            boolean configured,
+            java.time.LocalDateTime lastRunAt,
+            String lastStatus,
+            String lastMessage) {}
+
+    public record IntegrationAdapterConfigDto(java.util.Map<String, String> config) {}
+
+    public record IntegrationAdapterRunResultDto(String importBatchId, String status, String message) {}
+
+    public record ExternalRowPageDto(
+            String tableName,
+            int page,
+            int size,
+            long totalElements,
+            List<java.util.Map<String, Object>> rows) {}
+
+    public record QualityReportDto(
+            String importBatchId,
+            int pendingCount,
+            int passedCount,
+            int failedCount,
+            int warningCount,
+            List<QualityIssueRowDto> failedRows) {}
+
+    public record QualityIssueRowDto(
+            String tableName, Long rowId, String qualityIssueCodes, String qualityIssueDetail) {}
+
+    public record IntegrationExcelUploadResultDto(
+            String importBatchId, int rowCount, String status, String message) {}
 }

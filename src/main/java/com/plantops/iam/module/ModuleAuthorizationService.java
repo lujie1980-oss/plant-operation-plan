@@ -83,6 +83,9 @@ public class ModuleAuthorizationService {
         if (!isModuleEnabled(workspaceId, "MOD-DI")) {
             return Optional.of("MODULE_DISABLED");
         }
+        if (!requestPath.contains("/run")) {
+            return Optional.empty();
+        }
         String adapterId = extractAdapterId(requestPath);
         if (adapterId != null && !isAdapterEnabled(workspaceId, adapterId)) {
             return Optional.of("ADAPTER_DISABLED");
@@ -102,10 +105,10 @@ public class ModuleAuthorizationService {
         }
         String slug = tail.contains("/") ? tail.substring(0, tail.indexOf('/')) : tail;
         return switch (slug) {
-            case "erp-sap" -> "ADP-ERP-SAP";
-            case "mes" -> "ADP-MES";
-            case "excel" -> "ADP-EXCEL";
-            default -> null;
+            case "erp-sap", "ADP-ERP-SAP" -> "ADP-ERP-SAP";
+            case "mes", "ADP-MES" -> "ADP-MES";
+            case "excel", "ADP-EXCEL" -> "ADP-EXCEL";
+            default -> WorkspaceModuleCatalog.KNOWN_ADAPTER_IDS.contains(slug) ? slug : null;
         };
     }
 }
