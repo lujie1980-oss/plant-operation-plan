@@ -1,12 +1,12 @@
-# Plant Operation Plan (Timefold + Quarkus)
+# Plant Operation Plan (Timefold 2 + Quarkus)
 
-单工厂运营计划 APS，覆盖场景 S01–S07，核心优化由 Timefold 驱动（S04 主计划、S05 详细排程）。
+单工厂运营计划 APS，覆盖场景 S01–S07。系统以工作区数据集为边界，将主数据、业务规则、主计划、生产排程、执行反馈与 KPI 串成可运行的计划链路；核心优化由 Timefold 驱动（S04 主计划、S05 详细排程）。
 
 ## 技术栈
 
 - Java 21
-- Quarkus 3.17
-- Timefold Solver 1.15 (Community)
+- Quarkus 3.17.5
+- Timefold Solver 2.0.0 (Community)
 - H2 + Flyway
 
 ## 启动
@@ -49,7 +49,7 @@ cd d:\AILab\PlantOperationPlan\plant-operation-plan\frontend
 .\dev.cmd
 ```
 
-浏览器打开 http://localhost:5173 ，侧栏可进入 S01–S07 各页面。
+浏览器打开 http://localhost:5173 ，侧栏按「数据管理 / 业务规则 / 主计划 / 生产排程」分组；顶部可切换或管理工作区数据集。
 
 **PowerShell 报「禁止运行脚本」时**：不要用 `npm`，改用 `npm.cmd` 或上面的 `.cmd` 脚本，例如：
 
@@ -86,17 +86,33 @@ docker compose up -d --build
 
 访问 http://localhost:8080/#/ 。详细说明见 [docs/docker-deploy.md](docs/docker-deploy.md)。
 
-| 路由 | 场景 |
+| 路由 | 模块 |
 |------|------|
-| `/#/` | 工作台 |
-| `/#/demand` | S01 需求满足（KPI + 订单列表 + 满足链甘特图） |
-| `/#/kitting` | S02 齐套 |
-| `/#/capacity` | S03 产能平衡 |
-| `/#/master-plan` | S04 主计划 + 甘特图 |
-| `/#/detail-schedule` | S05 详细排程 + 甘特图 |
-| `/#/execution` | S06 执行闭环 |
-| `/#/kpi` | S07 KPI |
-| `/#/pipeline` | 全链路编排 |
+| `/#/` | 工作台与关键指标 |
+| `/#/workspaces` | 工作区 / 数据集管理 |
+| `/#/master-data` | 主数据：产品、BOM、工艺、资源、日历、规则基础数据 |
+| `/#/business-data` | 业务数据：销售订单、库存、工单等 |
+| `/#/factory-calendar` | 工厂日历与资源工作时间 |
+| `/#/business-rules/production` | 业务规则维护（生产、产能、物料、人力、需求分类） |
+| `/#/master-plan/parameters` | 主计划参数 |
+| `/#/master-plan/objectives` | 主计划策略与优化目标 |
+| `/#/master-plan/plan-run` | 主计划流水线运行 |
+| `/#/master-plan/analysis/demand` | S01 需求满足与满足链 |
+| `/#/master-plan/analysis/material` | S02 物料需求 / 齐套 |
+| `/#/master-plan/analysis/capacity` | S03 产能平衡 |
+| `/#/master-plan/analysis/work-orders` | S04 工单与计划结果 |
+| `/#/master-plan/analysis/diagnostics` | 主计划 / 排程推演诊断 |
+| `/#/master-plan/analysis/order-chain` | 订单计划链预览 |
+| `/#/master-plan/scenario-comparison` | 主计划场景对比 |
+| `/#/scheduling/parameters` | 生产排程参数 |
+| `/#/scheduling/pending-work-orders` | 待排工单池 |
+| `/#/scheduling/batch-plan` | 生产批次拆分与批次计划 |
+| `/#/scheduling/kitting` | 批次齐套 |
+| `/#/scheduling/detail-schedule` | S05 详细排程 Session 推演 / 优化 / 确认 |
+| `/#/scheduling/version-comparison` | 排程版本对比 |
+| `/#/demand-tracking` | S07 需求交付跟踪与 KPI |
+
+旧路由（如 `/#/demand`、`/#/pipeline`、`/#/detail-schedule`）仍由前端重定向到新路径。
 
 ## 示例调用
 
@@ -104,17 +120,38 @@ docker compose up -d --build
 # 需求满足
 curl http://localhost:8080/api/v1/demand/demand-pool
 
-# 齐套
+# 工作区数据集
+curl http://localhost:8080/api/v1/workspaces
+
+# 主计划物料齐套 / MRP
 curl -X POST http://localhost:8080/api/v1/kitting/compute
+curl -X POST http://localhost:8080/api/v1/material-requirements/compute
 
 # 主计划求解
 curl -X POST http://localhost:8080/api/v1/planning/master-plan/solve
 
-# 详细排程（可带 masterPlanVersionId）
+# 详细排程 Timefold 求解（可带 masterPlanVersionId）
 curl -X POST "http://localhost:8080/api/v1/planning/detail-schedule/solve"
 
-# 全链路 S01→S07
-curl -X POST http://localhost:8080/api/v1/planning/run-full-pipeline
+# 详细排程 Session：创建 → 推演 → 确认
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions \
+  -H "Content-Type: application/json" \
+  -d '{"masterPlanVersionId":"{masterPlanVersionId}","simulationProfileId":"SP-DEFAULT"}'
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions/{sessionId}/simulate \
+  -H "Content-Type: application/json" \
+  -d '{"fullReschedule":false,"simulationProfileId":"SP-DEFAULT","feedbackCutoff":"2026-06-02"}'
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions/{sessionId}/confirm
+
+# 生产批次与批次齐套
+curl http://localhost:8080/api/v1/scheduling/batches/work-orders
+curl -X POST http://localhost:8080/api/v1/scheduling/batches/split/auto-all
+curl -X POST http://localhost:8080/api/v1/scheduling/batches/kitting/compute
+
+# 车间执行任务
+curl http://localhost:8080/api/v1/production-tasks
+
+# 主计划流水线；需要连带详细排程求解时显式打开 includeDetailSchedule
+curl -X POST "http://localhost:8080/api/v1/planning/run-full-pipeline?includeDetailSchedule=true"
 
 # KPI
 curl http://localhost:8080/api/v1/kpi/report
@@ -122,15 +159,15 @@ curl http://localhost:8080/api/v1/kpi/report
 
 ## 场景映射
 
-| 场景 | 服务 | 求解 |
-|------|------|------|
-| S01 需求满足 | DemandService | 规则 |
-| S02 齐套 | KittingService | 规则 |
-| S03 产能平衡 | CapacityService | 利用率甘特+区间工单 |
-| S04 主计划 | MasterPlanService | Timefold |
-| S05 排程 | DetailScheduleService | Timefold |
-| S06 执行闭环 | ExecutionService | 事件+R0–R3 |
-| S07 KPI | KpiService | 指标汇总 |
+| 场景 | 关键服务 / API | 求解或推演方式 |
+|------|---------------|----------------|
+| S01 需求满足 | `DemandService`、`/api/v1/demand/*` | 规则 + 满足链追溯 |
+| S02 物料齐套 / MRP | `KittingService`、`MaterialRequirementResource` | BOM 展开、库存扣减、缺料分析 |
+| S03 产能平衡 | `CapacityService` | 资源×班次负荷分析 |
+| S04 主计划 | `MasterPlanService`、`PlanningResource` | Timefold 2.0 主计划求解 + 场景对比 |
+| S05 生产排程 | `DetailScheduleService`、`DetailScheduleSessionService`、`SchedulingBatchResource` | Timefold 排程、批次拆分、Session 推演/优化/确认 |
+| S06 执行闭环 | `ProductionTaskService`、`ScheduleFeedbackService` | 排程确认发布 `production_task`，执行反馈冻结 RUNNING/COMPLETED 工序 |
+| S07 KPI | `KpiService`、场景/版本对比 API | 指标汇总与版本对比 |
 
 ## 测试
 
@@ -155,4 +192,9 @@ python -X utf8 tools/parse_demo_excel.py
 |------|------|
 | **[docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md)** | **完整项目文档**（业务蓝图、功能设计、技术方案、部署） |
 | [docs/architecture.md](docs/architecture.md) | 架构摘要 |
+| [docs/aps-planning-layer.md](docs/aps-planning-layer.md) | 主计划 / 详细排程分层推演与 Timefold 边界 |
+| [docs/detail-schedule-simulation-layer.md](docs/detail-schedule-simulation-layer.md) | 详细排程 Session 推演、规则、确认发布 Runbook |
+| [docs/master-plan-bom-routing.md](docs/master-plan-bom-routing.md) | BOM、工艺路线、MRP 与工单链路 |
+| [docs/timefold-2-upgrade.md](docs/timefold-2-upgrade.md) | Timefold 2.0 升级说明 |
+| [docs/docker-deploy.md](docs/docker-deploy.md) | Docker 部署说明 |
 | 工作区根目录 `工厂计划*.md` | 业务方法论文档（场景卡片） |
