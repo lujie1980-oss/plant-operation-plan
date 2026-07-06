@@ -136,10 +136,10 @@ curl -X POST "http://localhost:8080/api/v1/planning/detail-schedule/solve"
 # 详细排程 Session：创建 → 推演 → 确认
 curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions \
   -H "Content-Type: application/json" \
-  -d '{"masterPlanVersionId":"MP-20260602-001"}'
+  -d '{"masterPlanVersionId":"{masterPlanVersionId}","simulationProfileId":"SP-DEFAULT"}'
 curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions/{sessionId}/simulate \
   -H "Content-Type: application/json" \
-  -d '{"fullReschedule":false,"simulationProfileId":"default","feedbackCutoff":"2026-06-02"}'
+  -d '{"fullReschedule":false,"simulationProfileId":"SP-DEFAULT","feedbackCutoff":"2026-06-02"}'
 curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions/{sessionId}/confirm
 
 # 生产批次与批次齐套
@@ -150,8 +150,8 @@ curl -X POST http://localhost:8080/api/v1/scheduling/batches/kitting/compute
 # 车间执行任务
 curl http://localhost:8080/api/v1/production-tasks
 
-# 全链路 S01→S07
-curl -X POST http://localhost:8080/api/v1/planning/run-full-pipeline
+# 主计划流水线；需要连带详细排程求解时显式打开 includeDetailSchedule
+curl -X POST "http://localhost:8080/api/v1/planning/run-full-pipeline?includeDetailSchedule=true"
 
 # KPI
 curl http://localhost:8080/api/v1/kpi/report

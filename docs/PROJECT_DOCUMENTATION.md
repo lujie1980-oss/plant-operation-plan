@@ -153,7 +153,7 @@ flowchart LR
 - **发布**：排程 Session 确认后写入/更新 `detail_schedule_operation`，并由 `ProductionTaskService` 发布为 `production_task`。
 - **反馈**：`production_task` 支持按工序 `start` / `complete`，执行状态可用于后续推演的 `feedbackCutoff` 冻结边界。
 - **冲突**：当已运行任务与新计划冲突时，系统记录 `planning_conflict`，计划员需在确认前处理。
-- **事件**：设备停机、缺料、加急、小延误等 → 映射重排级别 R0–R3 并触发对应流水线。
+- **事件**：设备停机、缺料、加急、小延误等 → 映射重排级别 R0–R3 并执行对应重排动作；R0/R1 只记录影响，R2/R3 调用主计划/详细排程服务重算。
 
 | 级别 | 典型事件 | 行为 |
 |------|----------|------|
@@ -536,15 +536,16 @@ erDiagram
 
 ### 4.6 全链路编排
 
-`PlanningOrchestrator.runFullPipeline()` 顺序：
+`PlanningOrchestrator.runFullPipeline()` 是主计划流水线快捷入口；默认 `includeDetailSchedule=false`，不执行详细排程，也不发布生产任务。设置 `includeDetailSchedule=true` 时才会追加 S05 详细排程求解。
 
 ```text
-需求满足 → 物料需求 → 粗能力 → 主计划求解 → 详细排程求解(带主计划版本) → 下发 → KPI
+需求准备 → 主数据校验 → 工单重建 → MRP 物料可行性 → 产能基线 → S04 主计划求解
+  └─ 可选 includeDetailSchedule=true：S05 推演层构建 → S05 Timefold 详细排程求解
 ```
 
 数据为空时自动加载 `factory-demo.json`。
 
-交互式排程页通常不直接依赖全链路编排，而是先从主计划版本、待排工单或批次创建 `schedule-session`，再在 Session 内推演、优化、确认。全链路编排适合演示端到端基线；计划员日常调整应优先使用 Session workflow。
+交互式排程页通常不直接依赖流水线快捷入口，而是先从主计划版本、待排工单或批次创建 `schedule-session`，再在 Session 内推演、优化、确认。只有 `schedule-session/{id}/confirm` 会发布 `production_task`；流水线求解出的排程版本不会自动执行任务发布。
 
 ### 4.7 前端技术方案
 
@@ -765,7 +766,7 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 | `PlanningResource` | `POST /api/v1/kitting/compute`、`POST /api/v1/capacity/analyze?masterPlanVersionId=` | 物料齐套与产能分析 |
 | `PlanningResource` | `POST /api/v1/planning/master-plan/solve?strategyId=`、`GET /planning/master-plan/result/{versionId}` | 主计划求解与结果 |
 | `PlanningResource` | `POST /api/v1/planning/master-plan/preview`、`GET /planning/master-plan/diagnostics/preview`、`POST /planning/order-chain/preview` | 主计划推演、诊断、订单计划链 |
-| `PlanningResource` | `POST/GET /api/v1/planning/pipeline-runs`、`POST /pipeline-runs/{runId}/execute`、`POST /planning/run-full-pipeline` | 流水线运行与端到端演示 |
+| `PlanningResource` | `POST/GET /api/v1/planning/pipeline-runs`、`POST /pipeline-runs/{runId}/execute`、`POST /planning/run-full-pipeline` | 主计划流水线；`includeDetailSchedule=true` 时追加详细排程求解 |
 | `PlanningResource` | `GET /api/v1/planning/scenarios`、`POST /planning/scenarios/compare`、`GET /planning/compare` | 主计划场景和版本对比 |
 | `MasterPlanStrategyResource` | `/api/v1/planning/master-plan/strategies/*` | 主计划策略 CRUD、默认策略、复制 |
 | `MasterPlanObjectiveResource` | `/api/v1/planning/master-plan/objectives`、`/reset-defaults` | 优化目标权重配置 |
