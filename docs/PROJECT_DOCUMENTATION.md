@@ -225,7 +225,7 @@ flowchart LR
 | F12 | ERP/MES 联调 Mock | `GET /integration/*` | — |
 | F13 | **主计划策略 CRUD** | `GET/POST/PUT/DELETE .../master-plan/strategies` | `/#/master-plan/objectives` |
 | F14 | **场景列表与对比** | `GET /planning/scenarios`、`/scenarios/compare` | `/#/master-plan/scenario-comparison` |
-| F15 | **场景选择器** | 复用 F06/F14 场景 API | 四个结果页 `PageHeader` |
+| F15 | **场景选择器** | 复用 F06/F14 场景 API | 六个主计划分析页 `PageHeader` |
 | F16 | 数据集/Workspace 隔离 | `GET/POST/DELETE /workspaces`，请求头 `X-Workspace-Id` | `/#/workspaces`、顶部数据集选择器 |
 | F17 | 主计划/排程推演诊断 | `/planning/*/diagnostics/preview`、`/planning/order-chain/preview` | `/#/master-plan/analysis/diagnostics`、`/#/master-plan/analysis/order-chain` |
 | F18 | S05 排程 Session | `POST/GET/PATCH /planning/schedule-sessions/*` | `/#/scheduling/detail-schedule` |
@@ -803,7 +803,7 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 | 日期 | 内容 |
 |------|------|
 | 2026-05-25 | 初版：S01–S07 场景、Timefold 双求解器、满足链、React 前端 |
-| 2026-05-27 | 主计划策略体系（产能模式 + 目标权重 CRUD）；产能均衡软目标；计划运行选策略；场景列表/对比展示策略名；`PlanContext` 场景选择器；产能页按场景分析；导航重命名与结果页分组；场景选择器仅保留于四个计划结果页；四结果页绑定 `masterPlanVersionId` |
+| 2026-05-27 | 主计划策略体系（产能模式 + 目标权重 CRUD）；产能均衡软目标；计划运行选策略；场景列表/对比展示策略名；`PlanContext` 场景选择器；产能页按场景分析；导航重命名与结果页分组；早期结果页绑定 `masterPlanVersionId` |
 | 2026-05-28 | 帕累托扫描模式产品设计 v1（`docs/pareto-scan-design.md`）：权重网格批量求解、分目标 KPI、非支配前沿、帕累托探索页 |
 | 2026-07-13 | 文档同步：Timefold 2.0、S05 list-variable/Session 推演、`SimulationProfile`、Workspace 数据集隔离、`run-full-pipeline` 默认主计划优先、生产任务发布路径、当前路由与相关设计文档索引 |
 
