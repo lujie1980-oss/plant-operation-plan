@@ -6,7 +6,7 @@
 
 - Java 21
 - Quarkus 3.17
-- Timefold Solver 1.15 (Community)
+- Timefold Solver 2.0 (Community)
 - H2 + Flyway
 
 ## 启动
@@ -32,7 +32,7 @@ cd plant-operation-plan
 
 ## 业务前端 (React)
 
-多页面 React 应用，含 **主计划** 与 **详细排程** 甘特图（`gantt-task-react`）。
+多页面 React 应用，含 **主计划** 与 **详细排程** 甘特图（`gantt-task-react`）。S05 详细排程支持 Session 工作副本：计划员可手动改线/排序、增量推演、主动优化，确认后发布为生产任务。
 
 ### 开发模式（推荐）
 
@@ -89,14 +89,27 @@ docker compose up -d --build
 | 路由 | 场景 |
 |------|------|
 | `/#/` | 工作台 |
-| `/#/demand` | S01 需求满足（KPI + 订单列表 + 满足链甘特图） |
-| `/#/kitting` | S02 齐套 |
-| `/#/capacity` | S03 产能平衡 |
-| `/#/master-plan` | S04 主计划 + 甘特图 |
-| `/#/detail-schedule` | S05 详细排程 + 甘特图 |
-| `/#/execution` | S06 执行闭环 |
-| `/#/kpi` | S07 KPI |
-| `/#/pipeline` | 全链路编排 |
+| `/#/master-data` / `/#/business-data` | 主数据与业务数据 |
+| `/#/workspaces` | 数据集管理；前端请求会携带 `X-Workspace-Id` |
+| `/#/factory-calendar` | 工厂日历 |
+| `/#/master-plan/parameters` | 主计划参数 |
+| `/#/master-plan/objectives` | 主计划策略与优化目标 |
+| `/#/business-rules/production` | 生产/产能/物料/人力/需求规则 |
+| `/#/master-plan/plan-run` | 主计划流水线运行 |
+| `/#/master-plan/analysis/demand` | S01 需求满足（KPI + 订单列表 + 满足链甘特图） |
+| `/#/master-plan/analysis/capacity` | S03 产能平衡 |
+| `/#/master-plan/analysis/material` | S02 物料需求/齐套 |
+| `/#/master-plan/analysis/work-orders` | 生产工单 |
+| `/#/master-plan/analysis/diagnostics` | 主计划/排程推演诊断 |
+| `/#/master-plan/analysis/order-chain` | 订单满足链推演 |
+| `/#/master-plan/scenario-comparison` | 主计划场景对比 |
+| `/#/scheduling/parameters` | 生产排程参数 |
+| `/#/scheduling/pending-work-orders` | 待排工单 |
+| `/#/scheduling/batch-plan` | 批次计划 |
+| `/#/scheduling/kitting` | 排程侧物料齐套 |
+| `/#/scheduling/detail-schedule` | S05 详细排程 Session + 甘特图 |
+| `/#/scheduling/version-comparison` | 排程版本对比 |
+| `/#/demand-tracking` | S07 需求跟踪与 KPI |
 
 ## 示例调用
 
@@ -113,8 +126,21 @@ curl -X POST http://localhost:8080/api/v1/planning/master-plan/solve
 # 详细排程（可带 masterPlanVersionId）
 curl -X POST "http://localhost:8080/api/v1/planning/detail-schedule/solve"
 
-# 全链路 S01→S07
+# 主计划流水线（默认只到 S04 主计划）
 curl -X POST http://localhost:8080/api/v1/planning/run-full-pipeline
+
+# 需要同步执行 S05 详细排程时显式开启；可选触发排程反馈刷新主计划
+curl -X POST "http://localhost:8080/api/v1/planning/run-full-pipeline?includeDetailSchedule=true&refreshMasterPlanAfterSchedule=false"
+
+# 基于主计划版本创建 S05 排程 Session（simulationProfileId 可省略，默认 SP-DEFAULT）
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions \
+  -H "Content-Type: application/json" \
+  -d '{"masterPlanVersionId":"MP-xxxx","seedInitialQueues":true,"simulationProfileId":"SP-DEFAULT"}'
+
+# 对 Session 做增量/全量推演；confirm 后落库排程版本并发布 RELEASED 生产任务
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions/SS-xxxx/simulate \
+  -H "Content-Type: application/json" \
+  -d '{"affectedOperationIds":["OP-1"],"fullReschedule":false}'
 
 # KPI
 curl http://localhost:8080/api/v1/kpi/report
@@ -155,4 +181,8 @@ python -X utf8 tools/parse_demo_excel.py
 |------|------|
 | **[docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md)** | **完整项目文档**（业务蓝图、功能设计、技术方案、部署） |
 | [docs/architecture.md](docs/architecture.md) | 架构摘要 |
+| [docs/aps-planning-layer.md](docs/aps-planning-layer.md) | 主计划/排程推演层与 Timefold 选优边界 |
+| [docs/detail-schedule-simulation-layer.md](docs/detail-schedule-simulation-layer.md) | S05 Session、增量推演、校验与发布流程 |
+| [docs/master-plan-bom-routing.md](docs/master-plan-bom-routing.md) | 主计划 BOM/工艺展开与工单生成 |
+| [docs/timefold-2-upgrade.md](docs/timefold-2-upgrade.md) | Timefold 2.0 升级与 Solver API 约束 |
 | 工作区根目录 `工厂计划*.md` | 业务方法论文档（场景卡片） |
