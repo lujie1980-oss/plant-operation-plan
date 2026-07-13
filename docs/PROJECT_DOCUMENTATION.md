@@ -226,7 +226,7 @@ flowchart LR
 | F13 | **主计划策略 CRUD** | `GET/POST/PUT/DELETE .../master-plan/strategies` | `/#/master-plan/objectives` |
 | F14 | **场景列表与对比** | `GET /planning/scenarios`、`/scenarios/compare` | `/#/master-plan/scenario-comparison` |
 | F15 | **场景选择器** | 复用 F06/F14 场景 API | 四个结果页 `PageHeader` |
-| F16 | 数据集/Workspace 隔离 | `GET/POST/PUT/DELETE /workspaces`，请求头 `X-Workspace-Id` | `/#/workspaces`、顶部数据集选择器 |
+| F16 | 数据集/Workspace 隔离 | `GET/POST/DELETE /workspaces`，请求头 `X-Workspace-Id` | `/#/workspaces`、顶部数据集选择器 |
 | F17 | 主计划/排程推演诊断 | `/planning/*/diagnostics/preview`、`/planning/order-chain/preview` | `/#/master-plan/analysis/diagnostics`、`/#/master-plan/analysis/order-chain` |
 | F18 | S05 排程 Session | `POST/GET/PATCH /planning/schedule-sessions/*` | `/#/scheduling/detail-schedule` |
 | F19 | SimulationProfile | `GET/POST/DELETE /planning/simulation-profiles` | 排程推演配置 |
@@ -751,8 +751,8 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | `/api/v1/workspaces` | 列出数据集 |
+| GET | `/api/v1/workspaces/{id}` | 查看数据集 |
 | POST | `/api/v1/workspaces` | 创建数据集 |
-| PUT | `/api/v1/workspaces/{id}` | 更新名称/描述等 |
 | DELETE | `/api/v1/workspaces/{id}` | 删除数据集 |
 
 > 大多数业务实体按 Workspace 隔离；前端通过顶部选择器设置 `X-Workspace-Id`，脚本/API 调用若省略该头会落到默认数据集。
