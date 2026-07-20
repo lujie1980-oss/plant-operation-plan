@@ -152,12 +152,12 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 |------|------|----------|
 | `kittingEligible` | P2 齐套推演 | 标记是否齐套；未齐套仍可上产线 |
 | `earliestStartMinute` | P2 + `kitting_lock_t_hours` | 未齐套时最早开工推后（分钟，相对锚点） |
-| `mpContractStartDate` / `mpContractEndDate` / `mpContractResourceId` | P0 主计划契约 | 软约束 + `ScheduleTimingUtil` 最早开工等待 |
+| `mpContractStartDate` / `mpContractEndDate` / `mpContractResourceId` | P0 主计划契约 | 软约束 + `DetailScheduleTimingKernel` 最早开工地板 |
 | `mpTargetEndDate` | 契约或工单末槽回退 | 软约束：相对主计划偏差 |
 | `pinned` | 订单排程锁定 + 规则项目启用 | 硬约束：固定产线 |
-| `line` / `startMinute` | **Timefold 决策变量** | 选优结果 |
+| `line` / `startMinute` | **Timefold 决策变量 + shadow/显式赋时输出** | 选优或 Session 推演结果 |
 
-**赋时**：求解后 `ScheduleTimingUtil.applyLineStartTimes` 按产线 cursor 顺序填分钟级开始/结束（含契约开始日等待）。
+**赋时**：求解后与 Session 推演均通过 `LineChainTimingUtil.applyAllStartTimes` → `DetailScheduleTimingKernel` 统一填充分钟级开始/结束；Timefold shadow 计算也委托同一内核，避免选优约束与人工推演时间口径分裂。
 
 ### 5.3 主计划 → 详细排程契约
 
@@ -203,11 +203,12 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | `SchedulingSession` / `SchedulingSessionStore` | 内存工作副本（8h TTL） |
 | `DetailScheduleSessionService` | create / get / simulate / optimize / confirm |
 | `DetailScheduleSessionMutation` | `SessionStepPatchDto`：改产线、队列顺序、锁定 |
-| `DetailScheduleSimulationEngine` | `fullSimulate` / `incrementalSimulate`（链式赋时 + 记录波及工序） |
+| `SimulationPipeline` / `DetailScheduleSimulationEngine` | `fullSimulate` / `incrementalSimulate`（链式赋时 + 校验 + 记录波及工序） |
+| `SimulationProfileService` / `SimulationProfileResolver` | 选择 `SP-DEFAULT` / active / 指定 Profile，合并单次 `ruleOverrides` |
 | `ScheduleValidationService` | 硬/中约束校验（工艺链、并行对、连续生产、齐套未分配等） |
 | `ProductionTaskService` | confirm 时 upsert `RELEASED` + `planning_conflict` |
 
-**REST**（`ScheduleSessionResource`）
+**REST**（`ScheduleSessionResource` / `SimulationProfileResource`）
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -217,6 +218,10 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | POST | `/api/v1/planning/schedule-sessions/{id}/simulate` | 增量或全量推演 + 校验 |
 | POST | `/api/v1/planning/schedule-sessions/{id}/optimize` | **主动** Timefold |
 | POST | `/api/v1/planning/schedule-sessions/{id}/confirm` | 落库 `plan_version` + RELEASED 生产任务 |
+| GET | `/api/v1/planning/simulation-profiles` | Profile 列表；默认 ID `SP-DEFAULT` |
+| GET | `/api/v1/planning/simulation-profiles/{profileId}` | Profile 详情 |
+| POST | `/api/v1/planning/simulation-profiles` | 新建或更新 Profile |
+| DELETE | `/api/v1/planning/simulation-profiles/{profileId}` | 删除非默认 Profile |
 
 **`SimulateScheduleSessionRequest`**
 
@@ -225,8 +230,13 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | `stepPatches` | 手动调整（改线 / 顺序 / 锁定） |
 | `affectedOperationIds` | 增量种子（无 patch 时指定波及起点） |
 | `fullReschedule` | `true` 时全量链式重算；默认无种子则全量 |
+| `simulationProfileId` | 可选，仅本次 simulate 临时改用指定 Profile |
+| `ruleOverrides` | 可选，仅本次 simulate 覆盖规则启用开关 |
+| `feedbackCutoff` | 可选，`feedback-freeze` 启用时冻结 cutoff 及之前工序 |
 
-增量模式从种子扩展：**工艺后继**、**并行配对**、**同产线队列后缀**，再 `LineChainTimingUtil.applyAllStartTimes`（全局收敛，返回 `recalculatedOperationIds`）。
+增量模式从种子扩展：**工艺后继**、**并行配对**、**同产线队列后缀**，以及 Profile 中启用的扩展闭包（如 `batch-continuous`），再 `LineChainTimingUtil.applyAllStartTimes`（全局收敛，返回 `recalculatedOperationIds` 与 `appliedRules`）。
+
+`confirm` 默认只发布已排且有开始时间的工序；若 Session Profile 设置 `validation.blockConfirmOnHard=true`，发布前会全量校验，存在 HARD 违背时拒绝确认。
 
 **前端**：**生产排程**页 Session 推演面板 + 甘特/列表「Session 推演」视图；**推演诊断**页保留预览入口。
 
@@ -535,7 +545,8 @@ POST /api/v1/planning/order-chain/preview
 | 推演诊断 DTO | `api/dto/planning/` |
 | 推演诊断采集 | `scenario/planning/diagnostics/` |
 | 订单推演链 | `scenario/planning/OrderPlanningChainService.java` |
-| Session / 增量推演 | `scenario/DetailScheduleSessionService.java`, `scenario/planning/DetailScheduleSimulationEngine.java` |
+| Session / 增量推演 | `scenario/DetailScheduleSessionService.java`, `scenario/planning/DetailScheduleSimulationEngine.java`, `scenario/planning/simulation/SimulationPipeline.java` |
+| 推演 Profile / 规则 | `scenario/planning/SimulationProfileService.java`, `scenario/planning/simulation/SimulationProfileResolver.java`, `scenario/planning/simulation/SimulationRuleRegistry.java` |
 | 生产任务 | `scenario/execution/ProductionTaskService.java`, `api/ScheduleSessionResource.java` |
 
 ---
