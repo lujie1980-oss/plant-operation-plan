@@ -278,8 +278,6 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 
 其中 Phase 3 的 `factory-calendar`、`feedback-freeze`、`batch-continuous` 默认关闭；其它内置规则未写入 Profile 时按业务规则页 scope 与规则自身默认启用。
 
-**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `DetailScheduleTimingKernel.computeShadowStartMinute`；Session 推演、`LineChainTimingUtil.applyAllStartTimes` 与 Timefold shadow 均经同一赋时内核读取 `SimulationRuleRegistry`。回归：`OperationStartTimeKernelAlignmentTest`。
-
 **Phase 3 — 扩展规则（默认关闭，业务规则页 + Profile 启用）：**
 
 | ruleTypeId | 类型 | 说明 |
@@ -287,6 +285,8 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 | `factory-calendar` | TimingRule | 按 `resource_calendar` + 工厂班次策略 snap 开工到可用窗口 |
 | `feedback-freeze` | Timing + Validation | cutoff 前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` |
 | `batch-continuous` | Closure + Validation | 增量闭包扩展同批次同线工序；校验队列内批次不被隔开 |
+
+**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `DetailScheduleTimingKernel.computeShadowStartMinute`；Session 推演、`LineChainTimingUtil.applyAllStartTimes` 与 Timefold shadow 均经同一赋时内核读取 `SimulationRuleRegistry`。回归：`OperationStartTimeKernelAlignmentTest`。
 
 ### 7.1 入口
 
@@ -612,7 +612,7 @@ useScheduleSession(masterPlanVersionId)
 
 - [ ] P0–P4 与 Session 内对象是否同源、创建后改主计划是否需重建 Session  
 - [ ] 计划员流程：改序 → simulate → 看 violations → confirm 是否符合现场 SOP  
-- [ ] HARD 违背是否允许带错发布（当前不阻断 confirm）  
+- [ ] HARD 违背是否允许带错发布（默认不阻断；`validation.blockConfirmOnHard=true` 时阻断 confirm）
 - [ ] 并行/连续/工艺链三类约束是否覆盖贵司工艺规则  
 - [ ] 8h TTL 与计划员班次是否匹配  
 - [ ] 集群部署时会话丢失风险是否可接受  
