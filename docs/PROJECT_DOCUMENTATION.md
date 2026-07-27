@@ -480,11 +480,17 @@ erDiagram
 
 ### 4.6 全链路编排
 
-`PlanningOrchestrator.runFullPipeline()` 顺序：
+`PlanningOrchestrator.runFullPipeline()` 默认只执行到主计划版本产出；S05 详细排程需显式启用，不自动下发 / 发布生产任务：
 
 ```text
-需求满足 → 物料需求 → 粗能力 → 主计划求解 → 详细排程求解(带主计划版本) → 下发 → KPI
+默认：
+需求满足 → 物料需求 → 粗能力 → 主计划求解 → KPI / 场景结果
+
+includeDetailSchedule=true：
+需求满足 → 物料需求 → 粗能力 → 主计划求解 → 详细排程求解(带主计划版本) → KPI / 场景结果
 ```
+
+启用方式：`?includeDetailSchedule=true`，或请求 body 中 `includeDetailSchedule: true`。若还需排程后刷新主计划，另传 `refreshMasterPlanAfterSchedule=true` / `refreshMasterPlanAfterSchedule: true`。
 
 数据为空时自动加载 `factory-demo.json`。
 

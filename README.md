@@ -113,8 +113,11 @@ curl -X POST http://localhost:8080/api/v1/planning/master-plan/solve
 # 详细排程（可带 masterPlanVersionId）
 curl -X POST "http://localhost:8080/api/v1/planning/detail-schedule/solve"
 
-# 全链路 S01→S07
+# 计划流水线（默认到 S04 主计划；不自动发布 / 下发）
 curl -X POST http://localhost:8080/api/v1/planning/run-full-pipeline
+
+# 如需同时执行 S05 详细排程，显式开启 includeDetailSchedule
+curl -X POST "http://localhost:8080/api/v1/planning/run-full-pipeline?includeDetailSchedule=true"
 
 # KPI
 curl http://localhost:8080/api/v1/kpi/report
