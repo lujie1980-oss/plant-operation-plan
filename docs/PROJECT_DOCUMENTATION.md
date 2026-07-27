@@ -475,7 +475,8 @@ erDiagram
 | 类型 | 类 | 说明 |
 |------|-----|------|
 | Solution | `DetailSchedule` | 产线范围、工序列表 |
-| Entity | `OperationAssignment` | 决策变量：产线；时间由 `assignStartTimes()` 后处理 |
+| Entity | `ScheduleLine` | `assignedOperations` 为 `@PlanningListVariable`，同时决定产线归属与同线顺序 |
+| List Value | `OperationAssignment` | `line` 为 inverse shadow；`startMinute` 由共享赋时内核 / shadow 推导 |
 | 约束 | `DetailScheduleConstraintProvider` | 顺序、换线、班次容量等 |
 
 ### 4.6 全链路编排

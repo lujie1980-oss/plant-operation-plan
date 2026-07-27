@@ -284,9 +284,9 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | 项目 | 主计划 S04 | 详细排程 S05 |
 |------|------------|--------------|
 | **Solution** | `MasterPlanSchedule` | `DetailSchedule` |
-| **Planning Entity** | `OrderAllocation` | `OperationAssignment` |
-| **Value Range** | `TimeSlot`（按资源） | `ScheduleLine` |
-| **决策变量** | `timeSlot` | `line`（顺序由约束与 shadow 时间推导） |
+| **Planning Entity** | `OrderAllocation` | `ScheduleLine` |
+| **Value Range** | `TimeSlot`（按资源） | `OperationAssignment`（`operationRange`） |
+| **决策变量** | `timeSlot` | `assignedOperations` list-variable；`OperationAssignment.line` 为 inverse shadow |
 | **Problem Facts** | 物料上下文、BOM 边、相邻槽位对、overlay、timing bounds、目标权重 | 契约权重、换型索引、工序流转索引、锚点日、班产能 |
 | **不在求解器内** | 工单生成、MRP 闭合、工艺展开、eligible 过滤 | 齐套标记、契约加载、并行/连续绑定 |
 

@@ -562,9 +562,9 @@ useScheduleSession(masterPlanVersionId)
 | 维度 | Session 推演 | Timefold optimize |
 |------|----------------|-------------------|
 | 触发 | simulate / applyTiming | optimize / solve |
-| 产线选择 | 人工 patch / 种子入队 | 求解器 `@PlanningVariable line` |
-| 顺序 | list 顺序 + 链式赋时 | list-variable + 约束 |
-| 时间 | `LineChainTimingUtil` 显式 | Shadow + 约束一致化 |
+| 产线选择 | 人工 patch / 种子入队 | `ScheduleLine.assignedOperations` list-variable 决定归属 |
+| 顺序 | list 顺序 + 链式赋时 | 同一 list-variable 决定同线顺序 |
+| 时间 | `LineChainTimingUtil` 显式 | `OperationAssignment.line` inverse shadow + `startMinute` shadow |
 | 输出 | violations DTO | score + violations（若再 simulate） |
 | 性能 | 毫秒级（典型） | 秒～数十秒 |
 
