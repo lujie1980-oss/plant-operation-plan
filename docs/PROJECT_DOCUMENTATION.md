@@ -6,7 +6,7 @@
 | 版本 | 1.0.0-SNAPSHOT |
 | 代码路径 | `plant-operation-plan/` |
 | 文档日期 | 2026-05-27 |
-| 最近更新 | 主计划策略体系、场景选择器、产能均衡目标、导航与结果页重构 |
+| 最近更新 | S05 Session 推演、SimulationProfile、扩展规则与 Timefold 2.0 对齐 |
 
 ---
 
@@ -42,7 +42,7 @@
 | 层级 | 技术 |
 |------|------|
 | 后端运行时 | Java 21、Quarkus 3.17.5 |
-| 优化引擎 | Timefold Solver 1.15（Community） |
+| 优化引擎 | Timefold Solver 2.0（Community） |
 | 持久化 | Hibernate ORM Panache、Flyway、H2 |
 | API | REST + JSON、SmallRye OpenAPI |
 | 前端 | React 18、TypeScript、Vite 6、React Router 7、gantt-task-react |
@@ -136,10 +136,11 @@ flowchart LR
 - 持久化：`plan_version`、`master_plan_allocation`、`line_opening_decision`。
 - 输出：计划版本号、得分、分配明细。
 
-#### S05 — 详细排程（Timefold + 后处理）
+#### S05 — 详细排程（Session 推演 + 可选 Timefold）
 
-- 在已开线产线上为工单工序分配产线（求解器），再**后处理**计算 `startMinute` / `endMinute`（含换线 30 分钟）。
-- 持久化：`detail_schedule_operation`；可选缺口建议 `shortage_recommendation`。
+- 默认计划员流程为 **创建 Session → patch → simulate → validate → confirm**，使用 `DetailScheduleTimingKernel` 做确定性链式赋时；Timefold 仅在 `optimize` 或 `solve=true` 时主动调用。
+- `SimulationProfile` 控制推演规则（如班次日历、反馈冻结、批次连续）与 `blockConfirmOnHard` 发布策略。
+- 持久化：`detail_schedule_operation`；确认发布后生成/更新 `RELEASED` 生产任务。
 
 #### S06 — 执行闭环
 
@@ -215,7 +216,7 @@ flowchart LR
 | F04 | 物料需求计算 | `POST /kitting/compute` | `/#/master-plan/material` |
 | F05 | 产能平衡分析 | `POST /capacity/analyze?masterPlanVersionId=` | `/#/master-plan/capacity` |
 | F06 | 主计划求解/查询 | `POST/GET .../master-plan/*` | 计划运行 + 场景选择器 |
-| F07 | 详细排程求解 | `POST .../detail-schedule/solve` | `/#/scheduling/detail-schedule` |
+| F07 | 详细排程 Session 推演 / 求解 | `POST .../schedule-sessions`、`POST .../detail-schedule/solve` | `/#/scheduling/detail-schedule` |
 | F08 | 工单下发 | `POST /planning/dispatch` | `/#/master-plan/work-orders` |
 | F09 | 事件与重排 | `POST /events`、`/planning/reschedule` | （API） |
 | F10 | KPI 与版本对比 | `GET /kpi/report`、`/planning/compare` | `/#/demand-tracking` |
@@ -224,6 +225,7 @@ flowchart LR
 | F13 | **主计划策略 CRUD** | `GET/POST/PUT/DELETE .../master-plan/strategies` | `/#/master-plan/objectives` |
 | F14 | **场景列表与对比** | `GET /planning/scenarios`、`/scenarios/compare` | `/#/master-plan/scenario-comparison` |
 | F15 | **场景选择器** | 复用 F06/F14 场景 API | 四个结果页 `PageHeader` |
+| F16 | **推演 Profile** | `GET/POST/DELETE .../simulation-profiles` | 生产排程 Session 推演 |
 
 > 旧路由（如 `/#/demand`、`/#/pipeline`）保留重定向至新路径，见 `App.tsx`。
 
@@ -686,6 +688,14 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 | POST | `/api/v1/planning/master-plan/solve?strategyId=` | 主计划求解（策略优先于 legacy capacityStrategy） |
 | GET | `/api/v1/planning/master-plan/result/{versionId}` | 主计划结果 |
 | POST | `/api/v1/planning/detail-schedule/solve?masterPlanVersionId=` | 详细排程 |
+| POST | `/api/v1/planning/schedule-sessions` | 创建详细排程 Session（可选 `seedInitialQueues` / `solve` / `simulationProfileId`） |
+| GET | `/api/v1/planning/schedule-sessions/{sessionId}` | 查看 Session 快照 |
+| PATCH | `/api/v1/planning/schedule-sessions/{sessionId}/steps` | 手动调整并增量推演 |
+| POST | `/api/v1/planning/schedule-sessions/{sessionId}/simulate` | 全量 / 增量推演 + 校验 |
+| POST | `/api/v1/planning/schedule-sessions/{sessionId}/optimize` | Session 内主动 Timefold 选优 |
+| POST | `/api/v1/planning/schedule-sessions/{sessionId}/confirm` | 落库排程版本并发布生产任务 |
+| GET/POST | `/api/v1/planning/simulation-profiles` | 列出 / 保存推演 Profile |
+| GET/DELETE | `/api/v1/planning/simulation-profiles/{profileId}` | 查看 / 删除推演 Profile |
 | POST | `/api/v1/planning/dispatch` | 下发 |
 | POST | `/api/v1/events` | 计划事件 |
 | POST | `/api/v1/planning/reschedule` | 重排 |
@@ -741,6 +751,7 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 | 2026-05-25 | 初版：S01–S07 场景、Timefold 双求解器、满足链、React 前端 |
 | 2026-05-27 | 主计划策略体系（产能模式 + 目标权重 CRUD）；产能均衡软目标；计划运行选策略；场景列表/对比展示策略名；`PlanContext` 场景选择器；产能页按场景分析；导航重命名与结果页分组；场景选择器仅保留于四个计划结果页；四结果页绑定 `masterPlanVersionId` |
 | 2026-05-28 | 帕累托扫描模式产品设计 v1（`docs/pareto-scan-design.md`）：权重网格批量求解、分目标 KPI、非支配前沿、帕累托探索页 |
+| 2026-07-27 | 补充 S05 Session 推演 / SimulationProfile / 扩展规则 API；同步 Timefold 2.0 版本 |
 
 ---
 
