@@ -199,7 +199,7 @@ PATCH steps / POST simulate  → patch + 赋时 + 校验 + 更新 preview
      ↓
 [可选] POST optimize  → Timefold + applyTiming + 更新 score
      ↓
-POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Session
+POST confirm  → enforceConfirmPolicy 通过后 persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Session
 ```
 
 ### 5.3 `DetailScheduleSessionService.create` 分支
