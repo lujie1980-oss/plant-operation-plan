@@ -474,13 +474,14 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 
 `confirm(sessionId)`：
 
-1. `persistSchedule("DS-" + uuid, schedule, duration)` → 排程版本落库。
-2. 筛选 `line != null && startMinute != null` 的工序，按线、时间排序。
-3. `ProductionTaskService.releaseFromSchedule(anchor, versionId, ops)`：
+1. `enforceConfirmPolicy(session)`：若 Profile 设置 `validation.blockConfirmOnHard=true` 且存在 HARD 违背，返回 400，**不**落库、不下发任务。
+2. `persistSchedule("DS-" + uuid, schedule, duration)` → 排程版本落库。
+3. 筛选 `line != null && startMinute != null` 的工序，按线、时间排序。
+4. `ProductionTaskService.releaseFromSchedule(anchor, versionId, ops)`：
    - 新建或更新 `production_task` 为 **RELEASED**；
    - **RUNNING** 任务不覆盖计划时间；
    - 计划与执行不一致 → `planning_conflict`（`RUNNING_SCHEDULE_MISMATCH`）。
-4. `sessionStore.remove(sessionId)`。
+5. `sessionStore.remove(sessionId)`。
 
 ---
 
@@ -557,7 +558,7 @@ useScheduleSession(masterPlanVersionId)
 
 - [ ] P0–P4 与 Session 内对象是否同源、创建后改主计划是否需重建 Session  
 - [ ] 计划员流程：改序 → simulate → 看 violations → confirm 是否符合现场 SOP  
-- [ ] HARD 违背是否允许带错发布（当前不阻断 confirm）  
+- [ ] HARD 违背是否允许带错发布（默认不阻断；`validation.blockConfirmOnHard=true` 可阻断 confirm）  
 - [ ] 并行/连续/工艺链三类约束是否覆盖贵司工艺规则  
 - [ ] 8h TTL 与计划员班次是否匹配  
 - [ ] 集群部署时会话丢失风险是否可接受  
