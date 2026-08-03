@@ -460,7 +460,7 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `recalculatedOperationIds` | 本次认为波及的工序 id |
 | `violations` / `hardViolationCount` / `mediumViolationCount` | 校验结果 |
 | `appliedRules` | 当前上下文中实际启用的 Timing / Validation / Closure 规则 ID |
-| `simulationProfileId` | 本次推演采用的 Profile ID（默认 `SP-DEFAULT`） |
+| `simulationProfileId` | 本次推演采用的 Profile ID（请求 / Session / active profile；无匹配时回退 `SP-DEFAULT`） |
 
 ### 10.3 预览 DTO 构建
 
