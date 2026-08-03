@@ -199,7 +199,7 @@ PATCH steps / POST simulate  → patch + 赋时 + 校验 + 更新 preview
      ↓
 [可选] POST optimize  → Timefold + applyTiming + 更新 score
      ↓
-POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Session
+POST confirm  → enforceConfirmPolicy 通过后 persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Session
 ```
 
 ### 5.3 `DetailScheduleSessionService.create` 分支
@@ -248,15 +248,17 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 
 **Phase 2 — SimulationProfile：** Session 创建时快照 `simulation_profile.config_json`；`simulate` 可传 `simulationProfileId` / `ruleOverrides`（仅当次）；响应含 `appliedRules`、`simulationProfileId`。CRUD：`GET/POST /api/v1/planning/simulation-profiles`。
 
-**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `OperationStartTimeKernel`（与 `DetailScheduleTimingKernel` 共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
+**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `DetailScheduleTimingKernel.computeShadowStartMinute`；`assignStartTimes` 仍走 `LineChainTimingUtil` → 同一 kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
 
-**Phase 3 — 扩展规则（默认关闭，业务规则页 + Profile 启用）：**
+**Phase 3 — 扩展规则（Profile-backed simulate 默认关闭，业务规则页 + Profile 启用）：**
 
 | ruleTypeId | 类型 | 说明 |
 |------------|------|------|
 | `factory-calendar` | TimingRule | 按 `resource_calendar` + 工厂班次策略 snap 开工到可用窗口 |
 | `feedback-freeze` | Timing + Validation | cutoff 前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` |
 | `batch-continuous` | Closure + Validation | 增量闭包扩展同批次同线工序；校验队列内批次不被隔开 |
+
+**注意**：这里的“默认关闭”指 `SimulationProfileResolver` 构建的 Session `simulate` 上下文。`create(seed/solve)`、`optimize` 或其它直接 `applyTiming()` 路径会走 `SimulationRuleContextFactory` 默认设置（缺省 rule key 视为启用），是否真正生效仍受业务规则 Scope、问题事实（如日历索引、冻结 cutoff）与具体规则条件约束。
 
 ### 7.1 入口
 
@@ -298,6 +300,7 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 |---------------------|------|
 | `operation-transfer-time` / `RoutingSuccessorClosureRule` | 工艺后继 |
 | `parallel-operations` / `ParallelMateClosureRule` | `pairMateOperationId` |
+| `batch-continuous` / `BatchContinuousClosureRule` | 种子工序所在批次、同线队列中的批次伙伴（当前依赖 `op.line` shadow） |
 | （无）/ `SameLineSuffixClosureRule` | 同线队列当前位及后缀 |
 
 `DetailScheduleSimulationEngine.expandAffectedClosure` 仍保留为静态入口，内部委托 `SimulationClosureExpander`。
@@ -311,6 +314,16 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 - `startMinute != null`
 - `operationId != null`
 - **已分配产线**：`op.getLine() != null` **或** 某 `line.assignedOperations.contains(op)`
+
+### 7.5 Phase 3 扩展规则细节
+
+在 `SimulationProfileResolver` 构建的 Session `simulate` 上下文中，这些规则默认由 `SimulationProfileConfigParser.DEFAULT_CONFIG_JSON` 关闭；同时需通过业务规则页 / `BusinessRuleScopeService` 启用对应 `ruleTypeId`。
+
+| 规则 | 入口 | 行为 | 约束与边界 |
+|------|------|------|------------|
+| `factory-calendar` | `FactoryCalendarTimingRule.snapStartMinute` | 若产线 `resourceId` 存在 `ResourceWorkingCalendarIndex`，将 tentative start 向前 snap 到下一个开放窗口；已在开放窗口内则不变。 | 只移动开工点，不切分跨班次工序；无日历资源保持原分钟。`DAY` 班次按当日开放班次合并窗口。 |
+| `feedback-freeze` | `FeedbackFreezeTimingRule.fixedStartMinute` + `FeedbackFreezeValidationRule` | `feedbackCutoff` 存在时，从 `ScheduleFeedbackEntity.listFrozenUpTo(cutoff)` 构建冻结索引；冻结工序以反馈中的 `plannedStart` 分钟为 fixed start。 | `cutoff` 为 ISO 日期字符串；不同锚点日期会折算到 Session anchor。若实际 start 偏离冻结分钟，校验输出 `FEEDBACK_FROZEN_START_MOVED`（MEDIUM）。 |
+| `batch-continuous` | `BatchContinuousClosureRule` + `BatchContinuousValidationRule` | 增量推演时，把同批次、同线队列中的工序纳入 affected 闭包；校验同一批次在同线队列中是否被其它批次/空批次插入。 | 当前闭包与校验都依赖 `op.getLine()`；仅在 `ScheduleLine.assignedOperations` list 中、但 shadow 为空的工序可能被跳过。闭包只影响 `recalculatedOperationIds` 标记，赋时仍全局重算；违背码为 `BATCH_INTERLEAVED`（MEDIUM），区别于 P4 连续生产组的 `CONTINUOUS_INTERLEAVED`（HARD）。 |
 
 ---
 
@@ -376,7 +389,8 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 ### 8.4 与 Timefold Shadow 的关系
 
 - Timefold 运行时使用 `@ShadowVariable` + `OperationStartTimeCalculator` 在约束中读时间。
-- **Session 推演路径不跑求解器**，直接写 `op.setStartMinute`，属于 **显式链式模型**，与 shadow 逻辑目标一致但实现路径独立。
+- `OperationStartTimeCalculator.compute` 通过 CDI 获取 `DetailScheduleTimingKernel`，调用 `computeShadowStartMinute(op, schedule)`；shadow 与 Session 赋时共用 `SimulationRuleRegistry`、换型、工艺链、契约 earliest、日历 snap 等插件。
+- **Session 推演路径不跑求解器**，通过 `DetailScheduleTimingKernel.applyAllStartTimes` 直接写 `op.setStartMinute`；Timefold shadow 只为约束读取单工序时间。
 - 因此：手动改序后 **必须** `simulate` 才能与校验、甘特展示一致。
 
 ---
@@ -400,11 +414,14 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `PARALLEL_SAME_LINE` | HARD | 并行对不在同一产线 |
 | `PARALLEL_SAME_TIME` | HARD | 并行对 start/end 不一致 |
 | `CONTINUOUS_INTERLEAVED` | HARD | 连续组在队列中被其它料号隔开 |
+| `FEEDBACK_FROZEN_START_MOVED` | MEDIUM | `feedback-freeze` 启用且冻结工序 start 偏离反馈计划开工分钟 |
+| `BATCH_INTERLEAVED` | MEDIUM | `batch-continuous` 启用且同批次工序在同线队列中被其它批次/空批次隔开 |
 
 **说明**：
 
 - 校验 **不阻止** simulate 完成；违背写入 `ScheduleSessionSimulateResultDto.violations` 与 preview。
-- HARD 计数用于 UI 警示；发布前应由计划员处理或知情确认。
+- HARD 计数用于 UI 警示；默认发布前由计划员处理或知情确认。
+- 若 Session Profile 的 `validation.blockConfirmOnHard=true`，`confirm` 会在持久化前重新校验并对 HARD 违背返回 400。
 
 ---
 
@@ -429,6 +446,9 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `stepPatches` | 手动调整列表 |
 | `affectedOperationIds` | 无 patch 时指定增量种子 |
 | `fullReschedule` | true → 强制 FULL |
+| `simulationProfileId` | 临时改用指定 Profile；未知 ID 返回 404 |
+| `ruleOverrides` | 本次 simulate 的规则开关覆盖，形如 `{ "factory-calendar": { "enabled": true } }` |
+| `feedbackCutoff` | ISO 日期；供 `feedback-freeze` 加载 cutoff 及之前的冻结反馈 |
 
 ### 10.2 响应 `ScheduleSessionSimulateResultDto`
 
@@ -439,6 +459,8 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `simulationDurationMs` | 推演耗时 |
 | `recalculatedOperationIds` | 本次认为波及的工序 id |
 | `violations` / `hardViolationCount` / `mediumViolationCount` | 校验结果 |
+| `appliedRules` | 当前上下文中实际启用的 Timing / Validation / Closure 规则 ID |
+| `simulationProfileId` | 本次推演采用的 Profile ID（请求 / Session / active profile；无匹配时回退 `SP-DEFAULT`） |
 
 ### 10.3 预览 DTO 构建
 
@@ -454,13 +476,16 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 
 `confirm(sessionId)`：
 
-1. `persistSchedule("DS-" + uuid, schedule, duration)` → 排程版本落库。
-2. 筛选 `line != null && startMinute != null` 的工序，按线、时间排序。
-3. `ProductionTaskService.releaseFromSchedule(anchor, versionId, ops)`：
+1. `enforceConfirmPolicy(session)`：若 Profile 设置 `validation.blockConfirmOnHard=true` 且存在 HARD 违背，返回 400，**不**落库、不下发任务。
+2. `persistSchedule("DS-" + uuid, schedule, duration)` → 排程版本落库。
+3. 筛选 `line != null && startMinute != null` 的工序，按线、时间排序。
+4. `ProductionTaskService.releaseFromSchedule(anchor, versionId, ops)`：
    - 新建或更新 `production_task` 为 **RELEASED**；
    - **RUNNING** 任务不覆盖计划时间；
    - 计划与执行不一致 → `planning_conflict`（`RUNNING_SCHEDULE_MISMATCH`）。
-4. `sessionStore.remove(sessionId)`。
+5. `sessionStore.remove(sessionId)`。
+
+**发布筛选约束**：当前下发任务仍依赖 `op.getLine() != null && startMinute != null`；若某些工序仅存在于 `ScheduleLine.assignedOperations` list、但 `op.line` shadow 为空，可能已参与推演却未释放为 `production_task`。见 §14「confirm 过滤」。
 
 ---
 
@@ -478,6 +503,8 @@ useScheduleSession(masterPlanVersionId)
 
 任意排产动作 → simulate(stepPatches[]) → 更新 preview + violations
 ```
+
+`ScheduleViolationsPanel` 在违背列表下方展示当前 `simulationProfileId` 与 `appliedRules`；即使没有违背，只要有 Profile 或规则信息也会显示诊断卡片，便于确认 Phase 3 规则是否实际生效。
 
 ### 12.2 前端插入算法（`scheduleSessionInsert.ts`）
 
@@ -535,7 +562,7 @@ useScheduleSession(masterPlanVersionId)
 
 - [ ] P0–P4 与 Session 内对象是否同源、创建后改主计划是否需重建 Session  
 - [ ] 计划员流程：改序 → simulate → 看 violations → confirm 是否符合现场 SOP  
-- [ ] HARD 违背是否允许带错发布（当前不阻断 confirm）  
+- [ ] HARD 违背是否允许带错发布（默认不阻断；`validation.blockConfirmOnHard=true` 可阻断 confirm）
 - [ ] 并行/连续/工艺链三类约束是否覆盖贵司工艺规则  
 - [ ] 8h TTL 与计划员班次是否匹配  
 - [ ] 集群部署时会话丢失风险是否可接受  
@@ -551,8 +578,14 @@ useScheduleSession(masterPlanVersionId)
 | 推演门面 | `scenario/planning/DetailScheduleSimulationEngine.java` |
 | 赋时内核 | `scenario/planning/simulation/DetailScheduleTimingKernel.java` |
 | 规则注册 | `scenario/planning/simulation/SimulationRuleRegistry.java` |
+| Profile 解析与覆盖 | `scenario/planning/simulation/SimulationProfileResolver.java`, `SimulationProfileConfigParser.java` |
+| Profile CRUD | `scenario/planning/SimulationProfileService.java`, `api/SimulationProfileResource.java` |
+| 工厂日历 snap | `scenario/planning/simulation/timing/FactoryCalendarTimingRule.java`, `scenario/ResourceWorkingCalendarIndex.java` |
+| 反馈冻结 | `scenario/planning/simulation/timing/FeedbackFreezeTimingRule.java`, `scenario/planning/simulation/validation/FeedbackFreezeValidationRule.java`, `scenario/FeedbackFreezeIndex.java` |
+| 批次连续闭包/校验 | `scenario/planning/simulation/closure/BatchContinuousClosureRule.java`, `scenario/planning/simulation/validation/BatchContinuousValidationRule.java` |
 | 手动 patch | `scenario/planning/DetailScheduleSessionMutation.java` |
 | 链式赋时门面 | `solver/detailschedule/LineChainTimingUtil.java` |
+| Timefold shadow 对齐 | `solver/detailschedule/OperationStartTimeCalculator.java`, `src/test/java/com/plantops/solver/detailschedule/OperationStartTimeKernelAlignmentTest.java` |
 | 校验 | `scenario/planning/ScheduleValidationService.java` |
 | 可定制规则规格 | `docs/superpowers/specs/2026-06-02-detail-schedule-simulation-rules-design.md` |
 | P0–P4 | `scenario/planning/DetailSchedulePlanningContextBuilder.java` |
