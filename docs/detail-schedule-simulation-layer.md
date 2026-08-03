@@ -250,13 +250,15 @@ POST confirm  → enforceConfirmPolicy 通过后 persistSchedule(DS-xxx) + Produ
 
 **Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `DetailScheduleTimingKernel.computeShadowStartMinute`；`assignStartTimes` 仍走 `LineChainTimingUtil` → 同一 kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
 
-**Phase 3 — 扩展规则（默认关闭，业务规则页 + Profile 启用）：**
+**Phase 3 — 扩展规则（Profile-backed simulate 默认关闭，业务规则页 + Profile 启用）：**
 
 | ruleTypeId | 类型 | 说明 |
 |------------|------|------|
 | `factory-calendar` | TimingRule | 按 `resource_calendar` + 工厂班次策略 snap 开工到可用窗口 |
 | `feedback-freeze` | Timing + Validation | cutoff 前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` |
 | `batch-continuous` | Closure + Validation | 增量闭包扩展同批次同线工序；校验队列内批次不被隔开 |
+
+**注意**：这里的“默认关闭”指 `SimulationProfileResolver` 构建的 Session `simulate` 上下文。`create(seed/solve)`、`optimize` 或其它直接 `applyTiming()` 路径会走 `SimulationRuleContextFactory` 默认设置（缺省 rule key 视为启用），是否真正生效仍受业务规则 Scope、问题事实（如日历索引、冻结 cutoff）与具体规则条件约束。
 
 ### 7.1 入口
 
@@ -298,7 +300,7 @@ POST confirm  → enforceConfirmPolicy 通过后 persistSchedule(DS-xxx) + Produ
 |---------------------|------|
 | `operation-transfer-time` / `RoutingSuccessorClosureRule` | 工艺后继 |
 | `parallel-operations` / `ParallelMateClosureRule` | `pairMateOperationId` |
-| `batch-continuous` / `BatchContinuousClosureRule` | 种子工序所在批次、同线队列中的批次伙伴 |
+| `batch-continuous` / `BatchContinuousClosureRule` | 种子工序所在批次、同线队列中的批次伙伴（当前依赖 `op.line` shadow） |
 | （无）/ `SameLineSuffixClosureRule` | 同线队列当前位及后缀 |
 
 `DetailScheduleSimulationEngine.expandAffectedClosure` 仍保留为静态入口，内部委托 `SimulationClosureExpander`。
@@ -315,13 +317,13 @@ POST confirm  → enforceConfirmPolicy 通过后 persistSchedule(DS-xxx) + Produ
 
 ### 7.5 Phase 3 扩展规则细节
 
-这些规则默认由 `SimulationProfileConfigParser.DEFAULT_CONFIG_JSON` 关闭；同时需通过业务规则页 / `BusinessRuleScopeService` 启用对应 `ruleTypeId`。
+在 `SimulationProfileResolver` 构建的 Session `simulate` 上下文中，这些规则默认由 `SimulationProfileConfigParser.DEFAULT_CONFIG_JSON` 关闭；同时需通过业务规则页 / `BusinessRuleScopeService` 启用对应 `ruleTypeId`。
 
 | 规则 | 入口 | 行为 | 约束与边界 |
 |------|------|------|------------|
 | `factory-calendar` | `FactoryCalendarTimingRule.snapStartMinute` | 若产线 `resourceId` 存在 `ResourceWorkingCalendarIndex`，将 tentative start 向前 snap 到下一个开放窗口；已在开放窗口内则不变。 | 只移动开工点，不切分跨班次工序；无日历资源保持原分钟。`DAY` 班次按当日开放班次合并窗口。 |
 | `feedback-freeze` | `FeedbackFreezeTimingRule.fixedStartMinute` + `FeedbackFreezeValidationRule` | `feedbackCutoff` 存在时，从 `ScheduleFeedbackEntity.listFrozenUpTo(cutoff)` 构建冻结索引；冻结工序以反馈中的 `plannedStart` 分钟为 fixed start。 | `cutoff` 为 ISO 日期字符串；不同锚点日期会折算到 Session anchor。若实际 start 偏离冻结分钟，校验输出 `FEEDBACK_FROZEN_START_MOVED`（MEDIUM）。 |
-| `batch-continuous` | `BatchContinuousClosureRule` + `BatchContinuousValidationRule` | 增量推演时，把同批次、同线队列中的工序纳入 affected 闭包；校验同一批次在同线队列中是否被其它批次/空批次插入。 | 闭包只影响 `recalculatedOperationIds` 标记，赋时仍全局重算；违背码为 `BATCH_INTERLEAVED`（MEDIUM），区别于 P4 连续生产组的 `CONTINUOUS_INTERLEAVED`（HARD）。 |
+| `batch-continuous` | `BatchContinuousClosureRule` + `BatchContinuousValidationRule` | 增量推演时，把同批次、同线队列中的工序纳入 affected 闭包；校验同一批次在同线队列中是否被其它批次/空批次插入。 | 当前闭包与校验都依赖 `op.getLine()`；仅在 `ScheduleLine.assignedOperations` list 中、但 shadow 为空的工序可能被跳过。闭包只影响 `recalculatedOperationIds` 标记，赋时仍全局重算；违背码为 `BATCH_INTERLEAVED`（MEDIUM），区别于 P4 连续生产组的 `CONTINUOUS_INTERLEAVED`（HARD）。 |
 
 ---
 
