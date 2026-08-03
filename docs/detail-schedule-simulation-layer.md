@@ -483,6 +483,8 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
    - 计划与执行不一致 → `planning_conflict`（`RUNNING_SCHEDULE_MISMATCH`）。
 5. `sessionStore.remove(sessionId)`。
 
+**发布筛选约束**：当前下发任务仍依赖 `op.getLine() != null && startMinute != null`；若某些工序仅存在于 `ScheduleLine.assignedOperations` list、但 `op.line` shadow 为空，可能已参与推演却未释放为 `production_task`。见 §14「confirm 过滤」。
+
 ---
 
 ## 12. 前端交互与推演衔接（生产排程页）
