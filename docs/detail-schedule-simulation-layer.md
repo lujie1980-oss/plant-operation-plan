@@ -94,6 +94,7 @@ flowchart TB
 | `DetailScheduleSessionService` | `scenario/` | create / get / simulate / optimize / confirm / candidateLines |
 | `DetailScheduleSessionMutation` | `scenario/planning/` | `SessionStepPatchDto` → 改线、改序、锁定 |
 | `DetailScheduleSimulationEngine` | `scenario/planning/` | full / incremental simulate |
+| `SimulationProfileService` / `SimulationProfileResolver` | `scenario/planning/` / `scenario/planning/simulation/` | 推演配置快照、当次覆盖、反馈冻结上下文 |
 | `LineChainTimingUtil` | `solver/detailschedule/` | 全量链式赋时 |
 | `ScheduleValidationService` | `scenario/planning/` | 推演后校验 |
 | `DetailScheduleService` | `scenario/` | 编排求解、预览 DTO、`assignStartTimes` 委托 |
@@ -246,17 +247,41 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 
 `DetailScheduleSimulationEngine` 为 REST/测试兼容门面，实际编排由 `com.plantops.scenario.planning.simulation.SimulationPipeline` 完成。
 
-**Phase 2 — SimulationProfile：** Session 创建时快照 `simulation_profile.config_json`；`simulate` 可传 `simulationProfileId` / `ruleOverrides`（仅当次）；响应含 `appliedRules`、`simulationProfileId`。CRUD：`GET/POST /api/v1/planning/simulation-profiles`。
+**Phase 2 — SimulationProfile：** Session 创建时快照 `simulation_profile.config_json`；`simulate` 可传 `simulationProfileId` / `ruleOverrides`（仅当次）；响应含 `appliedRules`、`simulationProfileId`。CRUD：`GET/POST /api/v1/planning/simulation-profiles`、`GET/DELETE /api/v1/planning/simulation-profiles/{profileId}`。
 
-**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `OperationStartTimeKernel`（与 `DetailScheduleTimingKernel` 共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
+**Profile 配置骨架（默认 `SP-DEFAULT`）：**
 
-**Phase 3 — 扩展规则（默认关闭，业务规则页 + Profile 启用）：**
+```json
+{
+  "timing": {
+    "maxRoutingIterations": 16,
+    "rules": {
+      "factory-calendar": { "enabled": false },
+      "feedback-freeze": { "enabled": false }
+    }
+  },
+  "incremental": {
+    "rules": {
+      "batch-continuous": { "enabled": false }
+    }
+  },
+  "validation": { "blockConfirmOnHard": false }
+}
+```
+
+Profile 解析顺序：创建 Session 时优先 `CreateScheduleSessionRequest.simulationProfileId`，否则取 `DETAIL_SCHEDULE` 层当前 active（可按 `masterPlanVersionId` 覆盖），最后回退 `SP-DEFAULT`。Session 保存的是快照；`simulate` 请求中的 `simulationProfileId` / `ruleOverrides` 只影响本次推演，不改 Session 快照。
+
+**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `DetailScheduleTimingKernel.computeShadowStartMinute`（与 Session 显式赋时共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
+
+**Phase 3 — 扩展规则（Profile-backed simulate 的默认 Profile 关闭；需业务规则页 + Profile/override 启用）：**
 
 | ruleTypeId | 类型 | 说明 |
 |------------|------|------|
 | `factory-calendar` | TimingRule | 按 `resource_calendar` + 工厂班次策略 snap 开工到可用窗口 |
 | `feedback-freeze` | Timing + Validation | cutoff 前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` |
 | `batch-continuous` | Closure + Validation | 增量闭包扩展同批次同线工序；校验队列内批次不被隔开 |
+
+**边界**：上述「默认关闭」仅指 `SimulationProfileResolver` 构建的 Session `simulate` / `confirm` 上下文。Session create 的 seed/solve、`optimize` 后 `applyTiming`、legacy `detail-schedule/solve` 等直接赋时路径使用 `SimulationRuleContextFactory.defaults`；缺省 rule flag 在 registry 中按 enabled 处理，仍受业务规则页 `BusinessRuleScope` 限制。
 
 ### 7.1 入口
 
@@ -376,7 +401,8 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 ### 8.4 与 Timefold Shadow 的关系
 
 - Timefold 运行时使用 `@ShadowVariable` + `OperationStartTimeCalculator` 在约束中读时间。
-- **Session 推演路径不跑求解器**，直接写 `op.setStartMinute`，属于 **显式链式模型**，与 shadow 逻辑目标一致但实现路径独立。
+- Phase 4 后，`OperationStartTimeCalculator.compute` 委托 `DetailScheduleTimingKernel.computeShadowStartMinute`；Session 的 `applyAllStartTimes` 与 Timefold shadow 通过同一个 timing kernel 与 `SimulationRuleRegistry` 读取规则。
+- **Session 推演路径不跑求解器**，仍直接写 `op.setStartMinute`；Timefold optimize 路径只在约束中读取 shadow 结果。
 - 因此：手动改序后 **必须** `simulate` 才能与校验、甘特展示一致。
 
 ---
@@ -400,11 +426,13 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `PARALLEL_SAME_LINE` | HARD | 并行对不在同一产线 |
 | `PARALLEL_SAME_TIME` | HARD | 并行对 start/end 不一致 |
 | `CONTINUOUS_INTERLEAVED` | HARD | 连续组在队列中被其它料号隔开 |
+| `FEEDBACK_FROZEN_START_MOVED` | MEDIUM | 启用 `feedback-freeze` 且传入 `feedbackCutoff` 时，冻结工序开工时间偏离反馈计划 |
+| `BATCH_INTERLEAVED` | MEDIUM | 启用 `batch-continuous` 时，同批次同线工序被其它批次打断 |
 
 **说明**：
 
 - 校验 **不阻止** simulate 完成；违背写入 `ScheduleSessionSimulateResultDto.violations` 与 preview。
-- HARD 计数用于 UI 警示；发布前应由计划员处理或知情确认。
+- HARD 计数默认用于 UI 警示；若 Session Profile 配置 `validation.blockConfirmOnHard=true`，`confirm` 会在落库前重新校验并对 HARD 违背返回 400。
 
 ---
 
@@ -429,6 +457,9 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `stepPatches` | 手动调整列表 |
 | `affectedOperationIds` | 无 patch 时指定增量种子 |
 | `fullReschedule` | true → 强制 FULL |
+| `simulationProfileId` | 当次推演使用的 Profile；为空则用 Session 创建时的快照 |
+| `ruleOverrides` | 当次规则开关覆盖，如 `{ "batch-continuous": { "enabled": true } }` |
+| `feedbackCutoff` | 非空时构建 `FeedbackFreezeIndex`，供 `feedback-freeze` timing / validation 使用 |
 
 ### 10.2 响应 `ScheduleSessionSimulateResultDto`
 
@@ -439,6 +470,7 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `simulationDurationMs` | 推演耗时 |
 | `recalculatedOperationIds` | 本次认为波及的工序 id |
 | `violations` / `hardViolationCount` / `mediumViolationCount` | 校验结果 |
+| `appliedRules` / `simulationProfileId` | 本次实际启用的规则清单与 Profile ID |
 
 ### 10.3 预览 DTO 构建
 
@@ -454,13 +486,14 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 
 `confirm(sessionId)`：
 
-1. `persistSchedule("DS-" + uuid, schedule, duration)` → 排程版本落库。
-2. 筛选 `line != null && startMinute != null` 的工序，按线、时间排序。
-3. `ProductionTaskService.releaseFromSchedule(anchor, versionId, ops)`：
+1. 若 Profile `validation.blockConfirmOnHard=true`，先用当前 Session schedule 做 FULL validation；存在 HARD 违背则返回 400，不落库。
+2. `persistSchedule("DS-" + uuid, schedule, duration)` → 排程版本落库。
+3. 筛选 `line != null && startMinute != null` 的工序，按线、时间排序。
+4. `ProductionTaskService.releaseFromSchedule(anchor, versionId, ops)`：
    - 新建或更新 `production_task` 为 **RELEASED**；
    - **RUNNING** 任务不覆盖计划时间；
    - 计划与执行不一致 → `planning_conflict`（`RUNNING_SCHEDULE_MISMATCH`）。
-4. `sessionStore.remove(sessionId)`。
+5. `sessionStore.remove(sessionId)`。
 
 ---
 
@@ -510,8 +543,8 @@ useScheduleSession(masterPlanVersionId)
 | 维度 | Session 推演 | Timefold optimize |
 |------|----------------|-------------------|
 | 触发 | simulate / applyTiming | optimize / solve |
-| 产线选择 | 人工 patch / 种子入队 | 求解器 `@PlanningVariable line` |
-| 顺序 | list 顺序 + 链式赋时 | list-variable + 约束 |
+| 产线/顺序选择 | 人工 patch / 种子入队 | 求解器维护 `ScheduleLine.assignedOperations` list-variable |
+| 归属读取 | list membership + `op.line` shadow | `OperationAssignment.line` 逆向 shadow |
 | 时间 | `LineChainTimingUtil` 显式 | Shadow + 约束一致化 |
 | 输出 | violations DTO | score + violations（若再 simulate） |
 | 性能 | 毫秒级（典型） | 秒～数十秒 |
@@ -549,8 +582,10 @@ useScheduleSession(masterPlanVersionId)
 | Session 服务 | `scenario/DetailScheduleSessionService.java` |
 | 推演管道 | `scenario/planning/simulation/SimulationPipeline.java` |
 | 推演门面 | `scenario/planning/DetailScheduleSimulationEngine.java` |
+| 推演 Profile | `scenario/planning/SimulationProfileService.java`, `scenario/planning/simulation/SimulationProfileResolver.java`, `api/SimulationProfileResource.java` |
 | 赋时内核 | `scenario/planning/simulation/DetailScheduleTimingKernel.java` |
 | 规则注册 | `scenario/planning/simulation/SimulationRuleRegistry.java` |
+| Phase 3 规则 | `scenario/planning/simulation/timing/FactoryCalendarTimingRule.java`, `scenario/planning/simulation/timing/FeedbackFreezeTimingRule.java`, `scenario/planning/simulation/closure/BatchContinuousClosureRule.java`, `scenario/planning/simulation/validation/FeedbackFreezeValidationRule.java`, `scenario/planning/simulation/validation/BatchContinuousValidationRule.java` |
 | 手动 patch | `scenario/planning/DetailScheduleSessionMutation.java` |
 | 链式赋时门面 | `solver/detailschedule/LineChainTimingUtil.java` |
 | 校验 | `scenario/planning/ScheduleValidationService.java` |

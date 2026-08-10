@@ -89,14 +89,20 @@ docker compose up -d --build
 | 路由 | 场景 |
 |------|------|
 | `/#/` | 工作台 |
-| `/#/demand` | S01 需求满足（KPI + 订单列表 + 满足链甘特图） |
-| `/#/kitting` | S02 齐套 |
-| `/#/capacity` | S03 产能平衡 |
-| `/#/master-plan` | S04 主计划 + 甘特图 |
-| `/#/detail-schedule` | S05 详细排程 + 甘特图 |
-| `/#/execution` | S06 执行闭环 |
-| `/#/kpi` | S07 KPI |
-| `/#/pipeline` | 全链路编排 |
+| `/#/master-plan/plan-run` | 主计划流水线运行 |
+| `/#/master-plan/analysis/demand` | S01 需求满足（KPI + 订单列表 + 满足链甘特图） |
+| `/#/master-plan/analysis/material` | S02 物料需求 / 齐套 |
+| `/#/master-plan/analysis/capacity` | S03 产能平衡 |
+| `/#/master-plan/analysis/work-orders` | 主计划工单与下发视图 |
+| `/#/master-plan/analysis/diagnostics` | 主计划 / 详细排程推演诊断 |
+| `/#/master-plan/analysis/order-chain` | 单订单推演链 |
+| `/#/scheduling/parameters` | 生产排程参数 |
+| `/#/scheduling/pending-work-orders` | 待排工单 |
+| `/#/scheduling/batch-plan` | 批次计划 |
+| `/#/scheduling/kitting` | 排程侧物料齐套 |
+| `/#/scheduling/detail-schedule` | S05 Session 推演、甘特拖拽、simulate / confirm |
+| `/#/scheduling/version-comparison` | 详细排程版本对比 |
+| `/#/demand-tracking` | S07 需求跟踪 / KPI |
 
 ## 示例调用
 
@@ -113,6 +119,18 @@ curl -X POST http://localhost:8080/api/v1/planning/master-plan/solve
 # 详细排程（可带 masterPlanVersionId）
 curl -X POST "http://localhost:8080/api/v1/planning/detail-schedule/solve"
 
+# S05 Session：创建 → 推演 → 确认发布
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions \
+  -H "Content-Type: application/json" \
+  -d '{"masterPlanVersionId":"MP-xxxx","seedInitialQueues":true}'
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions/{sessionId}/simulate \
+  -H "Content-Type: application/json" \
+  -d '{"fullReschedule":true}'
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions/{sessionId}/confirm
+
+# S05 推演 Profile
+curl http://localhost:8080/api/v1/planning/simulation-profiles
+
 # 全链路 S01→S07
 curl -X POST http://localhost:8080/api/v1/planning/run-full-pipeline
 
@@ -128,7 +146,7 @@ curl http://localhost:8080/api/v1/kpi/report
 | S02 齐套 | KittingService | 规则 |
 | S03 产能平衡 | CapacityService | 利用率甘特+区间工单 |
 | S04 主计划 | MasterPlanService | Timefold |
-| S05 排程 | DetailScheduleService | Timefold |
+| S05 排程 | DetailScheduleSessionService / DetailScheduleService | Session 推演 + 可选 Timefold |
 | S06 执行闭环 | ExecutionService | 事件+R0–R3 |
 | S07 KPI | KpiService | 指标汇总 |
 
@@ -155,4 +173,6 @@ python -X utf8 tools/parse_demo_excel.py
 |------|------|
 | **[docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md)** | **完整项目文档**（业务蓝图、功能设计、技术方案、部署） |
 | [docs/architecture.md](docs/architecture.md) | 架构摘要 |
+| [docs/aps-planning-layer.md](docs/aps-planning-layer.md) | S04/S05 推演层与 Timefold 边界 |
+| [docs/detail-schedule-simulation-layer.md](docs/detail-schedule-simulation-layer.md) | S05 Session、SimulationProfile、扩展规则与 confirm 发布 |
 | 工作区根目录 `工厂计划*.md` | 业务方法论文档（场景卡片） |
