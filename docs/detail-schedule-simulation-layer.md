@@ -273,13 +273,15 @@ Profile 解析顺序：创建 Session 时优先 `CreateScheduleSessionRequest.si
 
 **Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `DetailScheduleTimingKernel.computeShadowStartMinute`（与 Session 显式赋时共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
 
-**Phase 3 — 扩展规则（默认关闭，业务规则页 + Profile 启用）：**
+**Phase 3 — 扩展规则（Profile-backed simulate 的默认 Profile 关闭；需业务规则页 + Profile/override 启用）：**
 
 | ruleTypeId | 类型 | 说明 |
 |------------|------|------|
 | `factory-calendar` | TimingRule | 按 `resource_calendar` + 工厂班次策略 snap 开工到可用窗口 |
 | `feedback-freeze` | Timing + Validation | cutoff 前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` |
 | `batch-continuous` | Closure + Validation | 增量闭包扩展同批次同线工序；校验队列内批次不被隔开 |
+
+**边界**：上述「默认关闭」仅指 `SimulationProfileResolver` 构建的 Session `simulate` / `confirm` 上下文。Session create 的 seed/solve、`optimize` 后 `applyTiming`、legacy `detail-schedule/solve` 等直接赋时路径使用 `SimulationRuleContextFactory.defaults`；缺省 rule flag 在 registry 中按 enabled 处理，仍受业务规则页 `BusinessRuleScope` 限制。
 
 ### 7.1 入口
 
@@ -425,7 +427,7 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `PARALLEL_SAME_TIME` | HARD | 并行对 start/end 不一致 |
 | `CONTINUOUS_INTERLEAVED` | HARD | 连续组在队列中被其它料号隔开 |
 | `FEEDBACK_FROZEN_START_MOVED` | MEDIUM | 启用 `feedback-freeze` 且传入 `feedbackCutoff` 时，冻结工序开工时间偏离反馈计划 |
-| `BATCH_INTERLEAVED` | HARD | 启用 `batch-continuous` 时，同批次同线工序被其它批次打断 |
+| `BATCH_INTERLEAVED` | MEDIUM | 启用 `batch-continuous` 时，同批次同线工序被其它批次打断 |
 
 **说明**：
 
@@ -541,8 +543,8 @@ useScheduleSession(masterPlanVersionId)
 | 维度 | Session 推演 | Timefold optimize |
 |------|----------------|-------------------|
 | 触发 | simulate / applyTiming | optimize / solve |
-| 产线选择 | 人工 patch / 种子入队 | 求解器 `@PlanningVariable line` |
-| 顺序 | list 顺序 + 链式赋时 | list-variable + 约束 |
+| 产线/顺序选择 | 人工 patch / 种子入队 | 求解器维护 `ScheduleLine.assignedOperations` list-variable |
+| 归属读取 | list membership + `op.line` shadow | `OperationAssignment.line` 逆向 shadow |
 | 时间 | `LineChainTimingUtil` 显式 | Shadow + 约束一致化 |
 | 输出 | violations DTO | score + violations（若再 simulate） |
 | 性能 | 毫秒级（典型） | 秒～数十秒 |

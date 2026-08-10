@@ -240,13 +240,15 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 - 扩展规则需同时通过三道门：`BusinessRuleScopeService.isDetailScheduleEnabled(ruleTypeId)`、Profile `config_json` 中的规则开关、当次 `ruleOverrides`。
 - `validation.blockConfirmOnHard=true` 时，`confirm` 发布前会重新 FULL validation；存在 HARD 违背则返回 400，默认 false 仅警示。
 
-**Phase 3 扩展规则（默认 Profile 关闭）：**
+**Phase 3 扩展规则（Profile-backed simulate 默认 Profile 关闭）：**
 
 | ruleTypeId | 类别 | 作用 |
 |------------|------|------|
 | `factory-calendar` | Timing | 使用 `ResourceWorkingCalendarIndex` 将开工时间对齐到资源/班次可用窗口 |
 | `feedback-freeze` | Timing + Validation | `feedbackCutoff` 之前已冻结工序保持反馈计划时间；偏离时报 `FEEDBACK_FROZEN_START_MOVED` |
 | `batch-continuous` | Closure + Validation | 增量推演把同批次同线工序纳入闭包，并校验 `BATCH_INTERLEAVED` |
+
+> 注意：Profile/override 只由 `SimulationProfileResolver` 注入到 Session `simulate` / `confirm` 上下文。create seed/solve、`optimize` 后赋时、legacy `detail-schedule/solve` 等直接赋时路径使用默认上下文，缺省 rule flag 按 enabled 处理（仍受业务规则页 `BusinessRuleScope` 约束）。
 
 **前端**：**生产排程**页 Session 推演面板 + 甘特/列表「Session 推演」视图；Profile 结果在 violations 面板显示，当前未提供 Profile 管理 UI。**推演诊断**页保留预览入口。
 

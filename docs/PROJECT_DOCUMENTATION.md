@@ -487,7 +487,7 @@ erDiagram
 | 约束 | `DetailScheduleConstraintProvider` | 产线顺序、换型、班次容量、并行/连续等 |
 | 推演 | `DetailScheduleSessionService` / `SimulationPipeline` | Session 内存工作副本；patch → simulate → validation → confirm |
 | 赋时 | `DetailScheduleTimingKernel` | Session 显式赋时与 Timefold `OperationStartTimeCalculator` shadow 共用 |
-| 配置 | `SimulationProfileService` | Profile JSON 控制 `factory-calendar`、`feedback-freeze`、`batch-continuous` 与 confirm HARD 阻断 |
+| 配置 | `SimulationProfileService` | Session simulate/confirm 上下文中，Profile JSON 控制 `factory-calendar`、`feedback-freeze`、`batch-continuous` 与 confirm HARD 阻断 |
 
 ### 4.6 全链路编排
 
