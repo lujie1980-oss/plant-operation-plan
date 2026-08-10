@@ -155,9 +155,10 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | `mpContractStartDate` / `mpContractEndDate` / `mpContractResourceId` | P0 主计划契约 | 软约束 + `ScheduleTimingUtil` 最早开工等待 |
 | `mpTargetEndDate` | 契约或工单末槽回退 | 软约束：相对主计划偏差 |
 | `pinned` | 订单排程锁定 + 规则项目启用 | 硬约束：固定产线 |
-| `line` / `startMinute` | **Timefold 决策变量** | 选优结果 |
+| `ScheduleLine.assignedOperations` | **Timefold `@PlanningListVariable`** | 产线队列与顺序；`OperationAssignment.line` 为逆向 shadow |
+| `startMinute` / `endMinute` | 推演/Shadow 输出 | Session 显式赋时；Timefold 约束读取 shadow |
 
-**赋时**：求解后 `ScheduleTimingUtil.applyLineStartTimes` 按产线 cursor 顺序填分钟级开始/结束（含契约开始日等待）。
+**赋时**：Session 路径由 `LineChainTimingUtil` / `DetailScheduleTimingKernel.applyAllStartTimes` 显式写入分钟级开始/结束；Timefold 路径由 `OperationStartTimeCalculator` 委托同一 kernel 计算 shadow，求解后再 `applyTiming` 固化结果。
 
 ### 5.3 主计划 → 详细排程契约
 
@@ -203,7 +204,8 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | `SchedulingSession` / `SchedulingSessionStore` | 内存工作副本（8h TTL） |
 | `DetailScheduleSessionService` | create / get / simulate / optimize / confirm |
 | `DetailScheduleSessionMutation` | `SessionStepPatchDto`：改产线、队列顺序、锁定 |
-| `DetailScheduleSimulationEngine` | `fullSimulate` / `incrementalSimulate`（链式赋时 + 记录波及工序） |
+| `DetailScheduleSimulationEngine` / `SimulationPipeline` | `fullSimulate` / `incrementalSimulate`（链式赋时 + 记录波及工序） |
+| `SimulationProfileService` / `SimulationProfileResolver` | Profile 快照、当次规则覆盖、反馈冻结上下文 |
 | `ScheduleValidationService` | 硬/中约束校验（工艺链、并行对、连续生产、齐套未分配等） |
 | `ProductionTaskService` | confirm 时 upsert `RELEASED` + `planning_conflict` |
 
@@ -225,10 +227,28 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | `stepPatches` | 手动调整（改线 / 顺序 / 锁定） |
 | `affectedOperationIds` | 增量种子（无 patch 时指定波及起点） |
 | `fullReschedule` | `true` 时全量链式重算；默认无种子则全量 |
+| `simulationProfileId` | 当次推演使用的 Profile；为空则使用 Session 创建时的快照 |
+| `ruleOverrides` | 当次规则开关覆盖，如 `{ "batch-continuous": { "enabled": true } }` |
+| `feedbackCutoff` | 非空时构建反馈冻结索引，供 `feedback-freeze` timing / validation 使用 |
 
 增量模式从种子扩展：**工艺后继**、**并行配对**、**同产线队列后缀**，再 `LineChainTimingUtil.applyAllStartTimes`（全局收敛，返回 `recalculatedOperationIds`）。
 
-**前端**：**生产排程**页 Session 推演面板 + 甘特/列表「Session 推演」视图；**推演诊断**页保留预览入口。
+**SimulationProfile 与规则启用：**
+
+- 默认 Profile ID 为 `SP-DEFAULT`，创建 Session 时保存 `config_json` 快照；`simulate` 的 `simulationProfileId` / `ruleOverrides` 只影响本次请求。
+- Profile 查找顺序：请求指定 → `DETAIL_SCHEDULE` 层 active（优先匹配 `masterPlanVersionId`）→ `SP-DEFAULT`。
+- 扩展规则需同时通过三道门：`BusinessRuleScopeService.isDetailScheduleEnabled(ruleTypeId)`、Profile `config_json` 中的规则开关、当次 `ruleOverrides`。
+- `validation.blockConfirmOnHard=true` 时，`confirm` 发布前会重新 FULL validation；存在 HARD 违背则返回 400，默认 false 仅警示。
+
+**Phase 3 扩展规则（默认 Profile 关闭）：**
+
+| ruleTypeId | 类别 | 作用 |
+|------------|------|------|
+| `factory-calendar` | Timing | 使用 `ResourceWorkingCalendarIndex` 将开工时间对齐到资源/班次可用窗口 |
+| `feedback-freeze` | Timing + Validation | `feedbackCutoff` 之前已冻结工序保持反馈计划时间；偏离时报 `FEEDBACK_FROZEN_START_MOVED` |
+| `batch-continuous` | Closure + Validation | 增量推演把同批次同线工序纳入闭包，并校验 `BATCH_INTERLEAVED` |
+
+**前端**：**生产排程**页 Session 推演面板 + 甘特/列表「Session 推演」视图；Profile 结果在 violations 面板显示，当前未提供 Profile 管理 UI。**推演诊断**页保留预览入口。
 
 ---
 
@@ -237,10 +257,10 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | 项目 | 主计划 S04 | 详细排程 S05 |
 |------|------------|--------------|
 | **Solution** | `MasterPlanSchedule` | `DetailSchedule` |
-| **Planning Entity** | `OrderAllocation` | `OperationAssignment` |
+| **Planning Entity** | `OrderAllocation` | `ScheduleLine`（持有队列）+ `OperationAssignment`（队列元素） |
 | **Value Range** | `TimeSlot`（按资源） | `ScheduleLine` |
-| **决策变量** | `timeSlot` | `line`（顺序由约束与 shadow 时间推导） |
-| **Problem Facts** | 物料上下文、BOM 边、相邻槽位对、overlay、timing bounds、目标权重 | 契约权重、换型索引、工序流转索引、锚点日、班产能 |
+| **决策变量** | `timeSlot` | `ScheduleLine.assignedOperations`（`@PlanningListVariable`，顺序 + 归属） |
+| **Problem Facts** | 物料上下文、BOM 边、相邻槽位对、overlay、timing bounds、目标权重 | 契约权重、换型索引、工序流转索引、锚点日、班产能、资源工作日历、反馈冻结索引 |
 | **不在求解器内** | 工单生成、MRP 闭合、工艺展开、eligible 过滤 | 齐套标记、契约加载、并行/连续绑定 |
 
 ---
@@ -251,7 +271,15 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 
 `BusinessRuleScopeEntity` + 前端 `BusinessRuleScopePanel`：**主计划 / 排程** 开关在 **规则类型** 层级（换型、齐套/BOM、采购提前期等），不在单条规则条目上。
 
-`BusinessRuleScopeService.isMasterPlanEnabled(ruleTypeId)` / `isDetailScheduleEnabled(...)` 供推演与约束加载使用。
+`BusinessRuleScopeService.isMasterPlanEnabled(ruleTypeId)` / `isDetailScheduleEnabled(...)` 供推演与约束加载使用。S05 Session Profile 还会在此基础上按 `config_json` / `ruleOverrides` 再过滤扩展规则。
+
+S05 当前新增的可配置规则类型：
+
+| ruleTypeId | 说明 |
+|------------|------|
+| `factory-calendar` | 班次日历赋时；把开工时间 snap 到资源可用窗口 |
+| `feedback-freeze` | 反馈冻结窗口；保持 cutoff 前冻结工序的反馈计划开工 |
+| `batch-continuous` | 批次连续排产；扩展增量闭包并校验同批次同线不被插队 |
 
 ### 7.2 策略与场景
 
@@ -536,6 +564,7 @@ POST /api/v1/planning/order-chain/preview
 | 推演诊断采集 | `scenario/planning/diagnostics/` |
 | 订单推演链 | `scenario/planning/OrderPlanningChainService.java` |
 | Session / 增量推演 | `scenario/DetailScheduleSessionService.java`, `scenario/planning/DetailScheduleSimulationEngine.java` |
+| 推演 Profile / 扩展规则 | `scenario/planning/SimulationProfileService.java`, `scenario/planning/simulation/SimulationProfileResolver.java`, `scenario/planning/simulation/*Rule.java` |
 | 生产任务 | `scenario/execution/ProductionTaskService.java`, `api/ScheduleSessionResource.java` |
 
 ---
@@ -548,3 +577,4 @@ POST /api/v1/planning/order-chain/preview
 | 2026-05-30 | §8.3 推演可观测性：Collector、API、reasonCode、解读工作流 |
 | 2026-05-30 | §8.3.10 选优层得分分解：SolutionManager explain API + 前端面板 |
 | 2026-06-02 | §5.6 Session + 增量推演 + 生产任务 RELEASED 发布 |
+| 2026-08-10 | §5.6 补充 SimulationProfile、Phase 3 扩展规则、confirm HARD 阻断与 Timefold shadow/kernel 对齐 |
