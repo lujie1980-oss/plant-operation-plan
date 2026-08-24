@@ -252,12 +252,12 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 
 **Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 直接委托 `DetailScheduleTimingKernel.computeShadowStartMinute`（共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
 
-**Phase 3 — 扩展规则（默认关闭，业务规则页 + Profile 启用）：**
+**Phase 3 — 扩展规则（Session/Profile 路径默认关闭，业务规则页 + Profile 启用）：**
 
 | ruleTypeId | 类型 | 说明 |
 |------------|------|------|
 | `factory-calendar` | TimingRule | 按 `resource_calendar` + 工厂班次策略 snap 开工到可用窗口 |
-| `feedback-freeze` | Timing + Validation | cutoff 前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` |
+| `feedback-freeze` | Timing + Validation | cutoff 及之前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` |
 | `batch-continuous` | Closure + Validation | 增量闭包扩展同批次同线工序；校验队列内批次不被隔开（MEDIUM） |
 
 ### 7.1 Profile 配置与启用顺序
@@ -282,6 +282,8 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 }
 ```
 
+上面的默认关闭语义适用于 `DetailScheduleSessionService.simulate/confirm` 这类经 `SimulationProfileResolver` 构建上下文的 Session 路径。兼容门面 `SimulationPipeline.fullSimulate/incrementalSimulate` 与 `ScheduleValidationService.validate` 走 `SimulationRuleContextFactory.defaults(null)`；缺省 rule key 会按 `isRuleEnabled(ruleTypeId, true)` 视为启用，不能把 `SP-DEFAULT` 的默认关闭直接外推到这些无 Profile 路径。
+
 启用判定由 `SimulationRuleRegistry` 聚合：
 
 1. `ruleTypeId == null` 的内置规则默认参与（如 `SameLineSuffixClosureRule`）。
@@ -299,7 +301,7 @@ simulate(request.simulationProfileId 非空) → 读取该 Profile
 否则 → SP-DEFAULT
 ```
 
-`feedbackCutoff` 仅在 `simulate` 请求中提供时合并 `FeedbackFreezeIndex`；缺省时即使 Profile 打开 `feedback-freeze`，冻结规则也无 cutoff 数据可用。
+首次 `simulate` 若提供 `feedbackCutoff`，`SimulationProfileResolver` 会把对应 `FeedbackFreezeIndex` 写入 Session 内 `schedule.problemFacts`。由于后续会把同一个 schedule 放回 `SchedulingSessionStore`，之后不带 `feedbackCutoff` 的 simulate 会沿用上一次冻结索引；传入新的 cutoff 或重建 Session 才会刷新。
 
 ### 7.2 入口
 
@@ -488,7 +490,7 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `simulationDurationMs` | 推演耗时 |
 | `recalculatedOperationIds` | 本次认为波及的工序 id |
 | `violations` / `hardViolationCount` / `mediumViolationCount` | 校验结果 |
-| `appliedRules` | 本次实际参与的 Timing / Validation / Closure 规则 id |
+| `appliedRules` | `SimulationRuleRegistry.collectAppliedRuleIds` 输出：Timing rule id、Validation rule id/类名；Closure key 仅在 INCREMENTAL 返回 |
 | `simulationProfileId` | 本次生效的 Profile id |
 
 ### 10.3 预览 DTO 构建
