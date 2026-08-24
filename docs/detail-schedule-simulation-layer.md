@@ -363,7 +363,7 @@ simulate(request.simulationProfileId 非空) → 读取该 Profile
 
 实现位于 `scenario/planning/simulation/DetailScheduleTimingKernel`；`LineChainTimingUtil.applyAllStartTimes` 为静态门面（委托 kernel，便于 Timefold 与单测共用）。
 
-内置 `TimingRule`（换型、工艺链、契约 earliest、并行对扫描）由 `SimulationRuleRegistry` 按业务规则页与 Profile 开关启用后参与 cursor 计算。
+内置 `TimingRule`（换型、工艺链、契约 earliest、并行对扫描）由 `SimulationRuleRegistry` 汇总；其中 `ruleTypeId == null` 的规则始终参与，带 `ruleTypeId` 的规则在 Profile-resolved Session 路径下再叠加业务规则页与 Profile 开关。
 
 这是推演层的 **核心数值计算**，Timefold 求解后也会通过 `DetailScheduleService.assignStartTimes` → `LineChainTimingUtil` 调用同一内核。
 
@@ -428,7 +428,7 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 
 ## 9. 校验层：`ValidationPipeline` / `ScheduleValidationService`
 
-`ScheduleValidationService.validate` 构建 `SimulationRuleContext` 后委托 `ValidationPipeline`；各 `ValidationRule` 实现对应下表 ruleCode（启用逻辑与 `BusinessRuleTypeIds`、业务规则页、SimulationProfile 一致）。
+`ScheduleValidationService.validate` 构建 `SimulationRuleContext` 后委托 `ValidationPipeline`；各 `ValidationRule` 实现对应下表 ruleCode。Session `simulate/confirm` 路径的带 `ruleTypeId` 规则同时受 `BusinessRuleTypeIds`、业务规则页、SimulationProfile 控制；独立 `ScheduleValidationService.validate(schedule)` 兼容入口使用 `SimulationRuleContextFactory.defaults(null)`，不读取 Profile。
 
 推演后 **全量扫描** `schedule.operations`（不采样）。
 
