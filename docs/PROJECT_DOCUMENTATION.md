@@ -485,10 +485,10 @@ erDiagram
 `PlanningOrchestrator.runFullPipeline()` 顺序：
 
 ```text
-需求满足 → 物料需求 → 粗能力 → 主计划求解 → [可选 includeDetailSchedule] 详细排程求解/下发 → KPI
+需求满足 → 物料需求 → 粗能力 → 主计划求解 → [可选 includeDetailSchedule] 详细排程求解
 ```
 
-`POST /api/v1/planning/run-full-pipeline` 默认 `includeDetailSchedule=false`，产出主计划场景；传 `includeDetailSchedule=true` 时才继续 S05/S06。数据为空时自动加载 `factory-demo.json`。
+`POST /api/v1/planning/run-full-pipeline` 默认 `includeDetailSchedule=false`，产出主计划场景；传 `includeDetailSchedule=true` 时继续 S05 详细排程求解，但不执行 S06 下发，也不内联计算 KPI 报告。工单/生产任务发布仍通过 `/planning/dispatch` 或 Session `confirm` 入口完成；KPI 通过 `/api/v1/kpi/report` 查询。数据为空时自动加载 `factory-demo.json`。
 
 ### 4.7 前端技术方案
 
@@ -701,9 +701,9 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 | POST | `/api/v1/events` | 计划事件 |
 | POST | `/api/v1/planning/reschedule` | 重排 |
 | GET | `/api/v1/kpi/report` | KPI |
-| POST | `/api/v1/planning/pipeline-runs` | 启动主计划流水线（body: `strategyId`；可选 `includeDetailSchedule`） |
+| POST | `/api/v1/planning/pipeline-runs` | 创建主计划流水线运行（body: `strategyId`、`scenarioId`、`ruleSetVersionId`） |
 | GET | `/api/v1/planning/pipeline-runs/{runId}` | 流水线状态与日志 |
-| POST | `/api/v1/planning/pipeline-runs/{runId}/execute` | 执行流水线 |
+| POST | `/api/v1/planning/pipeline-runs/{runId}/execute` | 执行流水线；可选 `includeDetailSchedule` 继续 S05 详细排程求解 |
 | GET | `/api/v1/planning/scenarios?limit=` | 场景列表 |
 | POST | `/api/v1/planning/scenarios/compare` | 多场景 KPI 对比 |
 | GET | `/api/v1/planning/compare?from=&to=` | 两版本对比（legacy） |

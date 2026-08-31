@@ -125,7 +125,7 @@ curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions/SS-xxxxxxxx
 # 推演配置（默认 SP-DEFAULT，可配置 factory-calendar / feedback-freeze / batch-continuous）
 curl http://localhost:8080/api/v1/planning/simulation-profiles
 
-# 主计划流水线（默认到 S04；加 ?includeDetailSchedule=true 才继续 S05/S06）
+# 主计划流水线（默认到 S04；加 ?includeDetailSchedule=true 才继续 S05 详细排程求解）
 curl -X POST http://localhost:8080/api/v1/planning/run-full-pipeline
 
 # KPI
