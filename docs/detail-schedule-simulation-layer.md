@@ -404,7 +404,8 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 ### 8.4 与 Timefold Shadow 的关系
 
 - Timefold 运行时使用 `@ShadowVariable` + `OperationStartTimeCalculator` 在约束中读时间。
-- **Session 推演路径不跑求解器**，直接写 `op.setStartMinute`，属于 **显式链式模型**，与 shadow 逻辑目标一致但实现路径独立。
+- `OperationStartTimeCalculator` 委托 `DetailScheduleTimingKernel#computeShadowStartMinute`；Session 推演 / 求解后赋时通过 `LineChainTimingUtil` 委托同一个 kernel 做全队列赋时。
+- **Session 推演路径不跑求解器**，但其显式写入的 `op.setStartMinute` 与 Timefold shadow 读取的单工序下界共用规则插件与计算内核。
 - 因此：手动改序后 **必须** `simulate` 才能与校验、甘特展示一致。
 
 ---
@@ -588,9 +589,9 @@ useScheduleSession(masterPlanVersionId)
 | 维度 | Session 推演 | Timefold optimize |
 |------|----------------|-------------------|
 | 触发 | simulate / applyTiming | optimize / solve |
-| 产线选择 | 人工 patch / 种子入队 | 求解器 `@PlanningVariable line` |
+| 产线选择 | 人工 patch / 种子入队 | 求解器维护 `ScheduleLine.assignedOperations` list-variable，`OperationAssignment.line` 为逆向 shadow |
 | 顺序 | list 顺序 + 链式赋时 | list-variable + 约束 |
-| 时间 | `LineChainTimingUtil` 显式 | Shadow + 约束一致化 |
+| 时间 | `LineChainTimingUtil` → `DetailScheduleTimingKernel` 显式赋时 | `OperationStartTimeCalculator` → 同一 kernel 的 shadow 下界 |
 | 输出 | violations DTO | score + violations（若再 simulate） |
 | 性能 | 毫秒级（典型） | 秒～数十秒 |
 
