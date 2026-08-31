@@ -113,7 +113,19 @@ curl -X POST http://localhost:8080/api/v1/planning/master-plan/solve
 # 详细排程（可带 masterPlanVersionId）
 curl -X POST "http://localhost:8080/api/v1/planning/detail-schedule/solve"
 
-# 全链路 S01→S07
+# 详细排程 Session：创建 → 推演 → 确认发布
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions \
+  -H "Content-Type: application/json" \
+  -d '{"masterPlanVersionId":"MP-xxxxxxxx","seedInitialQueues":true}'
+
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions/SS-xxxxxxxxxxxx/simulate \
+  -H "Content-Type: application/json" \
+  -d '{"fullReschedule":true}'
+
+# 推演配置（默认 SP-DEFAULT，可配置 factory-calendar / feedback-freeze / batch-continuous）
+curl http://localhost:8080/api/v1/planning/simulation-profiles
+
+# 主计划流水线（默认到 S04；加 ?includeDetailSchedule=true 才继续 S05 详细排程求解）
 curl -X POST http://localhost:8080/api/v1/planning/run-full-pipeline
 
 # KPI
@@ -128,7 +140,7 @@ curl http://localhost:8080/api/v1/kpi/report
 | S02 齐套 | KittingService | 规则 |
 | S03 产能平衡 | CapacityService | 利用率甘特+区间工单 |
 | S04 主计划 | MasterPlanService | Timefold |
-| S05 排程 | DetailScheduleService | Timefold |
+| S05 排程 | DetailScheduleSessionService / DetailScheduleService | Session 推演 + 可选 Timefold |
 | S06 执行闭环 | ExecutionService | 事件+R0–R3 |
 | S07 KPI | KpiService | 指标汇总 |
 
@@ -155,4 +167,5 @@ python -X utf8 tools/parse_demo_excel.py
 |------|------|
 | **[docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md)** | **完整项目文档**（业务蓝图、功能设计、技术方案、部署） |
 | [docs/architecture.md](docs/architecture.md) | 架构摘要 |
+| [docs/detail-schedule-simulation-layer.md](docs/detail-schedule-simulation-layer.md) | S05 Session 推演、SimulationProfile、扩展规则与发布策略 |
 | 工作区根目录 `工厂计划*.md` | 业务方法论文档（场景卡片） |

@@ -225,8 +225,13 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | `stepPatches` | 手动调整（改线 / 顺序 / 锁定） |
 | `affectedOperationIds` | 增量种子（无 patch 时指定波及起点） |
 | `fullReschedule` | `true` 时全量链式重算；默认无种子则全量 |
+| `simulationProfileId` | 仅本次 simulate 改用指定 Profile；不更新 Session 快照 |
+| `ruleOverrides` | 仅本次 simulate 覆盖 Profile 规则开关；仍受业务规则页 ruleType 启用状态约束 |
+| `feedbackCutoff` | ISO 日期；启用 `feedback-freeze` 时加载 cutoff 及之前反馈，且写入当前 Session 的 `problemFacts` |
 
-增量模式从种子扩展：**工艺后继**、**并行配对**、**同产线队列后缀**，再 `LineChainTimingUtil.applyAllStartTimes`（全局收敛，返回 `recalculatedOperationIds`）。
+增量模式从种子扩展：**工艺后继**、**并行配对**、**批次连续**、**同产线队列后缀**，再 `LineChainTimingUtil.applyAllStartTimes`（全局收敛，返回 `recalculatedOperationIds`）。
+
+**SimulationProfile**：`/api/v1/planning/simulation-profiles` 管理 `SP-DEFAULT` 与自定义配置；Session 创建时快照 Profile，`confirm` 的 `validation.blockConfirmOnHard` 发布阻断策略也读取该快照。详见 [detail-schedule-simulation-layer.md](./detail-schedule-simulation-layer.md)。
 
 **前端**：**生产排程**页 Session 推演面板 + 甘特/列表「Session 推演」视图；**推演诊断**页保留预览入口。
 
@@ -239,7 +244,7 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | **Solution** | `MasterPlanSchedule` | `DetailSchedule` |
 | **Planning Entity** | `OrderAllocation` | `OperationAssignment` |
 | **Value Range** | `TimeSlot`（按资源） | `ScheduleLine` |
-| **决策变量** | `timeSlot` | `line`（顺序由约束与 shadow 时间推导） |
+| **决策变量** | `timeSlot` | `ScheduleLine.assignedOperations`（`@PlanningListVariable`）；`OperationAssignment.line` / `previousOnLine` / `nextOnLine` 为 shadow |
 | **Problem Facts** | 物料上下文、BOM 边、相邻槽位对、overlay、timing bounds、目标权重 | 契约权重、换型索引、工序流转索引、锚点日、班产能 |
 | **不在求解器内** | 工单生成、MRP 闭合、工艺展开、eligible 过滤 | 齐套标记、契约加载、并行/连续绑定 |
 
@@ -257,6 +262,7 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 
 - **主计划策略**：`MasterPlanStrategyConfigService`（产能模式 `UNCONSTRAINED` / `FINITE_CAPACITY` + 目标权重 JSON）。
 - **排程契约**：`ScheduleContractConfigService` → `ScheduleContractSettings`（`weight_mp_early` / `weight_mp_late` 等）。
+- **详细排程推演配置**：`SimulationProfileService`（Profile JSON：`timing.rules`、`incremental.rules`、`validation.blockConfirmOnHard`）。
 - **场景 / 规则版本**：`PlanningScenarioService`、`RuleSetVersionService`；流水线运行前可 `applyToWorkspace`。
 
 ---
