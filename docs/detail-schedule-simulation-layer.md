@@ -275,13 +275,15 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 
 **Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `DetailScheduleTimingKernel#computeShadowStartMinute`；Session/发布路径的 `assignStartTimes` 仍走 `LineChainTimingUtil` → `DetailScheduleTimingKernel.applyAllStartTimes` 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
 
-**Phase 3 — 扩展规则（默认关闭，需业务规则页 + Profile 同时启用）：**
+**Phase 3 — 扩展规则（REST Session/Profile 路径默认关闭，需业务规则页 + Profile 同时启用）：**
 
 | ruleTypeId | 类型 | 启用条件 | 说明 |
 |------------|------|----------|------|
 | `factory-calendar` | TimingRule | `business_rule_scope.enable_detail_schedule=true` 且 `timing.rules.factory-calendar.enabled=true` | 按 `resource_calendar` + 工厂班次策略 snap 开工到可用窗口 |
 | `feedback-freeze` | Timing + Validation | `business_rule_scope.enable_detail_schedule=true` 且 `timing.rules.feedback-freeze.enabled=true` | cutoff 前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` 加载冻结反馈 |
 | `batch-continuous` | Closure + Validation | `business_rule_scope.enable_detail_schedule=true` 且 `incremental.rules.batch-continuous.enabled=true` | 增量闭包扩展同批次同线工序；校验队列内批次是否被隔开 |
+
+直接调用 `SimulationRuleContextFactory.from(...)` 的低层路径没有 Profile JSON；规则开关缺省值按 `SimulationProfileSettings.isRuleEnabled(key, true)` 处理，仍受业务规则页 `business_rule_scope` 约束。
 
 ### 7.1 入口
 
@@ -323,6 +325,7 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 |---------------------|------|
 | `operation-transfer-time` / `RoutingSuccessorClosureRule` | 工艺后继 |
 | `parallel-operations` / `ParallelMateClosureRule` | `pairMateOperationId` |
+| `batch-continuous` / `BatchContinuousClosureRule` | 同批次、同线工序 |
 | （无）/ `SameLineSuffixClosureRule` | 同线队列当前位及后缀 |
 
 `DetailScheduleSimulationEngine.expandAffectedClosure` 仍保留为静态入口，内部委托 `SimulationClosureExpander`。
@@ -477,6 +480,8 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `simulationProfileId` | 仅本次 simulate 改用指定 Profile；不更新 Session 快照 |
 | `ruleOverrides` | 仅本次 simulate 覆盖规则开关；形如 `{ "factory-calendar": { "enabled": true } }` |
 | `feedbackCutoff` | ISO 日期（`YYYY-MM-DD`）；启用 `feedback-freeze` 时加载 cutoff 及之前反馈作为冻结计划 |
+
+`feedbackCutoff` 会把 `FeedbackFreezeIndex` 写入当前 Session 的 `schedule.problemFacts`；同一 Session 后续 simulate/confirm 若未重新指定 cutoff，会沿用已写入的冻结索引。需要清空该影响时请重建 Session。
 
 示例：在业务规则页已启用对应 ruleType 的前提下，临时启用工厂日历 + 批次连续闭包并做增量推演。
 
