@@ -248,7 +248,7 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 
 **Phase 2 — SimulationProfile：** Session 创建时快照 `simulation_profile.config_json`；`simulate` 可传 `simulationProfileId` / `ruleOverrides`（仅当次）；响应含 `appliedRules`、`simulationProfileId`。CRUD：`GET/POST /api/v1/planning/simulation-profiles`。
 
-**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `OperationStartTimeKernel`（与 `DetailScheduleTimingKernel` 共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
+**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `DetailScheduleTimingKernel.computeShadowStartMinute`（与 Session 赋时共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
 
 **Phase 3 — 扩展规则（默认关闭，业务规则页 + Profile 启用）：**
 
@@ -257,6 +257,59 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 | `factory-calendar` | TimingRule | 按 `resource_calendar` + 工厂班次策略 snap 开工到可用窗口 |
 | `feedback-freeze` | Timing + Validation | cutoff 前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` |
 | `batch-continuous` | Closure + Validation | 增量闭包扩展同批次同线工序；校验队列内批次不被隔开 |
+
+#### Phase 3 启用顺序与示例
+
+这些规则需要同时通过 **工作区业务规则开关** 与 **SimulationProfile / 当次 override**：
+
+1. Flyway `V48__phase3_simulation_extension_rules.sql` 为每个工作区补齐 `business_rule_scope` 记录，且 `enable_detail_schedule=false`。
+2. 默认 Profile `SP-DEFAULT` 的 `configJson` 中 `factory-calendar`、`feedback-freeze`、`batch-continuous` 均为 `enabled:false`。
+3. Session API 路径（`create` / `simulate` / `confirm`）通过 `SimulationProfileResolver` 解析 Profile；当次 `simulate` 的 `ruleOverrides` 只影响本次请求。
+
+Profile 配置示例：
+
+```json
+{
+  "timing": {
+    "maxRoutingIterations": 16,
+    "rules": {
+      "factory-calendar": { "enabled": true },
+      "feedback-freeze": { "enabled": true }
+    }
+  },
+  "incremental": {
+    "rules": {
+      "batch-continuous": { "enabled": true }
+    }
+  },
+  "validation": { "blockConfirmOnHard": false }
+}
+```
+
+`simulate` 当次覆盖示例：
+
+```bash
+curl -X POST "http://localhost:8080/api/v1/planning/schedule-sessions/SS-xxx/simulate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "affectedOperationIds": ["OP-1001"],
+    "fullReschedule": false,
+    "simulationProfileId": "SP-DEFAULT",
+    "ruleOverrides": {
+      "factory-calendar": { "enabled": true },
+      "feedback-freeze": { "enabled": true },
+      "batch-continuous": { "enabled": true }
+    },
+    "feedbackCutoff": "2026-06-01"
+  }'
+```
+
+**约束与坑点**：
+
+- `feedbackCutoff` 会把 `FeedbackFreezeIndex` 写回当前 Session 的 `schedule.problemFacts`；后续未传 cutoff 的 `simulate` / `confirm` 会继续沿用该冻结快照，直到传入新的 cutoff 或重建 Session。
+- `factory-calendar` 只将开工点 snap 到下一个可用窗口，不拆分跨班次的长工序；没有资源日历的资源保持原始分钟。
+- `batch-continuous` 读取 `OperationAssignment.line`（Timefold inverse shadow）和 `line.assignedOperations`。测试或脚本直接改队列时需要同步 `op.setLine(line)`，否则闭包和校验可能看不到 list-only 分配。
+- `DetailScheduleSimulationEngine.fullSimulate/incrementalSimulate` 等底层兼容入口使用 `SimulationRuleContextFactory` 默认设置；若要验证 Profile 默认关闭语义，请走 Session REST/API 服务层。
 
 ### 7.1 入口
 
@@ -400,11 +453,14 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `PARALLEL_SAME_LINE` | HARD | 并行对不在同一产线 |
 | `PARALLEL_SAME_TIME` | HARD | 并行对 start/end 不一致 |
 | `CONTINUOUS_INTERLEAVED` | HARD | 连续组在队列中被其它料号隔开 |
+| `FEEDBACK_FROZEN_START_MOVED` | MEDIUM | feedback-freeze 启用且冻结工序 start 与反馈 `plannedStart` 不一致 |
+| `BATCH_INTERLEAVED` | MEDIUM | batch-continuous 启用且同一批次在同线队列中被其它批次/空批次隔开 |
 
 **说明**：
 
 - 校验 **不阻止** simulate 完成；违背写入 `ScheduleSessionSimulateResultDto.violations` 与 preview。
 - HARD 计数用于 UI 警示；发布前应由计划员处理或知情确认。
+- 若 Session Profile 设置 `validation.blockConfirmOnHard=true`，`confirm` 会重新全量校验并在存在 HARD 违背时返回 400；MEDIUM 违背仍为提示，不会触发该阻断。
 
 ---
 
@@ -429,6 +485,9 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `stepPatches` | 手动调整列表 |
 | `affectedOperationIds` | 无 patch 时指定增量种子 |
 | `fullReschedule` | true → 强制 FULL |
+| `simulationProfileId` | 当次使用的 Profile；为空则使用 Session 创建时快照 |
+| `ruleOverrides` | 当次启停规则，形如 `{ "factory-calendar": { "enabled": true } }` |
+| `feedbackCutoff` | `yyyy-MM-dd`；加载 cutoff 之前/当天已冻结反馈的计划开工时间 |
 
 ### 10.2 响应 `ScheduleSessionSimulateResultDto`
 
@@ -510,8 +569,8 @@ useScheduleSession(masterPlanVersionId)
 | 维度 | Session 推演 | Timefold optimize |
 |------|----------------|-------------------|
 | 触发 | simulate / applyTiming | optimize / solve |
-| 产线选择 | 人工 patch / 种子入队 | 求解器 `@PlanningVariable line` |
-| 顺序 | list 顺序 + 链式赋时 | list-variable + 约束 |
+| 产线选择 | 人工 patch / 种子入队 | 求解器调整 `ScheduleLine.assignedOperations` |
+| 顺序 | list 顺序 + 链式赋时 | `@PlanningListVariable assignedOperations` + 约束 |
 | 时间 | `LineChainTimingUtil` 显式 | Shadow + 约束一致化 |
 | 输出 | violations DTO | score + violations（若再 simulate） |
 | 性能 | 毫秒级（典型） | 秒～数十秒 |
