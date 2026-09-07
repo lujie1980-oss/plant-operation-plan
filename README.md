@@ -5,8 +5,8 @@
 ## 技术栈
 
 - Java 21
-- Quarkus 3.17
-- Timefold Solver 1.15 (Community)
+- Quarkus 3.17.5
+- Timefold Solver 2.0.0 (Community)
 - H2 + Flyway
 
 ## 启动
@@ -155,4 +155,6 @@ python -X utf8 tools/parse_demo_excel.py
 |------|------|
 | **[docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md)** | **完整项目文档**（业务蓝图、功能设计、技术方案、部署） |
 | [docs/architecture.md](docs/architecture.md) | 架构摘要 |
+| [docs/detail-schedule-simulation-layer.md](docs/detail-schedule-simulation-layer.md) | S05 Session 推演、Profile、扩展规则与排程发布说明 |
+| [docs/timefold-2-upgrade.md](docs/timefold-2-upgrade.md) | Timefold Solver 2.0 升级与验证说明 |
 | 工作区根目录 `工厂计划*.md` | 业务方法论文档（场景卡片） |

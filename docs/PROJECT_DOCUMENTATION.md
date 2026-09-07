@@ -42,7 +42,7 @@
 | 层级 | 技术 |
 |------|------|
 | 后端运行时 | Java 21、Quarkus 3.17.5 |
-| 优化引擎 | Timefold Solver 1.15（Community） |
+| 优化引擎 | Timefold Solver 2.0.0（Community） |
 | 持久化 | Hibernate ORM Panache、Flyway、H2 |
 | API | REST + JSON、SmallRye OpenAPI |
 | 前端 | React 18、TypeScript、Vite 6、React Router 7、gantt-task-react |
@@ -67,7 +67,7 @@ PlantOperationPlan/                    # 工作区根目录
     │   └── sample/                    # 示例数据加载
     ├── src/main/resources/
     │   ├── application.properties
-    │   ├── db/migration/              # Flyway V1–V10
+    │   ├── db/migration/              # Flyway V1–V48
     │   ├── sample-data/factory-demo.json
     │   └── META-INF/resources/        # 前端生产构建产物
     ├── frontend/                      # React 源码
@@ -138,7 +138,7 @@ flowchart LR
 
 #### S05 — 详细排程（Timefold + 后处理）
 
-- 在已开线产线上为工单工序分配产线（求解器），再**后处理**计算 `startMinute` / `endMinute`（含换线 30 分钟）。
+- 在已开线产线上为工单工序排序（Timefold 2 `@PlanningListVariable` 位于 `ScheduleLine.assignedOperations`），`OperationAssignment.line` 为 inverse shadow；随后通过统一赋时内核计算 `startMinute` / `endMinute`。
 - 持久化：`detail_schedule_operation`；可选缺口建议 `shortage_recommendation`。
 
 #### S06 — 执行闭环
@@ -473,7 +473,7 @@ erDiagram
 | 类型 | 类 | 说明 |
 |------|-----|------|
 | Solution | `DetailSchedule` | 产线范围、工序列表 |
-| Entity | `OperationAssignment` | 决策变量：产线；时间由 `assignStartTimes()` 后处理 |
+| Entity | `OperationAssignment` | 被 `ScheduleLine.assignedOperations` 规划列表排序；`line` 为 inverse shadow；时间由统一赋时内核/Shadow 计算 |
 | 约束 | `DetailScheduleConstraintProvider` | 顺序、换线、班次容量等 |
 
 ### 4.6 全链路编排
@@ -730,6 +730,8 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 |------|------|
 | 快速启动 | `README.md` |
 | 架构摘要 | `docs/architecture.md` |
+| 详细排程推演层 | `docs/detail-schedule-simulation-layer.md` |
+| Timefold 2 升级 | `docs/timefold-2-upgrade.md` |
 | 设计摘要 | `docs/superpowers/specs/2026-05-25-plant-operation-plan-design.md` |
 | **帕累托扫描模式（v1 设计）** | `docs/pareto-scan-design.md` |
 | 业务方法论 | 工作区根目录 `工厂计划*.md` |
@@ -741,6 +743,7 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 | 2026-05-25 | 初版：S01–S07 场景、Timefold 双求解器、满足链、React 前端 |
 | 2026-05-27 | 主计划策略体系（产能模式 + 目标权重 CRUD）；产能均衡软目标；计划运行选策略；场景列表/对比展示策略名；`PlanContext` 场景选择器；产能页按场景分析；导航重命名与结果页分组；场景选择器仅保留于四个计划结果页；四结果页绑定 `masterPlanVersionId` |
 | 2026-05-28 | 帕累托扫描模式产品设计 v1（`docs/pareto-scan-design.md`）：权重网格批量求解、分目标 KPI、非支配前沿、帕累托探索页 |
+| 2026-09-07 | 文档对齐 Timefold Solver 2.0.0；补充 S05 Planning List Variable / inverse shadow 模型说明 |
 
 ---
 

@@ -155,9 +155,11 @@ DetailSchedule problem = problemMapper.toSchedule(ctx);
 | `mpContractStartDate` / `mpContractEndDate` / `mpContractResourceId` | P0 主计划契约 | 软约束 + `ScheduleTimingUtil` 最早开工等待 |
 | `mpTargetEndDate` | 契约或工单末槽回退 | 软约束：相对主计划偏差 |
 | `pinned` | 订单排程锁定 + 规则项目启用 | 硬约束：固定产线 |
-| `line` / `startMinute` | **Timefold 决策变量** | 选优结果 |
+| `ScheduleLine.assignedOperations` | **Timefold 2 `@PlanningListVariable`** | 决定工序所属产线与队列顺序 |
+| `line` / `previousOnLine` / `nextOnLine` | Timefold inverse/链式 shadow | 由规划列表反推，供约束、发布与校验读取 |
+| `startMinute` | `@ShadowVariable` + Session 赋时内核 | 与 `DetailScheduleTimingKernel` 保持一致的分钟级开工时间 |
 
-**赋时**：求解后 `ScheduleTimingUtil.applyLineStartTimes` 按产线 cursor 顺序填分钟级开始/结束（含契约开始日等待）。
+**赋时**：求解后 `LineChainTimingUtil.applyAllStartTimes` 委托 `DetailScheduleTimingKernel`，按产线 cursor 顺序填分钟级开始/结束（含契约开始日等待、换型、工艺链与启用的扩展规则）。
 
 ### 5.3 主计划 → 详细排程契约
 
