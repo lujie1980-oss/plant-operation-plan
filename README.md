@@ -6,7 +6,7 @@
 
 - Java 21
 - Quarkus 3.17
-- Timefold Solver 1.15 (Community)
+- Timefold Solver 2.0 (Community)
 - H2 + Flyway
 
 ## 启动
@@ -22,10 +22,11 @@ Linux/macOS：
 
 ```bash
 cd plant-operation-plan
-./mvnw quarkus:dev
+bash ./mvnw quarkus:dev
 ```
 
 若已安装 Maven 并加入 PATH，也可使用 `mvn quarkus:dev`。
+若本地 checkout 中 `mvnw` 没有执行位，Linux/macOS 可直接使用 `bash ./mvnw ...`，无需修改文件权限。
 
 - API: http://localhost:8080
 - Swagger UI: http://localhost:8080/q/swagger-ui
@@ -76,7 +77,7 @@ cd ..
 
 构建产物输出到 `src/main/resources/META-INF/resources`，访问 http://localhost:8080/#/ 使用业务界面。
 
-打包 JAR：`.\mvnw.cmd package -DskipTests`，运行 `java -jar target\quarkus-app\quarkus-run.jar`。
+打包 JAR：`.\mvnw.cmd package -DskipTests`（Linux/macOS：`bash ./mvnw package -DskipTests`），运行 `java -jar target\quarkus-app\quarkus-run.jar`。
 
 ### Docker 部署
 
@@ -88,15 +89,21 @@ docker compose up -d --build
 
 | 路由 | 场景 |
 |------|------|
-| `/#/` | 工作台 |
-| `/#/demand` | S01 需求满足（KPI + 订单列表 + 满足链甘特图） |
-| `/#/kitting` | S02 齐套 |
-| `/#/capacity` | S03 产能平衡 |
-| `/#/master-plan` | S04 主计划 + 甘特图 |
-| `/#/detail-schedule` | S05 详细排程 + 甘特图 |
-| `/#/execution` | S06 执行闭环 |
-| `/#/kpi` | S07 KPI |
-| `/#/pipeline` | 全链路编排 |
+| `/#/` | 首页工作台 |
+| `/#/master-data`、`/#/business-data`、`/#/factory-calendar`、`/#/workspaces` | 数据、日历与工作区管理 |
+| `/#/business-rules/production`、`/#/business-rules/capacity`、`/#/business-rules/material`、`/#/business-rules/labor`、`/#/business-rules/demand` | 业务规则 |
+| `/#/master-plan/parameters`、`/#/master-plan/objectives`、`/#/master-plan/plan-run` | 主计划配置与运行 |
+| `/#/master-plan/analysis/demand` | S01 需求满足（KPI + 订单列表 + 满足链甘特图） |
+| `/#/master-plan/analysis/material` | S02 物料需求 |
+| `/#/master-plan/analysis/capacity` | S03 产能平衡 |
+| `/#/master-plan/analysis/work-orders` | 生产工单 |
+| `/#/master-plan/analysis/diagnostics`、`/#/master-plan/analysis/order-chain` | 推演诊断与订单推演 |
+| `/#/master-plan/scenario-comparison` | 主计划场景对比 |
+| `/#/scheduling/parameters`、`/#/scheduling/pending-work-orders`、`/#/scheduling/batch-plan`、`/#/scheduling/kitting` | 生产排程准备 |
+| `/#/scheduling/detail-schedule`、`/#/scheduling/version-comparison` | S05 生产排程与版本对比 |
+| `/#/demand-tracking` | S07 需求跟踪/KPI |
+
+旧路径（如 `/#/demand`、`/#/detail-schedule`、`/#/pipeline`）会自动重定向到当前分组路由。
 
 ## 示例调用
 
@@ -113,8 +120,20 @@ curl -X POST http://localhost:8080/api/v1/planning/master-plan/solve
 # 详细排程（可带 masterPlanVersionId）
 curl -X POST "http://localhost:8080/api/v1/planning/detail-schedule/solve"
 
-# 全链路 S01→S07
+# 主计划流水线（默认执行到 S04 主计划；不自动排程/下发）
 curl -X POST http://localhost:8080/api/v1/planning/run-full-pipeline
+
+# 需要连带详细排程时显式打开；排程发布生产任务走 Session confirm
+curl -X POST "http://localhost:8080/api/v1/planning/run-full-pipeline?includeDetailSchedule=true"
+
+# 创建详细排程工作副本并推演/确认
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions \
+  -H "Content-Type: application/json" \
+  -d '{"masterPlanVersionId":"MP-...","seedInitialQueues":true}'
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions/{sessionId}/simulate \
+  -H "Content-Type: application/json" \
+  -d '{"fullReschedule":true}'
+curl -X POST http://localhost:8080/api/v1/planning/schedule-sessions/{sessionId}/confirm
 
 # KPI
 curl http://localhost:8080/api/v1/kpi/report
@@ -138,6 +157,12 @@ curl http://localhost:8080/api/v1/kpi/report
 .\mvnw.cmd test
 ```
 
+Linux/macOS 或 CI 中可用：
+
+```bash
+bash ./mvnw test
+```
+
 ## 演示数据（标准 Demo Excel）
 
 多层级 BOM 与工单树来自 `演示需求-数据准备.xlsx`，由脚本转换：
@@ -155,4 +180,7 @@ python -X utf8 tools/parse_demo_excel.py
 |------|------|
 | **[docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md)** | **完整项目文档**（业务蓝图、功能设计、技术方案、部署） |
 | [docs/architecture.md](docs/architecture.md) | 架构摘要 |
+| [docs/aps-planning-layer.md](docs/aps-planning-layer.md) | S04/S05 推演层与 Timefold 边界 |
+| [docs/detail-schedule-simulation-layer.md](docs/detail-schedule-simulation-layer.md) | 详细排程 Session、增量推演、规则配置 |
+| [docs/timefold-2-upgrade.md](docs/timefold-2-upgrade.md) | Timefold Solver 2.0 升级与验证要点 |
 | 工作区根目录 `工厂计划*.md` | 业务方法论文档（场景卡片） |

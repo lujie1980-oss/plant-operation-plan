@@ -248,7 +248,7 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 
 **Phase 2 — SimulationProfile：** Session 创建时快照 `simulation_profile.config_json`；`simulate` 可传 `simulationProfileId` / `ruleOverrides`（仅当次）；响应含 `appliedRules`、`simulationProfileId`。CRUD：`GET/POST /api/v1/planning/simulation-profiles`。
 
-**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `OperationStartTimeKernel`（与 `DetailScheduleTimingKernel` 共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
+**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 直接委托 `DetailScheduleTimingKernel.computeShadowStartMinute`，与 Session 推演共用同一套 `SimulationRuleRegistry`；`assignStartTimes` 仍走 `LineChainTimingUtil` → `DetailScheduleTimingKernel` 全局收敛。相关回归测试覆盖 Timefold shadow 与 Session simulate 的赋时一致性。
 
 **Phase 3 — 扩展规则（默认关闭，业务规则页 + Profile 启用）：**
 
