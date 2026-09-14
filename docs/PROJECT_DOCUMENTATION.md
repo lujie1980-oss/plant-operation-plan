@@ -140,7 +140,7 @@ flowchart LR
 
 - Timefold 2.0 使用 `ScheduleLine.assignedOperations` list variable 表示同线顺序；`OperationAssignment.line` 是 inverse shadow，`startMinute` 由 shadow supplier / 显式推演内核计算。
 - 日常交互以 **Session 工作副本** 为中心：手动 patch → 增量/全量推演 → 约束校验 → confirm 发布。
-- 持久化：`detail_schedule_operation`；confirm 时 upsert `RELEASED` 生产任务，并写入 `planning_conflict`。
+- 持久化：`detail_schedule_operation`；confirm 时 upsert `RELEASED` 生产任务。若已有任务处于 `RUNNING` 且新排程与现有任务不同，则跳过覆盖并写入 `planning_conflict`。
 
 #### S06 — 执行闭环
 
@@ -182,7 +182,7 @@ flowchart LR
 | 推演诊断 | `/master-plan/analysis/diagnostics` | S04/S05 推演层诊断 |
 | 订单推演 | `/master-plan/analysis/order-chain` | 单订单全链预览 |
 | 场景对比 | `/master-plan/scenario-comparison` | 多场景 KPI 柱状对比 |
-| **生产排程** | `/scheduling/parameters`、`/pending-work-orders`、`/batch-plan`、`/kitting`、`/detail-schedule`、`/version-comparison` | 排程参数、待排工单、批次、齐套、详细排程、版本对比 |
+| **生产排程** | `/scheduling/parameters`、`/scheduling/pending-work-orders`、`/scheduling/batch-plan`、`/scheduling/kitting`、`/scheduling/detail-schedule`、`/scheduling/version-comparison` | 排程参数、待排工单、批次、齐套、详细排程、版本对比 |
 | 需求跟踪 | `/demand-tracking` | 订单交付跟踪 |
 
 旧路径（如 `/demand`、`/master-plan/demand`、`/pipeline`）在 `App.tsx` 中保留重定向。
@@ -665,7 +665,7 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 ### 6.1 日志与诊断
 
 - Quarkus 开发模式控制台输出 Timefold 求解日志（阶段耗时、best score）。
-- 求解超时由 `SolverRuntimeFactory` 从系统参数读取并写入 `terminationSpentLimit`。
+- 求解超时由 `SolverRuntimeFactory` 从 `master_plan_solver_seconds` / `detail_schedule_solver_seconds` 读取，并写入 Timefold `TerminationConfig.withSecondsSpentLimit(...)`。
 
 ### 6.2 常见问题
 
