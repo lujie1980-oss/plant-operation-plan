@@ -160,7 +160,7 @@ flowchart LR
 
 ### 2.3 角色与界面
 
-前端采用**左侧导航 + 主内容区**布局，按「数据管理 / 业务规则 / 主计划 / 生产排程」分组：
+前端采用**左侧导航 + 顶栏工作区入口 + 主内容区**布局；左侧导航按「数据管理 / 业务规则 / 主计划 / 生产排程」分组：
 
 | 导航分组 | 页面 | 用途 |
 |----------|------|------|
@@ -168,7 +168,7 @@ flowchart LR
 | 数据管理 | `/master-data` | 产品、BOM、工艺、资源等主数据 |
 | 数据管理 | `/business-data` | 订单、库存、工单等业务数据 |
 | 数据管理 | `/factory-calendar` | 工厂日历 |
-| 数据管理 | `/workspaces` | 数据集/工作区管理 |
+| 顶栏 | `/workspaces` | 数据集/工作区管理 |
 | 业务规则 | `/business-rules/production`、`/business-rules/capacity`、`/business-rules/material`、`/business-rules/labor`、`/business-rules/demand` | 分类维护生产、产能、物料、人力、需求规则 |
 | **主计划 · 配置** | | |
 | 计划参数 | `/master-plan/parameters` | 规划窗、时栅、班次等全局参数 |
