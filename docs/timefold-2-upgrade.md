@@ -9,15 +9,15 @@
 
 ## 一键迁移命令（其它分支/项目复用）
 
-在项目根目录 `plant-operation-plan` 下执行：
+在项目根目录 `plant-operation-plan` 下执行（Linux/macOS 或 CI）：
 
 ```bash
-./mvnw.cmd org.openrewrite.maven:rewrite-maven-plugin:6.28.1:run \
+bash ./mvnw org.openrewrite.maven:rewrite-maven-plugin:6.28.1:run \
   "-Drewrite.recipeArtifactCoordinates=ai.timefold.solver:timefold-solver-migration:2.0.0" \
   "-Drewrite.activeRecipes=ai.timefold.solver.migration.ToLatest"
 ```
 
-Windows PowerShell 同上（单行）。
+Windows PowerShell 使用 `.\mvnw.cmd`，其余参数相同（单行）。
 
 迁移后仍需手动处理：
 
@@ -39,11 +39,11 @@ Windows PowerShell 同上（单行）。
 ## 验证
 
 ```bash
-./mvnw.cmd compile
-./mvnw.cmd test
+bash ./mvnw compile
+bash ./mvnw test
 ```
 
-集成测试 `PlantOperationPlanResourceTest.fullPipeline_succeeds` 会跑完整 pipeline（约 1–3 分钟）。
+集成测试 `PlantOperationPlanResourceTest.fullPipeline_succeeds` 调用默认主计划流水线（S01/S02/S03 准备 + S04 求解）并断言返回主计划版本；需要覆盖 S05 时显式传 `includeDetailSchedule=true` 或走 Session 流程。
 
 ## 参考
 

@@ -5,8 +5,8 @@
 | 名称 | Plant Operation Plan |
 | 版本 | 1.0.0-SNAPSHOT |
 | 代码路径 | `plant-operation-plan/` |
-| 文档日期 | 2026-05-27 |
-| 最近更新 | 主计划策略体系、场景选择器、产能均衡目标、导航与结果页重构 |
+| 文档日期 | 2026-09-14 |
+| 最近更新 | Timefold 2.0、S05 Session 增量推演/确认发布、主计划流水线默认边界、工作区/规则版本 API |
 
 ---
 
@@ -42,7 +42,7 @@
 | 层级 | 技术 |
 |------|------|
 | 后端运行时 | Java 21、Quarkus 3.17.5 |
-| 优化引擎 | Timefold Solver 1.15（Community） |
+| 优化引擎 | Timefold Solver 2.0（Community） |
 | 持久化 | Hibernate ORM Panache、Flyway、H2 |
 | API | REST + JSON、SmallRye OpenAPI |
 | 前端 | React 18、TypeScript、Vite 6、React Router 7、gantt-task-react |
@@ -67,7 +67,7 @@ PlantOperationPlan/                    # 工作区根目录
     │   └── sample/                    # 示例数据加载
     ├── src/main/resources/
     │   ├── application.properties
-    │   ├── db/migration/              # Flyway V1–V10
+    │   ├── db/migration/              # Flyway V1–V48+（工作区、规则、排程会话等演进）
     │   ├── sample-data/factory-demo.json
     │   └── META-INF/resources/        # 前端生产构建产物
     ├── frontend/                      # React 源码
@@ -136,10 +136,11 @@ flowchart LR
 - 持久化：`plan_version`、`master_plan_allocation`、`line_opening_decision`。
 - 输出：计划版本号、得分、分配明细。
 
-#### S05 — 详细排程（Timefold + 后处理）
+#### S05 — 详细排程（Timefold + Session 推演）
 
-- 在已开线产线上为工单工序分配产线（求解器），再**后处理**计算 `startMinute` / `endMinute`（含换线 30 分钟）。
-- 持久化：`detail_schedule_operation`；可选缺口建议 `shortage_recommendation`。
+- Timefold 2.0 使用 `ScheduleLine.assignedOperations` list variable 表示同线顺序；`OperationAssignment.line` 是 inverse shadow，`startMinute` 由 shadow supplier / 显式推演内核计算。
+- 日常交互以 **Session 工作副本** 为中心：手动 patch → 增量/全量推演 → 约束校验 → confirm 发布。
+- 持久化：`detail_schedule_operation`；confirm 时 upsert `RELEASED` 生产任务。若已有任务处于 `RUNNING` 且新排程与现有任务不同，则跳过覆盖并写入 `planning_conflict`。
 
 #### S06 — 执行闭环
 
@@ -159,26 +160,32 @@ flowchart LR
 
 ### 2.3 角色与界面
 
-前端采用**左侧导航 + 主内容区**布局，按「主计划 / 生产排程」分组：
+前端采用**左侧导航 + 顶栏工作区入口 + 主内容区**布局；左侧导航按「数据管理 / 业务规则 / 主计划 / 生产排程」分组：
 
 | 导航分组 | 页面 | 用途 |
 |----------|------|------|
 | 首页 | `/` | 总览入口 |
-| 主数据管理 | `/master-data` | 产品、BOM、工艺、资源等主数据 |
+| 数据管理 | `/master-data` | 产品、BOM、工艺、资源等主数据 |
+| 数据管理 | `/business-data` | 订单、库存、工单等业务数据 |
+| 数据管理 | `/factory-calendar` | 工厂日历 |
+| 顶栏 | `/workspaces` | 数据集/工作区管理 |
+| 业务规则 | `/business-rules/production`、`/business-rules/capacity`、`/business-rules/material`、`/business-rules/labor`、`/business-rules/demand` | 分类维护生产、产能、物料、人力、需求规则 |
 | **主计划 · 配置** | | |
 | 计划参数 | `/master-plan/parameters` | 规划窗、时栅、班次等全局参数 |
 | 优化目标 | `/master-plan/objectives` | **主计划策略**列表：产能模式 + 软目标权重 |
-| 业务规则 | `/business-rules` | 业务约束与规则维护 |
-| 业务数据 | `/master-plan/business-data` | 订单、库存、工单等业务数据 |
 | 计划运行 | `/master-plan/plan-run` | 选择策略并运行主计划流水线 |
 | **主计划 · 结果** | | 页面标题上方展示**场景选择器** |
-| 需求满足 | `/master-plan/demand` | S01 订单满足与追溯链 |
-| 产能平衡 | `/master-plan/capacity` | S03 资源×班次负荷热力甘特 |
-| 物料需求 | `/master-plan/material` | S02 物料滚算与缺料 |
-| 生产工单 | `/master-plan/work-orders` | 工单生成、下发与满足链 |
+| 需求满足 | `/master-plan/analysis/demand` | S01 订单满足与追溯链 |
+| 产能平衡 | `/master-plan/analysis/capacity` | S03 资源×班次负荷热力甘特 |
+| 物料需求 | `/master-plan/analysis/material` | S02 物料滚算与缺料 |
+| 生产工单 | `/master-plan/analysis/work-orders` | 工单生成、下发与满足链 |
+| 推演诊断 | `/master-plan/analysis/diagnostics` | S04/S05 推演层诊断 |
+| 订单推演 | `/master-plan/analysis/order-chain` | 单订单全链预览 |
 | 场景对比 | `/master-plan/scenario-comparison` | 多场景 KPI 柱状对比 |
-| **生产排程** | `/scheduling/*` | 排程参数、齐套、详细排程、场景对比 |
+| **生产排程** | `/scheduling/parameters`、`/scheduling/pending-work-orders`、`/scheduling/batch-plan`、`/scheduling/kitting`、`/scheduling/detail-schedule`、`/scheduling/version-comparison` | 排程参数、待排工单、批次、齐套、详细排程、版本对比 |
 | 需求跟踪 | `/demand-tracking` | 订单交付跟踪 |
+
+旧路径（如 `/demand`、`/master-plan/demand`、`/pipeline`）在 `App.tsx` 中保留重定向。
 
 | 角色 | 主要界面 |
 |------|----------|
@@ -209,23 +216,25 @@ flowchart LR
 
 | 编号 | 功能 | 后端 | 前端路由 |
 |------|------|------|----------|
-| F01 | 需求满足查询与 KPI | `GET /demand/demand-pool`、`/summary` | `/#/master-plan/demand` |
-| F02 | 订单满足链追溯 | `GET .../fulfillment-chain` | `/#/master-plan/demand` |
+| F01 | 需求满足查询与 KPI | `GET /demand/demand-pool`、`/summary` | `/#/master-plan/analysis/demand` |
+| F02 | 订单满足链追溯 | `GET .../fulfillment-chain` | `/#/master-plan/analysis/demand` |
 | F03 | 订单导入 | `POST /demand/import` | （API/Swagger） |
-| F04 | 物料需求计算 | `POST /kitting/compute` | `/#/master-plan/material` |
-| F05 | 产能平衡分析 | `POST /capacity/analyze?masterPlanVersionId=` | `/#/master-plan/capacity` |
+| F04 | 物料需求计算 | `POST /kitting/compute` | `/#/master-plan/analysis/material` |
+| F05 | 产能平衡分析 | `POST /capacity/analyze?masterPlanVersionId=` | `/#/master-plan/analysis/capacity` |
 | F06 | 主计划求解/查询 | `POST/GET .../master-plan/*` | 计划运行 + 场景选择器 |
-| F07 | 详细排程求解 | `POST .../detail-schedule/solve` | `/#/scheduling/detail-schedule` |
-| F08 | 工单下发 | `POST /planning/dispatch` | `/#/master-plan/work-orders` |
+| F07 | 详细排程求解 / Session 推演 | `POST .../detail-schedule/solve`、`/planning/schedule-sessions/*` | `/#/scheduling/detail-schedule` |
+| F08 | 工单下发 | `POST /planning/dispatch` | `/#/master-plan/analysis/work-orders` |
 | F09 | 事件与重排 | `POST /events`、`/planning/reschedule` | （API） |
 | F10 | KPI 与版本对比 | `GET /kpi/report`、`/planning/compare` | `/#/demand-tracking` |
 | F11 | 主计划流水线 | `POST /planning/pipeline-runs` | `/#/master-plan/plan-run` |
 | F12 | ERP/MES 联调 Mock | `GET /integration/*` | — |
 | F13 | **主计划策略 CRUD** | `GET/POST/PUT/DELETE .../master-plan/strategies` | `/#/master-plan/objectives` |
 | F14 | **场景列表与对比** | `GET /planning/scenarios`、`/scenarios/compare` | `/#/master-plan/scenario-comparison` |
-| F15 | **场景选择器** | 复用 F06/F14 场景 API | 四个结果页 `PageHeader` |
+| F15 | **场景选择器** | 复用 F06/F14 场景 API | 六个主计划分析页 `PageHeader` |
+| F16 | **详细排程推演配置** | `GET/POST/DELETE /planning/simulation-profiles` | `/#/scheduling/detail-schedule` |
+| F17 | **工作区与规则版本** | `GET/POST/DELETE /workspaces`、`/planning/rule-set-versions/*` | 多场景/规则版本管理 |
 
-> 旧路由（如 `/#/demand`、`/#/pipeline`）保留重定向至新路径，见 `App.tsx`。
+> 旧路由（如 `/#/demand`、`/#/master-plan/demand`、`/#/pipeline`）保留重定向至新路径，见 `App.tsx`。
 
 ### 3.2 S01 需求满足界面设计
 
@@ -280,8 +289,8 @@ flowchart LR
 
 - 通过 `PlanContext` 全局维护 `scenarios`、`selectedScenarioId`；启动时从 localStorage 恢复上次选中场景。
 - 下拉展示：`planVersionId · strategyName`；右侧策略 pill + 刷新按钮。
-- **仅出现在四个计划结果页**的 `PageHeader`（`showScenarioSelector={true}`）：
-  - 需求满足、产能平衡、物料需求、生产工单
+- **出现在主计划分析页**的 `PageHeader`（`showScenarioSelector={true}`）：
+  - 需求满足、产能平衡、物料需求、生产工单、推演诊断、订单推演
 - 配置类页面（计划参数、优化目标、业务规则、业务数据、计划运行）及场景对比页**不展示**全局场景选择器；场景对比页使用左侧多选列表。
 
 **场景联动**
@@ -457,7 +466,7 @@ erDiagram
 
 **为何不用 `timefold-solver-quarkus`**
 
-工程内存在两个 `@PlanningSolution`（主计划 + 详细排程），Quarkus 扩展仅允许单一方案。采用 `SolverProducers` 手工注册两个 `SolverManager`。
+工程内存在两个 `@PlanningSolution`（主计划 + 详细排程），Quarkus 扩展仅允许单一方案。采用 `SolverRuntimeFactory` 按当前参数创建两个 `SolverManager`。
 
 **S04 主计划**
 
@@ -473,18 +482,28 @@ erDiagram
 | 类型 | 类 | 说明 |
 |------|-----|------|
 | Solution | `DetailSchedule` | 产线范围、工序列表 |
-| Entity | `OperationAssignment` | 决策变量：产线；时间由 `assignStartTimes()` 后处理 |
-| 约束 | `DetailScheduleConstraintProvider` | 顺序、换线、班次容量等 |
+| Entity | `ScheduleLine` | `assignedOperations` 为 Timefold 2.0 Planning List Variable，维护同线工序顺序 |
+| List item | `OperationAssignment` | 工序明细；`line` 为 inverse shadow，`startMinute` 由 `OperationStartTimeCalculator` 委托推演内核计算 |
+| 约束 | `DetailScheduleConstraintProvider` | 顺序、换线、班次容量、齐套与契约偏差等 |
 
-### 4.6 全链路编排
+### 4.6 主计划流水线与可选排程编排
 
-`PlanningOrchestrator.runFullPipeline()` 顺序：
+`PlanningOrchestrator.runFullPipeline()` / `executePipelineRun()` 当前默认是**主计划运行**，用于产生可比较的 S04 场景；不会自动执行详细排程或工单下发。
 
 ```text
-需求满足 → 物料需求 → 粗能力 → 主计划求解 → 详细排程求解(带主计划版本) → 下发 → KPI
+需求准备 → 主数据校验 → 工单重建 → 库存快照/MRP → 产能基线 → S04 主计划推演 → Timefold 主计划求解 → KPI/场景登记
 ```
 
 数据为空时自动加载 `factory-demo.json`。
+
+可选参数：
+
+| 参数 | 默认 | 行为 |
+|------|------|------|
+| `includeDetailSchedule` | `false` | `true` 时在同一次 run 内追加 S05 推演层构建和 Timefold 详细排程求解 |
+| `refreshMasterPlanAfterSchedule` | `false` | `true` 时会隐式打开详细排程，并将排程反馈滚动刷新到主计划 |
+
+生产任务发布不走默认主计划流水线，而是通过 `/api/v1/planning/schedule-sessions/{id}/confirm`：Session 确认后持久化详细排程版本，并生成/更新 `RELEASED` 任务。
 
 ### 4.7 前端技术方案
 
@@ -522,8 +541,14 @@ public interface MesPort {
 
 ### 4.10 测试策略
 
-- `PlantOperationPlanResourceTest`：RestAssured 端到端，触发 S04/S05 求解并断言 HTTP 200。
+- `PlantOperationPlanResourceTest`：RestAssured 端到端，覆盖主计划流水线与关键 API HTTP 200。
 - 单元测试可针对 `FulfillmentPeggingService`、`KittingService` 扩展（当前以集成为主）。
+
+本地验证命令：
+
+```bash
+bash ./mvnw test
+```
 
 ---
 
@@ -538,7 +563,7 @@ public interface MesPort {
 | 内存 | 开发 ≥ 4GB；求解时建议 ≥ 8GB |
 | OS | Windows / Linux / macOS |
 
-**无需全局 Maven**：使用 `mvnw.cmd` / `./mvnw`。
+**无需全局 Maven**：Windows 使用 `mvnw.cmd`；Linux/macOS 可用 `bash ./mvnw`，即使 checkout 中 `mvnw` 没有执行位也可运行。
 
 **PowerShell 脚本策略**：若 `npm` 报执行策略错误，使用 `npm.cmd` 或 `frontend/*.cmd`。
 
@@ -640,7 +665,7 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 ### 6.1 日志与诊断
 
 - Quarkus 开发模式控制台输出 Timefold 求解日志（阶段耗时、best score）。
-- 求解超时可在 `SolverProducers` 中调整 `terminationSpentLimit`。
+- 求解超时由 `SolverRuntimeFactory` 从 `master_plan_solver_seconds` / `detail_schedule_solver_seconds` 读取，并写入 Timefold `TerminationConfig.withSecondsSpentLimit(...)`。
 
 ### 6.2 常见问题
 
@@ -697,6 +722,41 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 | POST | `/api/v1/planning/scenarios/compare` | 多场景 KPI 对比 |
 | GET | `/api/v1/planning/compare?from=&to=` | 两版本对比（legacy） |
 
+**详细排程 Session（ScheduleSessionResource）**
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/v1/planning/schedule-sessions` | 从 `masterPlanVersionId` 创建内存工作副本；`seedInitialQueues` 可生成初始可行队列，`solve` 可主动求解 |
+| GET | `/api/v1/planning/schedule-sessions/{id}` | 查看 Session 快照（8 小时 TTL） |
+| GET | `/api/v1/planning/schedule-sessions/{id}/operations/{operationId}/candidate-lines` | 查询工序可选产线 |
+| PATCH | `/api/v1/planning/schedule-sessions/{id}/steps` | 手动 patch 后触发增量推演 |
+| POST | `/api/v1/planning/schedule-sessions/{id}/simulate` | 增量或全量推演；请求可带 `stepPatches`、`affectedOperationIds`、`fullReschedule`、`simulationProfileId`、`ruleOverrides` |
+| POST | `/api/v1/planning/schedule-sessions/{id}/optimize` | 主动运行 Timefold 内存求解并更新工作副本 |
+| POST | `/api/v1/planning/schedule-sessions/{id}/confirm` | 持久化排程版本，并发布 `RELEASED` 生产任务 |
+
+**推演配置（SimulationProfileResource）**
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/planning/simulation-profiles` | 列出详细排程推演配置 |
+| GET | `/api/v1/planning/simulation-profiles/{profileId}` | 查看配置详情 |
+| POST | `/api/v1/planning/simulation-profiles` | 保存配置；默认 profile ID 为 `SP-DEFAULT` |
+| DELETE | `/api/v1/planning/simulation-profiles/{profileId}` | 删除配置 |
+
+**工作区与规则版本**
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/workspaces` | 列出工作区 |
+| GET | `/api/v1/workspaces/{id}` | 查看工作区 |
+| POST | `/api/v1/workspaces` | 创建工作区 |
+| DELETE | `/api/v1/workspaces/{id}` | 删除工作区 |
+| GET | `/api/v1/planning/scenario-catalog` | 列出计划场景目录 |
+| POST | `/api/v1/planning/scenario-catalog` | 创建计划场景 |
+| GET | `/api/v1/planning/rule-set-versions` | 列出规则版本 |
+| POST | `/api/v1/planning/rule-set-versions` | 创建规则版本 |
+| POST | `/api/v1/planning/rule-set-versions/{id}/sync-from-workspace` | 将当前工作区规则同步到指定规则版本 |
+
 **主计划策略（MasterPlanStrategyResource）**
 
 | 方法 | 路径 | 说明 |
@@ -741,6 +801,7 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 | 2026-05-25 | 初版：S01–S07 场景、Timefold 双求解器、满足链、React 前端 |
 | 2026-05-27 | 主计划策略体系（产能模式 + 目标权重 CRUD）；产能均衡软目标；计划运行选策略；场景列表/对比展示策略名；`PlanContext` 场景选择器；产能页按场景分析；导航重命名与结果页分组；场景选择器仅保留于四个计划结果页；四结果页绑定 `masterPlanVersionId` |
 | 2026-05-28 | 帕累托扫描模式产品设计 v1（`docs/pareto-scan-design.md`）：权重网格批量求解、分目标 KPI、非支配前沿、帕累托探索页 |
+| 2026-09-14 | 文档对齐当前实现：Timefold 2.0、S05 list variable / Session 推演、主计划流水线默认边界、当前路由、SimulationProfile / Workspace / RuleSet API |
 
 ---
 
