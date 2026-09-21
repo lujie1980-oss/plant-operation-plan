@@ -5,8 +5,8 @@
 | 名称 | Plant Operation Plan |
 | 版本 | 1.0.0-SNAPSHOT |
 | 代码路径 | `plant-operation-plan/` |
-| 文档日期 | 2026-05-27 |
-| 最近更新 | 主计划策略体系、场景选择器、产能均衡目标、导航与结果页重构 |
+| 文档日期 | 2026-09-21 |
+| 最近更新 | S05 推演层 Profile / 扩展规则 / 确认发布策略；Timefold 2.0 与 Planning List Variable 模型说明 |
 
 ---
 
@@ -42,7 +42,7 @@
 | 层级 | 技术 |
 |------|------|
 | 后端运行时 | Java 21、Quarkus 3.17.5 |
-| 优化引擎 | Timefold Solver 1.15（Community） |
+| 优化引擎 | Timefold Solver 2.0（Community） |
 | 持久化 | Hibernate ORM Panache、Flyway、H2 |
 | API | REST + JSON、SmallRye OpenAPI |
 | 前端 | React 18、TypeScript、Vite 6、React Router 7、gantt-task-react |
@@ -473,7 +473,7 @@ erDiagram
 | 类型 | 类 | 说明 |
 |------|-----|------|
 | Solution | `DetailSchedule` | 产线范围、工序列表 |
-| Entity | `OperationAssignment` | 决策变量：产线；时间由 `assignStartTimes()` 后处理 |
+| Entity | `ScheduleLine` / `OperationAssignment` | `ScheduleLine.assignedOperations` 是 Timefold Planning List Variable；`OperationAssignment.line` 为 inverse shadow；时间由 `assignStartTimes()` / `DetailScheduleTimingKernel` 计算 |
 | 约束 | `DetailScheduleConstraintProvider` | 顺序、换线、班次容量等 |
 
 ### 4.6 全链路编排
@@ -730,6 +730,8 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 |------|------|
 | 快速启动 | `README.md` |
 | 架构摘要 | `docs/architecture.md` |
+| 详细排程推演层 | `docs/detail-schedule-simulation-layer.md` |
+| Timefold 2.0 升级 | `docs/timefold-2-upgrade.md` |
 | 设计摘要 | `docs/superpowers/specs/2026-05-25-plant-operation-plan-design.md` |
 | **帕累托扫描模式（v1 设计）** | `docs/pareto-scan-design.md` |
 | 业务方法论 | 工作区根目录 `工厂计划*.md` |
@@ -741,6 +743,7 @@ java -jar quarkus-run.jar -Dquarkus.profile=prod
 | 2026-05-25 | 初版：S01–S07 场景、Timefold 双求解器、满足链、React 前端 |
 | 2026-05-27 | 主计划策略体系（产能模式 + 目标权重 CRUD）；产能均衡软目标；计划运行选策略；场景列表/对比展示策略名；`PlanContext` 场景选择器；产能页按场景分析；导航重命名与结果页分组；场景选择器仅保留于四个计划结果页；四结果页绑定 `masterPlanVersionId` |
 | 2026-05-28 | 帕累托扫描模式产品设计 v1（`docs/pareto-scan-design.md`）：权重网格批量求解、分目标 KPI、非支配前沿、帕累托探索页 |
+| 2026-09-21 | 文档索引补充 `detail-schedule-simulation-layer.md` / `timefold-2-upgrade.md`；同步 Timefold 2.0 与 S05 Planning List Variable 模型说明 |
 
 ---
 
