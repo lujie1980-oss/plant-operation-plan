@@ -1,6 +1,6 @@
 # 详细排程推演层 — 计算逻辑与技术说明（审阅稿）
 
-> **版本**：2026-06-02  
+> **版本**：2026-09-28
 > **读者**：架构/计划员/开发  
 > **关联文档**：[aps-planning-layer.md](./aps-planning-layer.md) §5（S05 推演 P0–P4）、§5.6（Session）  
 > **代码主包**：`com.plantops.scenario.planning`、`com.plantops.solver.detailschedule`、`com.plantops.scenario.DetailScheduleSessionService`
@@ -246,9 +246,9 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 
 `DetailScheduleSimulationEngine` 为 REST/测试兼容门面，实际编排由 `com.plantops.scenario.planning.simulation.SimulationPipeline` 完成。
 
-**Phase 2 — SimulationProfile：** Session 创建时快照 `simulation_profile.config_json`；`simulate` 可传 `simulationProfileId` / `ruleOverrides`（仅当次）；响应含 `appliedRules`、`simulationProfileId`。CRUD：`GET/POST /api/v1/planning/simulation-profiles`。
+**Phase 2 — SimulationProfile：** Session 创建时通过 `CreateScheduleSessionRequest.simulationProfileId`、当前激活配置或 `SP-DEFAULT` 解析并快照 `simulation_profile.config_json`；`simulate` 可传 `simulationProfileId` / `ruleOverrides`（仅当次推演覆盖，不改 Session 快照）。响应含 `appliedRules`、`simulationProfileId`。CRUD：`GET/POST/DELETE /api/v1/planning/simulation-profiles`。
 
-**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `OperationStartTimeKernel`（与 `DetailScheduleTimingKernel` 共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
+**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 直接委托 `DetailScheduleTimingKernel.computeShadowStartMinute`；`assignStartTimes` 仍走 `LineChainTimingUtil` → `DetailScheduleTimingKernel` 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
 
 **Phase 3 — 扩展规则（默认关闭，业务规则页 + Profile 启用）：**
 
@@ -257,6 +257,12 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 | `factory-calendar` | TimingRule | 按 `resource_calendar` + 工厂班次策略 snap 开工到可用窗口 |
 | `feedback-freeze` | Timing + Validation | cutoff 前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` |
 | `batch-continuous` | Closure + Validation | 增量闭包扩展同批次同线工序；校验队列内批次不被隔开 |
+
+**启用边界**：
+
+- REST Session 路径会经过 `SimulationProfileResolver`，默认 `SP-DEFAULT` 的 `config_json` 将三条 Phase 3 规则置为 `enabled=false`，因此新规则在交互式 `simulate` / `confirm` 中默认关闭。
+- `ruleOverrides` 只影响单次 `simulate`；`confirm` 只使用创建 Session 时快照的 Profile 配置，不读取最近一次请求覆盖。
+- 底层 `SimulationRuleRegistry` 对缺失 rule key 的默认值是启用（`whenAbsent=true`）。因此绕过 Profile 直接调用 `SimulationPipeline` / `DetailScheduleTimingKernel` 的内部测试或服务，应显式传入 Profile 上下文，避免与 REST 路径的默认关闭行为不一致。
 
 ### 7.1 入口
 
@@ -399,12 +405,14 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `PARALLEL_PAIR_INCOMPLETE` | HARD | 并行组少于 2 道工序 |
 | `PARALLEL_SAME_LINE` | HARD | 并行对不在同一产线 |
 | `PARALLEL_SAME_TIME` | HARD | 并行对 start/end 不一致 |
-| `CONTINUOUS_INTERLEAVED` | HARD | 连续组在队列中被其它料号隔开 |
+| `CONTINUOUS_INTERLEAVED` | HARD | 连续生产组在队列中被其它料号隔开 |
+| `BATCH_INTERLEAVED` | MEDIUM | 启用 `batch-continuous` 后，同批次同线队列被其它批次/工序隔开 |
 
 **说明**：
 
 - 校验 **不阻止** simulate 完成；违背写入 `ScheduleSessionSimulateResultDto.violations` 与 preview。
-- HARD 计数用于 UI 警示；发布前应由计划员处理或知情确认。
+- 默认 Profile 下，HARD 计数用于 UI 警示；发布前应由计划员处理或知情确认。
+- 若 Session 快照 Profile 设置 `validation.blockConfirmOnHard=true`，`confirm` 会在持久化和释放生产任务前重新校验，存在 HARD 违背时返回 400（`存在 HARD 级违背，推演配置禁止确认发布`）。
 
 ---
 
@@ -429,6 +437,9 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `stepPatches` | 手动调整列表 |
 | `affectedOperationIds` | 无 patch 时指定增量种子 |
 | `fullReschedule` | true → 强制 FULL |
+| `simulationProfileId` | 本次 `simulate` 临时使用的 Profile；不改 Session 快照 |
+| `ruleOverrides` | 本次请求覆盖规则开关，如 `{ "feedback-freeze": { "enabled": true } }` |
+| `feedbackCutoff` | ISO 日期；启用 `feedback-freeze` 时构建并写入 `FeedbackFreezeIndex`，后续未传 cutoff 的 simulate 会沿用 Session 内已有冻结索引 |
 
 ### 10.2 响应 `ScheduleSessionSimulateResultDto`
 
@@ -439,6 +450,8 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `simulationDurationMs` | 推演耗时 |
 | `recalculatedOperationIds` | 本次认为波及的工序 id |
 | `violations` / `hardViolationCount` / `mediumViolationCount` | 校验结果 |
+| `appliedRules` | `SimulationRuleRegistry.collectAppliedRuleIds` 收集的已启用 Timing/Validation 规则；增量推演还包含 Closure 规则 key |
+| `simulationProfileId` | 实际生效的 Profile ID（如 `SP-DEFAULT` 或本次覆盖的 Profile） |
 
 ### 10.3 预览 DTO 构建
 
