@@ -1,6 +1,6 @@
 # 详细排程推演层 — 计算逻辑与技术说明（审阅稿）
 
-> **版本**：2026-06-02  
+> **版本**：2026-10-05  
 > **读者**：架构/计划员/开发  
 > **关联文档**：[aps-planning-layer.md](./aps-planning-layer.md) §5（S05 推演 P0–P4）、§5.6（Session）  
 > **代码主包**：`com.plantops.scenario.planning`、`com.plantops.solver.detailschedule`、`com.plantops.scenario.DetailScheduleSessionService`
@@ -246,9 +246,9 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 
 `DetailScheduleSimulationEngine` 为 REST/测试兼容门面，实际编排由 `com.plantops.scenario.planning.simulation.SimulationPipeline` 完成。
 
-**Phase 2 — SimulationProfile：** Session 创建时快照 `simulation_profile.config_json`；`simulate` 可传 `simulationProfileId` / `ruleOverrides`（仅当次）；响应含 `appliedRules`、`simulationProfileId`。CRUD：`GET/POST /api/v1/planning/simulation-profiles`。
+**Phase 2 — SimulationProfile：** Session 创建时快照 `simulation_profile.config_json`；`simulate` 可传 `simulationProfileId` / `ruleOverrides`（仅当次）；响应含 `appliedRules`、`simulationProfileId`。默认 Profile ID 为 `SP-DEFAULT`。CRUD：`GET/POST/DELETE /api/v1/planning/simulation-profiles`。
 
-**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `OperationStartTimeKernel`（与 `DetailScheduleTimingKernel` 共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
+**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `DetailScheduleTimingKernel.computeShadowStartMinute`（与 Session 推演共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
 
 **Phase 3 — 扩展规则（默认关闭，业务规则页 + Profile 启用）：**
 
@@ -258,14 +258,46 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 | `feedback-freeze` | Timing + Validation | cutoff 前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` |
 | `batch-continuous` | Closure + Validation | 增量闭包扩展同批次同线工序；校验队列内批次不被隔开 |
 
-### 7.1 入口
+### 7.1 Profile 与规则开关
+
+`SimulationProfileConfigParser.DEFAULT_CONFIG_JSON` 当前形态：
+
+```json
+{
+  "timing": {
+    "maxRoutingIterations": 16,
+    "rules": {
+      "factory-calendar": { "enabled": false },
+      "feedback-freeze": { "enabled": false }
+    }
+  },
+  "incremental": {
+    "rules": {
+      "batch-continuous": { "enabled": false }
+    }
+  },
+  "validation": { "blockConfirmOnHard": false }
+}
+```
+
+生效顺序：
+
+1. `create` 时 `SimulationProfileService.resolveSnapshot(masterPlanVersionId, simulationProfileId)` 选择 Profile：请求指定优先，其次当前主计划版本的 active Profile，最后 `SP-DEFAULT`。
+2. `simulate` 可临时指定 `simulationProfileId` 或 `ruleOverrides`；它们只影响本次推演，不改写 Session 快照或 Profile 表。
+3. `ruleOverrides` 只读取 `{ "<rule-key>": { "enabled": true|false } }` 中的 `enabled` 布尔值。
+4. Profile 配置中缺失的规则键按 `SimulationProfileSettings.isRuleEnabled(key, true)` 处理为启用；默认 JSON 显式把 Phase 3 三个扩展规则设为关闭。
+5. 规则还必须通过业务规则页的 `BusinessRuleScopeService.isDetailScheduleEnabled(ruleTypeId)`；Profile 打开但业务规则关闭时仍不生效。
+
+**注意**：Profile 解析只合并 `timing.rules` 与 `incremental.rules` 中的规则开关；`validation.blockConfirmOnHard` 单独用于确认发布策略，不是 ValidationRule 的启停表。
+
+### 7.2 入口
 
 | 方法 | 模式 | 行为 |
 |------|------|------|
 | `fullSimulate(schedule)` | FULL | `DetailScheduleTimingKernel.applyAllStartTimes` → 收集全部已排工序 id → `ValidationPipeline.validate` |
 | `incrementalSimulate(schedule, seeds)` | INCREMENTAL | `SimulationClosureExpander`（内置 ClosureRule）→ **仍全局** kernel 赋时 → recalculated = 闭包或全量 |
 
-### 7.2 `simulate` 服务层路由（`DetailScheduleSessionService.simulate`）
+### 7.3 `simulate` 服务层路由（`DetailScheduleSessionService.simulate`）
 
 ```text
 1. applyPatches(stepPatches) → patchTouched
@@ -290,7 +322,7 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 | 批次/工序右键排产、选择机台确认、拖入甘特、甘特拖拽 | `stepPatches` + `fullReschedule: false`（增量） |
 | 取消计划（批次/全部） | 同上（unassign patch 后增量） |
 
-### 7.3 增量闭包 `SimulationClosureExpander`
+### 7.4 增量闭包 `SimulationClosureExpander`
 
 从种子 BFS 扩展，直到稳定；由 CDI 注册的 `AffectedClosureRule` 实现（受 `BusinessRuleScopeService` 控制）：
 
@@ -298,13 +330,16 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 |---------------------|------|
 | `operation-transfer-time` / `RoutingSuccessorClosureRule` | 工艺后继 |
 | `parallel-operations` / `ParallelMateClosureRule` | `pairMateOperationId` |
+| `batch-continuous` / `BatchContinuousClosureRule` | Phase 3 扩展：种子工序所在批次的同线工序 |
 | （无）/ `SameLineSuffixClosureRule` | 同线队列当前位及后缀 |
 
 `DetailScheduleSimulationEngine.expandAffectedClosure` 仍保留为静态入口，内部委托 `SimulationClosureExpander`。
 
 **重要**：闭包仅用于 **标记** `recalculatedOperationIds`；赋时仍 **全产线全队列** 重算（全局收敛），避免局部时间不一致。
 
-### 7.4 `scheduledOperationIds` 判定
+`BatchContinuousClosureRule` 当前以 `op.getLine()` shadow 查找同线批次；若工序只存在于 `ScheduleLine.assignedOperations` list 而 shadow 未同步，闭包可能漏计同批次工序。后续 `scheduledOperationIds` 判定已兼容 list membership，但该闭包规则本身仍依赖 shadow。
+
+### 7.5 `scheduledOperationIds` 判定
 
 计入 recalculated 需同时满足：
 
@@ -325,7 +360,7 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 ### 8.1 总体流程
 
 ```text
-FOR iter = 1 .. 16:
+FOR iter = 1 .. profile.maxRoutingIterations(default 16):
     applyLineQueuesOnce()                    // 按每条产线队列顺序扫 cursor 赋 start
     IF NOT bumpEarliestFromRoutingPredecessors():
         BREAK                                // 工艺链抬升 earliest，无变化则停
@@ -400,11 +435,14 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `PARALLEL_SAME_LINE` | HARD | 并行对不在同一产线 |
 | `PARALLEL_SAME_TIME` | HARD | 并行对 start/end 不一致 |
 | `CONTINUOUS_INTERLEAVED` | HARD | 连续组在队列中被其它料号隔开 |
+| `FEEDBACK_FROZEN_START_MOVED` | MEDIUM | `feedback-freeze` 启用且冻结工序 start 偏离反馈计划时间 |
+| `BATCH_INTERLEAVED` | MEDIUM | `batch-continuous` 启用且同线队列内同批次工序被其它批次/工序隔开 |
 
 **说明**：
 
 - 校验 **不阻止** simulate 完成；违背写入 `ScheduleSessionSimulateResultDto.violations` 与 preview。
-- HARD 计数用于 UI 警示；发布前应由计划员处理或知情确认。
+- HARD 计数用于 UI 警示；发布前应由计划员处理或知情确认。若 Session Profile 设置 `validation.blockConfirmOnHard=true`，`confirm` 会阻断 HARD 违背。
+- `BATCH_INTERLEAVED` 当前由 `BatchContinuousValidationRule` 基于 `op.getLine()` shadow 定位队列；list-only 分配但 shadow 为空时可能不报该 MEDIUM 违背。
 
 ---
 
@@ -429,6 +467,9 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `stepPatches` | 手动调整列表 |
 | `affectedOperationIds` | 无 patch 时指定增量种子 |
 | `fullReschedule` | true → 强制 FULL |
+| `simulationProfileId` | 本次推演临时切换 Profile；不存在则 404 |
+| `ruleOverrides` | 本次推演临时覆盖规则启停，如 `{ "factory-calendar": { "enabled": true } }` |
+| `feedbackCutoff` | `yyyy-MM-dd`；传入后从反馈表构造冻结索引并写回 Session schedule facts |
 
 ### 10.2 响应 `ScheduleSessionSimulateResultDto`
 
@@ -439,6 +480,8 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `simulationDurationMs` | 推演耗时 |
 | `recalculatedOperationIds` | 本次认为波及的工序 id |
 | `violations` / `hardViolationCount` / `mediumViolationCount` | 校验结果 |
+| `appliedRules` | 本次实际参与的 TimingRule / ValidationRule ruleTypeId；增量推演还包含 ClosureRule profile key |
+| `simulationProfileId` | 本次解析后的 Profile ID（通常为 Session 快照或请求覆盖的 Profile） |
 
 ### 10.3 预览 DTO 构建
 
@@ -454,13 +497,16 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 
 `confirm(sessionId)`：
 
-1. `persistSchedule("DS-" + uuid, schedule, duration)` → 排程版本落库。
-2. 筛选 `line != null && startMinute != null` 的工序，按线、时间排序。
-3. `ProductionTaskService.releaseFromSchedule(anchor, versionId, ops)`：
+1. 若 Session Profile 的 `validation.blockConfirmOnHard=true`，先按 FULL context 运行 `ValidationPipeline`；存在 HARD 违背则返回 400，不落库、不下发。
+2. `persistSchedule("DS-" + uuid, schedule, duration)` → 排程版本落库。
+3. 筛选 `line != null && startMinute != null` 的工序，按线、时间排序。
+4. `ProductionTaskService.releaseFromSchedule(anchor, versionId, ops)`：
    - 新建或更新 `production_task` 为 **RELEASED**；
    - **RUNNING** 任务不覆盖计划时间；
    - 计划与执行不一致 → `planning_conflict`（`RUNNING_SCHEDULE_MISMATCH`）。
-4. `sessionStore.remove(sessionId)`。
+5. `sessionStore.remove(sessionId)`。
+
+**注意**：`feedbackCutoff` 在 `simulate` 时会把 `FeedbackFreezeIndex` 写入当前 Session 的 `schedule.problemFacts`；后续不带 `feedbackCutoff` 的 simulate 会沿用已有冻结索引，直到传入新的 cutoff 或重建 Session。
 
 ---
 
