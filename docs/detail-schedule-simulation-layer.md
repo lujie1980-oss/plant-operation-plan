@@ -210,6 +210,7 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 | `seedInitialQueues=true` | 种子入队 + `applyTiming` |
 | `solve=true` | Timefold 内存求解 + `applyTiming`；记录 `score`、`solveDurationMs` |
 | `seedInitialQueues` 与 `solve` | **互斥**，400 |
+| `simulationProfileId` | 指定本 Session 的推演配置快照；缺省为当前 active Profile 或 `SP-DEFAULT` |
 
 生产排程页默认：`createSession({ seedInitialQueues: true, solve: false })`。
 
@@ -246,9 +247,9 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 
 `DetailScheduleSimulationEngine` 为 REST/测试兼容门面，实际编排由 `com.plantops.scenario.planning.simulation.SimulationPipeline` 完成。
 
-**Phase 2 — SimulationProfile：** Session 创建时快照 `simulation_profile.config_json`；`simulate` 可传 `simulationProfileId` / `ruleOverrides`（仅当次）；响应含 `appliedRules`、`simulationProfileId`。CRUD：`GET/POST /api/v1/planning/simulation-profiles`。
+**Phase 2 — SimulationProfile：** Session 创建时快照 `simulation_profile.config_json`；`simulate` 可传 `simulationProfileId` / `ruleOverrides`（仅当次）；响应含 `appliedRules`、`simulationProfileId`。CRUD：`GET/POST/DELETE /api/v1/planning/simulation-profiles`。
 
-**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `OperationStartTimeKernel`（与 `DetailScheduleTimingKernel` 共用 `SimulationRuleRegistry`）；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
+**Phase 4 — Timefold 对齐：** `OperationStartTimeCalculator` 委托 `DetailScheduleTimingKernel#computeShadowStartMinute`；`assignStartTimes` 仍走 `LineChainTimingUtil` → kernel 全局收敛。回归：`OperationStartTimeKernelAlignmentTest`。
 
 **Phase 3 — 扩展规则（默认关闭，业务规则页 + Profile 启用）：**
 
@@ -256,7 +257,13 @@ POST confirm  → persistSchedule(DS-xxx) + ProductionTask RELEASED + 删除 Ses
 |------------|------|------|
 | `factory-calendar` | TimingRule | 按 `resource_calendar` + 工厂班次策略 snap 开工到可用窗口 |
 | `feedback-freeze` | Timing + Validation | cutoff 前冻结反馈工序保持 `plannedStart`；simulate 可传 `feedbackCutoff` |
-| `batch-continuous` | Closure + Validation | 增量闭包扩展同批次同线工序；校验队列内批次不被隔开 |
+| `batch-continuous` | Closure + Validation | 增量闭包扩展同批次同线工序；校验队列内批次不被隔开（`BATCH_INTERLEAVED` / MEDIUM） |
+
+**启用边界**：
+
+- 在 Profile resolver 构建的上下文中（`DetailScheduleSessionService.simulate` 与 `confirm` 策略校验），`SP-DEFAULT` 中 Phase 3 规则默认 `enabled: false`；需同时满足业务规则页启用与 Profile/ruleOverrides 启用。
+- Session `create(seed/solve)` 后的 `applyTiming`、`optimize`、`ScheduleValidationService.validate(schedule)`、直接 `SimulationPipeline.fullSimulate/incrementalSimulate` 等路径不走 Profile resolver，使用 `SimulationRuleContextFactory` 默认值，缺省规则键按启用处理。
+- `feedbackCutoff` 会写入 Session 内 `schedule.problemFacts.feedbackFreeze`；后续 simulate 未传新 cutoff 时会沿用此前冻结索引，直到传入新 cutoff 或重建 Session。
 
 ### 7.1 入口
 
@@ -400,11 +407,14 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `PARALLEL_SAME_LINE` | HARD | 并行对不在同一产线 |
 | `PARALLEL_SAME_TIME` | HARD | 并行对 start/end 不一致 |
 | `CONTINUOUS_INTERLEAVED` | HARD | 连续组在队列中被其它料号隔开 |
+| `FEEDBACK_FROZEN_START_MOVED` | MEDIUM | 启用 `feedback-freeze` 且冻结工序 start 被移动 |
+| `BATCH_INTERLEAVED` | MEDIUM | 启用 `batch-continuous` 且同批次工序在同线队列中被其它批次/工序隔开 |
 
 **说明**：
 
 - 校验 **不阻止** simulate 完成；违背写入 `ScheduleSessionSimulateResultDto.violations` 与 preview。
-- HARD 计数用于 UI 警示；发布前应由计划员处理或知情确认。
+- 默认 Profile 下，HARD 计数用于 UI 警示；发布前应由计划员处理或知情确认。
+- 若 Session Profile 设置 `validation.blockConfirmOnHard=true`，`confirm` 前会重新全量校验，存在 HARD 违背则 400，不落库、不下发生产任务。
 
 ---
 
@@ -422,6 +432,8 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | POST | `/{sessionId}/optimize` | Timefold 内存求解 |
 | POST | `/{sessionId}/confirm` | 落库 + RELEASED 任务 |
 
+**Profile CRUD**：`SimulationProfileResource` 暴露 `GET /api/v1/planning/simulation-profiles`、`GET /{profileId}`、`POST /`、`DELETE /{profileId}`；默认 Profile ID 为 `SP-DEFAULT`，不可删除。
+
 ### 10.1 `SimulateScheduleSessionRequest`
 
 | 字段 | 含义 |
@@ -429,6 +441,9 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `stepPatches` | 手动调整列表 |
 | `affectedOperationIds` | 无 patch 时指定增量种子 |
 | `fullReschedule` | true → 强制 FULL |
+| `simulationProfileId` | 仅本次 simulate 使用另一个 Profile；不替换 Session 创建时的快照 |
+| `ruleOverrides` | 仅本次 simulate 的规则开关覆盖，如 `{ "batch-continuous": { "enabled": true } }` |
+| `feedbackCutoff` | `yyyy-MM-dd`；构建/刷新反馈冻结索引，供 `feedback-freeze` 规则使用 |
 
 ### 10.2 响应 `ScheduleSessionSimulateResultDto`
 
@@ -439,6 +454,8 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 | `simulationDurationMs` | 推演耗时 |
 | `recalculatedOperationIds` | 本次认为波及的工序 id |
 | `violations` / `hardViolationCount` / `mediumViolationCount` | 校验结果 |
+| `appliedRules` | `SimulationRuleRegistry.collectAppliedRuleIds` 收集的规则 id；增量模式还包含闭包规则 key |
+| `simulationProfileId` | 本次推演实际使用的 Profile ID |
 
 ### 10.3 预览 DTO 构建
 
@@ -454,13 +471,14 @@ max(op.earliestStartMinute, contractSettings.contractStartMinuteFloor(op, anchor
 
 `confirm(sessionId)`：
 
-1. `persistSchedule("DS-" + uuid, schedule, duration)` → 排程版本落库。
-2. 筛选 `line != null && startMinute != null` 的工序，按线、时间排序。
-3. `ProductionTaskService.releaseFromSchedule(anchor, versionId, ops)`：
+1. 若 Session Profile 的 `validation.blockConfirmOnHard=true`，先按 FULL 上下文运行 `ValidationPipeline.validate`；有 HARD 违背则返回 400。
+2. `persistSchedule("DS-" + uuid, schedule, duration)` → 排程版本落库。
+3. 筛选 `line != null && startMinute != null` 的工序，按线、时间排序。
+4. `ProductionTaskService.releaseFromSchedule(anchor, versionId, ops)`：
    - 新建或更新 `production_task` 为 **RELEASED**；
    - **RUNNING** 任务不覆盖计划时间；
    - 计划与执行不一致 → `planning_conflict`（`RUNNING_SCHEDULE_MISMATCH`）。
-4. `sessionStore.remove(sessionId)`。
+5. `sessionStore.remove(sessionId)`。
 
 ---
 
@@ -526,6 +544,7 @@ useScheduleSession(masterPlanVersionId)
 | 增量推演 | 赋时全局重算，闭包仅作标记 | 文档化；真局部赋时需新算法 |
 | Mutation | 不校验 acceptsLine | 可前置校验减少无效 simulate |
 | confirm 过滤 | 依赖 `op.getLine()` 非 null | 与 list-only 分配对齐（仅 list 时已排可能漏发布） |
+| 批次连续校验 | `BatchContinuousValidationRule` 依赖 `op.getLine()` 影子字段 | 与 list-only 分配对齐，避免仅 list membership 时漏报 |
 | 候选产线 | 按首工序 API | 批次可取多工序交集 |
 | 推荐插位 | 前端启发式 | 可增加 `POST assign-earliest` 服务端算 seq |
 
@@ -535,7 +554,7 @@ useScheduleSession(masterPlanVersionId)
 
 - [ ] P0–P4 与 Session 内对象是否同源、创建后改主计划是否需重建 Session  
 - [ ] 计划员流程：改序 → simulate → 看 violations → confirm 是否符合现场 SOP  
-- [ ] HARD 违背是否允许带错发布（当前不阻断 confirm）  
+- [ ] HARD 违背是否允许带错发布（默认不阻断；Profile 可用 `blockConfirmOnHard` 阻断）  
 - [ ] 并行/连续/工艺链三类约束是否覆盖贵司工艺规则  
 - [ ] 8h TTL 与计划员班次是否匹配  
 - [ ] 集群部署时会话丢失风险是否可接受  
